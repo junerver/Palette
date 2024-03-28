@@ -75,6 +75,7 @@ fun BorderTextField(
     borderColor: Color = "#D9D9D9".toColor(),
     backgroundColor: Color = Color.White,
     hint: String = "",
+    hintColor: Color = "#bfbfbf".toColor(),
     keyboardType: KeyboardType = KeyboardType.Text
 ) {
     ContentBorder(
@@ -98,7 +99,7 @@ fun BorderTextField(
                     Text(
                         hint,
                         fontSize = fontSize,
-                        color = "#bfbfbf".toColor(),
+                        color = hintColor,
                         modifier = Modifier.padding(start = 10.dp)
                     )
                 }
