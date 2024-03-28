@@ -1,4 +1,4 @@
-package com.edusoa.ideallecturer.suzhou.components
+package com.edusoa.android.palette
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -110,12 +110,4 @@ fun BorderTextField(
             )
         }
     }
-}
-
-// 自定义VisualTransformation来隐藏密码
-val PasswordVisualTransformation1 = VisualTransformation {
-    TransformedText(
-        text = buildAnnotatedString { "*".repeat(it.length) },
-        OffsetMapping.Identity
-    )
 }

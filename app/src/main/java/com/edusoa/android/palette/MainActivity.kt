@@ -1,4 +1,4 @@
-package com.edusoa.compose.palette
+package com.edusoa.android.palette
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -10,7 +10,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
-import com.edusoa.compose.palette.ui.theme.PaletteTheme
+import com.edusoa.android.palette.ui.theme.PaletteTheme
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {

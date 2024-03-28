@@ -1,4 +1,4 @@
-package com.edusoa.compose.palette
+package com.edusoa.android.palette
 
 import org.junit.Test
 

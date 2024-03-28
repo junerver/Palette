@@ -1,4 +1,4 @@
-package com.edusoa.ideallecturer.suzhou.components
+package com.edusoa.android.palette
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box

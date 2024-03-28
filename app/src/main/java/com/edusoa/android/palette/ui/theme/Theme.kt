@@ -1,4 +1,4 @@
-package com.edusoa.compose.palette.ui.theme
+package com.edusoa.android.palette.ui.theme
 
 import android.app.Activity
 import android.os.Build

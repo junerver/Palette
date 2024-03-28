@@ -1,10 +1,11 @@
 plugins {
     alias(libs.plugins.androidLibrary)
     alias(libs.plugins.jetbrainsKotlinAndroid)
+    id 'maven-publish'
 }
 
 android {
-    namespace 'com.edusoa.compose.palette'
+    namespace 'com.edusoa.android.palette'
     compileSdk 34
 
     defaultConfig {
@@ -20,6 +21,14 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }
+
+    buildFeatures {
+        compose = true
+    }
+    composeOptions {
+        kotlinCompilerExtensionVersion = "1.5.11"
+    }
+
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8
@@ -46,6 +55,30 @@ dependencies {
     implementation(libs.androidx.material3)
     debugImplementation(libs.androidx.ui.tooling)
     implementation(libs.androidx.lifecycle.viewmodel.compose)
-    implementation (libs.androidx.runtime.livedata)
+    implementation(libs.androidx.runtime.livedata)
     implementation(libs.hooks)
+}
+
+afterEvaluate {
+    publishing {
+        publications {
+            release(MavenPublication) {
+                from components.release
+                groupId = 'com.edusoa.android.compose'
+                artifactId = 'palette'
+                version = '1.0.1'
+            }
+        }
+        repositories {
+            maven {
+                allowInsecureProtocol = true
+                name = "nexus"
+                url = "http://10.10.15.120:8081/repository/maven-releases/"
+                credentials {
+                    username = 'admin'
+                    password = 'admin'
+                }
+            }
+        }
+    }
 }
