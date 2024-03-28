@@ -3,6 +3,7 @@ package com.edusoa.android.palette
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -15,13 +16,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.text.input.OffsetMapping
 import androidx.compose.ui.text.input.PasswordVisualTransformation
-import androidx.compose.ui.text.input.TransformedText
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
@@ -52,6 +51,7 @@ fun ContentBorder(
         modifier = Modifier
             .padding(8.dp)
             .border(borderWidth, borderColor, shape = RoundedCornerShape(cornerSize))
+            .clip(RoundedCornerShape(cornerSize))
             .background(color = backgroundColor)
             .padding(8.dp)
             .width(width)
@@ -65,6 +65,8 @@ fun ContentBorder(
 fun BorderTextField(
     value: String,
     onValueChange: (String) -> Unit,
+    icon: @Composable (() -> Unit)? = null,
+    textColor: Color = Color.Black,
     fontSize: TextUnit = 17.sp,
     height: Dp = 28.dp,
     width: Dp = 300.dp,
@@ -83,31 +85,42 @@ fun BorderTextField(
         borderColor = borderColor,
         backgroundColor = backgroundColor,
     ) {
-        Box(contentAlignment = Alignment.CenterStart) {
-            val showHint by useState(value) {
-                value.isEmpty()
-            }
-            if (showHint) {
-                Text(
-                    hint,
-                    fontSize = fontSize,
-                    color = "#bfbfbf".toColor(),
-                    modifier = Modifier.padding(start = 10.dp)
+        Row {
+            icon?.invoke()
+            Box(
+                modifier = Modifier.weight(1f),
+                contentAlignment = Alignment.CenterStart
+            ) {
+                val showHint by useState(value) {
+                    value.isEmpty()
+                }
+                if (showHint) {
+                    Text(
+                        hint,
+                        fontSize = fontSize,
+                        color = "#bfbfbf".toColor(),
+                        modifier = Modifier.padding(start = 10.dp)
+                    )
+                }
+                BasicTextField(
+                    singleLine = true,
+                    textStyle = TextStyle.Default.copy(
+                        fontSize = fontSize,
+                        color = textColor,
+                    ),
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(top = 4.dp, start = 10.dp),
+                    value = value,
+                    onValueChange = onValueChange,
+                    keyboardOptions = KeyboardOptions.Default.copy(
+                        keyboardType = keyboardType
+                    ),
+                    visualTransformation = if (keyboardType == KeyboardType.Password) PasswordVisualTransformation(
+                        '*'
+                    ) else VisualTransformation.None
                 )
             }
-            BasicTextField(
-                singleLine = true,
-                textStyle = TextStyle.Default.copy(fontSize = fontSize),
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(top = 4.dp, start = 10.dp),
-                value = value,
-                onValueChange = onValueChange,
-                keyboardOptions = KeyboardOptions.Default.copy(
-                    keyboardType = keyboardType
-                ),
-                visualTransformation = if (keyboardType == KeyboardType.Password) PasswordVisualTransformation('*') else VisualTransformation.None
-            )
         }
     }
 }
