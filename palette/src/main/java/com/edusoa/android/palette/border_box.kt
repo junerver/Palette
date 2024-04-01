@@ -67,6 +67,7 @@ fun BorderTextField(
     value: String,
     onValueChange: (String) -> Unit,
     icon: @Composable (() -> Unit)? = null,
+    tailIcon: @Composable (() -> Unit)? = null,
     textColor: Color = Color.Black,
     fontSize: TextUnit = 17.sp,
     height: Dp = 28.dp,
@@ -77,7 +78,8 @@ fun BorderTextField(
     backgroundColor: Color = Color.White,
     hint: String = "",
     hintColor: Color = "#bfbfbf".toColor(),
-    keyboardType: KeyboardType = KeyboardType.Text
+    keyboardType: KeyboardType = KeyboardType.Text,
+    passTrans: Boolean = true,
 ) {
     ContentBorder(
         height = height,
@@ -120,11 +122,12 @@ fun BorderTextField(
                     keyboardOptions = KeyboardOptions.Default.copy(
                         keyboardType = keyboardType
                     ),
-                    visualTransformation = if (keyboardType == KeyboardType.Password) PasswordVisualTransformation(
+                    visualTransformation = if (keyboardType == KeyboardType.Password && passTrans) PasswordVisualTransformation(
                         '*'
                     ) else VisualTransformation.None
                 )
             }
+            tailIcon?.invoke()
         }
     }
 }
