@@ -1,4 +1,4 @@
-package com.edusoa.android.palette
+package xyz.junerver.compose.palette
 
 import org.junit.Test
 

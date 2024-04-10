@@ -5,7 +5,7 @@ plugins {
 }
 
 android {
-    namespace 'com.edusoa.android.palette'
+    namespace 'xyz.junerver.compose.palette'
     compileSdk 34
 
     defaultConfig {
@@ -59,26 +59,3 @@ dependencies {
     implementation(libs.hooks)
 }
 
-afterEvaluate {
-    publishing {
-        publications {
-            release(MavenPublication) {
-                from components.release
-                groupId = 'com.edusoa.android.compose'
-                artifactId = 'palette'
-                version = '1.0.9'
-            }
-        }
-        repositories {
-            maven {
-                allowInsecureProtocol = true
-                name = "nexus"
-                url = "http://10.10.15.120:8081/repository/maven-releases/"
-                credentials {
-                    username = 'admin'
-                    password = 'admin'
-                }
-            }
-        }
-    }
-}

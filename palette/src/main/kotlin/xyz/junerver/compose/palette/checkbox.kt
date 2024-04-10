@@ -1,4 +1,4 @@
-package com.edusoa.android.palette
+package xyz.junerver.compose.palette
 
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CheckboxDefaults

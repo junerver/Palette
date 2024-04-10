@@ -1,4 +1,4 @@
-package com.edusoa.android.palette
+package xyz.junerver.compose.palette
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
@@ -18,6 +18,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import xyz.junerver.compose.hooks.ext.toColor
@@ -33,13 +34,14 @@ import xyz.junerver.compose.hooks.ext.toColor
 fun Toolbar(
     title: String = "",
     onIconClick: () -> Unit = {},
-    backgroundColor: Color = "#0f71f2".toColor()
+    backgroundColor: Color = "#0f71f2".toColor(),
+    height:Dp = 58.dp
 ) {
     Row(
         verticalAlignment = Alignment.CenterVertically,
         modifier = Modifier
             .fillMaxWidth()
-            .height(58.dp)
+            .height(height)
             .background(color = backgroundColor)
     ) {
         Box(modifier = Modifier.weight(1f)) {

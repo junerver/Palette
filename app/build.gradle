@@ -4,11 +4,11 @@ plugins {
 }
 
 android {
-    namespace 'com.edusoa.compose.palette'
+    namespace 'xyz.junerver.compose.palette'
     compileSdk 34
 
     defaultConfig {
-        applicationId "com.edusoa.compose.palette"
+        applicationId "xyz.junerver.compose.palette"
         minSdk 24
         targetSdk 34
         versionCode 1
@@ -37,7 +37,7 @@ android {
         compose true
     }
     composeOptions {
-        kotlinCompilerExtensionVersion '1.5.1'
+        kotlinCompilerExtensionVersion '1.5.11'
     }
     packaging {
         resources {

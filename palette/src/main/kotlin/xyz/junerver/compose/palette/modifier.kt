@@ -1,4 +1,4 @@
-package com.edusoa.android.palette
+package xyz.junerver.compose.palette
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource

@@ -1,16 +1,19 @@
-package com.edusoa.android.palette
+package xyz.junerver.compose.palette
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material3.Badge
+import androidx.compose.material3.BadgedBox
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
-import com.edusoa.android.palette.ui.theme.PaletteTheme
+import xyz.junerver.compose.palette.ui.theme.PaletteTheme
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -22,7 +25,12 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    Greeting("Android")
+                    Column {
+                        Badge() {
+                            Text(text = "1")
+                        }
+
+                    }
                 }
             }
         }
@@ -30,17 +38,12 @@ class MainActivity : ComponentActivity() {
 }
 
 @Composable
-fun Greeting(name: String, modifier: Modifier = Modifier) {
-    Text(
-        text = "Hello $name!",
-        modifier = modifier
-    )
-}
-
-@Preview(showBackground = true)
-@Composable
-fun GreetingPreview() {
-    PaletteTheme {
-        Greeting("Android")
+fun Greeting() {
+    BadgedBox(badge = {
+        Badge {
+            Text(text = "2")
+        }
+    }) {
+        Text("Android")
     }
 }
