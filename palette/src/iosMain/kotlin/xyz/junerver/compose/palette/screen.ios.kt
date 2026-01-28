@@ -1,27 +1,27 @@
 package xyz.junerver.compose.palette
 
-import platform.Foundation.NSScreen
+import androidx.compose.runtime.Composable
+import kotlinx.cinterop.ExperimentalForeignApi
+import kotlinx.cinterop.useContents
 import platform.UIKit.UIScreen
-import platform.UIKit.UIScreenMode
-import kotlinx.cinterop.CValue
-import platform.CoreGraphics.CGSize
 
 /**
  * Actual implementation for iOS
  */
 actual interface PlatformActivity {
-    fun finish()
+    actual fun finish()
 }
 
 /**
  * Actual implementation of getScreenWidthPx for iOS
  */
+@OptIn(ExperimentalForeignApi::class)
 @Composable
 actual fun getScreenWidthPx(): Float {
     val screen = UIScreen.mainScreen
     val scale = screen.scale
-    val size = screen.bounds.size
-    return (size.width * scale).toFloat()
+    val width = screen.bounds.useContents { size.width }
+    return (width * scale).toFloat()
 }
 
 /**

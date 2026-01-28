@@ -29,15 +29,15 @@ val ActivityContext = compositionLocalOf<PlatformActivity?> { null }
 fun Screen(
     activity: PlatformActivity,
     title: String = "",
-    draftWitdh: Float = 480f,
+    draftWidth: Float = 480f,
     verticalArrangement: Arrangement.Vertical = Arrangement.Top,
     horizontalAlignment: Alignment.Horizontal = Alignment.Start,
     content: @Composable ColumnScope.() -> Unit
 ) {
     val fontScale = LocalDensity.current.fontScale
     val screenWidth = getScreenWidthPx()
-    val density = screenWidth / draftWitdh
-    
+    val density = screenWidth / draftWidth
+
     CompositionLocalProvider(
         LocalDensity provides Density(
             density = density,

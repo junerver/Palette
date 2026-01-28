@@ -5,17 +5,40 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.compositionLocalOf
+import androidx.compose.ui.graphics.Color
+
+val LocalIsDarkTheme = compositionLocalOf { false }
 
 private val DarkColorScheme = darkColorScheme(
-    primary = Purple80,
+    primary = PrimaryLight,
+    onPrimary = Color.White,
+    primaryContainer = PrimaryDark,
     secondary = PurpleGrey80,
-    tertiary = Pink80
+    tertiary = Pink80,
+    background = SurfaceDark,
+    surface = CardBackgroundDark,
+    surfaceVariant = CodeBackgroundDark,
+    onBackground = TextPrimaryDark,
+    onSurface = TextPrimaryDark,
+    onSurfaceVariant = TextSecondaryDark,
+    outline = BorderDark,
 )
 
 private val LightColorScheme = lightColorScheme(
-    primary = Purple40,
+    primary = Primary,
+    onPrimary = Color.White,
+    primaryContainer = PrimaryLight,
     secondary = PurpleGrey40,
-    tertiary = Pink40
+    tertiary = Pink40,
+    background = Surface,
+    surface = CardBackground,
+    surfaceVariant = CodeBackground,
+    onBackground = TextPrimary,
+    onSurface = TextPrimary,
+    onSurfaceVariant = TextSecondary,
+    outline = Border,
 )
 
 @Composable
@@ -25,9 +48,11 @@ fun PaletteTheme(
 ) {
     val colorScheme = if (darkTheme) DarkColorScheme else LightColorScheme
 
-    MaterialTheme(
-        colorScheme = colorScheme,
-        typography = Typography,
-        content = content
-    )
+    CompositionLocalProvider(LocalIsDarkTheme provides darkTheme) {
+        MaterialTheme(
+            colorScheme = colorScheme,
+            typography = Typography,
+            content = content
+        )
+    }
 }
