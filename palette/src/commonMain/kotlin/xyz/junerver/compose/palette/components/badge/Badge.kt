@@ -18,8 +18,8 @@ import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import xyz.junerver.compose.hooks.useState
+import xyz.junerver.compose.palette.core.theme.PaletteTheme
 
 @Composable
 fun PBadge(
@@ -69,8 +69,9 @@ fun PBadge(
             contentAlignment = Alignment.Center
         ) {
             content?.let {
-                Text(text = it, color = Color.White, fontSize = 12.sp)
+                Text(text = it, color = Color.White, style = PaletteTheme.typography.label)
             }
         }
     }
 }
+

@@ -15,10 +15,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.sp
+import xyz.junerver.compose.palette.core.theme.PaletteTheme
 
 @Composable
 fun Toolbar(
@@ -50,8 +50,8 @@ fun Toolbar(
                 color = colors.contentColor,
                 textAlign = TextAlign.Center,
                 modifier = Modifier.fillMaxWidth(),
+                style = PaletteTheme.typography.title,
                 fontSize = 20.sp,
-                fontWeight = FontWeight.Medium
             )
         }
         Spacer(modifier = Modifier.weight(1f))

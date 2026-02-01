@@ -5,7 +5,7 @@ import androidx.compose.runtime.Immutable
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import xyz.junerver.compose.palette.core.theme.PaletteTheme
+import xyz.junerver.compose.palette.core.util.PaletteDefaults
 
 @Immutable
 data class ToolbarColors(
@@ -18,8 +18,8 @@ object ToolbarDefaults {
 
     @Composable
     fun colors(
-        backgroundColor: Color = PaletteTheme.colors.primary,
-        contentColor: Color = PaletteTheme.colors.onPrimary,
+        backgroundColor: Color = PaletteDefaults.colors.primary,
+        contentColor: Color = PaletteDefaults.colors.onPrimary,
     ): ToolbarColors = ToolbarColors(
         backgroundColor = backgroundColor,
         contentColor = contentColor,

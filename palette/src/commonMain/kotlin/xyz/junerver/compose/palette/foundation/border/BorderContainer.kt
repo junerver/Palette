@@ -14,7 +14,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import xyz.junerver.compose.palette.core.theme.PaletteTheme
+import xyz.junerver.compose.palette.core.util.PaletteDefaults
 
 object BorderContainerDefaults {
     val Height: Dp = 28.dp
@@ -24,10 +24,10 @@ object BorderContainerDefaults {
     val ContentPadding: Dp = 8.dp
 
     @Composable
-    fun borderColor(): Color = PaletteTheme.colors.border
+    fun borderColor(): Color = PaletteDefaults.colors.border
 
     @Composable
-    fun backgroundColor(): Color = PaletteTheme.colors.surface
+    fun backgroundColor(): Color = PaletteDefaults.colors.surface
 }
 
 @Composable

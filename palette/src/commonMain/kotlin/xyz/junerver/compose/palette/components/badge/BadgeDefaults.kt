@@ -4,11 +4,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import xyz.junerver.compose.palette.core.theme.PaletteTheme
+import xyz.junerver.compose.palette.core.util.PaletteDefaults
 
 object BadgeDefaults {
     val Size: Dp = 10.dp
 
     @Composable
-    fun color(): Color = PaletteTheme.colors.error
+    fun color(): Color = PaletteDefaults.colors.error
 }

@@ -18,13 +18,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
-import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
+import xyz.junerver.compose.palette.core.theme.PaletteTheme
 
 @Composable
 fun BorderTextField(
@@ -74,6 +74,7 @@ fun BorderTextField(
                         text = hint,
                         fontSize = fontSize,
                         color = colors.hintColor,
+                        style = PaletteTheme.typography.body,
                         modifier = Modifier.padding(start = 10.dp)
                     )
                 }
@@ -82,7 +83,7 @@ fun BorderTextField(
                     onValueChange = onValueChange,
                     enabled = enabled,
                     singleLine = true,
-                    textStyle = TextStyle.Default.copy(
+                    textStyle = PaletteTheme.typography.body.copy(
                         fontSize = fontSize,
                         color = colors.textColor,
                     ),

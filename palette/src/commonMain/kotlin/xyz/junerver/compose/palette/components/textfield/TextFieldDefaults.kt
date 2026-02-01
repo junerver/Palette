@@ -1,21 +1,12 @@
 package xyz.junerver.compose.palette.components.textfield
 
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.Immutable
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import xyz.junerver.compose.palette.core.theme.PaletteTheme
-
-@Immutable
-data class BorderTextFieldColors(
-    val textColor: Color,
-    val hintColor: Color,
-    val borderColor: Color,
-    val backgroundColor: Color,
-)
+import xyz.junerver.compose.palette.core.util.PaletteDefaults
 
 object TextFieldDefaults {
     val Height: Dp = 28.dp
@@ -26,10 +17,10 @@ object TextFieldDefaults {
 
     @Composable
     fun colors(
-        textColor: Color = PaletteTheme.colors.onSurface,
-        hintColor: Color = PaletteTheme.colors.hint,
-        borderColor: Color = PaletteTheme.colors.border,
-        backgroundColor: Color = PaletteTheme.colors.surface,
+        textColor: Color = PaletteDefaults.colors.onSurface,
+        hintColor: Color = PaletteDefaults.colors.hint,
+        borderColor: Color = PaletteDefaults.colors.border,
+        backgroundColor: Color = PaletteDefaults.colors.surface,
     ): BorderTextFieldColors = BorderTextFieldColors(
         textColor = textColor,
         hintColor = hintColor,
