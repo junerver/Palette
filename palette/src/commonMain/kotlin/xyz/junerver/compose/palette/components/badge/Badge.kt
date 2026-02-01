@@ -19,6 +19,7 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import xyz.junerver.compose.hooks.useState
+import xyz.junerver.compose.palette.core.spec.ComponentSize
 import xyz.junerver.compose.palette.core.theme.PaletteTheme
 
 @Composable
@@ -26,10 +27,13 @@ fun PBadge(
     modifier: Modifier = Modifier,
     content: String? = null,
     size: Dp = BadgeDefaults.Size,
+    componentSize: ComponentSize? = null,
     color: Color = BadgeDefaults.color(),
     alignment: Alignment = Alignment.TopEnd,
-    holder: (@Composable () -> Unit)? = null
+    holder: (@Composable () -> Unit)? = null,
 ) {
+    val resolvedSize = componentSize?.let { BadgeDefaults.size(it) } ?: size
+
     Box(modifier = modifier) {
         val density = LocalDensity.current
         val (localWidth, setLocalWidth) = useState(0.dp)
@@ -43,10 +47,10 @@ fun PBadge(
         }
 
         val offsetY = when (alignment) {
-            Alignment.TopStart, Alignment.TopEnd -> -size / 2
-            Alignment.TopCenter -> -size / 2
-            Alignment.BottomStart, Alignment.BottomEnd -> size / 2
-            Alignment.BottomCenter -> size / 2
+            Alignment.TopStart, Alignment.TopEnd -> -resolvedSize / 2
+            Alignment.TopCenter -> -resolvedSize / 2
+            Alignment.BottomStart, Alignment.BottomEnd -> resolvedSize / 2
+            Alignment.BottomCenter -> resolvedSize / 2
             else -> 0.dp
         }
 
@@ -55,17 +59,17 @@ fun PBadge(
         Box(
             modifier = Modifier
                 .align(alignment)
-                .widthIn(min = size)
-                .height(size)
+                .widthIn(min = resolvedSize)
+                .height(resolvedSize)
                 .onSizeChanged { newSize ->
                     with(density) {
                         setLocalWidth(newSize.width.toDp())
                     }
                 }
                 .offset(x = offsetX, y = offsetY)
-                .clip(if (localWidth > size) RoundedCornerShape(20.dp) else CircleShape)
+                .clip(if (localWidth > resolvedSize) RoundedCornerShape(20.dp) else CircleShape)
                 .background(color)
-                .padding(horizontal = if (localWidth > size && content != null) 6.dp else 0.dp),
+                .padding(horizontal = if (localWidth > resolvedSize && content != null) 6.dp else 0.dp),
             contentAlignment = Alignment.Center
         ) {
             content?.let {
@@ -74,4 +78,3 @@ fun PBadge(
         }
     }
 }
-

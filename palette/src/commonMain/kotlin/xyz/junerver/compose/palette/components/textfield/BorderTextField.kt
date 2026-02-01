@@ -24,6 +24,9 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
+import xyz.junerver.compose.palette.core.spec.ComponentInteraction
+import xyz.junerver.compose.palette.core.spec.ComponentSize
+import xyz.junerver.compose.palette.core.spec.rememberComponentInteraction
 import xyz.junerver.compose.palette.core.theme.PaletteTheme
 
 @Composable
@@ -31,13 +34,14 @@ fun BorderTextField(
     value: String,
     onValueChange: (String) -> Unit,
     modifier: Modifier = Modifier,
-    enabled: Boolean = true,
     colors: BorderTextFieldColors = TextFieldDefaults.colors(),
     height: Dp = TextFieldDefaults.Height,
     width: Dp = TextFieldDefaults.Width,
     borderWidth: Dp = TextFieldDefaults.BorderWidth,
     cornerSize: Dp = TextFieldDefaults.CornerSize,
     fontSize: TextUnit = TextFieldDefaults.FontSize,
+    componentSize: ComponentSize? = null,
+    interaction: ComponentInteraction = rememberComponentInteraction(),
     hint: String = "",
     keyboardType: KeyboardType = KeyboardType.Text,
     isPassword: Boolean = false,
@@ -45,6 +49,8 @@ fun BorderTextField(
     leadingIcon: @Composable (() -> Unit)? = null,
     trailingIcon: @Composable (() -> Unit)? = null,
 ) {
+    val resolvedHeight = componentSize?.let { TextFieldDefaults.height(it) } ?: height
+    val resolvedFontSize = componentSize?.let { TextFieldDefaults.fontSize(it) } ?: fontSize
     val shape = RoundedCornerShape(cornerSize)
     val showHint = value.isEmpty()
     val visualTransformation = if (isPassword && !passwordVisible) {
@@ -61,7 +67,7 @@ fun BorderTextField(
             .background(colors.backgroundColor)
             .padding(8.dp)
             .width(width)
-            .height(height)
+            .height(resolvedHeight)
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             leadingIcon?.invoke()
@@ -72,7 +78,7 @@ fun BorderTextField(
                 if (showHint) {
                     Text(
                         text = hint,
-                        fontSize = fontSize,
+                        fontSize = resolvedFontSize,
                         color = colors.hintColor,
                         style = PaletteTheme.typography.body,
                         modifier = Modifier.padding(start = 10.dp)
@@ -81,10 +87,10 @@ fun BorderTextField(
                 BasicTextField(
                     value = value,
                     onValueChange = onValueChange,
-                    enabled = enabled,
+                    enabled = interaction.enabled,
                     singleLine = true,
                     textStyle = PaletteTheme.typography.body.copy(
-                        fontSize = fontSize,
+                        fontSize = resolvedFontSize,
                         color = colors.textColor,
                     ),
                     cursorBrush = SolidColor(colors.textColor),
@@ -103,7 +109,7 @@ fun BorderTextField(
 @Deprecated(
     message = "Use BorderTextField with leadingIcon/trailingIcon parameters",
     replaceWith = ReplaceWith(
-        "BorderTextField(value, onValueChange, modifier, true, TextFieldDefaults.colors(textColor, hintColor, borderColor, backgroundColor), height, width, borderWidth, cornerSize, fontSize, hint, keyboardType, keyboardType == KeyboardType.Password, passTrans, icon, tailIcon)",
+        "BorderTextField(value, onValueChange, modifier, TextFieldDefaults.colors(textColor, hintColor, borderColor, backgroundColor), height, width, borderWidth, cornerSize, fontSize, null, rememberComponentInteraction(true), hint, keyboardType, keyboardType == KeyboardType.Password, passTrans, icon, tailIcon)",
         "xyz.junerver.compose.palette.components.textfield.BorderTextField",
         "xyz.junerver.compose.palette.components.textfield.TextFieldDefaults"
     )
@@ -131,7 +137,6 @@ fun BorderTextField(
         value = value,
         onValueChange = onValueChange,
         modifier = Modifier,
-        enabled = true,
         colors = TextFieldDefaults.colors(
             textColor = textColor,
             hintColor = hintColor,

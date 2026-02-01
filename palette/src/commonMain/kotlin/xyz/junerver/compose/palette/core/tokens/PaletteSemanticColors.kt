@@ -46,6 +46,13 @@ data class PaletteSemanticColors(
         outline = border,
         outlineVariant = border,
         scrim = Color.Black,
+        surfaceBright = surface,
+        surfaceDim = surface,
+        surfaceContainerLowest = surface,
+        surfaceContainerLow = surface,
+        surfaceContainer = surface,
+        surfaceContainerHigh = surface,
+        surfaceContainerHighest = surface,
     )
 }
 
