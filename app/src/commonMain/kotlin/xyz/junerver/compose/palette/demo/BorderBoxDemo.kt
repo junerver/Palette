@@ -14,7 +14,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-import xyz.junerver.compose.palette.ContentBorder
+import xyz.junerver.compose.palette.foundation.border.BorderContainer
 import xyz.junerver.compose.palette.components.CodeBlock
 import xyz.junerver.compose.palette.ui.theme.Primary
 import xyz.junerver.compose.palette.ui.theme.Success
@@ -28,7 +28,7 @@ fun BorderBoxDemo() {
             .padding(24.dp)
     ) {
         Text(
-            text = "ContentBorder",
+            text = "BorderContainer",
             style = MaterialTheme.typography.headlineMedium
         )
         Text(
@@ -40,7 +40,7 @@ fun BorderBoxDemo() {
         Spacer(modifier = Modifier.height(32.dp))
 
         DemoSection(title = "基础用法") {
-            ContentBorder {
+            BorderContainer {
                 Text(
                     text = "这是容器内容",
                     style = MaterialTheme.typography.bodyMedium
@@ -52,14 +52,14 @@ fun BorderBoxDemo() {
 
         DemoSection(title = "自定义颜色") {
             Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
-                ContentBorder(
+                BorderContainer(
                     borderColor = Primary,
                     borderWidth = 1.dp
                 ) {
                     Text("蓝色边框", color = Primary)
                 }
 
-                ContentBorder(
+                BorderContainer(
                     borderColor = Success,
                     borderWidth = 1.dp
                 ) {
@@ -72,7 +72,7 @@ fun BorderBoxDemo() {
 
         DemoSection(title = "不同尺寸") {
             Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
-                ContentBorder(
+                BorderContainer(
                     height = 40.dp,
                     width = 200.dp,
                     cornerSize = 8.dp
@@ -80,7 +80,7 @@ fun BorderBoxDemo() {
                     Text("较大尺寸")
                 }
 
-                ContentBorder(
+                BorderContainer(
                     height = 24.dp,
                     width = 150.dp,
                     cornerSize = 4.dp
@@ -101,7 +101,7 @@ fun BorderBoxDemo() {
 
         CodeBlock(
             code = """
-ContentBorder(
+BorderContainer(
     height = 28.dp,
     width = 300.dp,
     borderWidth = 0.5.dp,

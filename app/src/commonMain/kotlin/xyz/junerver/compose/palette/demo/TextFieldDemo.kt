@@ -34,10 +34,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
-import xyz.junerver.compose.palette.BorderTextField
-import xyz.junerver.compose.palette.BorderTextField
-import xyz.junerver.compose.palette.CenterVerticallyRow
-import xyz.junerver.compose.palette.onClick
+import xyz.junerver.compose.palette.components.textfield.BorderTextField
+import xyz.junerver.compose.palette.components.textfield.TextFieldDefaults
+import xyz.junerver.compose.palette.foundation.layout.CenterVerticallyRow
+import xyz.junerver.compose.palette.core.util.noRippleClickable
 import xyz.junerver.compose.palette.components.CodeBlock
 import xyz.junerver.compose.palette.ui.theme.Error
 import xyz.junerver.compose.palette.ui.theme.Primary
@@ -68,7 +68,7 @@ fun TextFieldDemo() {
                 value = text,
                 onValueChange = { text = it },
                 hint = "请输入用户名",
-                icon = {
+                leadingIcon = {
                     Icon(
                         Icons.Default.Person,
                         contentDescription = null,
@@ -90,8 +90,9 @@ fun TextFieldDemo() {
                 onValueChange = { password = it },
                 hint = "请输入密码",
                 keyboardType = KeyboardType.Password,
-                passTrans = !visible,
-                icon = {
+                isPassword = true,
+                passwordVisible = visible,
+                leadingIcon = {
                     Icon(
                         Icons.Default.Lock,
                         contentDescription = null,
@@ -99,13 +100,13 @@ fun TextFieldDemo() {
                         tint = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 },
-                tailIcon = {
+                trailingIcon = {
                     Icon(
                         if (visible) Icons.Default.Visibility else Icons.Default.VisibilityOff,
                         contentDescription = if (visible) "隐藏" else "显示",
                         modifier = Modifier
                             .size(20.dp)
-                            .onClick { visible = !visible },
+                            .noRippleClickable { visible = !visible },
                         tint = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
@@ -121,7 +122,7 @@ fun TextFieldDemo() {
                 onValueChange = { email = it },
                 hint = "请输入邮箱",
                 keyboardType = KeyboardType.Email,
-                icon = {
+                leadingIcon = {
                     Icon(
                         Icons.Default.Email,
                         contentDescription = null,
@@ -143,7 +144,7 @@ fun TextFieldDemo() {
                     value = text1,
                     onValueChange = { text1 = it },
                     hint = "蓝色边框",
-                    borderColor = Primary,
+                    colors = TextFieldDefaults.colors(borderColor = Primary),
                     height = 36.dp,
                     width = 280.dp
                 )
@@ -152,7 +153,7 @@ fun TextFieldDemo() {
                     value = text2,
                     onValueChange = { text2 = it },
                     hint = "红色边框",
-                    borderColor = Error,
+                    colors = TextFieldDefaults.colors(borderColor = Error),
                     height = 36.dp,
                     width = 280.dp
                 )

@@ -1,4 +1,4 @@
-package xyz.junerver.compose.palette
+package xyz.junerver.compose.palette.foundation.layout
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
@@ -7,13 +7,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 
-/**
- * Description:
- *
- * @author Junerver @date: 2024/3/29-13:05
- * @email: junerver@gmail.com
- * @version: v1.0
- */
 @Composable
 fun CenterVerticallyRow(
     modifier: Modifier = Modifier,
@@ -21,10 +14,9 @@ fun CenterVerticallyRow(
     content: @Composable RowScope.() -> Unit
 ) {
     Row(
+        modifier = modifier,
         horizontalArrangement = horizontalArrangement,
         verticalAlignment = Alignment.CenterVertically,
-        modifier = modifier
-    ) {
-        content()
-    }
+        content = content
+    )
 }

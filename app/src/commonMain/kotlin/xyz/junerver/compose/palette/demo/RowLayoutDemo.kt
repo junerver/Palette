@@ -24,7 +24,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
-import xyz.junerver.compose.palette.CenterVerticallyRow
+import xyz.junerver.compose.palette.foundation.layout.CenterVerticallyRow
 import xyz.junerver.compose.palette.components.CodeBlock
 
 @Composable

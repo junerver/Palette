@@ -27,8 +27,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-import xyz.junerver.compose.palette.CenterVerticallyRow
-import xyz.junerver.compose.palette.ColoredCheckBox
+import xyz.junerver.compose.palette.foundation.layout.CenterVerticallyRow
+import xyz.junerver.compose.palette.components.checkbox.ColoredCheckBox
 import xyz.junerver.compose.palette.components.CodeBlock
 import xyz.junerver.compose.palette.ui.theme.TextSecondary
 

@@ -29,7 +29,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-import xyz.junerver.compose.palette.badge.PBadge
+import xyz.junerver.compose.palette.components.badge.PBadge
 import xyz.junerver.compose.palette.components.CodeBlock
 import xyz.junerver.compose.palette.ui.theme.Error
 import xyz.junerver.compose.palette.ui.theme.Primary

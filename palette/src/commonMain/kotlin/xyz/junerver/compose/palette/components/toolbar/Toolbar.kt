@@ -1,4 +1,4 @@
-package xyz.junerver.compose.palette
+package xyz.junerver.compose.palette.components.toolbar
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
@@ -18,41 +18,36 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
-import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
-/**
- * Description:
- *
- * @author Junerver date: 2024/3/21-16:07 Email: junerver@gmail.com
- *     Version: v1.0
- */
 @Composable
 fun Toolbar(
+    modifier: Modifier = Modifier,
     title: String = "",
-    onIconClick: () -> Unit = {},
-    backgroundColor: Color = Color(0xFF0F71F2),
-    height:Dp = 58.dp
+    colors: ToolbarColors = ToolbarDefaults.colors(),
+    height: Dp = ToolbarDefaults.Height,
+    onNavigationClick: () -> Unit = {},
 ) {
     Row(
-        verticalAlignment = Alignment.CenterVertically,
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
             .height(height)
-            .background(color = backgroundColor)
+            .background(colors.backgroundColor),
+        verticalAlignment = Alignment.CenterVertically,
     ) {
         Box(modifier = Modifier.weight(1f)) {
-            IconButton(onClick = onIconClick) {
+            IconButton(onClick = onNavigationClick) {
                 Icon(
                     imageVector = Icons.AutoMirrored.Rounded.ArrowBack,
                     contentDescription = null,
-                    tint = Color.White
+                    tint = colors.contentColor
                 )
             }
         }
         Box(modifier = Modifier.weight(1f)) {
-            Text(text = title,
-                color = Color.White,
+            Text(
+                text = title,
+                color = colors.contentColor,
                 textAlign = TextAlign.Center,
                 modifier = Modifier.fillMaxWidth(),
                 fontSize = 20.sp,
@@ -61,4 +56,28 @@ fun Toolbar(
         }
         Spacer(modifier = Modifier.weight(1f))
     }
+}
+
+@Deprecated(
+    message = "Use Toolbar with ToolbarColors",
+    replaceWith = ReplaceWith(
+        "Toolbar(modifier, title, ToolbarDefaults.colors(backgroundColor), height, onIconClick)",
+        "xyz.junerver.compose.palette.components.toolbar.Toolbar",
+        "xyz.junerver.compose.palette.components.toolbar.ToolbarDefaults"
+    )
+)
+@Composable
+fun Toolbar(
+    title: String = "",
+    onIconClick: () -> Unit = {},
+    backgroundColor: Color,
+    height: Dp = ToolbarDefaults.Height,
+) {
+    Toolbar(
+        modifier = Modifier,
+        title = title,
+        colors = ToolbarDefaults.colors(backgroundColor = backgroundColor),
+        height = height,
+        onNavigationClick = onIconClick,
+    )
 }

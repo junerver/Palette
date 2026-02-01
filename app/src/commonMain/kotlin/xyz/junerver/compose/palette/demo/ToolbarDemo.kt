@@ -13,7 +13,8 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import xyz.junerver.compose.palette.Toolbar
+import xyz.junerver.compose.palette.components.toolbar.Toolbar
+import xyz.junerver.compose.palette.components.toolbar.ToolbarDefaults
 import xyz.junerver.compose.palette.components.CodeBlock
 import xyz.junerver.compose.palette.ui.theme.Primary
 import xyz.junerver.compose.palette.ui.theme.Success
@@ -41,7 +42,7 @@ fun ToolbarDemo() {
         DemoSection(title = "基础用法") {
             Toolbar(
                 title = "页面标题",
-                onIconClick = { }
+                onNavigationClick = { }
             )
         }
 
@@ -51,14 +52,14 @@ fun ToolbarDemo() {
             Column {
                 Toolbar(
                     title = "主色调",
-                    backgroundColor = Primary,
-                    onIconClick = { }
+                    colors = ToolbarDefaults.colors(backgroundColor = Primary),
+                    onNavigationClick = { }
                 )
                 Spacer(modifier = Modifier.height(16.dp))
                 Toolbar(
                     title = "成功色",
-                    backgroundColor = Success,
-                    onIconClick = { }
+                    colors = ToolbarDefaults.colors(backgroundColor = Success),
+                    onNavigationClick = { }
                 )
             }
         }
@@ -69,7 +70,7 @@ fun ToolbarDemo() {
             Toolbar(
                 title = "较高的工具栏",
                 height = 72.dp,
-                onIconClick = { }
+                onNavigationClick = { }
             )
         }
 
