@@ -13,9 +13,9 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import xyz.junerver.compose.palette.components.CodeBlock
 import xyz.junerver.compose.palette.components.toolbar.Toolbar
 import xyz.junerver.compose.palette.components.toolbar.ToolbarDefaults
-import xyz.junerver.compose.palette.components.CodeBlock
 import xyz.junerver.compose.palette.ui.theme.Primary
 import xyz.junerver.compose.palette.ui.theme.Success
 

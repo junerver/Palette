@@ -7,12 +7,12 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -143,19 +143,6 @@ fun BadgeDemo() {
                         )
                     }
                 )
-
-                PBadge(
-                    content = "!",
-                    color = Warning,
-                    holder = {
-                        Box(
-                            modifier = Modifier
-                                .size(40.dp)
-                                .clip(RoundedCornerShape(8.dp))
-                                .background(MaterialTheme.colorScheme.outline.copy(alpha = 0.2f))
-                        )
-                    }
-                )
             }
         }
 
@@ -181,7 +168,7 @@ fun BadgeDemo() {
 
                 PBadge(
                     content = "2",
-                    alignment = Alignment.TopEnd,
+                    alignment = Alignment.TopCenter,
                     holder = {
                         Box(
                             modifier = Modifier
@@ -194,7 +181,7 @@ fun BadgeDemo() {
 
                 PBadge(
                     content = "3",
-                    alignment = Alignment.BottomStart,
+                    alignment = Alignment.Center,
                     holder = {
                         Box(
                             modifier = Modifier

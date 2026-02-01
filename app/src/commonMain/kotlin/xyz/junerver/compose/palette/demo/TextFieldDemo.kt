@@ -1,19 +1,15 @@
 package xyz.junerver.compose.palette.demo
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Email
@@ -23,7 +19,6 @@ import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -34,11 +29,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import xyz.junerver.compose.palette.components.CodeBlock
 import xyz.junerver.compose.palette.components.textfield.BorderTextField
 import xyz.junerver.compose.palette.components.textfield.TextFieldDefaults
-import xyz.junerver.compose.palette.foundation.layout.CenterVerticallyRow
-import xyz.junerver.compose.palette.core.util.noRippleClickable
-import xyz.junerver.compose.palette.components.CodeBlock
 import xyz.junerver.compose.palette.ui.theme.Error
 import xyz.junerver.compose.palette.ui.theme.Primary
 
@@ -81,56 +74,57 @@ fun TextFieldDemo() {
 
         Spacer(modifier = Modifier.height(24.dp))
 
-        DemoSection(title = "密码输入") {
-            var password by remember { mutableStateOf("") }
-            var visible by remember { mutableStateOf(false) }
-
-            BorderTextField(
-                value = password,
-                onValueChange = { password = it },
-                hint = "请输入密码",
-                keyboardType = KeyboardType.Password,
-                isPassword = true,
-                passwordVisible = visible,
-                leadingIcon = {
-                    Icon(
-                        Icons.Default.Lock,
-                        contentDescription = null,
-                        modifier = Modifier.size(20.dp),
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                },
-                trailingIcon = {
-                    Icon(
-                        if (visible) Icons.Default.Visibility else Icons.Default.VisibilityOff,
-                        contentDescription = if (visible) "隐藏" else "显示",
-                        modifier = Modifier
-                            .size(20.dp)
-                            .noRippleClickable { visible = !visible },
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
-            )
-        }
-
-        Spacer(modifier = Modifier.height(24.dp))
-
-        DemoSection(title = "邮箱输入") {
+        DemoSection(title = "带图标和验证") {
             var email by remember { mutableStateOf("") }
-            BorderTextField(
-                value = email,
-                onValueChange = { email = it },
-                hint = "请输入邮箱",
-                keyboardType = KeyboardType.Email,
-                leadingIcon = {
-                    Icon(
-                        Icons.Default.Email,
-                        contentDescription = null,
-                        modifier = Modifier.size(20.dp),
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
-            )
+            var password by remember { mutableStateOf("") }
+            var passwordVisible by remember { mutableStateOf(false) }
+
+            Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                BorderTextField(
+                    value = email,
+                    onValueChange = { email = it },
+                    hint = "请输入邮箱",
+                    keyboardType = KeyboardType.Email,
+                    leadingIcon = {
+                        Icon(
+                            Icons.Default.Email,
+                            contentDescription = null,
+                            modifier = Modifier.size(20.dp),
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                )
+
+                BorderTextField(
+                    value = password,
+                    onValueChange = { password = it },
+                    hint = "请输入密码",
+                    keyboardType = KeyboardType.Password,
+                    isPassword = true,
+                    passwordVisible = passwordVisible,
+                    leadingIcon = {
+                        Icon(
+                            Icons.Default.Lock,
+                            contentDescription = null,
+                            modifier = Modifier.size(20.dp),
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    },
+                    trailingIcon = {
+                        Icon(
+                            imageVector = if (passwordVisible) Icons.Default.Visibility else Icons.Default.VisibilityOff,
+                            contentDescription = null,
+                            modifier = Modifier.size(20.dp)
+                        )
+                    }
+                )
+
+                Text(
+                    text = if (passwordVisible) "密码显示" else "密码隐藏",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
         }
 
         Spacer(modifier = Modifier.height(24.dp))
@@ -171,14 +165,12 @@ fun TextFieldDemo() {
 
         CodeBlock(
             code = """
-var text by remember { mutableStateOf("") }
-
 BorderTextField(
     value = text,
     onValueChange = { text = it },
-    hint = "请输入内容",
-    icon = {
-        Icon(Icons.Default.Person, null)
+    hint = "请输入用户名",
+    leadingIcon = {
+        Icon(Icons.Default.Person, contentDescription = null)
     }
 )
             """.trimIndent()

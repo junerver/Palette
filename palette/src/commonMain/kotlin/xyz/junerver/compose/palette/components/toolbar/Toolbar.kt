@@ -14,7 +14,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.sp
@@ -56,28 +55,4 @@ fun Toolbar(
         }
         Spacer(modifier = Modifier.weight(1f))
     }
-}
-
-@Deprecated(
-    message = "Use Toolbar with ToolbarColors",
-    replaceWith = ReplaceWith(
-        "Toolbar(modifier, title, ToolbarDefaults.colors(backgroundColor), height, onIconClick)",
-        "xyz.junerver.compose.palette.components.toolbar.Toolbar",
-        "xyz.junerver.compose.palette.components.toolbar.ToolbarDefaults"
-    )
-)
-@Composable
-fun Toolbar(
-    title: String = "",
-    onIconClick: () -> Unit = {},
-    backgroundColor: Color,
-    height: Dp = ToolbarDefaults.Height,
-) {
-    Toolbar(
-        modifier = Modifier,
-        title = title,
-        colors = ToolbarDefaults.colors(backgroundColor = backgroundColor),
-        height = height,
-        onNavigationClick = onIconClick,
-    )
 }
