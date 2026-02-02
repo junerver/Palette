@@ -54,7 +54,7 @@ kotlin {
                 implementation(libs.kotlinx.collections.immutable)
                 implementation(libs.material.icons.core)
                 implementation(libs.material.icons.extended)
-                implementation(libs.hooks)
+                api(libs.hooks)
             }
         }
 

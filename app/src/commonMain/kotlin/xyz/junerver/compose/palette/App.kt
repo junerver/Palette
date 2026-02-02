@@ -4,8 +4,10 @@ import androidx.compose.animation.*
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.DarkMode
 import androidx.compose.material.icons.filled.LightMode
@@ -43,29 +45,16 @@ private fun AppContent(
 ) {
     var selectedRoute by rememberSaveable { mutableStateOf("button") }
 
-    Scaffold(
-        bottomBar = {
-            BottomNavBar(
-                selectedRoute = selectedRoute,
-                onRouteSelected = { selectedRoute = it }
-            )
-        }
-    ) { padding ->
-        Row(modifier = Modifier.fillMaxSize()) {
-            SideNav(
-                selectedRoute = selectedRoute,
-                onRouteSelected = { selectedRoute = it },
-                darkTheme = darkTheme,
-                onThemeToggle = onThemeToggle
-            )
+    Row(modifier = Modifier.fillMaxSize()) {
+        SideNav(
+            selectedRoute = selectedRoute,
+            onRouteSelected = { selectedRoute = it },
+            darkTheme = darkTheme,
+            onThemeToggle = onThemeToggle
+        )
 
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(padding)
-            ) {
-                MainContent(route = selectedRoute)
-            }
+        Box(modifier = Modifier.fillMaxSize()) {
+            MainContent(route = selectedRoute)
         }
     }
 }
@@ -98,6 +87,20 @@ private fun MainContent(route: String) {
                 NavItem.Toolbar.route -> ToolbarDemo()
                 NavItem.RowLayout.route -> RowLayoutDemo()
                 NavItem.BorderBox.route -> BorderBoxDemo()
+                NavItem.Table.route -> TableDemo()
+                NavItem.List.route -> ListDemo()
+                NavItem.Descriptions.route -> DescriptionsDemo()
+                NavItem.Statistic.route -> StatisticDemo()
+                NavItem.Timeline.route -> TimelineDemo()
+                NavItem.Tree.route -> TreeDemo()
+                NavItem.Image.route -> ImageDemo()
+                NavItem.Carousel.route -> CarouselDemo()
+                NavItem.Pagination.route -> PaginationDemo()
+                NavItem.Empty.route -> EmptyDemo()
+                NavItem.Card.route -> CardDemo()
+                NavItem.Avatar.route -> AvatarDemo()
+                NavItem.Collapse.route -> CollapseDemo()
+                NavItem.Tag.route -> TagDemo()
             }
         }
     }
@@ -186,7 +189,14 @@ private fun NavItems(
     selectedRoute: String,
     onRouteSelected: (String) -> Unit
 ) {
-    Column(modifier = Modifier.padding(horizontal = 12.dp)) {
+    val scrollState = rememberScrollState()
+    
+    Column(
+        modifier = Modifier
+            .fillMaxHeight()
+            .verticalScroll(scrollState)
+            .padding(horizontal = 12.dp)
+    ) {
         Text(
             text = "组件",
             style = MaterialTheme.typography.labelSmall,
@@ -201,6 +211,8 @@ private fun NavItems(
                 onClick = { onRouteSelected(item.route) }
             )
         }
+        
+        Spacer(modifier = Modifier.height(16.dp))
     }
 }
 
@@ -234,58 +246,4 @@ private fun NavItemRow(
     }
 }
 
-@Composable
-private fun BottomNavBar(
-    selectedRoute: String,
-    onRouteSelected: (String) -> Unit
-) {
-    Surface(
-        modifier = Modifier.fillMaxWidth(),
-        color = MaterialTheme.colorScheme.surface,
-        shadowElevation = 2.dp
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(8.dp),
-            horizontalArrangement = Arrangement.SpaceEvenly
-        ) {
-            NavItem.all.forEach { item ->
-                BottomNavItem(
-                    item = item,
-                    selected = item.route == selectedRoute,
-                    onClick = { onRouteSelected(item.route) }
-                )
-            }
-        }
-    }
-}
 
-@Composable
-private fun BottomNavItem(
-    item: NavItem,
-    selected: Boolean,
-    onClick: () -> Unit
-) {
-    Column(
-        modifier = Modifier
-            .clip(CircleShape)
-            .clickable(onClick = onClick)
-            .padding(8.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
-    ) {
-        Icon(
-            imageVector = item.icon,
-            contentDescription = null,
-            tint = if (selected) Primary else MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.size(24.dp)
-        )
-        Spacer(modifier = Modifier.height(4.dp))
-        Text(
-            text = item.label,
-            style = MaterialTheme.typography.labelSmall,
-            color = if (selected) Primary else MaterialTheme.colorScheme.onSurfaceVariant
-        )
-    }
-}

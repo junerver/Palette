@@ -65,6 +65,59 @@ import xyz.junerver.compose.palette.components.toast.ToastIcon as ToastIconImpl
 import xyz.junerver.compose.palette.components.toast.ToastState as ToastStateImpl
 import xyz.junerver.compose.palette.components.skeleton.SkeletonDefaults as SkeletonDefaultsImpl
 
+import xyz.junerver.compose.palette.components.pagination.PPagination as PPaginationImpl
+import xyz.junerver.compose.palette.components.pagination.PaginationDefaults as PaginationDefaultsImpl
+import xyz.junerver.compose.palette.components.pagination.PaginationColors as PaginationColorsImpl
+
+import xyz.junerver.compose.palette.components.empty.PEmpty as PEmptyImpl
+import xyz.junerver.compose.palette.components.empty.EmptyDefaults as EmptyDefaultsImpl
+
+import xyz.junerver.compose.palette.components.card.PCard as PCardImpl
+import xyz.junerver.compose.palette.components.card.CardDefaults as CardDefaultsImpl
+import xyz.junerver.compose.palette.components.card.CardColors as CardColorsImpl
+import xyz.junerver.compose.palette.components.card.CardVariant as CardVariantImpl
+
+import xyz.junerver.compose.palette.components.tag.PTag as PTagImpl
+import xyz.junerver.compose.palette.components.tag.TagDefaults as TagDefaultsImpl
+import xyz.junerver.compose.palette.components.tag.TagColors as TagColorsImpl
+import xyz.junerver.compose.palette.components.tag.TagVariant as TagVariantImpl
+
+import xyz.junerver.compose.palette.components.avatar.PAvatar as PAvatarImpl
+import xyz.junerver.compose.palette.components.avatar.AvatarDefaults as AvatarDefaultsImpl
+import xyz.junerver.compose.palette.components.avatar.AvatarSize as AvatarSizeImpl
+
+import xyz.junerver.compose.palette.components.collapse.PCollapse as PCollapseImpl
+import xyz.junerver.compose.palette.components.collapse.PCollapseItem as PCollapseItemImpl
+import xyz.junerver.compose.palette.components.collapse.CollapseDefaults as CollapseDefaultsImpl
+import xyz.junerver.compose.palette.components.collapse.CollapseItemData as CollapseItemDataImpl
+
+import xyz.junerver.compose.palette.components.descriptions.PDescriptions as PDescriptionsImpl
+import xyz.junerver.compose.palette.components.descriptions.DescriptionsDefaults as DescriptionsDefaultsImpl
+import xyz.junerver.compose.palette.components.descriptions.DescriptionItem as DescriptionItemImpl
+
+import xyz.junerver.compose.palette.components.statistic.PStatistic as PStatisticImpl
+import xyz.junerver.compose.palette.components.statistic.StatisticDefaults as StatisticDefaultsImpl
+import xyz.junerver.compose.palette.components.statistic.TrendType as TrendTypeImpl
+
+import xyz.junerver.compose.palette.components.tree.PTree as PTreeImpl
+import xyz.junerver.compose.palette.components.tree.TreeDefaults as TreeDefaultsImpl
+import xyz.junerver.compose.palette.components.tree.TreeNode as TreeNodeImpl
+
+import xyz.junerver.compose.palette.components.timeline.PTimeline as PTimelineImpl
+import xyz.junerver.compose.palette.components.timeline.TimelineDefaults as TimelineDefaultsImpl
+import xyz.junerver.compose.palette.components.timeline.TimelineItemData as TimelineItemDataImpl
+
+import xyz.junerver.compose.palette.components.image.PImage as PImageImpl
+import xyz.junerver.compose.palette.components.image.ImageDefaults as ImageDefaultsImpl
+
+import xyz.junerver.compose.palette.components.list.PList as PListImpl
+import xyz.junerver.compose.palette.components.list.ListDefaults as ListDefaultsImpl
+
+import xyz.junerver.compose.palette.components.table.PTable as PTableImpl
+import xyz.junerver.compose.palette.components.table.TableDefaults as TableDefaultsImpl
+import xyz.junerver.compose.palette.components.table.TableColors as TableColorsImpl
+import xyz.junerver.compose.palette.components.table.ColumnConfig as ColumnConfigImpl
+
 // Core - Tokens
 typealias PaletteColors = PaletteColorsImpl
 typealias PaletteSemanticColors = PaletteSemanticColorsImpl
@@ -147,4 +200,65 @@ typealias ToastState = ToastStateImpl
 
 // Components - Skeleton
 val SkeletonDefaults = SkeletonDefaultsImpl
+
+// Components - Pagination
+val PaginationDefaults = PaginationDefaultsImpl
+typealias PaginationColors = PaginationColorsImpl
+
+// Components - Empty
+val EmptyDefaults = EmptyDefaultsImpl
+
+// Components - Card
+val CardDefaults = CardDefaultsImpl
+typealias CardColors = CardColorsImpl
+typealias CardVariant = CardVariantImpl
+
+// Components - Tag
+val TagDefaults = TagDefaultsImpl
+typealias TagColors = TagColorsImpl
+typealias TagVariant = TagVariantImpl
+
+// Components - Avatar
+val AvatarDefaults = AvatarDefaultsImpl
+typealias AvatarSize = AvatarSizeImpl
+
+// Components - Collapse
+val CollapseDefaults = CollapseDefaultsImpl
+typealias CollapseItemData = CollapseItemDataImpl
+
+// Components - Descriptions
+val DescriptionsDefaults = DescriptionsDefaultsImpl
+typealias DescriptionItem = DescriptionItemImpl
+
+// Components - Statistic
+val StatisticDefaults = StatisticDefaultsImpl
+typealias TrendType = TrendTypeImpl
+
+// Components - Tree
+val TreeDefaults = TreeDefaultsImpl
+typealias TreeNode<T> = TreeNodeImpl<T>
+
+// Components - Timeline
+val TimelineDefaults = TimelineDefaultsImpl
+typealias TimelineItemData = TimelineItemDataImpl
+
+// Components - Image
+val ImageDefaults = ImageDefaultsImpl
+
+// Components - List
+val ListDefaults = ListDefaultsImpl
+
+// Components - Table
+val TableDefaults = TableDefaultsImpl
+typealias TableColors = TableColorsImpl
+typealias ColumnConfig<T> = ColumnConfigImpl<T>
+
+// Components - Carousel
+// val CarouselDefaults = CarouselDefaultsImpl
+
+
+// Components - Carousel (commented out - not implemented yet)
+// typealias PCarousel = PCarouselImpl
+// typealias CarouselDefaults = CarouselDefaultsImpl
+
 
