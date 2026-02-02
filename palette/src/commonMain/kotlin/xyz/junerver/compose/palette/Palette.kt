@@ -81,6 +81,9 @@ import xyz.junerver.compose.palette.components.tag.PTag as PTagImpl
 import xyz.junerver.compose.palette.components.tag.TagDefaults as TagDefaultsImpl
 import xyz.junerver.compose.palette.components.tag.TagColors as TagColorsImpl
 import xyz.junerver.compose.palette.components.tag.TagVariant as TagVariantImpl
+import xyz.junerver.compose.palette.components.tag.TagSize as TagSizeImpl
+import xyz.junerver.compose.palette.components.tag.TagSizeTokens as TagSizeTokensImpl
+import xyz.junerver.compose.palette.components.tag.PEditableTagGroup as PEditableTagGroupImpl
 
 import xyz.junerver.compose.palette.components.avatar.PAvatar as PAvatarImpl
 import xyz.junerver.compose.palette.components.avatar.AvatarDefaults as AvatarDefaultsImpl
@@ -217,6 +220,8 @@ typealias CardVariant = CardVariantImpl
 val TagDefaults = TagDefaultsImpl
 typealias TagColors = TagColorsImpl
 typealias TagVariant = TagVariantImpl
+typealias TagSize = TagSizeImpl
+typealias TagSizeTokens = TagSizeTokensImpl
 
 // Components - Avatar
 val AvatarDefaults = AvatarDefaultsImpl

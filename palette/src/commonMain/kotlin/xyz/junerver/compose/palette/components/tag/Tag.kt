@@ -20,7 +20,7 @@ import androidx.compose.ui.unit.dp
 import xyz.junerver.compose.palette.core.theme.PaletteTheme
 
 enum class TagVariant {
-    Default, Outlined
+    Default, Outlined, Soft
 }
 
 @Composable
@@ -28,18 +28,21 @@ fun PTag(
     text: String,
     modifier: Modifier = Modifier,
     variant: TagVariant = TagVariant.Default,
+    size: TagSize = TagSize.Medium,
     closable: Boolean = false,
     onClose: (() -> Unit)? = null,
     onClick: (() -> Unit)? = null,
     colors: TagColors = when (variant) {
         TagVariant.Default -> TagDefaults.defaultColors()
         TagVariant.Outlined -> TagDefaults.outlinedColors()
+        TagVariant.Soft -> TagDefaults.defaultColors()
     }
 ) {
-    val shape = RoundedCornerShape(TagDefaults.CornerRadius)
+    val sizeTokens = TagDefaults.sizeTokens(size)
+    val shape = RoundedCornerShape(sizeTokens.cornerRadius)
     
     Surface(
-        modifier = modifier.height(TagDefaults.Height),
+        modifier = modifier.height(sizeTokens.height),
         shape = shape,
         color = colors.containerColor,
         contentColor = colors.contentColor,
@@ -49,24 +52,24 @@ fun PTag(
         onClick = onClick ?: {}
     ) {
         Row(
-            modifier = Modifier.padding(horizontal = TagDefaults.HorizontalPadding),
+            modifier = Modifier.padding(horizontal = sizeTokens.horizontalPadding),
             horizontalArrangement = Arrangement.spacedBy(4.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
                 text = text,
-                style = PaletteTheme.typography.body
+                style = PaletteTheme.typography.body.copy(fontSize = sizeTokens.fontSize)
             )
             
             if (closable && onClose != null) {
                 IconButton(
                     onClick = onClose,
-                    modifier = Modifier.size(TagDefaults.CloseButtonSize)
+                    modifier = Modifier.size(sizeTokens.closeButtonSize)
                 ) {
                     Icon(
                         imageVector = Icons.Default.Close,
                         contentDescription = "Close",
-                        modifier = Modifier.size(14.dp)
+                        modifier = Modifier.size(sizeTokens.closeButtonSize * 0.7f)
                     )
                 }
             }
