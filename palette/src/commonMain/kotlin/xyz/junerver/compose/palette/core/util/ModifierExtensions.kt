@@ -13,3 +13,15 @@ fun Modifier.noRippleClickable(onClick: () -> Unit): Modifier = composed {
         onClick = onClick
     )
 }
+
+fun Modifier.clickableWithoutRipple(enabled: Boolean = true, onClick: () -> Unit): Modifier = composed {
+    if (enabled) {
+        clickable(
+            interactionSource = remember { MutableInteractionSource() },
+            indication = null,
+            onClick = onClick
+        )
+    } else {
+        this
+    }
+}

@@ -41,7 +41,7 @@ private fun AppContent(
     darkTheme: Boolean,
     onThemeToggle: () -> Unit
 ) {
-    var selectedRoute by rememberSaveable { mutableStateOf("checkbox") }
+    var selectedRoute by rememberSaveable { mutableStateOf("button") }
 
     Scaffold(
         bottomBar = {
@@ -82,9 +82,19 @@ private fun MainContent(route: String) {
     ) { targetRoute ->
         Box(modifier = Modifier.fillMaxSize()) {
             when (targetRoute) {
+                NavItem.Button.route -> ButtonDemo()
                 NavItem.Checkbox.route -> CheckboxDemo()
+                NavItem.Radio.route -> RadioDemo()
+                NavItem.Switch.route -> SwitchDemo()
+                NavItem.Slider.route -> SliderDemo()
                 NavItem.TextField.route -> TextFieldDemo()
+                NavItem.Rate.route -> RateDemo()
+                NavItem.Loading.route -> LoadingDemo()
+                NavItem.Progress.route -> ProgressDemo()
                 NavItem.Badge.route -> BadgeDemo()
+                NavItem.Dialog.route -> DialogDemo()
+                NavItem.Toast.route -> ToastDemo()
+                NavItem.Skeleton.route -> SkeletonDemo()
                 NavItem.Toolbar.route -> ToolbarDemo()
                 NavItem.RowLayout.route -> RowLayoutDemo()
                 NavItem.BorderBox.route -> BorderBoxDemo()

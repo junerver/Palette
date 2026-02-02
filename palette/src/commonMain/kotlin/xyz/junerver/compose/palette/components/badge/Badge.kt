@@ -67,7 +67,7 @@ fun PBadge(
                     }
                 }
                 .offset(x = offsetX, y = offsetY)
-                .clip(if (localWidth > resolvedSize) RoundedCornerShape(20.dp) else CircleShape)
+                .clip(if (localWidth > resolvedSize) RoundedCornerShape(999.dp) else CircleShape)
                 .background(color)
                 .padding(horizontal = if (localWidth > resolvedSize && content != null) 6.dp else 0.dp),
             contentAlignment = Alignment.Center

@@ -49,6 +49,22 @@ import xyz.junerver.compose.palette.components.screen.Screen as ScreenImpl
 import xyz.junerver.compose.palette.components.screen.ScreenColors as ScreenColorsImpl
 import xyz.junerver.compose.palette.components.screen.ScreenDefaults as ScreenDefaultsImpl
 
+import xyz.junerver.compose.palette.components.loading.LoadingDefaults as LoadingDefaultsImpl
+import xyz.junerver.compose.palette.components.progress.ProgressDefaults as ProgressDefaultsImpl
+import xyz.junerver.compose.palette.components.button.ButtonType as ButtonTypeImpl
+import xyz.junerver.compose.palette.components.button.ButtonSize as ButtonSizeImpl
+import xyz.junerver.compose.palette.components.button.ButtonDefaults as ButtonDefaultsImpl
+import xyz.junerver.compose.palette.components.radio.RadioDefaults as RadioDefaultsImpl
+import xyz.junerver.compose.palette.components.switch.SwitchDefaults as SwitchDefaultsImpl
+import xyz.junerver.compose.palette.components.slider.SliderDefaults as SliderDefaultsImpl
+import xyz.junerver.compose.palette.components.rate.RateDefaults as RateDefaultsImpl
+import xyz.junerver.compose.palette.components.dialog.DialogDefaults as DialogDefaultsImpl
+import xyz.junerver.compose.palette.components.dialog.DialogState as DialogStateImpl
+import xyz.junerver.compose.palette.components.toast.ToastDefaults as ToastDefaultsImpl
+import xyz.junerver.compose.palette.components.toast.ToastIcon as ToastIconImpl
+import xyz.junerver.compose.palette.components.toast.ToastState as ToastStateImpl
+import xyz.junerver.compose.palette.components.skeleton.SkeletonDefaults as SkeletonDefaultsImpl
+
 // Core - Tokens
 typealias PaletteColors = PaletteColorsImpl
 typealias PaletteSemanticColors = PaletteSemanticColorsImpl
@@ -96,4 +112,39 @@ val LocalPlatformActivity = LocalPlatformActivityImpl
 typealias PlatformActivity = PlatformActivityImpl
 typealias ScreenColors = ScreenColorsImpl
 typealias ScreenDefaults = ScreenDefaultsImpl
+
+// Components - Loading
+val LoadingDefaults = LoadingDefaultsImpl
+
+// Components - Progress
+val ProgressDefaults = ProgressDefaultsImpl
+
+// Components - Button
+typealias ButtonType = ButtonTypeImpl
+typealias ButtonSize = ButtonSizeImpl
+val ButtonDefaults = ButtonDefaultsImpl
+
+// Components - Radio
+val RadioDefaults = RadioDefaultsImpl
+
+// Components - Switch
+val SwitchDefaults = SwitchDefaultsImpl
+
+// Components - Slider
+val SliderDefaults = SliderDefaultsImpl
+
+// Components - Rate
+val RateDefaults = RateDefaultsImpl
+
+// Components - Dialog
+val DialogDefaults = DialogDefaultsImpl
+typealias DialogState = DialogStateImpl
+
+// Components - Toast
+val ToastDefaults = ToastDefaultsImpl
+typealias ToastIcon = ToastIconImpl
+typealias ToastState = ToastStateImpl
+
+// Components - Skeleton
+val SkeletonDefaults = SkeletonDefaultsImpl
 

@@ -8,12 +8,12 @@ import xyz.junerver.compose.palette.core.spec.ComponentSize
 import xyz.junerver.compose.palette.core.util.PaletteDefaults
 
 object BadgeDefaults {
-    val Size: Dp = 10.dp
+    val Size: Dp = 16.dp
 
     fun size(size: ComponentSize): Dp = when (size) {
-        ComponentSize.Small -> 8.dp
-        ComponentSize.Medium -> 10.dp
-        ComponentSize.Large -> 14.dp
+        ComponentSize.Small -> 12.dp
+        ComponentSize.Medium -> 16.dp
+        ComponentSize.Large -> 20.dp
     }
 
     @Composable
