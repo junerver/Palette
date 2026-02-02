@@ -1,8 +1,9 @@
 package xyz.junerver.compose.palette.demo
 
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
@@ -10,23 +11,20 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import xyz.junerver.compose.palette.components.CodeBlock
-import xyz.junerver.compose.palette.components.table.ColumnConfig
+import xyz.junerver.compose.hooks.usetable.core.column
+import xyz.junerver.compose.hooks.usetable.state.PaginationState
 import xyz.junerver.compose.palette.components.table.PTable
+import xyz.junerver.compose.palette.core.theme.PaletteTheme
 
-data class Person(val name: String, val age: Int, val address: String)
-
-private val demoData = listOf(
-    Person("John Brown", 32, "New York No. 1 Lake Park"),
-    Person("Jim Green", 42, "London No. 1 Bridge Street"),
-    Person("Joe Black", 32, "Sidney No. 1 Lake Park"),
-    Person("Jim Red", 32, "London No. 2 Lake Park")
+data class Person(
+    val id: String,
+    val name: String,
+    val age: Int,
+    val email: String,
+    val department: String
 )
 
 @Composable
@@ -35,163 +33,338 @@ fun TableDemo() {
         modifier = Modifier
             .fillMaxSize()
             .verticalScroll(rememberScrollState())
-            .padding(24.dp)
+            .padding(16.dp),
+        verticalArrangement = Arrangement.spacedBy(32.dp)
     ) {
         Text(
-            text = "PTable",
-            style = MaterialTheme.typography.headlineMedium
+            text = "Table Component Examples",
+            style = MaterialTheme.typography.headlineLarge,
+            fontWeight = FontWeight.Bold
+        )
+
+        // Example 1: Basic Table
+        BasicTableExample()
+
+        // Example 2: Sortable Table
+        SortableTableExample()
+
+        // Example 3: Table with Row Selection
+        SelectableTableExample()
+
+        // Example 4: Table with Pagination
+        PaginatedTableExample()
+
+        // Example 5: Full-Featured Table
+        FullFeaturedTableExample()
+    }
+}
+
+/**
+ * Example 1: Basic Table
+ * Demonstrates the simplest usage with minimal configuration.
+ */
+@Composable
+private fun BasicTableExample() {
+    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        Text(
+            text = "1. Basic Table",
+            style = MaterialTheme.typography.headlineMedium,
+            fontWeight = FontWeight.Bold
         )
         Text(
-            text = "用于展示行列数据。",
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
+            text = "Simple table with no interactions",
+            style = MaterialTheme.typography.bodyMedium
         )
 
-        Spacer(modifier = Modifier.height(32.dp))
+        val data = listOf(
+            Person("1", "Alice", 28, "alice@example.com", "Engineering"),
+            Person("2", "Bob", 32, "bob@example.com", "Marketing"),
+            Person("3", "Charlie", 25, "charlie@example.com", "Design")
+        )
 
-        // 1. 基础表格
-        DemoSection(title = "基础用法") {
-            val columns = remember {
-                listOf(
-                    ColumnConfig<Person>(title = "Name", width = 120.dp) { Text(it.name) },
-                    ColumnConfig(title = "Age", width = 80.dp) { Text(it.age.toString()) },
-                    ColumnConfig(title = "Address") { Text(it.address) }
-                )
+        val columns = listOf(
+            column<Person, String>(
+                id = "name",
+                header = "Name",
+                accessorFn = { it.name }
+            ),
+            column<Person, Int>(
+                id = "age",
+                header = "Age",
+                accessorFn = { it.age }
+            ),
+            column<Person, String>(
+                id = "department",
+                header = "Department",
+                accessorFn = { it.department }
+            )
+        )
+
+        PTable(
+            data = data,
+            columns = columns,
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(300.dp)
+        )
+    }
+}
+
+/**
+ * Example 2: Sortable Table
+ * Demonstrates automatic sorting with useTable.
+ * Click column headers to sort - no manual state management needed!
+ */
+@Composable
+private fun SortableTableExample() {
+    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        Text(
+            text = "2. Sortable Table",
+            style = MaterialTheme.typography.headlineMedium,
+            fontWeight = FontWeight.Bold
+        )
+        Text(
+            text = "Click column headers to sort (automatic sorting by useTable)",
+            style = MaterialTheme.typography.bodyMedium
+        )
+
+        val data = listOf(
+            Person("1", "Alice", 28, "alice@example.com", "Engineering"),
+            Person("2", "Bob", 32, "bob@example.com", "Marketing"),
+            Person("3", "Charlie", 25, "charlie@example.com", "Design"),
+            Person("4", "David", 35, "david@example.com", "Engineering"),
+            Person("5", "Eve", 29, "eve@example.com", "Marketing")
+        )
+
+        val columns = listOf(
+            column<Person, String>(
+                id = "name",
+                header = "Name",
+                accessorFn = { it.name },
+                enableSorting = true
+            ),
+            column<Person, Int>(
+                id = "age",
+                header = "Age",
+                accessorFn = { it.age },
+                enableSorting = true
+            ),
+            column<Person, String>(
+                id = "email",
+                header = "Email",
+                accessorFn = { it.email },
+                enableSorting = true
+            ),
+            column<Person, String>(
+                id = "department",
+                header = "Department",
+                accessorFn = { it.department },
+                enableSorting = true
+            )
+        )
+
+        PTable(
+            data = data,
+            columns = columns,
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(300.dp),
+            optionsOf = {
+                enableSorting = true
             }
+        )
+    }
+}
 
-            PTable(
-                data = demoData,
-                columns = columns,
-                modifier = Modifier.height(250.dp)
+/**
+ * Example 3: Table with Row Selection
+ * Demonstrates row selection with checkboxes.
+ * useTable automatically manages selection state!
+ */
+@Composable
+private fun SelectableTableExample() {
+    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        Text(
+            text = "3. Selectable Table",
+            style = MaterialTheme.typography.headlineMedium,
+            fontWeight = FontWeight.Bold
+        )
+        Text(
+            text = "Click rows or checkboxes to select (automatic selection by useTable)",
+            style = MaterialTheme.typography.bodyMedium
+        )
+
+        val data = listOf(
+            Person("1", "Alice", 28, "alice@example.com", "Engineering"),
+            Person("2", "Bob", 32, "bob@example.com", "Marketing"),
+            Person("3", "Charlie", 25, "charlie@example.com", "Design"),
+            Person("4", "David", 35, "david@example.com", "Engineering")
+        )
+
+        val columns = listOf(
+            column<Person, String>(
+                id = "name",
+                header = "Name",
+                accessorFn = { it.name }
+            ),
+            column<Person, Int>(
+                id = "age",
+                header = "Age",
+                accessorFn = { it.age }
+            ),
+            column<Person, String>(
+                id = "department",
+                header = "Department",
+                accessorFn = { it.department }
+            )
+        )
+
+        PTable(
+            data = data,
+            columns = columns,
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(300.dp),
+            optionsOf = {
+                enableRowSelection = true
+            }
+        )
+    }
+}
+
+/**
+ * Example 4: Table with Pagination
+ * Demonstrates automatic pagination with useTable.
+ */
+@Composable
+private fun PaginatedTableExample() {
+    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        Text(
+            text = "4. Paginated Table",
+            style = MaterialTheme.typography.headlineMedium,
+            fontWeight = FontWeight.Bold
+        )
+        Text(
+            text = "Automatic pagination (5 items per page)",
+            style = MaterialTheme.typography.bodyMedium
+        )
+
+        val data = (1..20).map {
+            Person(
+                id = it.toString(),
+                name = "Person $it",
+                age = 20 + (it % 30),
+                email = "person$it@example.com",
+                department = listOf("Engineering", "Marketing", "Design", "Sales")[it % 4]
             )
         }
 
-        Spacer(modifier = Modifier.height(16.dp))
-
-        CodeBlock(
-            code = """
-            val columns = listOf(
-                ColumnConfig<Person>(title = "Name", width = 120.dp) { Text(it.name) },
-                ColumnConfig(title = "Age", width = 80.dp) { Text(it.age.toString()) },
-                ColumnConfig(title = "Address") { Text(it.address) }
+        val columns = listOf(
+            column<Person, String>(
+                id = "name",
+                header = "Name",
+                accessorFn = { it.name }
+            ),
+            column<Person, Int>(
+                id = "age",
+                header = "Age",
+                accessorFn = { it.age }
+            ),
+            column<Person, String>(
+                id = "email",
+                header = "Email",
+                accessorFn = { it.email }
+            ),
+            column<Person, String>(
+                id = "department",
+                header = "Department",
+                accessorFn = { it.department }
             )
-
-            PTable(
-                data = data,
-                columns = columns
-            )
-            """.trimIndent()
         )
 
-        Spacer(modifier = Modifier.height(32.dp))
+        PTable(
+            data = data,
+            columns = columns,
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(400.dp),
+            optionsOf = {
+                enablePagination = true
+                pageSize = 5
+            },
+            showPagination = true
+        )
+    }
+}
 
-        // 2. 可排序表格
-        DemoSection(title = "可排序") {
-            var sortColumn by remember { mutableStateOf<Int?>(null) }
-            var sortAscending by remember { mutableStateOf(true) }
-            
-            // 根据排序状态处理数据
-            val sortedData = remember(sortColumn, sortAscending) {
-                if (sortColumn == null) demoData else {
-                    val comparator = when (sortColumn) {
-                        0 -> compareBy<Person> { it.name }
-                        1 -> compareBy { it.age }
-                        else -> compareBy { it.address }
-                    }
-                    if (sortAscending) demoData.sortedWith(comparator)
-                    else demoData.sortedWith(comparator).reversed()
-                }
-            }
-
-            val columns = remember {
-                listOf(
-                    ColumnConfig<Person>(title = "Name", width = 120.dp, sortable = true) { Text(it.name) },
-                    ColumnConfig(title = "Age", width = 80.dp, sortable = true) { Text(it.age.toString()) },
-                    ColumnConfig(title = "Address", sortable = true) { Text(it.address) }
-                )
-            }
-
-            PTable(
-                data = sortedData,
-                columns = columns,
-                sortColumn = sortColumn,
-                sortAscending = sortAscending,
-                onSortChange = { col, asc ->
-                    sortColumn = col
-                    sortAscending = asc
-                },
-                modifier = Modifier.height(250.dp)
-            )
-        }
-        
-        Spacer(modifier = Modifier.height(16.dp))
-
-        CodeBlock(
-            code = """
-            var sortColumn by remember { mutableStateOf<Int?>(null) }
-            var sortAscending by remember { mutableStateOf(true) }
-            
-            PTable(
-                data = sortedData,
-                columns = columns, // set sortable = true in ColumnConfig
-                sortColumn = sortColumn,
-                sortAscending = sortAscending,
-                onSortChange = { col, asc ->
-                    sortColumn = col
-                    sortAscending = asc
-                }
-            )
-            """.trimIndent()
+/**
+ * Example 5: Full-Featured Table
+ * Demonstrates all features combined: sorting + selection + pagination.
+ * This shows the power of useTable - all features work together seamlessly!
+ */
+@Composable
+private fun FullFeaturedTableExample() {
+    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        Text(
+            text = "5. Full-Featured Table",
+            style = MaterialTheme.typography.headlineMedium,
+            fontWeight = FontWeight.Bold
+        )
+        Text(
+            text = "Sorting + Selection + Pagination (all features enabled)",
+            style = MaterialTheme.typography.bodyMedium
         )
 
-        Spacer(modifier = Modifier.height(32.dp))
-
-        // 3. 可选择表格
-        DemoSection(title = "可选择") {
-            var selectedItems by remember { mutableStateOf(emptySet<Person>()) }
-            
-            val columns = remember {
-                listOf(
-                    ColumnConfig<Person>(title = "Name", width = 120.dp) { Text(it.name) },
-                    ColumnConfig(title = "Age", width = 80.dp) { Text(it.age.toString()) },
-                    ColumnConfig(title = "Address") { Text(it.address) }
-                )
-            }
-
-            Column {
-                Text(
-                    text = "Selected: ${selectedItems.size} items",
-                    style = MaterialTheme.typography.bodySmall,
-                    modifier = Modifier.padding(bottom = 8.dp)
-                )
-                
-                PTable(
-                    data = demoData,
-                    columns = columns,
-                    selectable = true,
-                    multiSelect = true,
-                    selectedItems = selectedItems,
-                    onSelectionChange = { selectedItems = it },
-                    modifier = Modifier.height(250.dp)
-                )
-            }
-        }
-        
-        Spacer(modifier = Modifier.height(16.dp))
-
-        CodeBlock(
-            code = """
-            var selectedItems by remember { mutableStateOf(emptySet<Person>()) }
-            
-            PTable(
-                data = data,
-                columns = columns,
-                selectable = true,
-                multiSelect = true,
-                selectedItems = selectedItems,
-                onSelectionChange = { selectedItems = it }
+        val data = (1..50).map {
+            Person(
+                id = it.toString(),
+                name = "Employee $it",
+                age = 22 + (it % 40),
+                email = "employee$it@company.com",
+                department = listOf("Engineering", "Marketing", "Design", "Sales", "HR")[it % 5]
             )
-            """.trimIndent()
+        }
+
+        val columns = listOf(
+            column<Person, String>(
+                id = "name",
+                header = "Name",
+                accessorFn = { it.name },
+                enableSorting = true
+            ),
+            column<Person, Int>(
+                id = "age",
+                header = "Age",
+                accessorFn = { it.age },
+                enableSorting = true
+            ),
+            column<Person, String>(
+                id = "email",
+                header = "Email",
+                accessorFn = { it.email },
+                enableSorting = true
+            ),
+            column<Person, String>(
+                id = "department",
+                header = "Department",
+                accessorFn = { it.department },
+                enableSorting = true
+            )
+        )
+
+        PTable(
+            data = data,
+            columns = columns,
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(500.dp),
+            optionsOf = {
+                enableSorting = true
+                enableRowSelection = true
+                enablePagination = true
+                pageSize = 10
+            },
+            showPagination = true
         )
     }
 }

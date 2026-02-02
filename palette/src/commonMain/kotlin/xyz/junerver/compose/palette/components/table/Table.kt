@@ -24,119 +24,141 @@ import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import xyz.junerver.compose.hooks.usetable.TableHolder
+import xyz.junerver.compose.hooks.usetable.TableOptions
+import xyz.junerver.compose.hooks.usetable.core.ColumnDef
+import xyz.junerver.compose.hooks.usetable.Table as HeadlessTable
+import xyz.junerver.compose.hooks.usetable.useTable
 import xyz.junerver.compose.palette.core.theme.PaletteTheme
 
-data class ColumnConfig<T>(
-    val title: String,
-    val width: Dp? = null,
-    val sortable: Boolean = false,
-    val render: @Composable (T) -> Unit
-)
-
+/**
+ * Primary PTable component that accepts a TableHolder from useTable.
+ *
+ * This component provides a Material Design 3 styled table UI that integrates
+ * with ComposeHooks' headless table implementation.
+ *
+ * @param table TableHolder instance from useTable hook
+ * @param modifier Modifier to be applied to the table
+ * @param colors Color scheme for the table
+ * @param emptyContent Content to display when table has no data
+ * @param showPagination Whether to show pagination controls
+ */
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun <T> PTable(
-    data: List<T>,
-    columns: List<ColumnConfig<T>>,
+    table: TableHolder<T>,
     modifier: Modifier = Modifier,
-    selectable: Boolean = false,
-    multiSelect: Boolean = false,
-    selectedItems: Set<T> = emptySet(),
-    onSelectionChange: (Set<T>) -> Unit = {},
-    sortColumn: Int? = null,
-    sortAscending: Boolean = true,
-    onSortChange: (Int, Boolean) -> Unit = { _, _ -> },
+    colors: TableColors = TableDefaults.colors(),
     emptyContent: (@Composable () -> Unit)? = null,
-    colors: TableColors = TableDefaults.colors()
+    showPagination: Boolean = true
 ) {
-    val selectAll = remember(data, selectedItems) {
-        data.isNotEmpty() && selectedItems.containsAll(data)
-    }
+    val columns = table.columns.value
+    val state = table.state.value
+    val density = LocalDensity.current
 
     LazyColumn(modifier = modifier) {
+        // Header
         stickyHeader {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(TableDefaults.HeaderHeight)
-                    .background(colors.headerContainerColor),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                if (selectable) {
-                    Box(
+            HeadlessTable(table = table) {
+                TableHeader { _, _ ->
+                    Row(
                         modifier = Modifier
-                            .width(48.dp)
-                            .fillMaxHeight(),
-                        contentAlignment = Alignment.Center
+                            .fillMaxWidth()
+                            .height(TableDefaults.HeaderHeight)
+                            .background(colors.headerContainerColor),
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
-                        if (multiSelect) {
-                            Checkbox(
-                                checked = selectAll,
-                                onCheckedChange = { checked ->
-                                    if (checked) onSelectionChange(data.toSet())
-                                    else onSelectionChange(emptySet())
-                                },
-                                colors = CheckboxDefaults.colors(
-                                    checkedColor = colors.headerContentColor,
-                                    uncheckedColor = colors.headerContentColor,
-                                    checkmarkColor = colors.headerContainerColor
-                                )
-                            )
-                        }
-                    }
-                }
+                        // Selection checkbox column
+                        if (state.rowSelection.selectedRowIds.isNotEmpty() || table.rowModel.value.totalRows > 0) {
+                            val selectedCount = state.rowSelection.selectedRowIds.size
+                            val totalCount = table.rowModel.value.totalRows
+                            val isAllSelected = selectedCount == totalCount && totalCount > 0
 
-                columns.forEachIndexed { index, column ->
-                    Box(
-                        modifier = Modifier
-                            .then(
-                                if (column.width != null) Modifier.width(column.width!!)
-                                else Modifier.weight(1f)
-                            )
-                            .fillMaxHeight()
-                            .clickable(enabled = column.sortable) {
-                                val newAscending = if (sortColumn == index) !sortAscending else true
-                                onSortChange(index, newAscending)
-                            }
-                            .padding(horizontal = TableDefaults.CellContentPadding),
-                        contentAlignment = Alignment.CenterStart
-                    ) {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(4.dp)
-                        ) {
-                            Text(
-                                text = column.title,
-                                style = PaletteTheme.typography.title,
-                                color = colors.headerContentColor,
-                                maxLines = 1,
-                                overflow = TextOverflow.Ellipsis
-                            )
-                            if (sortColumn == index) {
-                                Icon(
-                                    imageVector = if (sortAscending) Icons.Filled.ArrowDropUp else Icons.Filled.ArrowDropDown,
-                                    contentDescription = null,
-                                    tint = colors.headerContentColor,
-                                    modifier = Modifier.height(16.dp)
+                            Box(
+                                modifier = Modifier
+                                    .width(48.dp)
+                                    .fillMaxHeight(),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Checkbox(
+                                    checked = isAllSelected,
+                                    onCheckedChange = { checked ->
+                                        table.toggleAllRowsSelection(checked)
+                                    },
+                                    colors = CheckboxDefaults.colors(
+                                        checkedColor = colors.headerContentColor,
+                                        uncheckedColor = colors.headerContentColor,
+                                        checkmarkColor = colors.headerContainerColor
+                                    )
                                 )
                             }
                         }
+
+                        // Column headers
+                        columns.forEach { column ->
+                            val sortingState = state.sorting.sorting.firstOrNull { it.columnId == column.id }
+                            val isSorted = sortingState != null
+                            val isSortable = column.enableSorting
+
+                            val columnWidth = state.columnSizing.columnSizing[column.id]
+                            val widthModifier = if (columnWidth != null) {
+                                with(density) { Modifier.width(columnWidth.toDp()) }
+                            } else {
+                                Modifier.weight(1f)
+                            }
+
+                            Box(
+                                modifier = Modifier
+                                    .then(widthModifier)
+                                    .fillMaxHeight()
+                                    .clickable(enabled = isSortable) {
+                                        table.toggleSorting(column.id, null)
+                                    }
+                                    .padding(horizontal = TableDefaults.CellContentPadding),
+                                contentAlignment = Alignment.CenterStart
+                            ) {
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(4.dp)
+                                ) {
+                                    Text(
+                                        text = column.header,
+                                        style = PaletteTheme.typography.title,
+                                        color = colors.headerContentColor,
+                                        maxLines = 1,
+                                        overflow = TextOverflow.Ellipsis
+                                    )
+                                    if (isSorted) {
+                                        Icon(
+                                            imageVector = if (!sortingState.desc)
+                                                Icons.Filled.ArrowDropUp
+                                            else
+                                                Icons.Filled.ArrowDropDown,
+                                            contentDescription = null,
+                                            tint = colors.headerContentColor,
+                                            modifier = Modifier.height(16.dp)
+                                        )
+                                    }
+                                }
+                            }
+                        }
                     }
+                    HorizontalDivider(
+                        thickness = TableDefaults.DividerThickness,
+                        color = colors.dividerColor
+                    )
                 }
             }
-            HorizontalDivider(
-                thickness = TableDefaults.DividerThickness,
-                color = colors.dividerColor
-            )
         }
 
-        if (data.isEmpty()) {
+        // Body
+        val rows = table.rowModel.value.rows
+        if (rows.isEmpty()) {
             if (emptyContent != null) {
                 item {
                     Box(
@@ -148,25 +170,24 @@ fun <T> PTable(
                 }
             }
         } else {
-            items(data, key = { it.hashCode() }) { item ->
-                val isSelected = selectedItems.contains(item)
+            items(rows, key = { it.id }) { row ->
+                val isSelected = state.rowSelection.selectedRowIds.contains(row.id)
 
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(TableDefaults.RowHeight)
-                        .background(if (isSelected) colors.selectedRowContainerColor else colors.rowContainerColor)
-                        .clickable(enabled = selectable) {
-                            val newSelection = if (multiSelect) {
-                                if (isSelected) selectedItems - item else selectedItems + item
-                            } else {
-                                if (isSelected) emptySet() else setOf(item)
-                            }
-                            onSelectionChange(newSelection)
+                        .background(
+                            if (isSelected) colors.selectedRowContainerColor
+                            else colors.rowContainerColor
+                        )
+                        .clickable {
+                            table.toggleRowSelection(row.id)
                         },
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    if (selectable) {
+                    // Selection checkbox
+                    if (state.rowSelection.selectedRowIds.isNotEmpty() || table.rowModel.value.totalRows > 0) {
                         Box(
                             modifier = Modifier
                                 .width(48.dp)
@@ -175,13 +196,8 @@ fun <T> PTable(
                         ) {
                             Checkbox(
                                 checked = isSelected,
-                                onCheckedChange = { checked ->
-                                    val newSelection = if (multiSelect) {
-                                        if (checked) selectedItems + item else selectedItems - item
-                                    } else {
-                                        if (checked) setOf(item) else emptySet()
-                                    }
-                                    onSelectionChange(newSelection)
+                                onCheckedChange = {
+                                    table.toggleRowSelection(row.id)
                                 },
                                 colors = CheckboxDefaults.colors(
                                     checkedColor = colors.selectedRowContentColor,
@@ -192,21 +208,34 @@ fun <T> PTable(
                         }
                     }
 
+                    // Cells
                     columns.forEach { column ->
+                        val columnWidth = state.columnSizing.columnSizing[column.id]
+                        val widthModifier = if (columnWidth != null) {
+                            with(density) { Modifier.width(columnWidth.toDp()) }
+                        } else {
+                            Modifier.weight(1f)
+                        }
+
                         Box(
                             modifier = Modifier
-                                .then(
-                                    if (column.width != null) Modifier.width(column.width)
-                                    else Modifier.weight(1f)
-                                )
+                                .then(widthModifier)
                                 .fillMaxHeight()
                                 .padding(horizontal = TableDefaults.CellContentPadding),
                             contentAlignment = Alignment.CenterStart
                         ) {
                             CompositionLocalProvider(
-                                LocalContentColor provides if (isSelected) colors.selectedRowContentColor else colors.rowContentColor
+                                LocalContentColor provides
+                                    if (isSelected) colors.selectedRowContentColor
+                                    else colors.rowContentColor
                             ) {
-                                column.render(item)
+                                val cellValue = row.getValue(column)
+                                Text(
+                                    text = cellValue?.toString().orEmpty(),
+                                    style = PaletteTheme.typography.body,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis
+                                )
                             }
                         }
                     }
@@ -217,5 +246,81 @@ fun <T> PTable(
                 )
             }
         }
+
+        // Pagination
+        if (showPagination && state.pagination.pageSize > 0) {
+            item {
+                HeadlessTable(table = table) {
+                    TablePagination { paginationScope ->
+                        PTablePagination(
+                            paginationScope = paginationScope,
+                            colors = colors,
+                            onPreviousPage = { table.previousPage() },
+                            onNextPage = { table.nextPage() }
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
+/**
+ * Convenience overload that creates TableHolder internally using useTable.
+ *
+ * @param data List of data items to display
+ * @param columns Column definitions
+ * @param modifier Modifier to be applied to the table
+ * @param optionsOf Configuration block for table options
+ * @param colors Color scheme for the table
+ * @param emptyContent Content to display when table has no data
+ * @param showPagination Whether to show pagination controls
+ */
+@Composable
+fun <T> PTable(
+    data: List<T>,
+    columns: List<ColumnDef<T, *>>,
+    modifier: Modifier = Modifier,
+    optionsOf: TableOptions<T>.() -> Unit = {},
+    colors: TableColors = TableDefaults.colors(),
+    emptyContent: (@Composable () -> Unit)? = null,
+    showPagination: Boolean = true
+) {
+    val table = useTable(
+        data = data,
+        columns = columns,
+        optionsOf = optionsOf
+    )
+
+    PTable(
+        table = table,
+        modifier = modifier,
+        colors = colors,
+        emptyContent = emptyContent,
+        showPagination = showPagination
+    )
+}
+
+@Composable
+private fun PTablePagination(
+    paginationScope: xyz.junerver.compose.hooks.usetable.PaginationScope,
+    colors: TableColors,
+    onPreviousPage: () -> Unit,
+    onNextPage: () -> Unit
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(56.dp)
+            .background(colors.headerContainerColor)
+            .padding(horizontal = TableDefaults.CellContentPadding),
+        horizontalArrangement = Arrangement.End,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(
+            text = "Page ${paginationScope.pageIndex + 1} of ${paginationScope.pageCount}",
+            style = PaletteTheme.typography.body,
+            color = colors.headerContentColor
+        )
     }
 }

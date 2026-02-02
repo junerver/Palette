@@ -2,124 +2,77 @@
 
 package xyz.junerver.compose.palette
 
-import xyz.junerver.compose.palette.core.tokens.PaletteColors as PaletteColorsImpl
-import xyz.junerver.compose.palette.core.tokens.PaletteSemanticColors as PaletteSemanticColorsImpl
-import xyz.junerver.compose.palette.core.tokens.PaletteShapes as PaletteShapesImpl
-import xyz.junerver.compose.palette.core.tokens.PaletteSpacing as PaletteSpacingImpl
-import xyz.junerver.compose.palette.core.tokens.PaletteTypography as PaletteTypographyImpl
-import xyz.junerver.compose.palette.core.theme.LocalPaletteColors as LocalPaletteColorsImpl
-import xyz.junerver.compose.palette.core.theme.LocalPaletteShapes as LocalPaletteShapesImpl
-import xyz.junerver.compose.palette.core.theme.LocalPaletteSpacing as LocalPaletteSpacingImpl
-import xyz.junerver.compose.palette.core.theme.LocalPaletteTypography as LocalPaletteTypographyImpl
-import xyz.junerver.compose.palette.core.theme.LocalPaletteDarkTheme as LocalPaletteDarkThemeImpl
-import xyz.junerver.compose.palette.core.theme.PaletteTheme as PaletteThemeImpl
-import xyz.junerver.compose.palette.core.theme.PaletteMaterialTheme as PaletteMaterialThemeImpl
-
+import xyz.junerver.compose.palette.components.avatar.AvatarDefaults as AvatarDefaultsImpl
+import xyz.junerver.compose.palette.components.avatar.AvatarSize as AvatarSizeImpl
+import xyz.junerver.compose.palette.components.badge.BadgeDefaults as BadgeDefaultsImpl
+import xyz.junerver.compose.palette.components.button.ButtonDefaults as ButtonDefaultsImpl
+import xyz.junerver.compose.palette.components.button.ButtonSize as ButtonSizeImpl
+import xyz.junerver.compose.palette.components.button.ButtonType as ButtonTypeImpl
+import xyz.junerver.compose.palette.components.card.CardColors as CardColorsImpl
+import xyz.junerver.compose.palette.components.card.CardDefaults as CardDefaultsImpl
+import xyz.junerver.compose.palette.components.card.CardVariant as CardVariantImpl
+import xyz.junerver.compose.palette.components.checkbox.CheckboxDefaults as CheckboxDefaultsImpl
+import xyz.junerver.compose.palette.components.collapse.CollapseDefaults as CollapseDefaultsImpl
+import xyz.junerver.compose.palette.components.collapse.CollapseItemData as CollapseItemDataImpl
+import xyz.junerver.compose.palette.components.descriptions.DescriptionItem as DescriptionItemImpl
+import xyz.junerver.compose.palette.components.descriptions.DescriptionsDefaults as DescriptionsDefaultsImpl
+import xyz.junerver.compose.palette.components.dialog.DialogDefaults as DialogDefaultsImpl
+import xyz.junerver.compose.palette.components.dialog.DialogState as DialogStateImpl
+import xyz.junerver.compose.palette.components.empty.EmptyDefaults as EmptyDefaultsImpl
+import xyz.junerver.compose.palette.components.image.ImageDefaults as ImageDefaultsImpl
+import xyz.junerver.compose.palette.components.list.ListDefaults as ListDefaultsImpl
+import xyz.junerver.compose.palette.components.loading.LoadingDefaults as LoadingDefaultsImpl
+import xyz.junerver.compose.palette.components.pagination.PaginationColors as PaginationColorsImpl
+import xyz.junerver.compose.palette.components.pagination.PaginationDefaults as PaginationDefaultsImpl
+import xyz.junerver.compose.palette.components.progress.ProgressDefaults as ProgressDefaultsImpl
+import xyz.junerver.compose.palette.components.radio.RadioDefaults as RadioDefaultsImpl
+import xyz.junerver.compose.palette.components.rate.RateDefaults as RateDefaultsImpl
+import xyz.junerver.compose.palette.components.screen.LocalPlatformActivity as LocalPlatformActivityImpl
+import xyz.junerver.compose.palette.components.screen.PlatformActivity as PlatformActivityImpl
+import xyz.junerver.compose.palette.components.screen.ScreenColors as ScreenColorsImpl
+import xyz.junerver.compose.palette.components.screen.ScreenDefaults as ScreenDefaultsImpl
+import xyz.junerver.compose.palette.components.skeleton.SkeletonDefaults as SkeletonDefaultsImpl
+import xyz.junerver.compose.palette.components.slider.SliderDefaults as SliderDefaultsImpl
+import xyz.junerver.compose.palette.components.statistic.StatisticDefaults as StatisticDefaultsImpl
+import xyz.junerver.compose.palette.components.statistic.TrendType as TrendTypeImpl
+import xyz.junerver.compose.palette.components.switch.SwitchDefaults as SwitchDefaultsImpl
+import xyz.junerver.compose.palette.components.table.TableColors as TableColorsImpl
+import xyz.junerver.compose.palette.components.table.TableDefaults as TableDefaultsImpl
+import xyz.junerver.compose.palette.components.tag.TagColors as TagColorsImpl
+import xyz.junerver.compose.palette.components.tag.TagDefaults as TagDefaultsImpl
+import xyz.junerver.compose.palette.components.tag.TagSize as TagSizeImpl
+import xyz.junerver.compose.palette.components.tag.TagSizeTokens as TagSizeTokensImpl
+import xyz.junerver.compose.palette.components.tag.TagVariant as TagVariantImpl
+import xyz.junerver.compose.palette.components.textfield.BorderTextFieldColors as BorderTextFieldColorsImpl
+import xyz.junerver.compose.palette.components.textfield.TextFieldDefaults as TextFieldDefaultsImpl
+import xyz.junerver.compose.palette.components.timeline.TimelineDefaults as TimelineDefaultsImpl
+import xyz.junerver.compose.palette.components.timeline.TimelineItemData as TimelineItemDataImpl
+import xyz.junerver.compose.palette.components.toast.ToastDefaults as ToastDefaultsImpl
+import xyz.junerver.compose.palette.components.toast.ToastIcon as ToastIconImpl
+import xyz.junerver.compose.palette.components.toast.ToastState as ToastStateImpl
+import xyz.junerver.compose.palette.components.toolbar.ToolbarColors as ToolbarColorsImpl
+import xyz.junerver.compose.palette.components.toolbar.ToolbarDefaults as ToolbarDefaultsImpl
+import xyz.junerver.compose.palette.components.tree.TreeDefaults as TreeDefaultsImpl
+import xyz.junerver.compose.palette.components.tree.TreeNode as TreeNodeImpl
 import xyz.junerver.compose.palette.core.spec.ComponentInteraction as ComponentInteractionImpl
 import xyz.junerver.compose.palette.core.spec.ComponentSize as ComponentSizeImpl
 import xyz.junerver.compose.palette.core.spec.ComponentState as ComponentStateImpl
 import xyz.junerver.compose.palette.core.spec.ComponentStatus as ComponentStatusImpl
 import xyz.junerver.compose.palette.core.spec.rememberComponentInteraction as rememberComponentInteractionImpl
-
-import xyz.junerver.compose.palette.core.util.noRippleClickable as noRippleClickableImpl
+import xyz.junerver.compose.palette.core.theme.LocalPaletteColors as LocalPaletteColorsImpl
+import xyz.junerver.compose.palette.core.theme.LocalPaletteDarkTheme as LocalPaletteDarkThemeImpl
+import xyz.junerver.compose.palette.core.theme.LocalPaletteShapes as LocalPaletteShapesImpl
+import xyz.junerver.compose.palette.core.theme.LocalPaletteSpacing as LocalPaletteSpacingImpl
+import xyz.junerver.compose.palette.core.theme.LocalPaletteTypography as LocalPaletteTypographyImpl
+import xyz.junerver.compose.palette.core.theme.PaletteMaterialTheme as PaletteMaterialThemeImpl
+import xyz.junerver.compose.palette.core.theme.PaletteTheme as PaletteThemeImpl
+import xyz.junerver.compose.palette.core.tokens.PaletteColors as PaletteColorsImpl
+import xyz.junerver.compose.palette.core.tokens.PaletteSemanticColors as PaletteSemanticColorsImpl
+import xyz.junerver.compose.palette.core.tokens.PaletteShapes as PaletteShapesImpl
+import xyz.junerver.compose.palette.core.tokens.PaletteSpacing as PaletteSpacingImpl
+import xyz.junerver.compose.palette.core.tokens.PaletteTypography as PaletteTypographyImpl
 import xyz.junerver.compose.palette.core.util.PaletteDefaults as PaletteDefaultsImpl
-
-import xyz.junerver.compose.palette.foundation.border.BorderContainer as BorderContainerImpl
 import xyz.junerver.compose.palette.foundation.border.BorderContainerDefaults as BorderContainerDefaultsImpl
-
-import xyz.junerver.compose.palette.foundation.layout.CenterVerticallyRow as CenterVerticallyRowImpl
-
-import xyz.junerver.compose.palette.components.badge.BadgeDefaults as BadgeDefaultsImpl
-import xyz.junerver.compose.palette.components.badge.PBadge as PBadgeImpl
-
-import xyz.junerver.compose.palette.components.checkbox.CheckboxDefaults as CheckboxDefaultsImpl
-import xyz.junerver.compose.palette.components.checkbox.ColoredCheckBox as ColoredCheckBoxImpl
-
-import xyz.junerver.compose.palette.components.textfield.BorderTextField as BorderTextFieldImpl
-import xyz.junerver.compose.palette.components.textfield.BorderTextFieldColors as BorderTextFieldColorsImpl
-import xyz.junerver.compose.palette.components.textfield.TextFieldDefaults as TextFieldDefaultsImpl
-
-import xyz.junerver.compose.palette.components.toolbar.Toolbar as ToolbarImpl
-import xyz.junerver.compose.palette.components.toolbar.ToolbarColors as ToolbarColorsImpl
-import xyz.junerver.compose.palette.components.toolbar.ToolbarDefaults as ToolbarDefaultsImpl
-
-import xyz.junerver.compose.palette.components.screen.LocalPlatformActivity as LocalPlatformActivityImpl
-import xyz.junerver.compose.palette.components.screen.PlatformActivity as PlatformActivityImpl
-import xyz.junerver.compose.palette.components.screen.Screen as ScreenImpl
-import xyz.junerver.compose.palette.components.screen.ScreenColors as ScreenColorsImpl
-import xyz.junerver.compose.palette.components.screen.ScreenDefaults as ScreenDefaultsImpl
-
-import xyz.junerver.compose.palette.components.loading.LoadingDefaults as LoadingDefaultsImpl
-import xyz.junerver.compose.palette.components.progress.ProgressDefaults as ProgressDefaultsImpl
-import xyz.junerver.compose.palette.components.button.ButtonType as ButtonTypeImpl
-import xyz.junerver.compose.palette.components.button.ButtonSize as ButtonSizeImpl
-import xyz.junerver.compose.palette.components.button.ButtonDefaults as ButtonDefaultsImpl
-import xyz.junerver.compose.palette.components.radio.RadioDefaults as RadioDefaultsImpl
-import xyz.junerver.compose.palette.components.switch.SwitchDefaults as SwitchDefaultsImpl
-import xyz.junerver.compose.palette.components.slider.SliderDefaults as SliderDefaultsImpl
-import xyz.junerver.compose.palette.components.rate.RateDefaults as RateDefaultsImpl
-import xyz.junerver.compose.palette.components.dialog.DialogDefaults as DialogDefaultsImpl
-import xyz.junerver.compose.palette.components.dialog.DialogState as DialogStateImpl
-import xyz.junerver.compose.palette.components.toast.ToastDefaults as ToastDefaultsImpl
-import xyz.junerver.compose.palette.components.toast.ToastIcon as ToastIconImpl
-import xyz.junerver.compose.palette.components.toast.ToastState as ToastStateImpl
-import xyz.junerver.compose.palette.components.skeleton.SkeletonDefaults as SkeletonDefaultsImpl
-
-import xyz.junerver.compose.palette.components.pagination.PPagination as PPaginationImpl
-import xyz.junerver.compose.palette.components.pagination.PaginationDefaults as PaginationDefaultsImpl
-import xyz.junerver.compose.palette.components.pagination.PaginationColors as PaginationColorsImpl
-
-import xyz.junerver.compose.palette.components.empty.PEmpty as PEmptyImpl
-import xyz.junerver.compose.palette.components.empty.EmptyDefaults as EmptyDefaultsImpl
-
-import xyz.junerver.compose.palette.components.card.PCard as PCardImpl
-import xyz.junerver.compose.palette.components.card.CardDefaults as CardDefaultsImpl
-import xyz.junerver.compose.palette.components.card.CardColors as CardColorsImpl
-import xyz.junerver.compose.palette.components.card.CardVariant as CardVariantImpl
-
-import xyz.junerver.compose.palette.components.tag.PTag as PTagImpl
-import xyz.junerver.compose.palette.components.tag.TagDefaults as TagDefaultsImpl
-import xyz.junerver.compose.palette.components.tag.TagColors as TagColorsImpl
-import xyz.junerver.compose.palette.components.tag.TagVariant as TagVariantImpl
-import xyz.junerver.compose.palette.components.tag.TagSize as TagSizeImpl
-import xyz.junerver.compose.palette.components.tag.TagSizeTokens as TagSizeTokensImpl
-import xyz.junerver.compose.palette.components.tag.PEditableTagGroup as PEditableTagGroupImpl
-
-import xyz.junerver.compose.palette.components.avatar.PAvatar as PAvatarImpl
-import xyz.junerver.compose.palette.components.avatar.AvatarDefaults as AvatarDefaultsImpl
-import xyz.junerver.compose.palette.components.avatar.AvatarSize as AvatarSizeImpl
-
-import xyz.junerver.compose.palette.components.collapse.PCollapse as PCollapseImpl
-import xyz.junerver.compose.palette.components.collapse.PCollapseItem as PCollapseItemImpl
-import xyz.junerver.compose.palette.components.collapse.CollapseDefaults as CollapseDefaultsImpl
-import xyz.junerver.compose.palette.components.collapse.CollapseItemData as CollapseItemDataImpl
-
-import xyz.junerver.compose.palette.components.descriptions.PDescriptions as PDescriptionsImpl
-import xyz.junerver.compose.palette.components.descriptions.DescriptionsDefaults as DescriptionsDefaultsImpl
-import xyz.junerver.compose.palette.components.descriptions.DescriptionItem as DescriptionItemImpl
-
-import xyz.junerver.compose.palette.components.statistic.PStatistic as PStatisticImpl
-import xyz.junerver.compose.palette.components.statistic.StatisticDefaults as StatisticDefaultsImpl
-import xyz.junerver.compose.palette.components.statistic.TrendType as TrendTypeImpl
-
-import xyz.junerver.compose.palette.components.tree.PTree as PTreeImpl
-import xyz.junerver.compose.palette.components.tree.TreeDefaults as TreeDefaultsImpl
-import xyz.junerver.compose.palette.components.tree.TreeNode as TreeNodeImpl
-
-import xyz.junerver.compose.palette.components.timeline.PTimeline as PTimelineImpl
-import xyz.junerver.compose.palette.components.timeline.TimelineDefaults as TimelineDefaultsImpl
-import xyz.junerver.compose.palette.components.timeline.TimelineItemData as TimelineItemDataImpl
-
-import xyz.junerver.compose.palette.components.image.PImage as PImageImpl
-import xyz.junerver.compose.palette.components.image.ImageDefaults as ImageDefaultsImpl
-
-import xyz.junerver.compose.palette.components.list.PList as PListImpl
-import xyz.junerver.compose.palette.components.list.ListDefaults as ListDefaultsImpl
-
-import xyz.junerver.compose.palette.components.table.PTable as PTableImpl
-import xyz.junerver.compose.palette.components.table.TableDefaults as TableDefaultsImpl
-import xyz.junerver.compose.palette.components.table.TableColors as TableColorsImpl
-import xyz.junerver.compose.palette.components.table.ColumnConfig as ColumnConfigImpl
 
 // Core - Tokens
 typealias PaletteColors = PaletteColorsImpl
@@ -256,7 +209,6 @@ val ListDefaults = ListDefaultsImpl
 // Components - Table
 val TableDefaults = TableDefaultsImpl
 typealias TableColors = TableColorsImpl
-typealias ColumnConfig<T> = ColumnConfigImpl<T>
 
 // Components - Carousel
 // val CarouselDefaults = CarouselDefaultsImpl
