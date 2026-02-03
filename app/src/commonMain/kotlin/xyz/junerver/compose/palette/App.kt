@@ -78,6 +78,7 @@ private fun MainContent(route: String) {
                 NavItem.Slider.route -> SliderDemo()
                 NavItem.TextField.route -> TextFieldDemo()
                 NavItem.Rate.route -> RateDemo()
+                NavItem.Form.route -> FormDemo()
                 NavItem.Loading.route -> LoadingDemo()
                 NavItem.Progress.route -> ProgressDemo()
                 NavItem.Badge.route -> BadgeDemo()

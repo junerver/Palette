@@ -17,6 +17,7 @@ sealed class NavItem(
     data object Slider : NavItem("slider", "滑块", Icons.Default.LinearScale, ComponentCategory.FORM)
     data object TextField : NavItem("textfield", "输入框", Icons.Default.Edit, ComponentCategory.FORM)
     data object Rate : NavItem("rate", "评分", Icons.Default.Star, ComponentCategory.FORM)
+    data object Form : NavItem("form", "表单", Icons.Default.Assignment, ComponentCategory.FORM)
     data object Loading : NavItem("loading", "加载", Icons.Default.Refresh, ComponentCategory.FEEDBACK)
     data object Progress : NavItem("progress", "进度条", Icons.Default.TrendingUp, ComponentCategory.FEEDBACK)
     data object Badge : NavItem("badge", "徽章", Icons.Filled.Label, ComponentCategory.FEEDBACK)
@@ -49,7 +50,7 @@ sealed class NavItem(
 
     companion object {
         val all = listOf(
-            Button, Checkbox, Radio, Switch, Slider, TextField, Rate,
+            Button, Checkbox, Radio, Switch, Slider, TextField, Rate, Form,
             Loading, Progress, Badge, Dialog, Toast, Skeleton,
             Toolbar,
             RowLayout, BorderBox,

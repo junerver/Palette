@@ -55,6 +55,9 @@ import xyz.junerver.compose.palette.components.toolbar.ToolbarColors as ToolbarC
 import xyz.junerver.compose.palette.components.toolbar.ToolbarDefaults as ToolbarDefaultsImpl
 import xyz.junerver.compose.palette.components.tree.TreeDefaults as TreeDefaultsImpl
 import xyz.junerver.compose.palette.components.tree.TreeNode as TreeNodeImpl
+import xyz.junerver.compose.palette.components.form.FormDefaults as FormDefaultsImpl
+import xyz.junerver.compose.palette.components.form.FormLayout as FormLayoutImpl
+import xyz.junerver.compose.palette.components.form.FormLabelPosition as FormLabelPositionImpl
 import xyz.junerver.compose.palette.core.spec.ComponentInteraction as ComponentInteractionImpl
 import xyz.junerver.compose.palette.core.spec.ComponentSize as ComponentSizeImpl
 import xyz.junerver.compose.palette.core.spec.ComponentState as ComponentStateImpl
@@ -219,5 +222,10 @@ typealias TableScrollBehavior = TableScrollBehaviorImpl
 // Components - Carousel (commented out - not implemented yet)
 // typealias PCarousel = PCarouselImpl
 // typealias CarouselDefaults = CarouselDefaultsImpl
+
+// Components - Form
+val FormDefaults = FormDefaultsImpl
+typealias FormLayout = FormLayoutImpl
+typealias FormLabelPosition = FormLabelPositionImpl
 
 
