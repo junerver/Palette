@@ -43,6 +43,7 @@ Palette/
 ./gradlew build                      # 构建全项目
 ./gradlew :palette:build             # 仅构建组件库
 ./gradlew :app:run                   # 运行 Desktop 应用
+./gradlew :app:hotRunDesktop         # 通过 hotrun 插件运行支持热更新的 Desktop 应用
 ./gradlew :app:installDebug          # 安装 Android Debug 包
 ./gradlew :palette:allTests          # 运行组件库全部测试
 ./gradlew :palette:desktopTest       # 运行 Desktop 测试
@@ -62,6 +63,7 @@ Palette/
 ### 组件结构
 
 每个组件目录应包含：
+
 - `Xxx.kt` - 组件实现
 - `XxxDefaults.kt` - 默认值定义
 

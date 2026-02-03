@@ -5,6 +5,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -44,6 +45,7 @@ import xyz.junerver.compose.palette.core.theme.PaletteTheme
  *
  * @param table TableHolder instance from useTable hook
  * @param modifier Modifier to be applied to the table
+ * @param scrollBehavior Controls how the table handles scrolling
  * @param colors Color scheme for the table
  * @param emptyContent Content to display when table has no data
  * @param showPagination Whether to show pagination controls
@@ -53,6 +55,7 @@ import xyz.junerver.compose.palette.core.theme.PaletteTheme
 fun <T> PTable(
     table: TableHolder<T>,
     modifier: Modifier = Modifier,
+    scrollBehavior: TableScrollBehavior = TableScrollBehavior.Scrollable,
     colors: TableColors = TableDefaults.colors(),
     emptyContent: (@Composable () -> Unit)? = null,
     showPagination: Boolean = true
@@ -61,7 +64,18 @@ fun <T> PTable(
     val state = table.state.value
     val density = LocalDensity.current
 
-    LazyColumn(modifier = modifier) {
+    if (scrollBehavior == TableScrollBehavior.Embedded) {
+        // Embedded mode: Use Column for compatibility with scrollable parents
+        Column(modifier = modifier) {
+            TableHeaderSection(table, columns, state, density, colors)
+            TableBodySection(table, columns, state, density, colors, emptyContent)
+            if (showPagination && state.pagination.pageSize > 0) {
+                TablePaginationSection(table, colors)
+            }
+        }
+    } else {
+        // Scrollable/FixedHeight mode: Use LazyColumn for performance
+        LazyColumn(modifier = modifier) {
         // Header
         stickyHeader {
             HeadlessTable(table = table) {
@@ -263,6 +277,7 @@ fun <T> PTable(
             }
         }
     }
+    }
 }
 
 /**
@@ -271,6 +286,7 @@ fun <T> PTable(
  * @param data List of data items to display
  * @param columns Column definitions
  * @param modifier Modifier to be applied to the table
+ * @param scrollBehavior Controls how the table handles scrolling
  * @param optionsOf Configuration block for table options
  * @param colors Color scheme for the table
  * @param emptyContent Content to display when table has no data
@@ -281,6 +297,7 @@ fun <T> PTable(
     data: List<T>,
     columns: List<ColumnDef<T, *>>,
     modifier: Modifier = Modifier,
+    scrollBehavior: TableScrollBehavior = TableScrollBehavior.Scrollable,
     optionsOf: TableOptions<T>.() -> Unit = {},
     colors: TableColors = TableDefaults.colors(),
     emptyContent: (@Composable () -> Unit)? = null,
@@ -295,10 +312,236 @@ fun <T> PTable(
     PTable(
         table = table,
         modifier = modifier,
+        scrollBehavior = scrollBehavior,
         colors = colors,
         emptyContent = emptyContent,
         showPagination = showPagination
     )
+}
+
+/**
+ * Shared table header section for both LazyColumn and Column implementations.
+ */
+@Composable
+private fun <T> TableHeaderSection(
+    table: TableHolder<T>,
+    columns: List<xyz.junerver.compose.hooks.usetable.core.ColumnDef<T, *>>,
+    state: xyz.junerver.compose.hooks.usetable.state.TableState<T>,
+    density: androidx.compose.ui.unit.Density,
+    colors: TableColors
+) {
+    HeadlessTable(table = table) {
+        TableHeader { _, _ ->
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(TableDefaults.HeaderHeight)
+                    .background(colors.headerContainerColor),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                // Selection checkbox column
+                if (state.rowSelection.selectedRowIds.isNotEmpty() || table.rowModel.value.totalRows > 0) {
+                    val selectedCount = state.rowSelection.selectedRowIds.size
+                    val totalCount = table.rowModel.value.totalRows
+                    val isAllSelected = selectedCount == totalCount && totalCount > 0
+
+                    Box(
+                        modifier = Modifier
+                            .width(48.dp)
+                            .fillMaxHeight(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Checkbox(
+                            checked = isAllSelected,
+                            onCheckedChange = { checked ->
+                                table.toggleAllRowsSelection(checked)
+                            },
+                            colors = CheckboxDefaults.colors(
+                                checkedColor = colors.headerContentColor,
+                                uncheckedColor = colors.headerContentColor,
+                                checkmarkColor = colors.headerContainerColor
+                            )
+                        )
+                    }
+                }
+
+                // Column headers
+                columns.forEach { column ->
+                    val sortingState = state.sorting.sorting.firstOrNull { it.columnId == column.id }
+                    val isSorted = sortingState != null
+                    val isSortable = column.enableSorting
+
+                    val columnWidth = state.columnSizing.columnSizing[column.id]
+                    val widthModifier = if (columnWidth != null) {
+                        with(density) { Modifier.width(columnWidth.toDp()) }
+                    } else {
+                        Modifier.weight(1f)
+                    }
+
+                    Box(
+                        modifier = Modifier
+                            .then(widthModifier)
+                            .fillMaxHeight()
+                            .clickable(enabled = isSortable) {
+                                table.toggleSorting(column.id, null)
+                            }
+                            .padding(horizontal = TableDefaults.CellContentPadding),
+                        contentAlignment = Alignment.CenterStart
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(4.dp)
+                        ) {
+                            Text(
+                                text = column.header,
+                                style = PaletteTheme.typography.title,
+                                color = colors.headerContentColor,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
+                            )
+                            if (isSorted) {
+                                Icon(
+                                    imageVector = if (!sortingState.desc)
+                                        Icons.Filled.ArrowDropUp
+                                    else
+                                        Icons.Filled.ArrowDropDown,
+                                    contentDescription = null,
+                                    tint = colors.headerContentColor,
+                                    modifier = Modifier.height(16.dp)
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+            HorizontalDivider(
+                thickness = TableDefaults.DividerThickness,
+                color = colors.dividerColor
+            )
+        }
+    }
+}
+
+/**
+ * Shared table body section for both LazyColumn and Column implementations.
+ */
+@Composable
+private fun <T> TableBodySection(
+    table: TableHolder<T>,
+    columns: List<xyz.junerver.compose.hooks.usetable.core.ColumnDef<T, *>>,
+    state: xyz.junerver.compose.hooks.usetable.state.TableState<T>,
+    density: androidx.compose.ui.unit.Density,
+    colors: TableColors,
+    emptyContent: (@Composable () -> Unit)?
+) {
+    val rows = table.rowModel.value.rows
+    
+    if (rows.isEmpty()) {
+        if (emptyContent != null) {
+            Box(
+                modifier = Modifier.fillMaxWidth().padding(32.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                emptyContent()
+            }
+        }
+    } else {
+        rows.forEach { row ->
+            val isSelected = state.rowSelection.selectedRowIds.contains(row.id)
+
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(TableDefaults.RowHeight)
+                    .background(
+                        if (isSelected) colors.selectedRowContainerColor
+                        else colors.rowContainerColor
+                    )
+                    .clickable {
+                        table.toggleRowSelection(row.id)
+                    },
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                // Selection checkbox
+                if (state.rowSelection.selectedRowIds.isNotEmpty() || table.rowModel.value.totalRows > 0) {
+                    Box(
+                        modifier = Modifier
+                            .width(48.dp)
+                            .fillMaxHeight(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Checkbox(
+                            checked = isSelected,
+                            onCheckedChange = {
+                                table.toggleRowSelection(row.id)
+                            },
+                            colors = CheckboxDefaults.colors(
+                                checkedColor = colors.selectedRowContentColor,
+                                uncheckedColor = colors.rowContentColor,
+                                checkmarkColor = colors.selectedRowContainerColor
+                            )
+                        )
+                    }
+                }
+
+                // Cells
+                columns.forEach { column ->
+                    val columnWidth = state.columnSizing.columnSizing[column.id]
+                    val widthModifier = if (columnWidth != null) {
+                        with(density) { Modifier.width(columnWidth.toDp()) }
+                    } else {
+                        Modifier.weight(1f)
+                    }
+
+                    Box(
+                        modifier = Modifier
+                            .then(widthModifier)
+                            .fillMaxHeight()
+                            .padding(horizontal = TableDefaults.CellContentPadding),
+                        contentAlignment = Alignment.CenterStart
+                    ) {
+                        CompositionLocalProvider(
+                            LocalContentColor provides
+                                if (isSelected) colors.selectedRowContentColor
+                                else colors.rowContentColor
+                        ) {
+                            val cellValue = row.getValue(column)
+                            Text(
+                                text = cellValue?.toString().orEmpty(),
+                                style = PaletteTheme.typography.body,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
+                            )
+                        }
+                    }
+                }
+            }
+            HorizontalDivider(
+                thickness = TableDefaults.DividerThickness,
+                color = colors.dividerColor
+            )
+        }
+    }
+}
+
+/**
+ * Shared table pagination section for both LazyColumn and Column implementations.
+ */
+@Composable
+private fun <T> TablePaginationSection(
+    table: TableHolder<T>,
+    colors: TableColors
+) {
+    HeadlessTable(table = table) {
+        TablePagination { paginationScope ->
+            PTablePagination(
+                paginationScope = paginationScope,
+                colors = colors,
+                onPreviousPage = { table.previousPage() },
+                onNextPage = { table.nextPage() }
+            )
+        }
+    }
 }
 
 @Composable

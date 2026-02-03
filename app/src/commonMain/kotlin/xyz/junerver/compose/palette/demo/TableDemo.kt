@@ -11,12 +11,14 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import xyz.junerver.compose.hooks.usetable.core.column
 import xyz.junerver.compose.hooks.usetable.state.PaginationState
 import xyz.junerver.compose.palette.components.table.PTable
+import xyz.junerver.compose.palette.components.table.TableScrollBehavior
 import xyz.junerver.compose.palette.core.theme.PaletteTheme
 
 data class Person(
@@ -56,6 +58,9 @@ fun TableDemo() {
 
         // Example 5: Full-Featured Table
         FullFeaturedTableExample()
+
+        // Example 6: Embedded Table (No Fixed Height Required)
+        EmbeddedTableExample()
     }
 }
 
@@ -365,6 +370,82 @@ private fun FullFeaturedTableExample() {
                 pageSize = 10
             },
             showPagination = true
+        )
+    }
+}
+
+@Composable
+private fun EmbeddedTableExample() {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 16.dp)
+    ) {
+        Text(
+            text = "Embedded Table (No Fixed Height Required)",
+            style = MaterialTheme.typography.titleMedium,
+            modifier = Modifier.padding(bottom = 8.dp)
+        )
+
+        Text(
+            text = "使用 scrollBehavior = Embedded 模式，表格可以在可滚动容器中无需固定高度。" +
+                    "为保持性能，建议启用分页（pageSize = 20）。",
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.padding(bottom = 16.dp)
+        )
+
+        val data = remember {
+            List(100) { index ->
+                Person(
+                    id = "${index + 1}",
+                    name = "User ${index + 1}",
+                    age = 20 + (index % 50),
+                    email = "user${index + 1}@example.com",
+                    department = listOf("Engineering", "Design", "Marketing", "Sales")[index % 4]
+                )
+            }
+        }
+
+        val columns = remember {
+            listOf(
+                column<Person, String>(
+                    id = "id",
+                    header = "ID",
+                    accessorFn = { it.id }
+                ),
+                column<Person, String>(
+                    id = "name",
+                    header = "Name",
+                    accessorFn = { it.name }
+                ),
+                column<Person, Int>(
+                    id = "age",
+                    header = "Age",
+                    accessorFn = { it.age }
+                ),
+                column<Person, String>(
+                    id = "email",
+                    header = "Email",
+                    accessorFn = { it.email }
+                ),
+                column<Person, String>(
+                    id = "department",
+                    header = "Department",
+                    accessorFn = { it.department }
+                )
+            )
+        }
+
+        PTable<Person>(
+            data = data,
+            columns = columns,
+            scrollBehavior = TableScrollBehavior.Embedded,
+            modifier = Modifier.fillMaxWidth(),
+            optionsOf = {
+                enablePagination = true
+                pageSize = 20
+            }
         )
     }
 }

@@ -38,6 +38,7 @@ import xyz.junerver.compose.palette.components.statistic.TrendType as TrendTypeI
 import xyz.junerver.compose.palette.components.switch.SwitchDefaults as SwitchDefaultsImpl
 import xyz.junerver.compose.palette.components.table.TableColors as TableColorsImpl
 import xyz.junerver.compose.palette.components.table.TableDefaults as TableDefaultsImpl
+import xyz.junerver.compose.palette.components.table.TableScrollBehavior as TableScrollBehaviorImpl
 import xyz.junerver.compose.palette.components.tag.TagColors as TagColorsImpl
 import xyz.junerver.compose.palette.components.tag.TagDefaults as TagDefaultsImpl
 import xyz.junerver.compose.palette.components.tag.TagSize as TagSizeImpl
@@ -209,6 +210,7 @@ val ListDefaults = ListDefaultsImpl
 // Components - Table
 val TableDefaults = TableDefaultsImpl
 typealias TableColors = TableColorsImpl
+typealias TableScrollBehavior = TableScrollBehaviorImpl
 
 // Components - Carousel
 // val CarouselDefaults = CarouselDefaultsImpl
