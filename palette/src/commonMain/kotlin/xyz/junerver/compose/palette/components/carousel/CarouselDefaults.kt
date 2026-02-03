@@ -9,6 +9,8 @@ import xyz.junerver.compose.palette.core.theme.PaletteTheme
 object CarouselDefaults {
     val Height: Dp = 200.dp
     val IndicatorSize: Dp = 8.dp
+    val ActiveIndicatorSize: Dp = 10.dp
+    val InactiveIndicatorSize: Dp = 6.dp
     val IndicatorSpacing: Dp = 8.dp
     val ArrowContainerSize: Dp = 40.dp
 

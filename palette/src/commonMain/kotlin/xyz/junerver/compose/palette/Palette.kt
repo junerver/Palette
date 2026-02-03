@@ -58,6 +58,7 @@ import xyz.junerver.compose.palette.components.tree.TreeNode as TreeNodeImpl
 import xyz.junerver.compose.palette.components.form.FormDefaults as FormDefaultsImpl
 import xyz.junerver.compose.palette.components.form.FormLayout as FormLayoutImpl
 import xyz.junerver.compose.palette.components.form.FormLabelPosition as FormLabelPositionImpl
+import xyz.junerver.compose.palette.components.carousel.CarouselDefaults as CarouselDefaultsImpl
 import xyz.junerver.compose.palette.core.spec.ComponentInteraction as ComponentInteractionImpl
 import xyz.junerver.compose.palette.core.spec.ComponentSize as ComponentSizeImpl
 import xyz.junerver.compose.palette.core.spec.ComponentState as ComponentStateImpl
@@ -216,12 +217,7 @@ typealias TableColors = TableColorsImpl
 typealias TableScrollBehavior = TableScrollBehaviorImpl
 
 // Components - Carousel
-// val CarouselDefaults = CarouselDefaultsImpl
-
-
-// Components - Carousel (commented out - not implemented yet)
-// typealias PCarousel = PCarouselImpl
-// typealias CarouselDefaults = CarouselDefaultsImpl
+val CarouselDefaults = CarouselDefaultsImpl
 
 // Components - Form
 val FormDefaults = FormDefaultsImpl
