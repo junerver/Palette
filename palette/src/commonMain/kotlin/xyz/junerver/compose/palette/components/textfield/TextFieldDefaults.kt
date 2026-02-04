@@ -8,7 +8,7 @@ import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import xyz.junerver.compose.palette.core.spec.ComponentSize
-import xyz.junerver.compose.palette.core.util.PaletteDefaults
+import xyz.junerver.compose.palette.core.theme.PaletteTheme
 
 @Immutable
 data class BorderTextFieldColors(
@@ -39,10 +39,10 @@ object TextFieldDefaults {
 
     @Composable
     fun colors(
-        textColor: Color = PaletteDefaults.colors.onSurface,
-        hintColor: Color = PaletteDefaults.colors.hint,
-        borderColor: Color = PaletteDefaults.colors.border,
-        backgroundColor: Color = PaletteDefaults.colors.surface,
+        textColor: Color = PaletteTheme.colors.onSurface,
+        hintColor: Color = PaletteTheme.colors.hint,
+        borderColor: Color = PaletteTheme.colors.border,
+        backgroundColor: Color = PaletteTheme.colors.surface,
     ): BorderTextFieldColors = BorderTextFieldColors(
         textColor = textColor,
         hintColor = hintColor,

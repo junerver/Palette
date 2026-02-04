@@ -4,7 +4,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import xyz.junerver.compose.palette.core.util.PaletteDefaults
+import xyz.junerver.compose.palette.core.theme.PaletteTheme
 
 enum class AvatarSize(val size: Dp) {
     Small(24.dp),
@@ -15,8 +15,8 @@ enum class AvatarSize(val size: Dp) {
 
 object AvatarDefaults {
     @Composable
-    fun backgroundColor(): Color = PaletteDefaults.colors.primary
+    fun backgroundColor(): Color = PaletteTheme.colors.primary
 
     @Composable
-    fun textColor(): Color = PaletteDefaults.colors.onPrimary
+    fun textColor(): Color = PaletteTheme.colors.onPrimary
 }

@@ -1,5 +1,7 @@
 package xyz.junerver.compose.palette.core.theme
 
+import androidx.compose.material3.LocalContentColor
+import androidx.compose.material3.LocalTextStyle
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.ReadOnlyComposable
@@ -30,6 +32,8 @@ fun PaletteTheme(
         LocalPaletteShapes provides shapes,
         LocalPaletteTypography provides typography,
         LocalPaletteDarkTheme provides darkTheme,
+        LocalContentColor provides colors.onSurface,
+        LocalTextStyle provides typography.body,
         content = content
     )
 }

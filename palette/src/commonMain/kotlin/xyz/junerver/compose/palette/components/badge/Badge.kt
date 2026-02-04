@@ -73,7 +73,7 @@ fun PBadge(
             contentAlignment = Alignment.Center
         ) {
             content?.let {
-                Text(text = it, color = Color.White, style = PaletteTheme.typography.label)
+                Text(text = it, color = PaletteTheme.colors.onError, style = PaletteTheme.typography.label)
             }
         }
     }

@@ -6,7 +6,7 @@ import androidx.compose.ui.graphics.Color
 import xyz.junerver.compose.palette.components.toolbar.ToolbarColors
 import xyz.junerver.compose.palette.components.toolbar.ToolbarDefaults
 import xyz.junerver.compose.palette.core.spec.ComponentStatus
-import xyz.junerver.compose.palette.core.util.PaletteDefaults
+import xyz.junerver.compose.palette.core.theme.PaletteTheme
 
 @Immutable
 data class ScreenColors(
@@ -18,14 +18,14 @@ object ScreenDefaults {
     @Composable
     fun colors(
         status: ComponentStatus = ComponentStatus.Default,
-        backgroundColor: Color = PaletteDefaults.colors.surface,
-        contentColor: Color = PaletteDefaults.colors.onSurface,
+        backgroundColor: Color = PaletteTheme.colors.surface,
+        contentColor: Color = PaletteTheme.colors.onSurface,
     ): ScreenColors = ScreenColors(
         backgroundColor = when (status) {
             ComponentStatus.Default -> backgroundColor
-            ComponentStatus.Success -> PaletteDefaults.colors.success
-            ComponentStatus.Warning -> PaletteDefaults.colors.warning
-            ComponentStatus.Error -> PaletteDefaults.colors.error
+            ComponentStatus.Success -> PaletteTheme.colors.success
+            ComponentStatus.Warning -> PaletteTheme.colors.warning
+            ComponentStatus.Error -> PaletteTheme.colors.error
         },
         contentColor = contentColor,
     )

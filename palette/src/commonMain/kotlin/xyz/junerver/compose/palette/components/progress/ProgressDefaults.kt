@@ -26,5 +26,5 @@ object ProgressDefaults {
     fun textColor(): Color = PaletteTheme.colors.onSurface
 
     @Composable
-    fun circleTextColor(): Color = PaletteTheme.colors.onPrimary
+    fun circleTextColor(): Color = PaletteTheme.colors.onSurface
 }

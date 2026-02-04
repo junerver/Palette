@@ -3,45 +3,56 @@ package xyz.junerver.compose.palette
 import androidx.compose.animation.*
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.DarkMode
 import androidx.compose.material.icons.filled.LightMode
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import xyz.junerver.compose.palette.demo.*
-import xyz.junerver.compose.palette.ui.theme.PaletteTheme
+import xyz.junerver.compose.palette.theme.*
+import xyz.junerver.compose.palette.core.theme.PaletteMaterialTheme
+import xyz.junerver.compose.palette.core.theme.PaletteTheme
+import xyz.junerver.compose.palette.core.tokens.PaletteColors
 import xyz.junerver.compose.palette.ui.theme.Primary
 
 @Composable
 fun App() {
-    var darkTheme by rememberSaveable { mutableStateOf(false) }
+    val themeMode by ThemeManager.themeMode.collectAsState()
+    val systemDark = isSystemInDarkTheme()
+    val darkTheme = isDarkTheme(themeMode, systemDark)
 
-    PaletteTheme(darkTheme = darkTheme) {
-        AppContent(
-            darkTheme = darkTheme,
-            onThemeToggle = { darkTheme = !darkTheme }
-        )
+    CompositionLocalProvider(
+        LocalThemeMode provides themeMode,
+        LocalSetThemeMode provides { ThemeManager.setThemeMode(it) }
+    ) {
+        PaletteMaterialTheme(
+            colors = if (darkTheme) PaletteColors.dark() else PaletteColors.light(),
+            darkTheme = darkTheme
+        ) {
+            AppContent(
+                themeMode = themeMode,
+                onThemeModeChange = { ThemeManager.setThemeMode(it) }
+            )
+        }
     }
 }
 
 @Composable
 private fun AppContent(
-    darkTheme: Boolean,
-    onThemeToggle: () -> Unit
+    themeMode: ThemeMode,
+    onThemeModeChange: (ThemeMode) -> Unit
 ) {
     var selectedRoute by rememberSaveable { mutableStateOf("button") }
 
@@ -49,8 +60,8 @@ private fun AppContent(
         SideNav(
             selectedRoute = selectedRoute,
             onRouteSelected = { selectedRoute = it },
-            darkTheme = darkTheme,
-            onThemeToggle = onThemeToggle
+            themeMode = themeMode,
+            onThemeModeChange = onThemeModeChange
         )
 
         Box(modifier = Modifier.fillMaxSize()) {
@@ -69,7 +80,11 @@ private fun MainContent(route: String) {
         },
         label = "content_transition"
     ) { targetRoute ->
-        Box(modifier = Modifier.fillMaxSize()) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(MaterialTheme.colorScheme.background)
+        ) {
             when (targetRoute) {
                 NavItem.Button.route -> ButtonDemo()
                 NavItem.Checkbox.route -> CheckboxDemo()
@@ -111,8 +126,8 @@ private fun MainContent(route: String) {
 private fun SideNav(
     selectedRoute: String,
     onRouteSelected: (String) -> Unit,
-    darkTheme: Boolean,
-    onThemeToggle: () -> Unit
+    themeMode: ThemeMode,
+    onThemeModeChange: (ThemeMode) -> Unit
 ) {
     Surface(
         modifier = Modifier
@@ -122,7 +137,10 @@ private fun SideNav(
         shadowElevation = 1.dp
     ) {
         Column {
-            HeaderSection(darkTheme = darkTheme, onThemeToggle = onThemeToggle)
+            HeaderSection(
+                themeMode = themeMode,
+                onThemeModeChange = onThemeModeChange
+            )
 
             NavItems(
                 selectedRoute = selectedRoute,
@@ -134,8 +152,8 @@ private fun SideNav(
 
 @Composable
 private fun HeaderSection(
-    darkTheme: Boolean,
-    onThemeToggle: () -> Unit
+    themeMode: ThemeMode,
+    onThemeModeChange: (ThemeMode) -> Unit
 ) {
     Column(modifier = Modifier.padding(24.dp)) {
         Text(
@@ -151,36 +169,93 @@ private fun HeaderSection(
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        ThemeToggle(
-            darkTheme = darkTheme,
-            onToggle = onThemeToggle
+        ThemeModeSelector(
+            themeMode = themeMode,
+            onThemeModeChange = onThemeModeChange
         )
     }
 }
 
 @Composable
-private fun ThemeToggle(
-    darkTheme: Boolean,
-    onToggle: () -> Unit
+private fun ThemeModeSelector(
+    themeMode: ThemeMode,
+    onThemeModeChange: (ThemeMode) -> Unit
 ) {
-    Row(
+    Column(
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(12.dp))
-            .clickable(onClick = onToggle)
             .background(MaterialTheme.colorScheme.surfaceVariant)
-            .padding(12.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.SpaceBetween
+            .padding(12.dp)
     ) {
         Text(
-            text = if (darkTheme) "深色模式" else "浅色模式",
-            style = MaterialTheme.typography.bodyMedium
+            text = "主题模式",
+            style = MaterialTheme.typography.labelMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
         )
+        
+        Spacer(modifier = Modifier.height(8.dp))
+        
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            ThemeModeChip(
+                label = "浅色",
+                icon = Icons.Default.LightMode,
+                selected = themeMode == ThemeMode.LIGHT,
+                onClick = { onThemeModeChange(ThemeMode.LIGHT) },
+                modifier = Modifier.weight(1f)
+            )
+            ThemeModeChip(
+                label = "深色",
+                icon = Icons.Default.DarkMode,
+                selected = themeMode == ThemeMode.DARK,
+                onClick = { onThemeModeChange(ThemeMode.DARK) },
+                modifier = Modifier.weight(1f)
+            )
+            ThemeModeChip(
+                label = "系统",
+                icon = Icons.Default.Settings,
+                selected = themeMode == ThemeMode.SYSTEM,
+                onClick = { onThemeModeChange(ThemeMode.SYSTEM) },
+                modifier = Modifier.weight(1f)
+            )
+        }
+    }
+}
+
+@Composable
+private fun ThemeModeChip(
+    label: String,
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    selected: Boolean,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val backgroundColor = if (selected) Primary else MaterialTheme.colorScheme.surface
+    val contentColor = if (selected) Color.White else MaterialTheme.colorScheme.onSurface
+    
+    Row(
+        modifier = modifier
+            .clip(RoundedCornerShape(8.dp))
+            .background(backgroundColor)
+            .clickable(onClick = onClick)
+            .padding(horizontal = 8.dp, vertical = 6.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.Center
+    ) {
         Icon(
-            imageVector = if (darkTheme) Icons.Default.DarkMode else Icons.Default.LightMode,
+            imageVector = icon,
             contentDescription = null,
-            tint = MaterialTheme.colorScheme.primary
+            tint = contentColor,
+            modifier = Modifier.size(16.dp)
+        )
+        Spacer(modifier = Modifier.width(4.dp))
+        Text(
+            text = label,
+            style = MaterialTheme.typography.labelSmall,
+            color = contentColor
         )
     }
 }
@@ -246,5 +321,3 @@ private fun NavItemRow(
         )
     }
 }
-
-

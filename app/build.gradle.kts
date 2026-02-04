@@ -40,10 +40,12 @@ kotlin {
             implementation(compose.materialIconsExtended)
             implementation(compose.ui)
             implementation(project(":palette"))
+            implementation(libs.androidx.datastore.preferences.core)
         }
 
         androidMain.dependencies {
             implementation(libs.androidx.activity.compose)
+            implementation(libs.androidx.datastore.preferences)
         }
 
         val desktopMain by getting {

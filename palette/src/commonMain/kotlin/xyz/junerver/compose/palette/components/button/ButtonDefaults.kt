@@ -44,7 +44,11 @@ object ButtonDefaults {
     }
 
     @Composable
-    fun dangerContentColor(): Color = PaletteTheme.colors.error
+    fun dangerContentColor(): Color = if (PaletteTheme.isDark) {
+        PaletteTheme.colors.onError
+    } else {
+        PaletteTheme.colors.error
+    }
 
     @Composable
     fun plainContainerColor(): Color = if (PaletteTheme.isDark) {

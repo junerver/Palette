@@ -41,6 +41,7 @@ fun TableDemo() {
         Text(
             text = "Table Component Examples",
             style = MaterialTheme.typography.headlineLarge,
+            color = MaterialTheme.colorScheme.onBackground,
             fontWeight = FontWeight.Bold
         )
 

@@ -12,6 +12,7 @@ class PaletteColors(
     val onSurface: Color = Color.Black,
     val hint: Color = Color(0xFFBFBFBF),
     val error: Color = Color(0xFFE53935),
+    val onError: Color = Color.White,
     val success: Color = Color(0xFF10B981),
     val warning: Color = Color(0xFFF59E0B),
 ) {
@@ -26,6 +27,7 @@ class PaletteColors(
             onSurface = Color.White,
             hint = Color(0xFF757575),
             error = Color(0xFFEF5350),
+            onError = Color.White,
             success = Color(0xFF4CAF50),
             warning = Color(0xFFFFB74D),
         )
@@ -41,6 +43,7 @@ class PaletteColors(
             onSurface == other.onSurface &&
             hint == other.hint &&
             error == other.error &&
+            onError == other.onError &&
             success == other.success &&
             warning == other.warning
     }
@@ -53,6 +56,7 @@ class PaletteColors(
         result = 31 * result + onSurface.hashCode()
         result = 31 * result + hint.hashCode()
         result = 31 * result + error.hashCode()
+        result = 31 * result + onError.hashCode()
         result = 31 * result + success.hashCode()
         result = 31 * result + warning.hashCode()
         return result

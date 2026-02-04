@@ -24,9 +24,5 @@ object SwitchDefaults {
     fun uncheckedTrackColor(): Color = PaletteTheme.colors.border
 
     @Composable
-    fun thumbColor(): Color = if (PaletteTheme.isDark) {
-        PaletteTheme.colors.onSurface
-    } else {
-        Color.White
-    }
+    fun thumbColor(): Color = PaletteTheme.colors.surface
 }

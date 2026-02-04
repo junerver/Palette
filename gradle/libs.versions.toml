@@ -17,6 +17,7 @@ kotlinxCoroutines = "1.10.2"
 kotlinxDatetime = "0.7.1"
 kotlinxCollectionsImmutable = "0.4.0"
 hooks = "2.2.2-beta-2"
+datastore = "1.1.7"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -48,6 +49,8 @@ kotlinx-datetime = { group = "org.jetbrains.kotlinx", name = "kotlinx-datetime",
 kotlinx-collections-immutable = { group = "org.jetbrains.kotlinx", name = "kotlinx-collections-immutable", version.ref = "kotlinxCollectionsImmutable" }
 
 hooks = { module = "xyz.junerver.compose:hooks2", version.ref = "hooks" }
+androidx-datastore-preferences-core = { group = "androidx.datastore", name = "datastore-preferences-core", version.ref = "datastore" }
+androidx-datastore-preferences = { group = "androidx.datastore", name = "datastore-preferences", version.ref = "datastore" }
 
 [plugins]
 androidApplication = { id = "com.android.application", version.ref = "agp" }

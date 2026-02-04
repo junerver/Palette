@@ -27,7 +27,11 @@ object ToastDefaults {
         Color.Black.copy(alpha = 0.7f)
     }
     @Composable
-    fun textColor(): Color = Color.White
+    fun textColor(): Color = if (PaletteTheme.isDark) {
+        PaletteTheme.colors.onSurface
+    } else {
+        Color.White
+    }
     val AnimationDuration: Int = 100
     val DefaultDuration: Long = 1500L
 }

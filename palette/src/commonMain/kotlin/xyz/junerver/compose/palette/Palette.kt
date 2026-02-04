@@ -44,6 +44,8 @@ import xyz.junerver.compose.palette.components.tag.TagDefaults as TagDefaultsImp
 import xyz.junerver.compose.palette.components.tag.TagSize as TagSizeImpl
 import xyz.junerver.compose.palette.components.tag.TagSizeTokens as TagSizeTokensImpl
 import xyz.junerver.compose.palette.components.tag.TagVariant as TagVariantImpl
+import xyz.junerver.compose.palette.components.text.PText as PTextImpl
+import xyz.junerver.compose.palette.components.text.TextDefaults as TextDefaultsImpl
 import xyz.junerver.compose.palette.components.textfield.BorderTextFieldColors as BorderTextFieldColorsImpl
 import xyz.junerver.compose.palette.components.textfield.TextFieldDefaults as TextFieldDefaultsImpl
 import xyz.junerver.compose.palette.components.timeline.TimelineDefaults as TimelineDefaultsImpl
@@ -116,6 +118,10 @@ typealias CheckboxDefaults = CheckboxDefaultsImpl
 // Components - TextField
 typealias BorderTextFieldColors = BorderTextFieldColorsImpl
 typealias TextFieldDefaults = TextFieldDefaultsImpl
+
+// Components - Text
+val PText = ::PTextImpl
+val TextDefaults = TextDefaultsImpl
 
 // Components - Toolbar
 typealias ToolbarColors = ToolbarColorsImpl
