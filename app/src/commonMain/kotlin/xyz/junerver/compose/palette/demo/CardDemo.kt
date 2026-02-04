@@ -11,6 +11,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import xyz.junerver.compose.palette.components.text.PText
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -26,11 +27,11 @@ fun CardDemo() {
             .verticalScroll(rememberScrollState())
             .padding(24.dp)
     ) {
-        Text(
+        PText(
             text = "Card",
             style = MaterialTheme.typography.headlineMedium
         )
-        Text(
+        PText(
             text = "卡片组件",
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant
@@ -42,12 +43,12 @@ fun CardDemo() {
             PCard(
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Text(
+                PText(
                     text = "Elevated Card",
                     style = MaterialTheme.typography.titleMedium
                 )
                 Spacer(modifier = Modifier.height(8.dp))
-                Text(
+                PText(
                     text = "这是默认的卡片样式，具有阴影效果，适用于需要与背景分离的内容。",
                     style = MaterialTheme.typography.bodyMedium
                 )
@@ -61,12 +62,12 @@ fun CardDemo() {
                 modifier = Modifier.fillMaxWidth(),
                 variant = CardVariant.Filled
             ) {
-                Text(
+                PText(
                     text = "Filled Card",
                     style = MaterialTheme.typography.titleMedium
                 )
                 Spacer(modifier = Modifier.height(8.dp))
-                Text(
+                PText(
                     text = "填充样式的卡片，使用表面颜色填充，视觉层级较低。",
                     style = MaterialTheme.typography.bodyMedium
                 )
@@ -80,12 +81,12 @@ fun CardDemo() {
                 modifier = Modifier.fillMaxWidth(),
                 variant = CardVariant.Outlined
             ) {
-                Text(
+                PText(
                     text = "Outlined Card",
                     style = MaterialTheme.typography.titleMedium
                 )
                 Spacer(modifier = Modifier.height(8.dp))
-                Text(
+                PText(
                     text = "描边样式的卡片，带有边框但没有阴影，适用于边界清晰的内容区域。",
                     style = MaterialTheme.typography.bodyMedium
                 )
@@ -99,12 +100,12 @@ fun CardDemo() {
                 modifier = Modifier.fillMaxWidth(),
                 onClick = { /* Handle click */ }
             ) {
-                Text(
+                PText(
                     text = "Click Me",
                     style = MaterialTheme.typography.titleMedium
                 )
                 Spacer(modifier = Modifier.height(8.dp))
-                Text(
+                PText(
                     text = "这是一个可点击的卡片，具有点击涟漪效果。",
                     style = MaterialTheme.typography.bodyMedium
                 )
@@ -113,7 +114,7 @@ fun CardDemo() {
 
         Spacer(modifier = Modifier.height(32.dp))
 
-        Text(
+        PText(
             text = "代码示例",
             style = MaterialTheme.typography.titleMedium
         )

@@ -26,7 +26,7 @@ enum class ComponentSize(
         cornerRadius = 4.dp
     ),
     Medium(
-        height = 32.dp,
+        height = 40.dp,
         fontSize = 16.sp,
         iconSize = 20.dp,
         horizontalPadding = 16.dp,

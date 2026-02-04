@@ -5,6 +5,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import xyz.junerver.compose.palette.components.text.PText
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -18,12 +19,12 @@ fun PaginationDemo() {
             .verticalScroll(rememberScrollState())
             .padding(24.dp)
     ) {
-        Text(
+        PText(
             text = "PPagination 分页器",
             style = MaterialTheme.typography.headlineMedium
         )
         Spacer(modifier = Modifier.height(8.dp))
-        Text(
+        PText(
             text = "用于数据分页的组件",
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant

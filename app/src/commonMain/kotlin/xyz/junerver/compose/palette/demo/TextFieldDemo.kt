@@ -20,6 +20,7 @@ import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import xyz.junerver.compose.palette.components.text.PText
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -43,11 +44,11 @@ fun TextFieldDemo() {
             .verticalScroll(rememberScrollState())
             .padding(24.dp)
     ) {
-        Text(
+        PText(
             text = "BorderTextField",
             style = MaterialTheme.typography.headlineMedium
         )
-        Text(
+        PText(
             text = "带边框和图标的输入框组件",
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant
@@ -140,7 +141,7 @@ fun TextFieldDemo() {
 
         Spacer(modifier = Modifier.height(32.dp))
 
-        Text(
+        PText(
             text = "代码示例",
             style = MaterialTheme.typography.titleMedium
         )

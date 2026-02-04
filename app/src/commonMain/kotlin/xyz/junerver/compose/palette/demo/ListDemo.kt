@@ -5,6 +5,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import xyz.junerver.compose.palette.components.text.PText
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
@@ -19,12 +20,12 @@ fun ListDemo() {
             .verticalScroll(rememberScrollState())
             .padding(24.dp)
     ) {
-        Text(
+        PText(
             text = "PList 列表",
             style = MaterialTheme.typography.headlineMedium
         )
         Spacer(modifier = Modifier.height(8.dp))
-        Text(
+        PText(
             text = "虚拟滚动列表组件",
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant
@@ -39,7 +40,7 @@ fun ListDemo() {
                     data = items,
                     showDivider = true
                 ) { item ->
-                    Text(
+                    PText(
                         text = item,
                         modifier = Modifier.padding(16.dp)
                     )

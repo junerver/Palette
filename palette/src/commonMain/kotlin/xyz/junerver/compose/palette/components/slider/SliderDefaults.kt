@@ -27,7 +27,7 @@ object SliderDefaults {
     fun inactiveTrackColor(): Color = PaletteTheme.colors.border
 
     @Composable
-    fun thumbColor(): Color = PaletteTheme.colors.surface
+    fun thumbColor(): Color = PaletteTheme.colors.primary
 
     @Composable
     fun labelColor(): Color = PaletteTheme.colors.onSurface

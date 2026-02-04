@@ -10,6 +10,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import xyz.junerver.compose.palette.components.text.PText
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -27,11 +28,11 @@ fun BorderBoxDemo() {
             .verticalScroll(rememberScrollState())
             .padding(24.dp)
     ) {
-        Text(
+        PText(
             text = "BorderContainer",
             style = MaterialTheme.typography.headlineMedium
         )
-        Text(
+        PText(
             text = "带边框和圆角的内容容器",
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant
@@ -41,7 +42,7 @@ fun BorderBoxDemo() {
 
         DemoSection(title = "基础用法") {
             BorderContainer {
-                Text(
+                PText(
                     text = "这是容器内容",
                     style = MaterialTheme.typography.bodyMedium
                 )
@@ -92,7 +93,7 @@ fun BorderBoxDemo() {
 
         Spacer(modifier = Modifier.height(32.dp))
 
-        Text(
+        PText(
             text = "代码示例",
             style = MaterialTheme.typography.titleMedium
         )

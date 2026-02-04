@@ -10,6 +10,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import xyz.junerver.compose.palette.components.text.PText
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -29,11 +30,11 @@ fun DialogDemo() {
             .verticalScroll(rememberScrollState())
             .padding(24.dp)
     ) {
-        Text(
+        PText(
             text = "Dialog",
             style = MaterialTheme.typography.headlineMedium
         )
-        Text(
+        PText(
             text = "对话框组件",
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant
@@ -85,7 +86,7 @@ fun DialogDemo() {
 
         Spacer(modifier = Modifier.height(32.dp))
 
-        Text(
+        PText(
             text = "代码示例",
             style = MaterialTheme.typography.titleMedium
         )

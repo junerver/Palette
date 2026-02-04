@@ -9,6 +9,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import xyz.junerver.compose.palette.components.text.PText
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
@@ -27,11 +28,11 @@ fun SliderDemo() {
             .verticalScroll(rememberScrollState())
             .padding(24.dp)
     ) {
-        Text(
+        PText(
             text = "Slider",
             style = MaterialTheme.typography.headlineMedium
         )
-        Text(
+        PText(
             text = "滑块组件",
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant
@@ -92,7 +93,7 @@ fun SliderDemo() {
 
         Spacer(modifier = Modifier.height(32.dp))
 
-        Text(
+        PText(
             text = "代码示例",
             style = MaterialTheme.typography.titleMedium
         )

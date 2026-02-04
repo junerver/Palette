@@ -13,6 +13,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import xyz.junerver.compose.palette.components.text.PText
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -29,12 +30,12 @@ fun CarouselDemo() {
             .verticalScroll(rememberScrollState())
             .padding(24.dp)
     ) {
-        Text(
+        PText(
             text = "PCarousel 轮播图",
             style = MaterialTheme.typography.headlineMedium
         )
         Spacer(modifier = Modifier.height(8.dp))
-        Text(
+        PText(
             text = "用于展示轮播内容的组件，支持自动播放、指示器、箭头导航",
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant
@@ -63,7 +64,7 @@ fun CarouselDemo() {
                         .background(color),
                     contentAlignment = Alignment.Center
                 ) {
-                    Text(
+                    PText(
                         text = "Slide ${colors.indexOf(color) + 1}",
                         style = MaterialTheme.typography.headlineMedium,
                         color = Color.White
@@ -99,7 +100,7 @@ fun CarouselDemo() {
                         ),
                     contentAlignment = Alignment.Center
                 ) {
-                    Text(
+                    PText(
                         text = item,
                         style = MaterialTheme.typography.headlineMedium,
                         color = Color.White
@@ -163,7 +164,7 @@ fun CarouselDemo() {
                         .background(color),
                     contentAlignment = Alignment.Center
                 ) {
-                    Text(
+                    PText(
                         text = "自定义箭头",
                         style = MaterialTheme.typography.headlineMedium,
                         color = Color.White
@@ -195,7 +196,7 @@ fun CarouselDemo() {
                         .background(color),
                     contentAlignment = Alignment.Center
                 ) {
-                    Text(
+                    PText(
                         text = "Slide ${colors.indexOf(color) + 1}",
                         style = MaterialTheme.typography.headlineLarge,
                         color = Color.White

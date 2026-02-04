@@ -6,6 +6,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import xyz.junerver.compose.palette.components.text.PText
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -23,8 +24,8 @@ fun FormDemo() {
             .verticalScroll(rememberScrollState())
             .padding(24.dp)
     ) {
-        Text("Form", style = MaterialTheme.typography.headlineMedium)
-        Text("表单组件，基于 compose-hooks 的无头 Form 基础设施", style = MaterialTheme.typography.bodyMedium)
+        PText("Form", style = MaterialTheme.typography.headlineMedium)
+        PText("表单组件，基于 compose-hooks 的无头 Form 基础设施", style = MaterialTheme.typography.bodyMedium)
         
         Spacer(modifier = Modifier.height(32.dp))
         

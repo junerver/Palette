@@ -20,6 +20,7 @@ import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import xyz.junerver.compose.palette.components.text.PText
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -35,11 +36,11 @@ fun RowLayoutDemo() {
             .verticalScroll(rememberScrollState())
             .padding(24.dp)
     ) {
-        Text(
+        PText(
             text = "CenterVerticallyRow",
             style = MaterialTheme.typography.headlineMedium
         )
-        Text(
+        PText(
             text = "垂直居中的行布局组件",
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant
@@ -57,7 +58,7 @@ fun RowLayoutDemo() {
                     modifier = Modifier.size(24.dp),
                     tint = MaterialTheme.colorScheme.primary
                 )
-                Text(
+                PText(
                     text = "首页",
                     style = MaterialTheme.typography.bodyLarge
                 )
@@ -104,11 +105,11 @@ fun RowLayoutDemo() {
                         .background(MaterialTheme.colorScheme.primaryContainer)
                 )
                 Column {
-                    Text(
+                    PText(
                         text = "用户名",
                         style = MaterialTheme.typography.bodyMedium
                     )
-                    Text(
+                    PText(
                         text = "描述信息",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
@@ -119,7 +120,7 @@ fun RowLayoutDemo() {
 
         Spacer(modifier = Modifier.height(32.dp))
 
-        Text(
+        PText(
             text = "代码示例",
             style = MaterialTheme.typography.titleMedium
         )

@@ -9,6 +9,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import xyz.junerver.compose.palette.components.text.PText
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -27,7 +28,7 @@ fun CollapseDemo() {
                 key = "1",
                 title = "Consistency 一致性"
             ) {
-                Text(
+                PText(
                     text = "Consistent with real life: in line with the process and logic of real life, and comply with languages and habits that the users are used to.\n\n" +
                         "Consistent within interface: all elements should be consistent, such as: design style, icons and texts, position of elements, etc."
                 )
@@ -36,7 +37,7 @@ fun CollapseDemo() {
                 key = "2",
                 title = "Feedback 反馈"
             ) {
-                Text(
+                PText(
                     text = "Operation feedback: enable the users to clearly perceive their operations by style updates and interactive effects.\n\n" +
                         "Visual feedback: reflect current state by updating or rearranging elements of the page."
                 )
@@ -45,7 +46,7 @@ fun CollapseDemo() {
                 key = "3",
                 title = "Efficiency 效率"
             ) {
-                Text(
+                PText(
                     text = "Simplify the process: keep operating process simple and intuitive.\n\n" +
                         "Definite and clear: enunciate your intentions clearly so that the users can quickly understand and make decisions."
                 )
@@ -59,11 +60,11 @@ fun CollapseDemo() {
             .verticalScroll(rememberScrollState())
             .padding(24.dp)
     ) {
-        Text(
+        PText(
             text = "Collapse",
             style = MaterialTheme.typography.headlineMedium
         )
-        Text(
+        PText(
             text = "折叠面板",
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant

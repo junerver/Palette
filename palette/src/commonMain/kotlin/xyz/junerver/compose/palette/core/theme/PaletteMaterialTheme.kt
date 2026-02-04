@@ -1,6 +1,7 @@
 package xyz.junerver.compose.palette.core.theme
 
 import androidx.compose.material3.ColorScheme
+import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Shapes
 import androidx.compose.material3.Typography
@@ -44,6 +45,7 @@ fun PaletteMaterialTheme(
             LocalMaterialColorScheme provides materialColors,
             LocalMaterialTypography provides materialTypography,
             LocalMaterialShapes provides materialShapes,
+            LocalContentColor provides materialColors.onSurface,
             content = content
         )
     }

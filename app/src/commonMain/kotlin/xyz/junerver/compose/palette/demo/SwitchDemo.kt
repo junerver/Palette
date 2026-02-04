@@ -10,6 +10,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import xyz.junerver.compose.palette.components.text.PText
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -29,11 +30,11 @@ fun SwitchDemo() {
             .verticalScroll(rememberScrollState())
             .padding(24.dp)
     ) {
-        Text(
+        PText(
             text = "Switch",
             style = MaterialTheme.typography.headlineMedium
         )
-        Text(
+        PText(
             text = "开关组件",
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant
@@ -51,7 +52,7 @@ fun SwitchDemo() {
                     checked = checked1,
                     onChange = { checked1 = it }
                 )
-                Text(
+                PText(
                     text = "状态: ${if (checked1) "开启" else "关闭"}",
                     style = MaterialTheme.typography.bodySmall
                 )
@@ -84,7 +85,7 @@ fun SwitchDemo() {
 
         Spacer(modifier = Modifier.height(32.dp))
 
-        Text(
+        PText(
             text = "代码示例",
             style = MaterialTheme.typography.titleMedium
         )

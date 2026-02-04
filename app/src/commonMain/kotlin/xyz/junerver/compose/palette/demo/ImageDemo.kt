@@ -6,6 +6,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import xyz.junerver.compose.palette.components.text.PText
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -19,12 +20,12 @@ fun ImageDemo() {
             .verticalScroll(rememberScrollState())
             .padding(24.dp)
     ) {
-        Text(
+        PText(
             text = "PImage 图片",
             style = MaterialTheme.typography.headlineMedium
         )
         Spacer(modifier = Modifier.height(8.dp))
-        Text(
+        PText(
             text = "用于展示图片的组件",
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant
@@ -37,7 +38,7 @@ fun ImageDemo() {
                     .size(200.dp)
                     .background(Color.LightGray)
             ) {
-                Text(
+                PText(
                     "图片占位符",
                     modifier = Modifier.padding(16.dp)
                 )
@@ -46,7 +47,7 @@ fun ImageDemo() {
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        Text(
+        PText(
             text = "注意：PImage 组件需要 Painter 参数，请使用 painterResource 加载图片资源",
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.error

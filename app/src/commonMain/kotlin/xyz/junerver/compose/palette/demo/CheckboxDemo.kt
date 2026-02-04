@@ -14,6 +14,7 @@ import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import xyz.junerver.compose.palette.components.text.PText
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -36,11 +37,11 @@ fun CheckboxDemo() {
             .verticalScroll(rememberScrollState())
             .padding(24.dp)
     ) {
-        Text(
+        PText(
             text = "ColoredCheckBox",
             style = MaterialTheme.typography.headlineMedium
         )
-        Text(
+        PText(
             text = "可自定义颜色的复选框",
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant
@@ -56,7 +57,7 @@ fun CheckboxDemo() {
                     onCheckedChange = { checked = it }
                 )
                 Spacer(modifier = Modifier.height(8.dp))
-                Text(
+                PText(
                     text = "状态: ${if (checked) "已选中" else "未选中"}",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
@@ -95,7 +96,7 @@ fun CheckboxDemo() {
 
         Spacer(modifier = Modifier.height(32.dp))
 
-        Text(
+        PText(
             text = "代码示例",
             style = MaterialTheme.typography.titleMedium
         )

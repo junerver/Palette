@@ -10,6 +10,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import xyz.junerver.compose.palette.components.text.PText
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
@@ -38,7 +39,7 @@ fun TableDemo() {
             .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(32.dp)
     ) {
-        Text(
+        PText(
             text = "Table Component Examples",
             style = MaterialTheme.typography.headlineLarge,
             color = MaterialTheme.colorScheme.onBackground,
@@ -72,12 +73,12 @@ fun TableDemo() {
 @Composable
 private fun BasicTableExample() {
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        Text(
+        PText(
             text = "1. Basic Table",
             style = MaterialTheme.typography.headlineMedium,
             fontWeight = FontWeight.Bold
         )
-        Text(
+        PText(
             text = "Simple table with no interactions",
             style = MaterialTheme.typography.bodyMedium
         )
@@ -124,12 +125,12 @@ private fun BasicTableExample() {
 @Composable
 private fun SortableTableExample() {
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        Text(
+        PText(
             text = "2. Sortable Table",
             style = MaterialTheme.typography.headlineMedium,
             fontWeight = FontWeight.Bold
         )
-        Text(
+        PText(
             text = "Click column headers to sort (automatic sorting by useTable)",
             style = MaterialTheme.typography.bodyMedium
         )
@@ -190,12 +191,12 @@ private fun SortableTableExample() {
 @Composable
 private fun SelectableTableExample() {
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        Text(
+        PText(
             text = "3. Selectable Table",
             style = MaterialTheme.typography.headlineMedium,
             fontWeight = FontWeight.Bold
         )
-        Text(
+        PText(
             text = "Click rows or checkboxes to select (automatic selection by useTable)",
             style = MaterialTheme.typography.bodyMedium
         )
@@ -245,12 +246,12 @@ private fun SelectableTableExample() {
 @Composable
 private fun PaginatedTableExample() {
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        Text(
+        PText(
             text = "4. Paginated Table",
             style = MaterialTheme.typography.headlineMedium,
             fontWeight = FontWeight.Bold
         )
-        Text(
+        PText(
             text = "Automatic pagination (5 items per page)",
             style = MaterialTheme.typography.bodyMedium
         )
@@ -311,12 +312,12 @@ private fun PaginatedTableExample() {
 @Composable
 private fun FullFeaturedTableExample() {
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        Text(
+        PText(
             text = "5. Full-Featured Table",
             style = MaterialTheme.typography.headlineMedium,
             fontWeight = FontWeight.Bold
         )
-        Text(
+        PText(
             text = "Sorting + Selection + Pagination (all features enabled)",
             style = MaterialTheme.typography.bodyMedium
         )
@@ -382,13 +383,13 @@ private fun EmbeddedTableExample() {
             .fillMaxWidth()
             .padding(vertical = 16.dp)
     ) {
-        Text(
+        PText(
             text = "Embedded Table (No Fixed Height Required)",
             style = MaterialTheme.typography.titleMedium,
             modifier = Modifier.padding(bottom = 8.dp)
         )
 
-        Text(
+        PText(
             text = "使用 scrollBehavior = Embedded 模式，表格可以在可滚动容器中无需固定高度。" +
                     "为保持性能，建议启用分页（pageSize = 20）。",
             style = MaterialTheme.typography.bodySmall,

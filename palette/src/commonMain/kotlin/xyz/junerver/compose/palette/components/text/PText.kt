@@ -44,7 +44,7 @@ import androidx.compose.ui.unit.TextUnit
 fun PText(
     text: String,
     modifier: Modifier = Modifier,
-    color: Color = LocalContentColor.current,
+    color: Color = Color.Unspecified,
     fontSize: TextUnit = TextUnit.Unspecified,
     fontStyle: FontStyle? = null,
     fontWeight: FontWeight? = null,
@@ -60,10 +60,19 @@ fun PText(
     onTextLayout: ((TextLayoutResult) -> Unit)? = null,
     style: TextStyle = LocalTextStyle.current
 ) {
+    // Use LocalContentColor when color is not explicitly specified
+    val textColor = if (color == Color.Unspecified) {
+        LocalContentColor.current
+    } else {
+        color
+    }
+    
+    // Merge color into style to ensure it takes precedence
+    val mergedStyle = style.copy(color = textColor)
+    
     Text(
         text = text,
         modifier = modifier,
-        color = color,
         fontSize = fontSize,
         fontStyle = fontStyle,
         fontWeight = fontWeight,
@@ -77,6 +86,6 @@ fun PText(
         maxLines = maxLines,
         minLines = minLines,
         onTextLayout = onTextLayout,
-        style = style
+        style = mergedStyle
     )
 }
