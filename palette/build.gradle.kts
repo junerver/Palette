@@ -52,8 +52,7 @@ kotlin {
                 implementation(libs.kotlinx.coroutines.core)
                 implementation(libs.kotlinx.datetime)
                 implementation(libs.kotlinx.collections.immutable)
-                implementation(libs.material.icons.core)
-                implementation(libs.material.icons.extended)
+                implementation(compose.materialIconsExtended)
                 api(libs.hooks)
             }
         }

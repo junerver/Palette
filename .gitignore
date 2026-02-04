@@ -10,3 +10,5 @@
 local.properties
 /.kotlin/
 /NUL
+E
+*.log

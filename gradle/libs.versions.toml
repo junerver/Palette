@@ -1,15 +1,14 @@
 [versions]
 agp = "8.9.3"
 kotlin = "2.2.21"
-composePlugin = "1.8.2"
+composePlugin = "1.10.0"
 composeHotReload = "1.0.0-beta04"
-materialIcons = "1.7.3"
 coreKtx = "1.15.0"
 junit = "4.13.2"
 junitVersion = "1.2.1"
 espressoCore = "3.6.1"
-lifecycleRuntimeKtx = "2.8.7"
-activityCompose = "1.9.3"
+lifecycleRuntimeKtx = "2.9.1"
+activityCompose = "1.10.0"
 composeBom = "2024.12.01"
 appcompat = "1.7.0"
 material = "1.12.0"
@@ -41,13 +40,7 @@ androidx-lifecycle-viewmodel-compose = { module = "androidx.lifecycle:lifecycle-
 androidx-runtime-livedata = { group = "androidx.compose.runtime", name = "runtime-livedata" }
 
 # Compose Multiplatform
-compose-runtime = { group = "org.jetbrains.compose.runtime", name = "runtime" }
-compose-foundation = { group = "org.jetbrains.compose.foundation", name = "foundation" }
-compose-ui = { group = "org.jetbrains.compose.ui", name = "ui" }
-compose-material3 = { group = "org.jetbrains.compose.material3", name = "material3" }
 compose-lifecycle-runtime-compose = { group = "org.jetbrains.androidx.lifecycle", name = "lifecycle-runtime-compose", version.ref = "composeLifecycle" }
-material-icons-core = { group = "org.jetbrains.compose.material", name = "material-icons-core", version.ref = "materialIcons" }
-material-icons-extended = { group = "org.jetbrains.compose.material", name = "material-icons-extended", version.ref = "materialIcons" }
 
 # KotlinX
 kotlinx-coroutines-core = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-core", version.ref = "kotlinxCoroutines" }
