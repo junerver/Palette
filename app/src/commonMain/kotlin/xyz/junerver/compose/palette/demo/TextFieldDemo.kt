@@ -60,7 +60,7 @@ fun TextFieldDemo() {
             BorderTextField(
                 value = text,
                 onValueChange = { text = it },
-                hint = "请输入用户名",
+                placeholder = "请输入用户名",
                 leadingIcon = {
                     Icon(
                         Icons.Default.Person,
@@ -77,14 +77,15 @@ fun TextFieldDemo() {
         DemoSection(title = "带图标和验证") {
             var email by remember { mutableStateOf("") }
             var password by remember { mutableStateOf("") }
-            var passwordVisible by remember { mutableStateOf(false) }
 
             Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
                 BorderTextField(
                     value = email,
                     onValueChange = { email = it },
-                    hint = "请输入邮箱",
-                    keyboardType = KeyboardType.Email,
+                    placeholder = "请输入邮箱",
+                    keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(
+                        keyboardType = KeyboardType.Email
+                    ),
                     leadingIcon = {
                         Icon(
                             Icons.Default.Email,
@@ -98,10 +99,10 @@ fun TextFieldDemo() {
                 BorderTextField(
                     value = password,
                     onValueChange = { password = it },
-                    hint = "请输入密码",
-                    keyboardType = KeyboardType.Password,
-                    isPassword = true,
-                    passwordVisible = passwordVisible,
+                    placeholder = "请输入密码",
+                    keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(
+                        keyboardType = KeyboardType.Password
+                    ),
                     leadingIcon = {
                         Icon(
                             Icons.Default.Lock,
@@ -109,20 +110,7 @@ fun TextFieldDemo() {
                             modifier = Modifier.size(20.dp),
                             tint = MaterialTheme.colorScheme.onSurfaceVariant
                         )
-                    },
-                    trailingIcon = {
-                        Icon(
-                            imageVector = if (passwordVisible) Icons.Default.Visibility else Icons.Default.VisibilityOff,
-                            contentDescription = null,
-                            modifier = Modifier.size(20.dp)
-                        )
                     }
-                )
-
-                Text(
-                    text = if (passwordVisible) "密码显示" else "密码隐藏",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
         }
@@ -137,19 +125,15 @@ fun TextFieldDemo() {
                 BorderTextField(
                     value = text1,
                     onValueChange = { text1 = it },
-                    hint = "蓝色边框",
-                    colors = TextFieldDefaults.colors(borderColor = Primary),
-                    height = 36.dp,
-                    width = 280.dp
+                    placeholder = "蓝色边框",
+                    status = xyz.junerver.compose.palette.core.spec.ComponentStatus.Default
                 )
 
                 BorderTextField(
                     value = text2,
                     onValueChange = { text2 = it },
-                    hint = "红色边框",
-                    colors = TextFieldDefaults.colors(borderColor = Error),
-                    height = 36.dp,
-                    width = 280.dp
+                    placeholder = "红色边框",
+                    status = xyz.junerver.compose.palette.core.spec.ComponentStatus.Error
                 )
             }
         }
@@ -168,7 +152,7 @@ fun TextFieldDemo() {
 BorderTextField(
     value = text,
     onValueChange = { text = it },
-    hint = "请输入用户名",
+    placeholder = "请输入用户名",
     leadingIcon = {
         Icon(Icons.Default.Person, contentDescription = null)
     }

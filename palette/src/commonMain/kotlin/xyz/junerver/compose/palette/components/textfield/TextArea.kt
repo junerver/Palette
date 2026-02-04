@@ -1,6 +1,5 @@
 package xyz.junerver.compose.palette.components.textfield
 
-import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.foundation.background
@@ -13,17 +12,12 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Clear
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
@@ -33,7 +27,7 @@ import xyz.junerver.compose.palette.core.theme.PaletteTheme
 import xyz.junerver.compose.palette.core.tokens.FormTokens
 
 @Composable
-fun BorderTextField(
+fun TextArea(
     value: String,
     onValueChange: (String) -> Unit,
     modifier: Modifier = Modifier,
@@ -42,15 +36,10 @@ fun BorderTextField(
     size: ComponentSize = ComponentSize.Medium,
     status: ComponentStatus = ComponentStatus.Default,
     placeholder: String = "",
-    leadingIcon: (@Composable () -> Unit)? = null,
-    trailingIcon: (@Composable () -> Unit)? = null,
-    prefix: String? = null,
-    suffix: String? = null,
-    clearable: Boolean = false,
     showCount: Boolean = false,
     maxLength: Int? = null,
-    singleLine: Boolean = true,
-    visualTransformation: VisualTransformation = VisualTransformation.None,
+    minLines: Int = 3,
+    maxLines: Int = 6,
     keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
     keyboardActions: KeyboardActions = KeyboardActions.Default,
 ) {
@@ -94,93 +83,43 @@ fun BorderTextField(
                 .border(borderWidth, borderColor, shape)
                 .clip(shape)
                 .background(backgroundColor)
-                .height(size.height)
+                .defaultMinSize(minHeight = size.height * minLines)
         ) {
-            Row(
+            Box(
                 modifier = Modifier
-                    .fillMaxSize()
-                    .padding(horizontal = size.horizontalPadding, vertical = size.verticalPadding),
-                verticalAlignment = Alignment.CenterVertically
+                    .fillMaxWidth()
+                    .padding(horizontal = size.horizontalPadding, vertical = size.verticalPadding)
             ) {
-                if (prefix != null) {
+                if (value.isEmpty() && placeholder.isNotEmpty()) {
                     Text(
-                        text = prefix,
+                        text = placeholder,
                         fontSize = size.fontSize,
-                        color = textColor.copy(alpha = 0.6f),
-                        modifier = Modifier.padding(end = 4.dp)
+                        color = PaletteTheme.colors.hint,
+                        style = PaletteTheme.typography.body
                     )
                 }
 
-                leadingIcon?.let {
-                    Box(modifier = Modifier.padding(end = 8.dp)) {
-                        it()
-                    }
-                }
-
-                Box(
-                    modifier = Modifier.weight(1f),
-                    contentAlignment = Alignment.CenterStart
-                ) {
-                    if (value.isEmpty() && placeholder.isNotEmpty()) {
-                        Text(
-                            text = placeholder,
-                            fontSize = size.fontSize,
-                            color = PaletteTheme.colors.hint,
-                            style = PaletteTheme.typography.body
-                        )
-                    }
-
-                    BasicTextField(
-                        value = value,
-                        onValueChange = { newValue ->
-                            if (maxLength == null || newValue.length <= maxLength) {
-                                onValueChange(newValue)
-                            }
-                        },
-                        enabled = enabled,
-                        readOnly = readOnly,
-                        singleLine = singleLine,
-                        textStyle = PaletteTheme.typography.body.copy(
-                            fontSize = size.fontSize,
-                            color = textColor
-                        ),
-                        cursorBrush = SolidColor(PaletteTheme.colors.primary),
-                        modifier = Modifier.fillMaxWidth(),
-                        keyboardOptions = keyboardOptions,
-                        keyboardActions = keyboardActions,
-                        visualTransformation = visualTransformation,
-                        interactionSource = interactionSource
-                    )
-                }
-
-                AnimatedVisibility(visible = clearable && value.isNotEmpty() && enabled) {
-                    IconButton(
-                        onClick = { onValueChange("") },
-                        modifier = Modifier.size(size.iconSize)
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Clear,
-                            contentDescription = "Clear",
-                            tint = textColor.copy(alpha = 0.6f),
-                            modifier = Modifier.size(size.iconSize - 4.dp)
-                        )
-                    }
-                }
-
-                trailingIcon?.let {
-                    Box(modifier = Modifier.padding(start = 8.dp)) {
-                        it()
-                    }
-                }
-
-                if (suffix != null) {
-                    Text(
-                        text = suffix,
+                BasicTextField(
+                    value = value,
+                    onValueChange = { newValue ->
+                        if (maxLength == null || newValue.length <= maxLength) {
+                            onValueChange(newValue)
+                        }
+                    },
+                    enabled = enabled,
+                    readOnly = readOnly,
+                    textStyle = PaletteTheme.typography.body.copy(
                         fontSize = size.fontSize,
-                        color = textColor.copy(alpha = 0.6f),
-                        modifier = Modifier.padding(start = 4.dp)
-                    )
-                }
+                        color = textColor
+                    ),
+                    cursorBrush = SolidColor(PaletteTheme.colors.primary),
+                    modifier = Modifier.fillMaxWidth(),
+                    keyboardOptions = keyboardOptions,
+                    keyboardActions = keyboardActions,
+                    interactionSource = interactionSource,
+                    minLines = minLines,
+                    maxLines = maxLines
+                )
             }
         }
 

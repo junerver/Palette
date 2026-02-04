@@ -7,15 +7,18 @@ import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import xyz.junerver.compose.palette.core.theme.PaletteTheme
+import xyz.junerver.compose.palette.core.tokens.FormTokens
+import xyz.junerver.compose.palette.core.tokens.disabledBorder
 
 object SliderDefaults {
     val Height: Dp = 48.dp
-    val TrackHeight: Dp = 2.dp
+    val TrackHeight: Dp = FormTokens.BorderWidthFocus
     val ThumbSize: Dp = 28.dp
-    val ThumbShadowElevation: Dp = 14.dp
+    val ThumbShadowElevation: Dp = FormTokens.ShadowBlur
     val LabelSpacing: Dp = 12.dp
     val LabelWidth: Dp = 40.dp
     val LabelFontSize: TextUnit = 14.sp
+    val DisabledAlpha: Float = 0.5f
 
     @Composable
     fun activeTrackColor(): Color = PaletteTheme.colors.primary
@@ -31,4 +34,7 @@ object SliderDefaults {
 
     @Composable
     fun thumbShadowColor(): Color = PaletteTheme.colors.border
+    
+    @Composable
+    fun disabledTrackColor(): Color = PaletteTheme.colors.disabledBorder
 }

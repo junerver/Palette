@@ -53,8 +53,7 @@ fun CheckboxDemo() {
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 ColoredCheckBox(
                     checked = checked,
-                    onCheckedChange = { checked = it },
-                    color = MaterialTheme.colorScheme.primary
+                    onCheckedChange = { checked = it }
                 )
                 Spacer(modifier = Modifier.height(8.dp))
                 Text(
@@ -73,9 +72,9 @@ fun CheckboxDemo() {
                 var c2 by remember { mutableStateOf(false) }
                 var c3 by remember { mutableStateOf(true) }
 
-                ColoredCheckBox(checked = c1, onCheckedChange = { c1 = it }, color = Color(0xFF6366F1))
-                ColoredCheckBox(checked = c2, onCheckedChange = { c2 = it }, color = Color(0xFF10B981))
-                ColoredCheckBox(checked = c3, onCheckedChange = { c3 = it }, color = Color(0xFFEF4444))
+                ColoredCheckBox(checked = c1, onCheckedChange = { c1 = it })
+                ColoredCheckBox(checked = c2, onCheckedChange = { c2 = it })
+                ColoredCheckBox(checked = c3, onCheckedChange = { c3 = it })
             }
         }
 
@@ -108,8 +107,7 @@ fun CheckboxDemo() {
 var checked by remember { mutableStateOf(false) }
 ColoredCheckBox(
     checked = checked,
-    onCheckedChange = { checked = it },
-    color = Color(0xFF6366F1)
+    onCheckedChange = { checked = it }
 )
             """.trimIndent()
         )

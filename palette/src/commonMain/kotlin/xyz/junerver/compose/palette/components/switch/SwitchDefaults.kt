@@ -5,6 +5,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import xyz.junerver.compose.palette.core.theme.PaletteTheme
+import xyz.junerver.compose.palette.core.tokens.FormTokens
+import xyz.junerver.compose.palette.core.tokens.disabledBorder
 
 object SwitchDefaults {
     val Width: Dp = 50.dp
@@ -14,8 +16,8 @@ object SwitchDefaults {
     val BorderRadius: Dp = 16.dp
     val ThumbBorderRadius: Dp = 50.dp
     val CheckedThumbOffset: Dp = 26.dp
-    val DisabledAlpha: Float = 0.7f
-    val AnimationDuration: Int = 100
+    val DisabledAlpha: Float = 0.5f
+    val AnimationDuration: Int = FormTokens.DurationNormal
 
     @Composable
     fun checkedTrackColor(): Color = PaletteTheme.colors.primary
@@ -25,4 +27,7 @@ object SwitchDefaults {
 
     @Composable
     fun thumbColor(): Color = PaletteTheme.colors.surface
+    
+    @Composable
+    fun disabledTrackColor(): Color = PaletteTheme.colors.disabledBorder
 }
