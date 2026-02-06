@@ -12,6 +12,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import xyz.junerver.compose.palette.core.theme.PaletteTheme
 
 data class TreeNode<T>(
     val key: String,
@@ -73,7 +74,11 @@ private fun <T> TreeNodeItem(
         if (hasChildren) {
             Icon(
                 imageVector = if (isExpanded) Icons.Default.KeyboardArrowDown else Icons.Default.KeyboardArrowRight,
-                contentDescription = if (isExpanded) "Collapse" else "Expand",
+                contentDescription = if (isExpanded) {
+                    PaletteTheme.strings.commonCollapse
+                } else {
+                    PaletteTheme.strings.commonExpand
+                },
                 modifier = Modifier
                     .size(TreeDefaults.IconSize)
                     .clickable {

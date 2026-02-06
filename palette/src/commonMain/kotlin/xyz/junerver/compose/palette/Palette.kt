@@ -66,10 +66,12 @@ import xyz.junerver.compose.palette.core.spec.ComponentSize as ComponentSizeImpl
 import xyz.junerver.compose.palette.core.spec.ComponentState as ComponentStateImpl
 import xyz.junerver.compose.palette.core.spec.ComponentStatus as ComponentStatusImpl
 import xyz.junerver.compose.palette.core.spec.rememberComponentInteraction as rememberComponentInteractionImpl
+import xyz.junerver.compose.palette.core.i18n.PaletteStrings as PaletteStringsImpl
 import xyz.junerver.compose.palette.core.theme.LocalPaletteColors as LocalPaletteColorsImpl
 import xyz.junerver.compose.palette.core.theme.LocalPaletteDarkTheme as LocalPaletteDarkThemeImpl
 import xyz.junerver.compose.palette.core.theme.LocalPaletteShapes as LocalPaletteShapesImpl
 import xyz.junerver.compose.palette.core.theme.LocalPaletteSpacing as LocalPaletteSpacingImpl
+import xyz.junerver.compose.palette.core.theme.LocalPaletteStrings as LocalPaletteStringsImpl
 import xyz.junerver.compose.palette.core.theme.LocalPaletteTypography as LocalPaletteTypographyImpl
 import xyz.junerver.compose.palette.core.theme.PaletteMaterialTheme as PaletteMaterialThemeImpl
 import xyz.junerver.compose.palette.core.theme.PaletteTheme as PaletteThemeImpl
@@ -87,10 +89,12 @@ typealias PaletteSemanticColors = PaletteSemanticColorsImpl
 typealias PaletteShapes = PaletteShapesImpl
 typealias PaletteSpacing = PaletteSpacingImpl
 typealias PaletteTypography = PaletteTypographyImpl
+typealias PaletteStrings = PaletteStringsImpl
 // Core - Theme
 val LocalPaletteColors = LocalPaletteColorsImpl
 val LocalPaletteShapes = LocalPaletteShapesImpl
 val LocalPaletteSpacing = LocalPaletteSpacingImpl
+val LocalPaletteStrings = LocalPaletteStringsImpl
 val LocalPaletteTypography = LocalPaletteTypographyImpl
 val LocalPaletteDarkTheme = LocalPaletteDarkThemeImpl
 typealias PaletteTheme = PaletteThemeImpl
@@ -229,5 +233,4 @@ val CarouselDefaults = CarouselDefaultsImpl
 val FormDefaults = FormDefaultsImpl
 typealias FormLayout = FormLayoutImpl
 typealias FormLabelPosition = FormLabelPositionImpl
-
 

@@ -32,18 +32,23 @@ fun App() {
     val themeMode by ThemeManager.themeMode.collectAsState()
     val systemDark = isSystemInDarkTheme()
     val darkTheme = isDarkTheme(themeMode, systemDark)
+    var language by rememberSaveable { mutableStateOf(Language.ZH_CN) }
 
     CompositionLocalProvider(
         LocalThemeMode provides themeMode,
-        LocalSetThemeMode provides { ThemeManager.setThemeMode(it) }
+        LocalSetThemeMode provides { ThemeManager.setThemeMode(it) },
+        LocalLanguage provides language,
     ) {
         PaletteMaterialTheme(
             colors = if (darkTheme) PaletteColors.dark() else PaletteColors.light(),
+            strings = language.toPaletteStrings(),
             darkTheme = darkTheme
         ) {
             AppContent(
                 themeMode = themeMode,
-                onThemeModeChange = { ThemeManager.setThemeMode(it) }
+                onThemeModeChange = { ThemeManager.setThemeMode(it) },
+                language = language,
+                onLanguageChange = { language = it },
             )
         }
     }
@@ -52,7 +57,9 @@ fun App() {
 @Composable
 private fun AppContent(
     themeMode: ThemeMode,
-    onThemeModeChange: (ThemeMode) -> Unit
+    onThemeModeChange: (ThemeMode) -> Unit,
+    language: Language,
+    onLanguageChange: (Language) -> Unit,
 ) {
     var selectedRoute by rememberSaveable { mutableStateOf("button") }
 
@@ -61,7 +68,9 @@ private fun AppContent(
             selectedRoute = selectedRoute,
             onRouteSelected = { selectedRoute = it },
             themeMode = themeMode,
-            onThemeModeChange = onThemeModeChange
+            onThemeModeChange = onThemeModeChange,
+            language = language,
+            onLanguageChange = onLanguageChange,
         )
 
         Box(modifier = Modifier.fillMaxSize()) {
@@ -127,7 +136,9 @@ private fun SideNav(
     selectedRoute: String,
     onRouteSelected: (String) -> Unit,
     themeMode: ThemeMode,
-    onThemeModeChange: (ThemeMode) -> Unit
+    onThemeModeChange: (ThemeMode) -> Unit,
+    language: Language,
+    onLanguageChange: (Language) -> Unit,
 ) {
     Surface(
         modifier = Modifier
@@ -139,7 +150,9 @@ private fun SideNav(
         Column {
             HeaderSection(
                 themeMode = themeMode,
-                onThemeModeChange = onThemeModeChange
+                onThemeModeChange = onThemeModeChange,
+                language = language,
+                onLanguageChange = onLanguageChange,
             )
 
             NavItems(
@@ -153,7 +166,9 @@ private fun SideNav(
 @Composable
 private fun HeaderSection(
     themeMode: ThemeMode,
-    onThemeModeChange: (ThemeMode) -> Unit
+    onThemeModeChange: (ThemeMode) -> Unit,
+    language: Language,
+    onLanguageChange: (Language) -> Unit,
 ) {
     Column(modifier = Modifier.padding(24.dp)) {
         Text(
@@ -172,6 +187,80 @@ private fun HeaderSection(
         ThemeModeSelector(
             themeMode = themeMode,
             onThemeModeChange = onThemeModeChange
+        )
+
+        Spacer(modifier = Modifier.height(12.dp))
+
+        LanguageSelector(
+            language = language,
+            onLanguageChange = onLanguageChange,
+        )
+    }
+}
+
+@Composable
+private fun LanguageSelector(
+    language: Language,
+    onLanguageChange: (Language) -> Unit,
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(12.dp))
+            .background(MaterialTheme.colorScheme.surfaceVariant)
+            .padding(12.dp)
+    ) {
+        Text(
+            text = "语言",
+            style = MaterialTheme.typography.labelMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            TextChip(
+                label = "中文",
+                selected = language == Language.ZH_CN,
+                onClick = { onLanguageChange(Language.ZH_CN) },
+                modifier = Modifier.weight(1f)
+            )
+            TextChip(
+                label = "English",
+                selected = language == Language.EN_US,
+                onClick = { onLanguageChange(Language.EN_US) },
+                modifier = Modifier.weight(1f)
+            )
+        }
+    }
+}
+
+@Composable
+private fun TextChip(
+    label: String,
+    selected: Boolean,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val backgroundColor = if (selected) Primary else MaterialTheme.colorScheme.surface
+    val contentColor = if (selected) Color.White else MaterialTheme.colorScheme.onSurface
+
+    Row(
+        modifier = modifier
+            .clip(RoundedCornerShape(8.dp))
+            .background(backgroundColor)
+            .clickable(onClick = onClick)
+            .padding(horizontal = 8.dp, vertical = 6.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.Center,
+    ) {
+        Text(
+            text = label,
+            style = MaterialTheme.typography.labelSmall,
+            color = contentColor,
         )
     }
 }

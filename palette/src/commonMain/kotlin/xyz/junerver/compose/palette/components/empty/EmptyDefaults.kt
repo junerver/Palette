@@ -20,4 +20,10 @@ object EmptyDefaults {
     
     @Composable
     fun descriptionColor(): Color = PaletteTheme.colors.onSurface.copy(alpha = 0.6f)
+
+    @Composable
+    fun defaultTitle(): String = PaletteTheme.strings.emptyDefaultTitle
+
+    @Composable
+    fun defaultDescription(): String = PaletteTheme.strings.emptyDefaultDescription
 }

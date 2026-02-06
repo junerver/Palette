@@ -44,6 +44,7 @@ import androidx.compose.ui.window.Popup
 import androidx.compose.ui.window.PopupPositionProvider
 import kotlinx.coroutines.delay
 import xyz.junerver.compose.palette.components.loading.PLoading
+import xyz.junerver.compose.palette.core.theme.PaletteTheme
 
 enum class ToastIcon {
     SUCCESS,
@@ -137,7 +138,11 @@ fun PToast(
                                         } else {
                                             Icons.Filled.Info
                                         },
-                                        contentDescription = null,
+                                        contentDescription = if (icon == ToastIcon.SUCCESS) {
+                                            PaletteTheme.strings.toastSuccessContentDescription
+                                        } else {
+                                            PaletteTheme.strings.toastFailContentDescription
+                                        },
                                         modifier = Modifier.size(ToastDefaults.LoadingSize),
                                         tint = ToastDefaults.textColor()
                                     )

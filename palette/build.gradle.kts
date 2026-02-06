@@ -116,3 +116,20 @@ android {
     sourceSets["main"].res.srcDirs("src/androidMain/res")
     sourceSets["main"].resources.srcDirs("src/commonMain/resources")
 }
+
+tasks.register("runQualityChecks") {
+    group = "verification"
+    description = "Run scoped static checks for baseline test/quality tasks."
+    dependsOn(
+        "detekt",
+        "ktlintCommonTestSourceSetCheck",
+        "ktlintAndroidUnitTestSourceSetCheck",
+        "ktlintAndroidInstrumentedTestSourceSetCheck",
+    )
+}
+
+tasks.register("verifyReleaseReadiness") {
+    group = "verification"
+    description = "Run quality checks and all tests before release."
+    dependsOn("runQualityChecks", "allTests")
+}

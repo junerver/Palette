@@ -561,7 +561,10 @@ private fun PTablePagination(
         verticalAlignment = Alignment.CenterVertically
     ) {
         Text(
-            text = "Page ${paginationScope.pageIndex + 1} of ${paginationScope.pageCount}",
+            text = PaletteTheme.strings.tablePaginationSummary(
+                paginationScope.pageIndex + 1,
+                paginationScope.pageCount,
+            ),
             style = PaletteTheme.typography.body,
             color = colors.headerContentColor
         )

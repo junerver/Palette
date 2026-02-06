@@ -15,8 +15,8 @@ import xyz.junerver.compose.palette.core.theme.PaletteTheme
 fun PEmpty(
     modifier: Modifier = Modifier,
     icon: (@Composable () -> Unit)? = null,
-    title: String? = null,
-    description: String? = null,
+    title: String? = EmptyDefaults.defaultTitle(),
+    description: String? = EmptyDefaults.defaultDescription(),
     action: (@Composable () -> Unit)? = null,
     iconColor: Color = EmptyDefaults.iconColor(),
     titleColor: Color = EmptyDefaults.titleColor(),

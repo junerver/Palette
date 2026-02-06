@@ -6,6 +6,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.runtime.staticCompositionLocalOf
+import xyz.junerver.compose.palette.core.i18n.PaletteStrings
 import xyz.junerver.compose.palette.core.tokens.PaletteColors
 import xyz.junerver.compose.palette.core.tokens.PaletteShapes
 import xyz.junerver.compose.palette.core.tokens.PaletteSpacing
@@ -16,6 +17,7 @@ val LocalPaletteSpacing = staticCompositionLocalOf { PaletteSpacing() }
 val LocalPaletteShapes = staticCompositionLocalOf { PaletteShapes() }
 val LocalPaletteTypography = staticCompositionLocalOf { PaletteTypography() }
 val LocalPaletteDarkTheme = staticCompositionLocalOf { false }
+val LocalPaletteStrings = staticCompositionLocalOf { PaletteStrings.zhCN() }
 
 @Composable
 fun PaletteTheme(
@@ -23,6 +25,7 @@ fun PaletteTheme(
     spacing: PaletteSpacing = PaletteSpacing(),
     shapes: PaletteShapes = PaletteShapes(),
     typography: PaletteTypography = PaletteTypography(),
+    strings: PaletteStrings = PaletteStrings.zhCN(),
     darkTheme: Boolean = false,
     content: @Composable () -> Unit
 ) {
@@ -31,6 +34,7 @@ fun PaletteTheme(
         LocalPaletteSpacing provides spacing,
         LocalPaletteShapes provides shapes,
         LocalPaletteTypography provides typography,
+        LocalPaletteStrings provides strings,
         LocalPaletteDarkTheme provides darkTheme,
         LocalContentColor provides colors.onSurface,
         LocalTextStyle provides typography.body,
@@ -58,6 +62,11 @@ object PaletteTheme {
         @Composable
         @ReadOnlyComposable
         get() = LocalPaletteTypography.current
+
+    val strings: PaletteStrings
+        @Composable
+        @ReadOnlyComposable
+        get() = LocalPaletteStrings.current
 
     val isDark: Boolean
         @Composable

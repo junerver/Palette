@@ -9,6 +9,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.runtime.staticCompositionLocalOf
+import xyz.junerver.compose.palette.core.i18n.PaletteStrings
 import xyz.junerver.compose.palette.core.tokens.PaletteColors
 import xyz.junerver.compose.palette.core.tokens.PaletteShapes
 import xyz.junerver.compose.palette.core.tokens.PaletteSpacing
@@ -25,6 +26,7 @@ fun PaletteMaterialTheme(
     spacing: PaletteSpacing = PaletteSpacing(),
     shapes: PaletteShapes = PaletteShapes(),
     typography: PaletteTypography = PaletteTypography(),
+    strings: PaletteStrings = PaletteStrings.zhCN(),
     darkTheme: Boolean = false,
     materialColors: ColorScheme = colors.toSemanticColors().toMaterialScheme(),
     materialTypography: Typography = MaterialTheme.typography,
@@ -41,6 +43,7 @@ fun PaletteMaterialTheme(
             LocalPaletteSpacing provides spacing,
             LocalPaletteShapes provides shapes,
             LocalPaletteTypography provides typography,
+            LocalPaletteStrings provides strings,
             LocalPaletteDarkTheme provides darkTheme,
             LocalMaterialColorScheme provides materialColors,
             LocalMaterialTypography provides materialTypography,

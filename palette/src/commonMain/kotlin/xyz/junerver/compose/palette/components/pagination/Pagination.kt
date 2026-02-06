@@ -41,7 +41,7 @@ fun PPagination(
             pages.forEach { page ->
                 when (page) {
                     -1 -> Text(
-                        text = "...",
+                        text = PaletteTheme.strings.paginationEllipsis,
                         color = colors.textColor,
                         modifier = Modifier.padding(horizontal = 8.dp)
                     )
@@ -55,7 +55,7 @@ fun PPagination(
             }
         } else {
             Text(
-                text = "$currentPage / $totalPages",
+                text = PaletteTheme.strings.tablePaginationSummary(currentPage, totalPages),
                 color = colors.textColor,
                 style = PaletteTheme.typography.body
             )
@@ -99,7 +99,7 @@ private fun PaginationButton(
     }
 }
 
-private fun calculatePageNumbers(current: Int, total: Int): List<Int> {
+internal fun calculatePageNumbers(current: Int, total: Int): List<Int> {
     if (total <= 7) {
         return (1..total).toList()
     }
