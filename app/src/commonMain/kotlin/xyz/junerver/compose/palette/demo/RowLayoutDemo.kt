@@ -19,17 +19,21 @@ import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import xyz.junerver.compose.palette.components.text.PText
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
+import xyz.junerver.compose.palette.Language
+import xyz.junerver.compose.palette.LocalLanguage
 import xyz.junerver.compose.palette.foundation.layout.CenterVerticallyRow
 import xyz.junerver.compose.palette.components.CodeBlock
 
 @Composable
 fun RowLayoutDemo() {
+    val text = rowLayoutDemoText()
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -37,18 +41,18 @@ fun RowLayoutDemo() {
             .padding(24.dp)
     ) {
         PText(
-            text = "CenterVerticallyRow",
+            text = text.title,
             style = MaterialTheme.typography.headlineMedium
         )
         PText(
-            text = "垂直居中的行布局组件",
+            text = text.subtitle,
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
 
         Spacer(modifier = Modifier.height(32.dp))
 
-        DemoSection(title = "基础用法") {
+        DemoSection(title = text.basicSectionTitle) {
             CenterVerticallyRow(
                 horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
@@ -59,7 +63,7 @@ fun RowLayoutDemo() {
                     tint = MaterialTheme.colorScheme.primary
                 )
                 PText(
-                    text = "首页",
+                    text = text.homeText,
                     style = MaterialTheme.typography.bodyLarge
                 )
             }
@@ -67,7 +71,7 @@ fun RowLayoutDemo() {
 
         Spacer(modifier = Modifier.height(24.dp))
 
-        DemoSection(title = "多图标组合") {
+        DemoSection(title = text.multiIconSectionTitle) {
             CenterVerticallyRow(
                 horizontalArrangement = Arrangement.spacedBy(16.dp)
             ) {
@@ -94,7 +98,7 @@ fun RowLayoutDemo() {
 
         Spacer(modifier = Modifier.height(24.dp))
 
-        DemoSection(title = "与其他组件配合") {
+        DemoSection(title = text.mixSectionTitle) {
             CenterVerticallyRow(
                 horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
@@ -106,11 +110,11 @@ fun RowLayoutDemo() {
                 )
                 Column {
                     PText(
-                        text = "用户名",
+                        text = text.userNameText,
                         style = MaterialTheme.typography.bodyMedium
                     )
                     PText(
-                        text = "描述信息",
+                        text = text.descriptionText,
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -121,21 +125,71 @@ fun RowLayoutDemo() {
         Spacer(modifier = Modifier.height(32.dp))
 
         PText(
-            text = "代码示例",
+            text = text.codeTitle,
             style = MaterialTheme.typography.titleMedium
         )
 
         Spacer(modifier = Modifier.height(16.dp))
 
         CodeBlock(
-            code = """
+            code = text.codeBlock
+        )
+    }
+}
+
+@Composable
+@ReadOnlyComposable
+private fun rowLayoutDemoText(): RowLayoutDemoText = when (LocalLanguage.current) {
+    Language.ZH_CN -> RowLayoutDemoText(
+        title = "CenterVerticallyRow",
+        subtitle = "垂直居中的行布局组件",
+        basicSectionTitle = "基础用法",
+        homeText = "首页",
+        multiIconSectionTitle = "多图标组合",
+        mixSectionTitle = "与其他组件配合",
+        userNameText = "用户名",
+        descriptionText = "描述信息",
+        codeTitle = "代码示例",
+        codeBlock = """
 CenterVerticallyRow(
     horizontalArrangement = Arrangement.spacedBy(12.dp)
 ) {
     Icon(Icons.Default.Home, null)
     Text("首页")
 }
-            """.trimIndent()
-        )
-    }
+        """.trimIndent(),
+    )
+
+    Language.EN_US -> RowLayoutDemoText(
+        title = "CenterVerticallyRow",
+        subtitle = "A vertically centered row layout component.",
+        basicSectionTitle = "Basic Usage",
+        homeText = "Home",
+        multiIconSectionTitle = "Multi-Icon Combination",
+        mixSectionTitle = "Works with Other Components",
+        userNameText = "Username",
+        descriptionText = "Description",
+        codeTitle = "Code Example",
+        codeBlock = """
+CenterVerticallyRow(
+    horizontalArrangement = Arrangement.spacedBy(12.dp)
+) {
+    Icon(Icons.Default.Home, null)
+    Text("Home")
 }
+        """.trimIndent(),
+    )
+}
+
+private data class RowLayoutDemoText(
+    val title: String,
+    val subtitle: String,
+    val basicSectionTitle: String,
+    val homeText: String,
+    val multiIconSectionTitle: String,
+    val mixSectionTitle: String,
+    val userNameText: String,
+    val descriptionText: String,
+    val codeTitle: String,
+    val codeBlock: String,
+)

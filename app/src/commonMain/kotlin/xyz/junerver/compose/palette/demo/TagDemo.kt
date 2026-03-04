@@ -12,13 +12,15 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import xyz.junerver.compose.palette.components.text.PText
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import xyz.junerver.compose.hooks.useState
+import xyz.junerver.compose.palette.Language
+import xyz.junerver.compose.palette.LocalLanguage
 import xyz.junerver.compose.palette.components.CodeBlock
 import xyz.junerver.compose.palette.components.tag.PTag
 import xyz.junerver.compose.palette.components.tag.PEditableTagGroup
@@ -29,6 +31,8 @@ import xyz.junerver.compose.palette.components.tag.TagDefaults
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun TagDemo() {
+    val text = tagDemoText()
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -36,18 +40,18 @@ fun TagDemo() {
             .padding(24.dp)
     ) {
         PText(
-            text = "PTag",
+            text = text.title,
             style = MaterialTheme.typography.headlineMedium
         )
         PText(
-            text = "用于标记和选择的标签组件",
+            text = text.subtitle,
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
 
         Spacer(modifier = Modifier.height(32.dp))
 
-        DemoSection(title = "基础用法") {
+        DemoSection(title = text.basicSectionTitle) {
             Row(
                 horizontalArrangement = Arrangement.spacedBy(16.dp),
                 verticalAlignment = Alignment.CenterVertically
@@ -60,7 +64,7 @@ fun TagDemo() {
 
         Spacer(modifier = Modifier.height(24.dp))
 
-        DemoSection(title = "尺寸") {
+        DemoSection(title = text.sizeSectionTitle) {
             Row(
                 horizontalArrangement = Arrangement.spacedBy(16.dp),
                 verticalAlignment = Alignment.CenterVertically
@@ -73,7 +77,7 @@ fun TagDemo() {
 
         Spacer(modifier = Modifier.height(24.dp))
 
-        DemoSection(title = "语义化颜色") {
+        DemoSection(title = text.semanticSectionTitle) {
             Row(
                 horizontalArrangement = Arrangement.spacedBy(16.dp),
                 verticalAlignment = Alignment.CenterVertically
@@ -87,7 +91,7 @@ fun TagDemo() {
 
         Spacer(modifier = Modifier.height(24.dp))
 
-        DemoSection(title = "Pastel 调色板") {
+        DemoSection(title = text.pastelSectionTitle) {
             FlowRow(
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
                 verticalArrangement = Arrangement.spacedBy(8.dp)
@@ -103,7 +107,7 @@ fun TagDemo() {
 
         Spacer(modifier = Modifier.height(24.dp))
 
-        DemoSection(title = "可关闭标签") {
+        DemoSection(title = text.closableSectionTitle) {
             val (tags, setTags) = useState(listOf("Tag 1", "Tag 2", "Tag 3"))
 
             Row(
@@ -122,7 +126,7 @@ fun TagDemo() {
 
                 if (tags.isEmpty()) {
                     PTag(
-                        text = "Reset",
+                        text = text.resetText,
                         onClick = { setTags(listOf("Tag 1", "Tag 2", "Tag 3")) }
                     )
                 }
@@ -131,26 +135,26 @@ fun TagDemo() {
 
         Spacer(modifier = Modifier.height(24.dp))
 
-        DemoSection(title = "可编辑标签组") {
+        DemoSection(title = text.editableSectionTitle) {
             val (editableTags, setEditableTags) = useState(listOf("React", "Vue", "Angular"))
 
             PEditableTagGroup(
                 tags = editableTags,
                 onTagsChange = setEditableTags,
-                placeholder = "Add framework...",
+                placeholder = text.addFrameworkPlaceholder,
                 maxTags = 8
             )
         }
 
         Spacer(modifier = Modifier.height(24.dp))
 
-        DemoSection(title = "可编辑标签组 (Pastel 风格)") {
+        DemoSection(title = text.editablePastelSectionTitle) {
             val (pastelTags, setPastelTags) = useState(listOf("Design", "Development", "Marketing"))
 
             PEditableTagGroup(
                 tags = pastelTags,
                 onTagsChange = setPastelTags,
-                placeholder = "Add tag...",
+                placeholder = text.addTagPlaceholder,
                 size = TagSize.Large,
                 tagColors = { TagDefaults.pastelColors(it) }
             )
@@ -159,14 +163,36 @@ fun TagDemo() {
         Spacer(modifier = Modifier.height(32.dp))
 
         PText(
-            text = "代码示例",
+            text = text.codeTitle,
             style = MaterialTheme.typography.titleMedium
         )
 
         Spacer(modifier = Modifier.height(16.dp))
 
         CodeBlock(
-            code = """
+            code = text.codeBlock
+        )
+    }
+}
+
+@Composable
+@ReadOnlyComposable
+private fun tagDemoText(): TagDemoText = when (LocalLanguage.current) {
+    Language.ZH_CN -> TagDemoText(
+        title = "PTag",
+        subtitle = "用于标记和选择的标签组件",
+        basicSectionTitle = "基础用法",
+        sizeSectionTitle = "尺寸",
+        semanticSectionTitle = "语义化颜色",
+        pastelSectionTitle = "Pastel 调色板",
+        closableSectionTitle = "可关闭标签",
+        resetText = "Reset",
+        editableSectionTitle = "可编辑标签组",
+        addFrameworkPlaceholder = "Add framework...",
+        editablePastelSectionTitle = "可编辑标签组 (Pastel 风格)",
+        addTagPlaceholder = "Add tag...",
+        codeTitle = "代码示例",
+        codeBlock = """
             // 基础用法
             PTag(text = "Default")
             PTag(text = "Outlined", variant = TagVariant.Outlined)
@@ -199,7 +225,73 @@ fun TagDemo() {
                 placeholder = "Add tag...",
                 maxTags = 10
             )
-            """.trimIndent()
-        )
-    }
+        """.trimIndent(),
+    )
+
+    Language.EN_US -> TagDemoText(
+        title = "PTag",
+        subtitle = "Tag component for marking and selection.",
+        basicSectionTitle = "Basic Usage",
+        sizeSectionTitle = "Sizes",
+        semanticSectionTitle = "Semantic Colors",
+        pastelSectionTitle = "Pastel Palette",
+        closableSectionTitle = "Closable Tags",
+        resetText = "Reset",
+        editableSectionTitle = "Editable Tag Group",
+        addFrameworkPlaceholder = "Add framework...",
+        editablePastelSectionTitle = "Editable Tag Group (Pastel Style)",
+        addTagPlaceholder = "Add tag...",
+        codeTitle = "Code Example",
+        codeBlock = """
+// Basic usage
+PTag(text = "Default")
+PTag(text = "Outlined", variant = TagVariant.Outlined)
+PTag(text = "Soft", variant = TagVariant.Soft)
+
+// Sizes
+PTag(text = "Small", size = TagSize.Small)
+PTag(text = "Medium", size = TagSize.Medium)
+PTag(text = "Large", size = TagSize.Large)
+
+// Semantic colors
+PTag(text = "Success", colors = TagDefaults.successColors())
+PTag(text = "Warning", colors = TagDefaults.warningColors())
+
+// Pastel palette
+PTag(text = "Apple", colors = TagDefaults.pastelColors("Apple"))
+
+// Closable tag
+PTag(
+    text = "Closable",
+    closable = true,
+    onClose = { /* handle close */ }
+)
+
+// Editable tag group
+val (tags, setTags) = useState(listOf("Tag 1", "Tag 2"))
+PEditableTagGroup(
+    tags = tags,
+    onTagsChange = setTags,
+    placeholder = "Add tag...",
+    maxTags = 10
+)
+        """.trimIndent(),
+    )
 }
+
+private data class TagDemoText(
+    val title: String,
+    val subtitle: String,
+    val basicSectionTitle: String,
+    val sizeSectionTitle: String,
+    val semanticSectionTitle: String,
+    val pastelSectionTitle: String,
+    val closableSectionTitle: String,
+    val resetText: String,
+    val editableSectionTitle: String,
+    val addFrameworkPlaceholder: String,
+    val editablePastelSectionTitle: String,
+    val addTagPlaceholder: String,
+    val codeTitle: String,
+    val codeBlock: String,
+)

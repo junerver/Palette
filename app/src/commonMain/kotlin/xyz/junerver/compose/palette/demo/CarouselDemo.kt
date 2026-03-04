@@ -12,18 +12,40 @@ import androidx.compose.material.icons.filled.KeyboardArrowRight
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import xyz.junerver.compose.palette.components.text.PText
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import xyz.junerver.compose.palette.Language
+import xyz.junerver.compose.palette.LocalLanguage
 import xyz.junerver.compose.palette.components.carousel.PCarousel
 
 @Composable
 fun CarouselDemo() {
+    val title = demoText("PCarousel 轮播图", "PCarousel")
+    val subtitle = demoText(
+        "用于展示轮播内容的组件，支持自动播放、指示器、箭头导航",
+        "A carousel component with autoplay, indicators, and arrow navigation."
+    )
+    val basicSectionTitle = demoText("基础用法 - 带箭头导航", "Basic Usage - With Arrow Navigation")
+    val autoPlaySectionTitle = demoText("自动播放 - 每3秒切换", "Autoplay - Switch Every 3 Seconds")
+    val customArrowSectionTitle = demoText("自定义箭头样式", "Custom Arrow Style")
+    val dragSectionTitle = demoText("无箭头导航 - 支持拖拽", "No Arrow Navigation - Draggable")
+    val slidePrefix = demoText("Slide", "Slide")
+    val customArrowText = demoText("自定义箭头", "Custom Arrow")
+    val previousText = demoText("上一张", "Previous")
+    val nextText = demoText("下一张", "Next")
+    val autoItems = listOf(
+        demoText("图片 1", "Image 1"),
+        demoText("图片 2", "Image 2"),
+        demoText("图片 3", "Image 3"),
+        demoText("图片 4", "Image 4"),
+    )
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -31,18 +53,18 @@ fun CarouselDemo() {
             .padding(24.dp)
     ) {
         PText(
-            text = "PCarousel 轮播图",
+            text = title,
             style = MaterialTheme.typography.headlineMedium
         )
         Spacer(modifier = Modifier.height(8.dp))
         PText(
-            text = "用于展示轮播内容的组件，支持自动播放、指示器、箭头导航",
+            text = subtitle,
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
         Spacer(modifier = Modifier.height(24.dp))
 
-        DemoSection(title = "基础用法 - 带箭头导航") {
+        DemoSection(title = basicSectionTitle) {
             val colors = listOf(
                 Color(0xFFE57373),
                 Color(0xFF64B5F6),
@@ -65,7 +87,7 @@ fun CarouselDemo() {
                     contentAlignment = Alignment.Center
                 ) {
                     PText(
-                        text = "Slide ${colors.indexOf(color) + 1}",
+                        text = "$slidePrefix ${colors.indexOf(color) + 1}",
                         style = MaterialTheme.typography.headlineMedium,
                         color = Color.White
                     )
@@ -75,11 +97,9 @@ fun CarouselDemo() {
 
         Spacer(modifier = Modifier.height(24.dp))
 
-        DemoSection(title = "自动播放 - 每3秒切换") {
-            val items = listOf("图片 1", "图片 2", "图片 3", "图片 4")
-            
+        DemoSection(title = autoPlaySectionTitle) {
             PCarousel(
-                items = items,
+                items = autoItems,
                 autoPlay = true,
                 autoPlayInterval = 3000L,
                 modifier = Modifier
@@ -91,7 +111,7 @@ fun CarouselDemo() {
                     modifier = Modifier
                         .fillMaxSize()
                         .background(
-                            when (items.indexOf(item)) {
+                            when (autoItems.indexOf(item)) {
                                 0 -> Color(0xFF42A5F5)
                                 1 -> Color(0xFF66BB6A)
                                 2 -> Color(0xFFFF7043)
@@ -111,7 +131,7 @@ fun CarouselDemo() {
 
         Spacer(modifier = Modifier.height(24.dp))
 
-        DemoSection(title = "自定义箭头样式") {
+        DemoSection(title = customArrowSectionTitle) {
             val colors = listOf(
                 Color(0xFFFF6B6B),
                 Color(0xFF4ECDC4),
@@ -131,7 +151,7 @@ fun CarouselDemo() {
                     ) {
                         Icon(
                             imageVector = Icons.Default.KeyboardArrowLeft,
-                            contentDescription = "Previous",
+                            contentDescription = previousText,
                             tint = Color.Black,
                             modifier = Modifier.size(32.dp)
                         )
@@ -147,7 +167,7 @@ fun CarouselDemo() {
                     ) {
                         Icon(
                             imageVector = Icons.Default.KeyboardArrowRight,
-                            contentDescription = "Next",
+                            contentDescription = nextText,
                             tint = Color.Black,
                             modifier = Modifier.size(32.dp)
                         )
@@ -165,7 +185,7 @@ fun CarouselDemo() {
                     contentAlignment = Alignment.Center
                 ) {
                     PText(
-                        text = "自定义箭头",
+                        text = customArrowText,
                         style = MaterialTheme.typography.headlineMedium,
                         color = Color.White
                     )
@@ -175,7 +195,7 @@ fun CarouselDemo() {
 
         Spacer(modifier = Modifier.height(24.dp))
 
-        DemoSection(title = "无箭头导航 - 支持拖拽") {
+        DemoSection(title = dragSectionTitle) {
             val colors = listOf(
                 Color(0xFFFF6B6B),
                 Color(0xFF4ECDC4),
@@ -197,7 +217,7 @@ fun CarouselDemo() {
                     contentAlignment = Alignment.Center
                 ) {
                     PText(
-                        text = "Slide ${colors.indexOf(color) + 1}",
+                        text = "$slidePrefix ${colors.indexOf(color) + 1}",
                         style = MaterialTheme.typography.headlineLarge,
                         color = Color.White
                     )
@@ -205,4 +225,11 @@ fun CarouselDemo() {
             }
         }
     }
+}
+
+@Composable
+@ReadOnlyComposable
+private fun demoText(zh: String, en: String): String = when (LocalLanguage.current) {
+    Language.ZH_CN -> zh
+    Language.EN_US -> en
 }

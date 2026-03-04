@@ -22,23 +22,25 @@ import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
 import xyz.junerver.compose.palette.components.text.PText
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import xyz.junerver.compose.palette.Language
+import xyz.junerver.compose.palette.LocalLanguage
 import xyz.junerver.compose.palette.components.badge.PBadge
 import xyz.junerver.compose.palette.components.CodeBlock
 import xyz.junerver.compose.palette.ui.theme.Error
 import xyz.junerver.compose.palette.ui.theme.Primary
 import xyz.junerver.compose.palette.ui.theme.Success
-import xyz.junerver.compose.palette.ui.theme.Warning
 
 @Composable
 fun BadgeDemo() {
+    val text = badgeDemoText()
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -46,18 +48,18 @@ fun BadgeDemo() {
             .padding(24.dp)
     ) {
         PText(
-            text = "PBadge",
+            text = text.title,
             style = MaterialTheme.typography.headlineMedium
         )
         PText(
-            text = "可自定义位置和内容的徽章组件",
+            text = text.subtitle,
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
 
         Spacer(modifier = Modifier.height(32.dp))
 
-        DemoSection(title = "基础用法") {
+        DemoSection(title = text.basicSectionTitle) {
             Row(
                 horizontalArrangement = Arrangement.spacedBy(32.dp),
                 verticalAlignment = Alignment.CenterVertically
@@ -101,7 +103,7 @@ fun BadgeDemo() {
 
         Spacer(modifier = Modifier.height(24.dp))
 
-        DemoSection(title = "不同颜色") {
+        DemoSection(title = text.colorSectionTitle) {
             Row(
                 horizontalArrangement = Arrangement.spacedBy(32.dp),
                 verticalAlignment = Alignment.CenterVertically
@@ -120,7 +122,7 @@ fun BadgeDemo() {
                 )
 
                 PBadge(
-                    content = "新",
+                    content = text.newBadge,
                     color = Primary,
                     holder = {
                         Box(
@@ -149,7 +151,7 @@ fun BadgeDemo() {
 
         Spacer(modifier = Modifier.height(24.dp))
 
-        DemoSection(title = "不同位置") {
+        DemoSection(title = text.positionSectionTitle) {
             Row(
                 horizontalArrangement = Arrangement.spacedBy(32.dp),
                 verticalAlignment = Alignment.CenterVertically
@@ -211,14 +213,30 @@ fun BadgeDemo() {
         Spacer(modifier = Modifier.height(32.dp))
 
         PText(
-            text = "代码示例",
+            text = text.codeTitle,
             style = MaterialTheme.typography.titleMedium
         )
 
         Spacer(modifier = Modifier.height(16.dp))
 
         CodeBlock(
-            code = """
+            code = text.codeBlock
+        )
+    }
+}
+
+@Composable
+@ReadOnlyComposable
+private fun badgeDemoText(): BadgeDemoText = when (LocalLanguage.current) {
+    Language.ZH_CN -> BadgeDemoText(
+        title = "PBadge",
+        subtitle = "可自定义位置和内容的徽章组件",
+        basicSectionTitle = "基础用法",
+        colorSectionTitle = "不同颜色",
+        positionSectionTitle = "不同位置",
+        newBadge = "新",
+        codeTitle = "代码示例",
+        codeBlock = """
 PBadge(
     content = "5",
     color = Color.Red,
@@ -231,7 +249,41 @@ PBadge(
         )
     }
 )
-            """.trimIndent()
+        """.trimIndent(),
+    )
+
+    Language.EN_US -> BadgeDemoText(
+        title = "PBadge",
+        subtitle = "A badge component with customizable position and content.",
+        basicSectionTitle = "Basic Usage",
+        colorSectionTitle = "Colors",
+        positionSectionTitle = "Positions",
+        newBadge = "New",
+        codeTitle = "Code Example",
+        codeBlock = """
+PBadge(
+    content = "5",
+    color = Color.Red,
+    alignment = Alignment.TopEnd,
+    holder = {
+        Icon(
+            Icons.Default.Notifications,
+            contentDescription = null,
+            modifier = Modifier.size(32.dp)
         )
     }
+)
+        """.trimIndent(),
+    )
 }
+
+private data class BadgeDemoText(
+    val title: String,
+    val subtitle: String,
+    val basicSectionTitle: String,
+    val colorSectionTitle: String,
+    val positionSectionTitle: String,
+    val newBadge: String,
+    val codeTitle: String,
+    val codeBlock: String,
+)

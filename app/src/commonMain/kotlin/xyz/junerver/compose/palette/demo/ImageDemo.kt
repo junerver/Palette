@@ -5,15 +5,19 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import xyz.junerver.compose.palette.components.text.PText
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import xyz.junerver.compose.palette.Language
+import xyz.junerver.compose.palette.LocalLanguage
 
 @Composable
 fun ImageDemo() {
+    val text = imageDemoText()
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -21,25 +25,25 @@ fun ImageDemo() {
             .padding(24.dp)
     ) {
         PText(
-            text = "PImage 图片",
+            text = text.title,
             style = MaterialTheme.typography.headlineMedium
         )
         Spacer(modifier = Modifier.height(8.dp))
         PText(
-            text = "用于展示图片的组件",
+            text = text.subtitle,
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
         Spacer(modifier = Modifier.height(24.dp))
 
-        DemoSection(title = "基础用法") {
+        DemoSection(title = text.basicSectionTitle) {
             Box(
                 modifier = Modifier
                     .size(200.dp)
                     .background(Color.LightGray)
             ) {
                 PText(
-                    "图片占位符",
+                    text.placeholderText,
                     modifier = Modifier.padding(16.dp)
                 )
             }
@@ -48,9 +52,37 @@ fun ImageDemo() {
         Spacer(modifier = Modifier.height(16.dp))
 
         PText(
-            text = "注意：PImage 组件需要 Painter 参数，请使用 painterResource 加载图片资源",
+            text = text.noticeText,
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.error
         )
     }
 }
+
+@Composable
+@ReadOnlyComposable
+private fun imageDemoText(): ImageDemoText = when (LocalLanguage.current) {
+    Language.ZH_CN -> ImageDemoText(
+        title = "PImage 图片",
+        subtitle = "用于展示图片的组件",
+        basicSectionTitle = "基础用法",
+        placeholderText = "图片占位符",
+        noticeText = "注意：PImage 组件需要 Painter 参数，请使用 painterResource 加载图片资源",
+    )
+
+    Language.EN_US -> ImageDemoText(
+        title = "PImage",
+        subtitle = "A component for displaying images.",
+        basicSectionTitle = "Basic Usage",
+        placeholderText = "Image Placeholder",
+        noticeText = "Note: PImage requires a Painter parameter. Use painterResource to load image resources.",
+    )
+}
+
+private data class ImageDemoText(
+    val title: String,
+    val subtitle: String,
+    val basicSectionTitle: String,
+    val placeholderText: String,
+    val noticeText: String,
+)

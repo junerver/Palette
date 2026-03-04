@@ -9,9 +9,9 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import xyz.junerver.compose.palette.components.text.PText
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.remember
@@ -19,12 +19,16 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import xyz.junerver.compose.palette.Language
+import xyz.junerver.compose.palette.LocalLanguage
 import xyz.junerver.compose.palette.components.CodeBlock
 import xyz.junerver.compose.palette.components.progress.PCircleProgress
 import xyz.junerver.compose.palette.components.progress.PProgress
 
 @Composable
 fun ProgressDemo() {
+    val text = progressDemoText()
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -32,18 +36,18 @@ fun ProgressDemo() {
             .padding(24.dp)
     ) {
         PText(
-            text = "Progress",
+            text = text.title,
             style = MaterialTheme.typography.headlineMedium
         )
         PText(
-            text = "进度条组件",
+            text = text.subtitle,
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
 
         Spacer(modifier = Modifier.height(32.dp))
 
-        DemoSection(title = "线性进度条") {
+        DemoSection(title = text.linearSectionTitle) {
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.spacedBy(16.dp)
@@ -61,7 +65,7 @@ fun ProgressDemo() {
 
         Spacer(modifier = Modifier.height(24.dp))
 
-        DemoSection(title = "圆形进度条") {
+        DemoSection(title = text.circleSectionTitle) {
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.spacedBy(16.dp)
@@ -73,7 +77,7 @@ fun ProgressDemo() {
 
         Spacer(modifier = Modifier.height(24.dp))
 
-        DemoSection(title = "自定义格式化") {
+        DemoSection(title = text.formatSectionTitle) {
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.spacedBy(16.dp)
@@ -88,14 +92,29 @@ fun ProgressDemo() {
         Spacer(modifier = Modifier.height(32.dp))
 
         PText(
-            text = "代码示例",
+            text = text.codeTitle,
             style = MaterialTheme.typography.titleMedium
         )
 
         Spacer(modifier = Modifier.height(16.dp))
 
         CodeBlock(
-            code = """
+            code = text.codeBlock
+        )
+    }
+}
+
+@Composable
+@ReadOnlyComposable
+private fun progressDemoText(): ProgressDemoText = when (LocalLanguage.current) {
+    Language.ZH_CN -> ProgressDemoText(
+        title = "Progress",
+        subtitle = "进度条组件",
+        linearSectionTitle = "线性进度条",
+        circleSectionTitle = "圆形进度条",
+        formatSectionTitle = "自定义格式化",
+        codeTitle = "代码示例",
+        codeBlock = """
 // 线性进度条
 PProgress(percent = 60f)
 
@@ -107,7 +126,38 @@ PProgress(
     percent = 50f,
     formatter = { "${'$'}{it.toInt()}/100" }
 )
-            """.trimIndent()
-        )
-    }
+        """.trimIndent(),
+    )
+
+    Language.EN_US -> ProgressDemoText(
+        title = "Progress",
+        subtitle = "Progress component.",
+        linearSectionTitle = "Linear Progress",
+        circleSectionTitle = "Circular Progress",
+        formatSectionTitle = "Custom Formatter",
+        codeTitle = "Code Example",
+        codeBlock = """
+// Linear progress
+PProgress(percent = 60f)
+
+// Circular progress
+PCircleProgress(percent = 75f)
+
+// Custom formatter
+PProgress(
+    percent = 50f,
+    formatter = { "${'$'}{it.toInt()}/100" }
+)
+        """.trimIndent(),
+    )
 }
+
+private data class ProgressDemoText(
+    val title: String,
+    val subtitle: String,
+    val linearSectionTitle: String,
+    val circleSectionTitle: String,
+    val formatSectionTitle: String,
+    val codeTitle: String,
+    val codeBlock: String,
+)

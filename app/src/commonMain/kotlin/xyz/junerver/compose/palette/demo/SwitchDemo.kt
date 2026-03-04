@@ -9,9 +9,9 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import xyz.junerver.compose.palette.components.text.PText
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -19,11 +19,15 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import xyz.junerver.compose.palette.Language
+import xyz.junerver.compose.palette.LocalLanguage
 import xyz.junerver.compose.palette.components.CodeBlock
 import xyz.junerver.compose.palette.components.switch.PSwitch
 
 @Composable
 fun SwitchDemo() {
+    val text = switchDemoText()
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -31,18 +35,18 @@ fun SwitchDemo() {
             .padding(24.dp)
     ) {
         PText(
-            text = "Switch",
+            text = text.title,
             style = MaterialTheme.typography.headlineMedium
         )
         PText(
-            text = "开关组件",
+            text = text.subtitle,
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
 
         Spacer(modifier = Modifier.height(32.dp))
 
-        DemoSection(title = "基础用法") {
+        DemoSection(title = text.basicSectionTitle) {
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.spacedBy(16.dp)
@@ -53,7 +57,7 @@ fun SwitchDemo() {
                     onChange = { checked1 = it }
                 )
                 PText(
-                    text = "状态: ${if (checked1) "开启" else "关闭"}",
+                    text = "${text.statusPrefix}${if (checked1) text.onText else text.offText}",
                     style = MaterialTheme.typography.bodySmall
                 )
             }
@@ -61,7 +65,7 @@ fun SwitchDemo() {
 
         Spacer(modifier = Modifier.height(24.dp))
 
-        DemoSection(title = "默认开启") {
+        DemoSection(title = text.defaultOnSectionTitle) {
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 var checked2 by remember { mutableStateOf(true) }
                 PSwitch(
@@ -73,7 +77,7 @@ fun SwitchDemo() {
 
         Spacer(modifier = Modifier.height(24.dp))
 
-        DemoSection(title = "禁用状态") {
+        DemoSection(title = text.disabledSectionTitle) {
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.spacedBy(16.dp)
@@ -86,20 +90,69 @@ fun SwitchDemo() {
         Spacer(modifier = Modifier.height(32.dp))
 
         PText(
-            text = "代码示例",
+            text = text.codeTitle,
             style = MaterialTheme.typography.titleMedium
         )
 
         Spacer(modifier = Modifier.height(16.dp))
 
         CodeBlock(
-            code = """
+            code = text.codeBlock
+        )
+    }
+}
+
+@Composable
+@ReadOnlyComposable
+private fun switchDemoText(): SwitchDemoText = when (LocalLanguage.current) {
+    Language.ZH_CN -> SwitchDemoText(
+        title = "Switch",
+        subtitle = "开关组件",
+        basicSectionTitle = "基础用法",
+        statusPrefix = "状态: ",
+        onText = "开启",
+        offText = "关闭",
+        defaultOnSectionTitle = "默认开启",
+        disabledSectionTitle = "禁用状态",
+        codeTitle = "代码示例",
+        codeBlock = """
 var checked by remember { mutableStateOf(false) }
 PSwitch(
     checked = checked,
     onChange = { checked = it }
 )
-            """.trimIndent()
-        )
-    }
+        """.trimIndent(),
+    )
+
+    Language.EN_US -> SwitchDemoText(
+        title = "Switch",
+        subtitle = "Switch component.",
+        basicSectionTitle = "Basic Usage",
+        statusPrefix = "Status: ",
+        onText = "On",
+        offText = "Off",
+        defaultOnSectionTitle = "Default On",
+        disabledSectionTitle = "Disabled State",
+        codeTitle = "Code Example",
+        codeBlock = """
+var checked by remember { mutableStateOf(false) }
+PSwitch(
+    checked = checked,
+    onChange = { checked = it }
+)
+        """.trimIndent(),
+    )
 }
+
+private data class SwitchDemoText(
+    val title: String,
+    val subtitle: String,
+    val basicSectionTitle: String,
+    val statusPrefix: String,
+    val onText: String,
+    val offText: String,
+    val defaultOnSectionTitle: String,
+    val disabledSectionTitle: String,
+    val codeTitle: String,
+    val codeBlock: String,
+)

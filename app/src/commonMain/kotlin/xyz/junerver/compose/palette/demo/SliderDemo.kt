@@ -8,20 +8,24 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import xyz.junerver.compose.palette.components.text.PText
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import xyz.junerver.compose.palette.Language
+import xyz.junerver.compose.palette.LocalLanguage
 import xyz.junerver.compose.palette.components.CodeBlock
 import xyz.junerver.compose.palette.components.slider.PSlider
 
 @Composable
 fun SliderDemo() {
+    val text = sliderDemoText()
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -29,18 +33,18 @@ fun SliderDemo() {
             .padding(24.dp)
     ) {
         PText(
-            text = "Slider",
+            text = text.title,
             style = MaterialTheme.typography.headlineMedium
         )
         PText(
-            text = "滑块组件",
+            text = text.subtitle,
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
 
         Spacer(modifier = Modifier.height(32.dp))
 
-        DemoSection(title = "基础用法") {
+        DemoSection(title = text.basicSectionTitle) {
             var value1 by remember { mutableFloatStateOf(50f) }
             PSlider(
                 value = value1,
@@ -50,7 +54,7 @@ fun SliderDemo() {
 
         Spacer(modifier = Modifier.height(24.dp))
 
-        DemoSection(title = "自定义范围") {
+        DemoSection(title = text.rangeSectionTitle) {
             var value2 by remember { mutableFloatStateOf(25f) }
             PSlider(
                 value = value2,
@@ -61,7 +65,7 @@ fun SliderDemo() {
 
         Spacer(modifier = Modifier.height(24.dp))
 
-        DemoSection(title = "步进值") {
+        DemoSection(title = text.stepSectionTitle) {
             var value3 by remember { mutableFloatStateOf(10f) }
             PSlider(
                 value = value3,
@@ -72,7 +76,7 @@ fun SliderDemo() {
 
         Spacer(modifier = Modifier.height(24.dp))
 
-        DemoSection(title = "自定义格式化") {
+        DemoSection(title = text.formatSectionTitle) {
             var value4 by remember { mutableFloatStateOf(50f) }
             PSlider(
                 value = value4,
@@ -83,7 +87,7 @@ fun SliderDemo() {
 
         Spacer(modifier = Modifier.height(24.dp))
 
-        DemoSection(title = "禁用状态") {
+        DemoSection(title = text.disabledSectionTitle) {
             PSlider(
                 value = 30f,
                 onChange = {},
@@ -94,14 +98,31 @@ fun SliderDemo() {
         Spacer(modifier = Modifier.height(32.dp))
 
         PText(
-            text = "代码示例",
+            text = text.codeTitle,
             style = MaterialTheme.typography.titleMedium
         )
 
         Spacer(modifier = Modifier.height(16.dp))
 
         CodeBlock(
-            code = """
+            code = text.codeBlock
+        )
+    }
+}
+
+@Composable
+@ReadOnlyComposable
+private fun sliderDemoText(): SliderDemoText = when (LocalLanguage.current) {
+    Language.ZH_CN -> SliderDemoText(
+        title = "Slider",
+        subtitle = "滑块组件",
+        basicSectionTitle = "基础用法",
+        rangeSectionTitle = "自定义范围",
+        stepSectionTitle = "步进值",
+        formatSectionTitle = "自定义格式化",
+        disabledSectionTitle = "禁用状态",
+        codeTitle = "代码示例",
+        codeBlock = """
 var value by remember { mutableFloatStateOf(50f) }
 PSlider(
     value = value,
@@ -109,7 +130,38 @@ PSlider(
     range = 0f..100f,
     step = 1
 )
-            """.trimIndent()
-        )
-    }
+        """.trimIndent(),
+    )
+
+    Language.EN_US -> SliderDemoText(
+        title = "Slider",
+        subtitle = "Slider component.",
+        basicSectionTitle = "Basic Usage",
+        rangeSectionTitle = "Custom Range",
+        stepSectionTitle = "Step Value",
+        formatSectionTitle = "Custom Formatter",
+        disabledSectionTitle = "Disabled State",
+        codeTitle = "Code Example",
+        codeBlock = """
+var value by remember { mutableFloatStateOf(50f) }
+PSlider(
+    value = value,
+    onChange = { value = it },
+    range = 0f..100f,
+    step = 1
+)
+        """.trimIndent(),
+    )
 }
+
+private data class SliderDemoText(
+    val title: String,
+    val subtitle: String,
+    val basicSectionTitle: String,
+    val rangeSectionTitle: String,
+    val stepSectionTitle: String,
+    val formatSectionTitle: String,
+    val disabledSectionTitle: String,
+    val codeTitle: String,
+    val codeBlock: String,
+)

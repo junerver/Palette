@@ -15,19 +15,23 @@ import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import xyz.junerver.compose.palette.components.text.PText
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import xyz.junerver.compose.palette.Language
+import xyz.junerver.compose.palette.LocalLanguage
 import xyz.junerver.compose.palette.components.CodeBlock
 import xyz.junerver.compose.palette.components.avatar.AvatarSize
 import xyz.junerver.compose.palette.components.avatar.PAvatar
 
 @Composable
 fun AvatarDemo() {
+    val text = avatarDemoText()
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -35,18 +39,18 @@ fun AvatarDemo() {
             .padding(24.dp)
     ) {
         PText(
-            text = "PAvatar",
+            text = text.title,
             style = MaterialTheme.typography.headlineMedium
         )
         PText(
-            text = "用来代表用户或事物，支持图片、图标或字符展示",
+            text = text.subtitle,
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
 
         Spacer(modifier = Modifier.height(32.dp))
 
-        DemoSection(title = "不同尺寸") {
+        DemoSection(title = text.sizeSectionTitle) {
             Row(
                 horizontalArrangement = Arrangement.spacedBy(16.dp),
                 verticalAlignment = Alignment.CenterVertically
@@ -60,7 +64,7 @@ fun AvatarDemo() {
 
         Spacer(modifier = Modifier.height(24.dp))
 
-        DemoSection(title = "不同背景色") {
+        DemoSection(title = text.colorSectionTitle) {
             Row(
                 horizontalArrangement = Arrangement.spacedBy(16.dp),
                 verticalAlignment = Alignment.CenterVertically
@@ -74,7 +78,7 @@ fun AvatarDemo() {
 
         Spacer(modifier = Modifier.height(24.dp))
 
-        DemoSection(title = "自定义内容") {
+        DemoSection(title = text.customSectionTitle) {
             Row(
                 horizontalArrangement = Arrangement.spacedBy(16.dp),
                 verticalAlignment = Alignment.CenterVertically
@@ -115,14 +119,29 @@ fun AvatarDemo() {
         Spacer(modifier = Modifier.height(32.dp))
 
         PText(
-            text = "代码示例",
+            text = text.codeTitle,
             style = MaterialTheme.typography.titleMedium
         )
 
         Spacer(modifier = Modifier.height(16.dp))
 
         CodeBlock(
-            code = """
+            code = text.codeBlock
+        )
+    }
+}
+
+@Composable
+@ReadOnlyComposable
+private fun avatarDemoText(): AvatarDemoText = when (LocalLanguage.current) {
+    Language.ZH_CN -> AvatarDemoText(
+        title = "PAvatar",
+        subtitle = "用来代表用户或事物，支持图片、图标或字符展示",
+        sizeSectionTitle = "不同尺寸",
+        colorSectionTitle = "不同背景色",
+        customSectionTitle = "自定义内容",
+        codeTitle = "代码示例",
+        codeBlock = """
 PAvatar(
     size = AvatarSize.Large,
     text = "User",
@@ -135,7 +154,39 @@ PAvatar(
     },
     backgroundColor = Color(0xFF87D068)
 )
-            """.trimIndent()
-        )
-    }
+        """.trimIndent(),
+    )
+
+    Language.EN_US -> AvatarDemoText(
+        title = "PAvatar",
+        subtitle = "Represents users or entities with image, icon, or text.",
+        sizeSectionTitle = "Sizes",
+        colorSectionTitle = "Background Colors",
+        customSectionTitle = "Custom Content",
+        codeTitle = "Code Example",
+        codeBlock = """
+PAvatar(
+    size = AvatarSize.Large,
+    text = "User",
+    backgroundColor = Color(0xFF1890FF)
+)
+
+PAvatar(
+    content = {
+        Icon(Icons.Default.Person, null)
+    },
+    backgroundColor = Color(0xFF87D068)
+)
+        """.trimIndent(),
+    )
 }
+
+private data class AvatarDemoText(
+    val title: String,
+    val subtitle: String,
+    val sizeSectionTitle: String,
+    val colorSectionTitle: String,
+    val customSectionTitle: String,
+    val codeTitle: String,
+    val codeBlock: String,
+)
