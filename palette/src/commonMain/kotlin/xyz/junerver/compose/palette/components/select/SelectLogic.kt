@@ -36,3 +36,22 @@ fun <T> isOptionSelectable(
     option: SelectOption<T>,
     enabled: Boolean,
 ): Boolean = enabled && !option.disabled
+
+fun <T> toggleMultiSelection(
+    current: List<T>,
+    value: T,
+    maxSelection: Int = Int.MAX_VALUE,
+): List<T> {
+    if (current.contains(value)) return current.filterNot { it == value }
+    if (maxSelection > 0 && current.size >= maxSelection) return current
+    return current + value
+}
+
+fun <T> filterSelectedOptions(
+    options: List<SelectOption<T>>,
+    selectedValues: List<T>,
+): List<SelectOption<T>> {
+    if (selectedValues.isEmpty()) return emptyList()
+    val lookup = options.associateBy { it.value }
+    return selectedValues.mapNotNull { lookup[it] }
+}

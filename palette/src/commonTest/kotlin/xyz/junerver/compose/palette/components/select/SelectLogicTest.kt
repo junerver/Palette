@@ -81,4 +81,50 @@ class SelectLogicTest {
 
         assertFalse(isOptionSelectable(option, enabled = true))
     }
+
+    @Test
+    fun toggleMultiSelection_whenMissing_shouldAppendValue() {
+        val selected = toggleMultiSelection(
+            current = listOf("a", "b"),
+            value = "c",
+            maxSelection = 3,
+        )
+
+        assertEquals(listOf("a", "b", "c"), selected)
+    }
+
+    @Test
+    fun toggleMultiSelection_whenExists_shouldRemoveValue() {
+        val selected = toggleMultiSelection(
+            current = listOf("a", "b"),
+            value = "a",
+            maxSelection = 3,
+        )
+
+        assertEquals(listOf("b"), selected)
+    }
+
+    @Test
+    fun toggleMultiSelection_whenReachedMax_shouldKeepCurrent() {
+        val selected = toggleMultiSelection(
+            current = listOf("a", "b"),
+            value = "c",
+            maxSelection = 2,
+        )
+
+        assertEquals(listOf("a", "b"), selected)
+    }
+
+    @Test
+    fun filterSelectedOptions_shouldKeepSelectionOrder() {
+        val options = listOf(
+            SelectOption(label = "Alpha", value = "a"),
+            SelectOption(label = "Beta", value = "b"),
+            SelectOption(label = "Gamma", value = "g"),
+        )
+
+        val selected = filterSelectedOptions(options, selectedValues = listOf("g", "a"))
+
+        assertEquals(listOf("Gamma", "Alpha"), selected.map { it.label })
+    }
 }
