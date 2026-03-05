@@ -69,5 +69,5 @@ object SelectDefaults {
 
     @Composable
     @ReadOnlyComposable
-    fun noResultText(): String = PaletteTheme.strings.emptyDefaultTitle
+    fun noResultText(): String = PaletteTheme.strings.selectNoResult
 }
