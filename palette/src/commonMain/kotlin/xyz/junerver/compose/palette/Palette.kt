@@ -101,6 +101,23 @@ import xyz.junerver.compose.palette.components.form.FormDefaults as FormDefaults
 import xyz.junerver.compose.palette.components.form.FormLayout as FormLayoutImpl
 import xyz.junerver.compose.palette.components.form.FormLabelPosition as FormLabelPositionImpl
 import xyz.junerver.compose.palette.components.carousel.CarouselDefaults as CarouselDefaultsImpl
+import xyz.junerver.compose.palette.components.datagrid.DataGridColumn as DataGridColumnImpl
+import xyz.junerver.compose.palette.components.datagrid.DataGridDefaults as DataGridDefaultsImpl
+import xyz.junerver.compose.palette.components.datagrid.PDataGrid as PDataGridImpl
+import xyz.junerver.compose.palette.components.datetimerange.DateTimeRange as DateTimeRangeImpl
+import xyz.junerver.compose.palette.components.datetimerange.DateTimeRangeDefaults as DateTimeRangeDefaultsImpl
+import xyz.junerver.compose.palette.components.datetimerange.PDateTimeRange as PDateTimeRangeImpl
+import xyz.junerver.compose.palette.components.commandpalette.CommandAction as CommandActionImpl
+import xyz.junerver.compose.palette.components.commandpalette.CommandPaletteDefaults as CommandPaletteDefaultsImpl
+import xyz.junerver.compose.palette.components.commandpalette.PCommandPalette as PCommandPaletteImpl
+import xyz.junerver.compose.palette.components.tour.PTour as PTourImpl
+import xyz.junerver.compose.palette.components.tour.TourDefaults as TourDefaultsImpl
+import xyz.junerver.compose.palette.components.tour.TourStep as TourStepImpl
+import xyz.junerver.compose.palette.components.sortable.PSortable as PSortableImpl
+import xyz.junerver.compose.palette.components.sortable.SortableDefaults as SortableDefaultsImpl
+import xyz.junerver.compose.palette.components.sortable.SortableItem as SortableItemImpl
+import xyz.junerver.compose.palette.components.virtuallist.PVirtualList as PVirtualListImpl
+import xyz.junerver.compose.palette.components.virtuallist.VirtualListDefaults as VirtualListDefaultsImpl
 import xyz.junerver.compose.palette.core.spec.ComponentInteraction as ComponentInteractionImpl
 import xyz.junerver.compose.palette.core.spec.ComponentSize as ComponentSizeImpl
 import xyz.junerver.compose.palette.core.spec.ComponentState as ComponentStateImpl
@@ -344,6 +361,20 @@ val TableDefaults = TableDefaultsImpl
 typealias TableColors = TableColorsImpl
 typealias TableScrollBehavior = TableScrollBehaviorImpl
 
+// Components - DataGrid
+@Composable
+fun <T> PDataGrid(
+    rows: List<T>,
+    columns: List<DataGridColumnImpl<T>>,
+    modifier: androidx.compose.ui.Modifier = androidx.compose.ui.Modifier,
+) = PDataGridImpl(
+    rows = rows,
+    columns = columns,
+    modifier = modifier,
+)
+val DataGridDefaults = DataGridDefaultsImpl
+typealias DataGridColumn<T> = DataGridColumnImpl<T>
+
 // Components - Carousel
 val CarouselDefaults = CarouselDefaultsImpl
 
@@ -351,3 +382,45 @@ val CarouselDefaults = CarouselDefaultsImpl
 val FormDefaults = FormDefaultsImpl
 typealias FormLayout = FormLayoutImpl
 typealias FormLabelPosition = FormLabelPositionImpl
+
+// Components - DateTimeRange
+val PDateTimeRange = ::PDateTimeRangeImpl
+val DateTimeRangeDefaults = DateTimeRangeDefaultsImpl
+typealias DateTimeRange = DateTimeRangeImpl
+
+// Components - CommandPalette
+val PCommandPalette = ::PCommandPaletteImpl
+val CommandPaletteDefaults = CommandPaletteDefaultsImpl
+typealias CommandAction = CommandActionImpl
+
+// Components - Tour
+val PTour = ::PTourImpl
+val TourDefaults = TourDefaultsImpl
+typealias TourStep = TourStepImpl
+
+// Components - Sortable
+@Composable
+fun <T> PSortable(
+    items: List<SortableItemImpl<T>>,
+    modifier: androidx.compose.ui.Modifier = androidx.compose.ui.Modifier,
+    itemText: (SortableItemImpl<T>) -> String = { it.id },
+) = PSortableImpl(
+    items = items,
+    modifier = modifier,
+    itemText = itemText,
+)
+val SortableDefaults = SortableDefaultsImpl
+typealias SortableItem<T> = SortableItemImpl<T>
+
+// Components - VirtualList
+@Composable
+fun <T> PVirtualList(
+    items: List<T>,
+    modifier: androidx.compose.ui.Modifier = androidx.compose.ui.Modifier,
+    itemText: (T) -> String = { it.toString() },
+) = PVirtualListImpl(
+    items = items,
+    modifier = modifier,
+    itemText = itemText,
+)
+val VirtualListDefaults = VirtualListDefaultsImpl
