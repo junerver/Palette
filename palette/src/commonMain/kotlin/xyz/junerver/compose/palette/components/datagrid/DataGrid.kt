@@ -2,10 +2,11 @@ package xyz.junerver.compose.palette.components.datagrid
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -16,25 +17,25 @@ fun <T> PDataGrid(
     columns: List<DataGridColumn<T>>,
     modifier: Modifier = Modifier,
 ) {
-    Column(
-        modifier = modifier.fillMaxWidth()
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .background(DataGridDefaults.headerContainerColor())
-                .padding(DataGridDefaults.CellPadding),
-            horizontalArrangement = Arrangement.spacedBy(DataGridDefaults.CellPadding)
-        ) {
-            columns.forEach { column ->
-                Text(
-                    text = column.title,
-                    color = DataGridDefaults.headerContentColor(),
-                    modifier = Modifier.weight(column.weight)
-                )
+    LazyColumn(modifier = modifier.fillMaxWidth()) {
+        item(key = "header") {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(DataGridDefaults.headerContainerColor())
+                    .padding(DataGridDefaults.CellPadding),
+                horizontalArrangement = Arrangement.spacedBy(DataGridDefaults.CellPadding)
+            ) {
+                columns.forEach { column ->
+                    Text(
+                        text = column.title,
+                        color = DataGridDefaults.headerContentColor(),
+                        modifier = Modifier.weight(column.weight)
+                    )
+                }
             }
         }
-        rows.forEach { row ->
+        itemsIndexed(rows, key = { index, _ -> index }) { _, row ->
             Row(
                 modifier = Modifier
                     .fillMaxWidth()

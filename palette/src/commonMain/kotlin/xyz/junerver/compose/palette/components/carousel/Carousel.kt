@@ -54,21 +54,18 @@ fun <T> PCarousel(
 ) {
     val pagerState = rememberPagerState(pageCount = { items.size })
     val scope = rememberCoroutineScope()
+    if (items.isEmpty()) return
 
     // Custom draggable state for desktop mouse drag support
     val draggableState = rememberDraggableState { delta ->
-        scope.launch {
-            pagerState.scroll {
-                scrollBy(-delta)
-            }
-        }
+        pagerState.dispatchRawDelta(-delta)
     }
 
-    LaunchedEffect(autoPlay) {
-        if (autoPlay && items.isNotEmpty()) {
+    LaunchedEffect(autoPlay, autoPlayInterval, items.size) {
+        if (autoPlay) {
             while (true) {
                 delay(autoPlayInterval)
-                if (!pagerState.isScrollInProgress) {
+                if (!pagerState.isScrollInProgress && items.isNotEmpty()) {
                     val nextPage = (pagerState.currentPage + 1) % items.size
                     pagerState.animateScrollToPage(nextPage)
                 }
@@ -109,7 +106,7 @@ fun <T> PCarousel(
                     }
                 ),
             beyondViewportPageCount = 1,
-            key = { it }
+            key = { index -> index }
         ) { page ->
             itemContent(items[page])
         }

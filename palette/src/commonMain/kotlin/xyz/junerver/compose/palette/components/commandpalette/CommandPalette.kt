@@ -11,6 +11,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import xyz.junerver.compose.palette.components.textfield.BorderTextField
@@ -25,7 +26,9 @@ fun PCommandPalette(
     modifier: Modifier = Modifier,
     onCommandClick: (CommandAction) -> Unit = {},
 ) {
-    val filtered = filterCommands(commands, query)
+    val filtered = remember(commands, query) {
+        filterCommands(commands, query)
+    }
 
     LazyColumn(
         modifier = modifier
@@ -42,7 +45,10 @@ fun PCommandPalette(
                 size = ComponentSize.Small,
             )
         }
-        itemsIndexed(filtered) { index, action ->
+        itemsIndexed(
+            items = filtered,
+            key = { _, action -> action.id }
+        ) { index, action ->
             Column(
                 modifier = Modifier
                     .fillMaxWidth()

@@ -7,6 +7,7 @@ plugins {
     alias(libs.plugins.jetbrainsCompose)
     alias(libs.plugins.composeCompiler)
     alias(libs.plugins.androidLibrary)
+    alias(libs.plugins.kotlinxBenchmark)
     id("maven-publish")
 }
 
@@ -23,6 +24,12 @@ kotlin {
         compilerOptions {
             jvmTarget.set(JvmTarget.JVM_11)
             freeCompilerArgs.add("-Xexpect-actual-classes")
+        }
+        compilations {
+            val main by getting
+            create("benchmark") {
+                associateWith(main)
+            }
         }
     }
 
@@ -79,6 +86,12 @@ kotlin {
             dependsOn(commonJvmAndroid)
         }
 
+        val desktopBenchmark by getting {
+            dependencies {
+                implementation(libs.kotlinx.benchmark.runtime)
+            }
+        }
+
         val iosMain by getting
 
         val androidUnitTest by getting
@@ -115,6 +128,12 @@ android {
     sourceSets["main"].manifest.srcFile("src/androidMain/AndroidManifest.xml")
     sourceSets["main"].res.srcDirs("src/androidMain/res")
     sourceSets["main"].resources.srcDirs("src/commonMain/resources")
+}
+
+benchmark {
+    targets {
+        register("desktopBenchmark")
+    }
 }
 
 tasks.register("runQualityChecks") {

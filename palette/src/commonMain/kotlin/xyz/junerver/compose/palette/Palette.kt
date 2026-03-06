@@ -418,9 +418,11 @@ fun <T> PVirtualList(
     items: List<T>,
     modifier: androidx.compose.ui.Modifier = androidx.compose.ui.Modifier,
     itemText: (T) -> String = { it.toString() },
+    key: ((T) -> Any)? = null,
 ) = PVirtualListImpl(
     items = items,
     modifier = modifier,
     itemText = itemText,
+    key = key,
 )
 val VirtualListDefaults = VirtualListDefaultsImpl

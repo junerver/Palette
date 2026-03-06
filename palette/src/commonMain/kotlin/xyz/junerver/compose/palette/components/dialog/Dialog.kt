@@ -18,7 +18,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -29,6 +28,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
+import xyz.junerver.compose.hooks.useCreation
 import xyz.junerver.compose.palette.core.theme.PaletteTheme
 
 @Composable
@@ -149,7 +149,7 @@ interface DialogState {
 
 @Composable
 fun rememberDialogState(): DialogState {
-    val state = remember { DialogStateImpl() }
+    val state = useCreation { DialogStateImpl() }.current
 
     if (state.visible) {
         state.props?.let { props ->

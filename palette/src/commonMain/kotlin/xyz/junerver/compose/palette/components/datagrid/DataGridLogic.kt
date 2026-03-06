@@ -17,11 +17,18 @@ fun <T> filterRows(
 ): List<T> {
     val normalized = keyword.trim()
     if (normalized.isEmpty()) return rows
-    return rows.filter { row ->
-        searchableText(row).any { value ->
-            value.contains(normalized, ignoreCase = true)
+
+    val filtered = ArrayList<T>(rows.size)
+    for (row in rows) {
+        val values = searchableText(row)
+        for (index in values.indices) {
+            if (values[index].contains(normalized, ignoreCase = true)) {
+                filtered.add(row)
+                break
+            }
         }
     }
+    return filtered
 }
 
 fun <T> sortRows(

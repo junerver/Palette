@@ -15,6 +15,7 @@ import androidx.compose.foundation.text.KeyboardActions
 import xyz.junerver.compose.palette.core.spec.ComponentSize
 import xyz.junerver.compose.palette.core.spec.ComponentStatus
 import xyz.junerver.compose.palette.core.theme.PaletteTheme
+import xyz.junerver.compose.hooks.useState
 
 @Composable
 fun PasswordField(
@@ -35,7 +36,7 @@ fun PasswordField(
     keyboardOptions: KeyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
     keyboardActions: KeyboardActions = KeyboardActions.Default,
 ) {
-    var passwordVisible by remember { mutableStateOf(false) }
+    val (passwordVisible, setPasswordVisible) = useState(false)
 
     BorderTextField(
         value = value,
@@ -49,7 +50,7 @@ fun PasswordField(
         leadingIcon = leadingIcon,
         trailingIcon = {
             IconButton(
-                onClick = { passwordVisible = !passwordVisible }
+                onClick = { setPasswordVisible(!passwordVisible) }
             ) {
                 Icon(
                     imageVector = if (passwordVisible) Icons.Default.Visibility else Icons.Default.VisibilityOff,

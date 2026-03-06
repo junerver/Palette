@@ -43,6 +43,9 @@ import androidx.compose.ui.unit.center
 import androidx.compose.ui.window.Popup
 import androidx.compose.ui.window.PopupPositionProvider
 import kotlinx.coroutines.delay
+import xyz.junerver.compose.hooks.useCreation
+import xyz.junerver.compose.hooks.useLatestState
+import xyz.junerver.compose.hooks.useState
 import xyz.junerver.compose.palette.components.loading.PLoading
 import xyz.junerver.compose.palette.core.theme.PaletteTheme
 
@@ -63,12 +66,13 @@ fun PToast(
     onClose: () -> Unit
 ) {
     val hasIcon = icon != ToastIcon.NONE
-    var localVisible by remember { mutableStateOf(visible) }
+    val (localVisible, setLocalVisible) = useState(visible)
+    val latestOnClose = useLatestState(onClose)
 
     LaunchedEffect(visible, duration, title) {
         if (visible && duration > 0) {
             delay(duration)
-            onClose()
+            latestOnClose.value()
         }
     }
 
@@ -76,7 +80,7 @@ fun PToast(
         if (!visible) {
             delay(150)
         }
-        localVisible = visible
+        setLocalVisible(visible)
     }
 
     val positionProvider = remember {
@@ -201,7 +205,7 @@ interface ToastState {
 
 @Composable
 fun rememberToastState(): ToastState {
-    val state = remember { ToastStateImpl() }
+    val state = useCreation { ToastStateImpl() }.current
 
     state.props?.let { props ->
         PToast(

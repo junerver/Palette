@@ -13,11 +13,30 @@ fun filterCommands(
 ): List<CommandAction> {
     val normalized = query.trim()
     if (normalized.isEmpty()) return commands
-    return commands.filter { action ->
-        action.title.contains(normalized, ignoreCase = true) ||
-            action.subtitle.orEmpty().contains(normalized, ignoreCase = true) ||
-            action.keywords.any { it.contains(normalized, ignoreCase = true) }
+
+    val filtered = ArrayList<CommandAction>(commands.size)
+    for (index in commands.indices) {
+        val action = commands[index]
+        if (action.title.contains(normalized, ignoreCase = true)) {
+            filtered.add(action)
+            continue
+        }
+
+        val subtitle = action.subtitle
+        if (subtitle != null && subtitle.contains(normalized, ignoreCase = true)) {
+            filtered.add(action)
+            continue
+        }
+
+        val keywords = action.keywords
+        for (keywordIndex in keywords.indices) {
+            if (keywords[keywordIndex].contains(normalized, ignoreCase = true)) {
+                filtered.add(action)
+                break
+            }
+        }
     }
+    return filtered
 }
 
 fun moveHighlight(
@@ -26,8 +45,15 @@ fun moveHighlight(
     size: Int,
 ): Int {
     if (size <= 0) return -1
-    val current = currentIndex.coerceIn(0, size - 1)
-    val moved = (current + offset) % size
+    val maxIndex = size - 1
+    var current = currentIndex
+    if (current < 0) {
+        current = 0
+    } else if (current > maxIndex) {
+        current = maxIndex
+    }
+    var moved = current + offset
+    moved %= size
     return if (moved < 0) moved + size else moved
 }
 

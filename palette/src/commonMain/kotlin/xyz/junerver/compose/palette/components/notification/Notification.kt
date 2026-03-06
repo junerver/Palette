@@ -28,7 +28,6 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -37,6 +36,9 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Popup
 import kotlinx.coroutines.delay
+import xyz.junerver.compose.hooks.useCreation
+import xyz.junerver.compose.hooks.useLatestState
+import xyz.junerver.compose.hooks.useState
 import xyz.junerver.compose.palette.components.message.MessageType
 
 @Composable
@@ -48,18 +50,19 @@ fun PNotification(
     duration: Long = NotificationDefaults.DefaultDuration,
     onClose: () -> Unit,
 ) {
-    var localVisible by remember { mutableStateOf(visible) }
+    val (localVisible, setLocalVisible) = useState(visible)
+    val latestOnClose = useLatestState(onClose)
 
     LaunchedEffect(visible, title, content, duration) {
         if (visible && duration > 0) {
             delay(duration)
-            onClose()
+            latestOnClose.value()
         }
     }
 
     LaunchedEffect(visible) {
         if (!visible) delay(NotificationDefaults.AnimationDuration.toLong())
-        localVisible = visible
+        setLocalVisible(visible)
     }
 
     if (!visible && !localVisible) return
@@ -141,7 +144,7 @@ interface NotificationState {
 
 @Composable
 fun rememberNotificationState(): NotificationState {
-    val state = remember { NotificationStateImpl() }
+    val state = useCreation { NotificationStateImpl() }.current
 
     state.props?.let { props ->
         PNotification(

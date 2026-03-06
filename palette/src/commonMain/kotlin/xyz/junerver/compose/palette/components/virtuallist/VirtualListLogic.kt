@@ -16,14 +16,25 @@ fun calculateVisibleRange(
         return VisibleRange(startIndex = 0, endIndex = -1)
     }
 
-    val firstVisible = (scrollOffsetPx / itemHeightPx).coerceAtLeast(0)
+    val firstVisible = if (scrollOffsetPx > 0) scrollOffsetPx / itemHeightPx else 0
     val visibleCount = (viewportHeightPx / itemHeightPx) + 1
-    val start = (firstVisible - overscan).coerceAtLeast(0)
-    val end = (firstVisible + visibleCount - 1 + overscan).coerceAtMost(totalItems - 1)
+    var start = firstVisible - overscan
+    if (start < 0) {
+        start = 0
+    }
+    val maxIndex = totalItems - 1
+    var end = firstVisible + visibleCount - 1 + overscan
+    if (end > maxIndex) {
+        end = maxIndex
+    }
     return VisibleRange(startIndex = start, endIndex = end)
 }
 
 fun totalHeightPx(
     totalItems: Int,
     itemHeightPx: Int,
-): Int = (totalItems.coerceAtLeast(0)) * (itemHeightPx.coerceAtLeast(0))
+): Int {
+    val nonNegativeItems = if (totalItems >= 0) totalItems else 0
+    val nonNegativeItemHeight = if (itemHeightPx >= 0) itemHeightPx else 0
+    return nonNegativeItems * nonNegativeItemHeight
+}

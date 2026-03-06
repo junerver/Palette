@@ -7,6 +7,7 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.Divider
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import xyz.junerver.compose.hooks.useState
 import xyz.junerver.compose.palette.components.empty.PEmpty
 
 @Composable
@@ -34,11 +35,21 @@ fun <T> PList(
     }
 
     val listState = rememberLazyListState()
+    val (loadMoreArmed, setLoadMoreArmed) = useState(true)
 
-    LaunchedEffect(listState.firstVisibleItemIndex, listState.isScrollInProgress) {
+    LaunchedEffect(data.size, loadMoreThreshold) {
+        setLoadMoreArmed(true)
+    }
+
+    LaunchedEffect(listState.firstVisibleItemIndex, listState.isScrollInProgress, data.size, loadMoreArmed) {
         if (onLoadMore != null && !listState.isScrollInProgress) {
             val lastVisibleIndex = listState.layoutInfo.visibleItemsInfo.lastOrNull()?.index ?: 0
-            if (lastVisibleIndex >= data.size - loadMoreThreshold) {
+            val shouldLoadMore = lastVisibleIndex >= data.size - loadMoreThreshold
+            if (!shouldLoadMore && !loadMoreArmed) {
+                setLoadMoreArmed(true)
+            }
+            if (shouldLoadMore && loadMoreArmed) {
+                setLoadMoreArmed(false)
                 onLoadMore()
             }
         }

@@ -15,9 +15,13 @@ fun <T> PVirtualList(
     items: List<T>,
     modifier: Modifier = Modifier,
     itemText: (T) -> String = { it.toString() },
+    key: ((T) -> Any)? = null,
 ) {
     LazyColumn(modifier = modifier) {
-        items(items) { item ->
+        items(
+            items = items,
+            key = key
+        ) { item ->
             Text(
                 text = itemText(item),
                 color = VirtualListDefaults.itemContentColor(),

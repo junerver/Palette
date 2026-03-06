@@ -23,3 +23,4 @@ dependencyResolutionManagement {
 rootProject.name = "Palette"
 include(":app")
 include(":palette")
+include(":benchmark")

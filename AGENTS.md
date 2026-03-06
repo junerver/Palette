@@ -48,6 +48,7 @@ Palette/
 ./gradlew :palette:allTests          # 运行组件库全部测试
 ./gradlew :palette:desktopTest       # 运行 Desktop 测试
 ./gradlew :palette:testDebugUnitTest # 运行 Android 单元测试
+./gradlew :palette:desktopBenchmarkBenchmark # 运行 Desktop 逻辑基准测试
 ./gradlew :palette:publishToMavenLocal # 发布到本地 Maven
 ```
 
@@ -107,6 +108,20 @@ import xyz.junerver.compose.hooks.useState
 
 val (value, setValue) = useState(initialValue)
 ```
+
+- 新增组件与重构组件时，状态与重组逻辑默认优先使用 `compose-hooks`（如 `useState`、`useGetState`、`useBoolean`、`useCreation`、`useLatestState`）。
+- 非必要场景不要直接使用原生 `remember { mutableStateOf(...) }` / `mutableStateOf(...)`。
+- 如必须使用原生状态 API（例如接口实现类中的稳定状态持有），需在代码中标注原因并在评审中说明。
+
+### 测试与性能基准守则
+
+- 组件逻辑改动必须先补或先写测试（TDD），至少覆盖：正常路径、边界条件、回归场景。
+- 提交前至少通过对应测试任务（如 `:palette:desktopTest` / `:palette:allTests`）。
+- 涉及性能相关改动时，必须提供基准验证，禁止只凭体感结论。
+- 基准验证必须包含基线对比：从已知提交（可用 `git worktree`）切出基线，在同机同参数下对比。
+- 基准结果至少跑 3 轮，优先看 `median` 与波动（`std`/误差），不要仅用单次结果判断。
+- Compose Multiplatform 项目默认优先 Desktop 或跨平台基准；Android 端基准作为补充而非唯一依据。
+- 若基准显示关键路径回归，应继续优化或回退该优化，不得以功能通过替代性能验收。
 
 ### 统一导出
 

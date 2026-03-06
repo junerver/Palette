@@ -18,12 +18,6 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableFloatStateOf
-import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
@@ -33,6 +27,7 @@ import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
+import xyz.junerver.compose.hooks.useState
 
 @Composable
 fun PSlider(
@@ -53,13 +48,14 @@ fun PSlider(
     val min = range.start
     val max = range.endInclusive
     val density = LocalDensity.current
-    var sliderWidth by remember { mutableIntStateOf(0) }
-    var percent by remember { mutableFloatStateOf(0f) }
-    var offsetX by remember { mutableStateOf(Dp(0f)) }
+    val (sliderWidth, setSliderWidth) = useState(0)
+    val (percent, setPercent) = useState(0f)
+    val (offsetX, setOffsetX) = useState(Dp(0f))
 
     LaunchedEffect(value, sliderWidth, range) {
-        percent = if (max - min > 0f) (value.coerceIn(min, max) - min) / (max - min) else 0f
-        offsetX = density.run { (sliderWidth * percent).toDp() }
+        val nextPercent = if (max - min > 0f) (value.coerceIn(min, max) - min) / (max - min) else 0f
+        setPercent(nextPercent)
+        setOffsetX(density.run { (sliderWidth * nextPercent).toDp() })
     }
 
     fun handleChange(offsetX: Float) {
@@ -83,7 +79,7 @@ fun PSlider(
                 .weight(1f)
                 .fillMaxHeight()
                 .onSizeChanged {
-                    sliderWidth = it.width
+                    setSliderWidth(it.width)
                 }
                 .pointerInput(range) {
                     detectHorizontalDragGestures(onDragEnd = {
