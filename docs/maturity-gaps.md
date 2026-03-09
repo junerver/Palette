@@ -1,715 +1,112 @@
-# Palette 组件库成熟度缺口分析
-
-> 文档生成时间：2026-02-06
-> 当前版本：开发中
-> 评估基准：业界成熟组件库标准（Ant Design、Material-UI、Chakra UI）
-
-## 📊 总体评估
-
-**当前状态**：早期可用阶段
-**成熟度**：约 40%
-**预计达到生产级**：6-12 个月持续投入
-
-### 核心优势
-- ✅ 26 个高质量基础组件
-- ✅ 完善的主题系统（Design Token）
-- ✅ 优秀的状态管理（compose-hooks）
-- ✅ 跨平台支持（Android/Desktop/iOS）
-- ✅ 清晰的架构设计
-
-### 主要短板
-- ⚠️ 测试覆盖率接近 0%
-- ⚠️ 缺少系统化文档
-- ⚠️ 高级组件不足
-- ⚠️ 无国际化支持
-- ⚠️ 工程化配置不完善
-
----
-
-## 🎯 缺口详细分析
-
-### 1. 测试体系严重不足 ⚠️ **P0 - 高优先级**
-
-#### 现状
-- 仅有示例测试文件（`ExampleInstrumentedTest.kt`、`ExampleUnitTest.kt`）
-- 无实际组件测试代码
-- 测试覆盖率：**< 5%**
-- 缺少自动化测试流程
-
-#### 需要补充
-
-**单元测试**
-```kotlin
-// 示例：Button 组件测试
-@Test
-fun testButtonClick() {
-    composeTestRule.setContent {
-        var clicked = false
-        PButton(onClick = { clicked = true }) {
-            Text("Click me")
-        }
-    }
-    composeTestRule.onNodeWithText("Click me").performClick()
-    assertTrue(clicked)
-}
-```
-
-**测试类型清单**
-- [ ] UI 测试（每个组件的渲染测试）
-- [ ] 状态测试（组件状态变化验证）
-- [ ] 交互测试（点击、拖拽、输入等）
-- [ ] 跨平台兼容性测试（Android/Desktop/iOS）
-- [ ] 快照测试（Snapshot Testing）
-- [ ] 集成测试（组件组合场景）
-- [ ] 性能测试（渲染性能、内存占用）
-- [ ] 无障碍性测试（Accessibility）
-
-**目标**
-- 核心组件测试覆盖率：**80%+**
-- 关键路径测试覆盖率：**100%**
-- 每个 PR 必须包含测试用例
-
-**参考实现**
-```
-palette/src/commonTest/kotlin/
-├── components/
-│   ├── ButtonTest.kt
-│   ├── FormTest.kt
-│   ├── TableTest.kt
-│   └── ...
-├── theme/
-│   └── PaletteThemeTest.kt
-└── util/
-    └── TestUtils.kt
-```
-
----
-
-### 2. 文档体系不完整 ⚠️ **P0 - 高优先级**
-
-#### 现状
-- 有基础 README（中英文）
-- 有示例应用（33 个 Demo）
-- 缺少系统化 API 文档
-- 无在线文档站点
-
-#### 需要补充
-
-**API 文档**
-```kotlin
-/**
- * 按钮组件
- *
- * @param onClick 点击回调
- * @param modifier 修饰符
- * @param size 按钮尺寸，默认 Medium
- * @param type 按钮类型，默认 Primary
- * @param enabled 是否启用，默认 true
- * @param content 按钮内容
- *
- * @sample xyz.junerver.compose.palette.samples.ButtonSample
- */
-@Composable
-fun PButton(
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier,
-    size: ComponentSize = ComponentSize.Medium,
-    type: ButtonType = ButtonType.Primary,
-    enabled: Boolean = true,
-    content: @Composable RowScope.() -> Unit
-)
-```
-
-**文档结构**
-```
-docs/
-├── README.md                    # 项目概述
-├── getting-started.md           # 快速开始
-├── installation.md              # 安装指南
-├── migration-guide.md           # 迁移指南
-├── design-guidelines.md         # 设计规范
-├── contributing.md              # 贡献指南
-├── changelog.md                 # 变更日志
-├── maturity-gaps.md            # 成熟度缺口（本文档）
-├── components/                  # 组件文档
-│   ├── button.md
-│   ├── form.md
-│   ├── table.md
-│   └── ...
-├── theme/                       # 主题文档
-│   ├── colors.md
-│   ├── typography.md
-│   ├── spacing.md
-│   └── customization.md
-└── examples/                    # 示例和最佳实践
-    ├── admin-dashboard.md
-    ├── form-validation.md
-    └── ...
-```
-
-**在线文档站点**
-- 技术选型：Docusaurus / VitePress / MkDocs
-- 功能需求：
-  - 组件实时预览
-  - 代码高亮和复制
-  - 搜索功能
-  - 多语言支持（中英文）
-  - 响应式设计
-  - 暗色模式
-
-**目标**
-- 每个组件都有完整的 API 文档
-- 每个组件至少 3 个使用示例
-- 提供完整的设计规范文档
-- 建立独立的文档站点
-
----
-
-### 3. 高级组件缺失 🔶 **P1 - 中优先级**
-
-#### 现状
-- 已有 26 个基础组件
-- 覆盖常见 UI 场景
-- 缺少复杂业务场景组件
-
-#### 建议补充组件（按优先级排序）
-
-**高优先级（P1）**
-- [ ] **DatePicker** - 日期选择器
-- [ ] **TimePicker** - 时间选择器
-- [ ] **Menu** - 菜单组件
-- [ ] **Dropdown** - 下拉菜单
-- [ ] **Tabs** - 标签页
-- [ ] **Breadcrumb** - 面包屑导航
-- [ ] **Steps** - 步骤条
-- [ ] **Message** - 全局提示
-- [ ] **Notification** - 通知提醒
-- [ ] **Drawer** - 抽屉
-- [ ] **Tooltip** - 文字提示
-- [ ] **Popover** - 气泡卡片
-
-**中优先级（P2）**
-- [ ] **Upload** - 文件上传
-- [ ] **ColorPicker** - 颜色选择器
-- [ ] **Tree** - 树形控件
-- [ ] **Transfer** - 穿梭框
-- [ ] **Calendar** - 日历
-- [ ] **Grid** - 栅格布局
-- [ ] **Divider** - 分割线
-- [ ] **Space** - 间距组件
-- [ ] **Anchor** - 锚点
-- [ ] **BackTop** - 回到顶部
-- [ ] **Affix** - 固钉
-
-**低优先级（P3）**
-- [ ] **Chart** - 图表组件
-  - LineChart - 折线图
-  - BarChart - 柱状图
-  - PieChart - 饼图
-  - AreaChart - 面积图
-- [ ] **Gauge** - 仪表盘
-- [ ] **Cascader** - 级联选择
-- [ ] **TreeSelect** - 树选择
-- [ ] **AutoComplete** - 自动完成
-- [ ] **Mentions** - 提及
-- [ ] **Tour** - 漫游式引导
-
-**目标**
-- 短期（3 个月）：补充 P1 组件，达到 40+ 组件
-- 中期（6 个月）：补充 P2 组件，达到 50+ 组件
-- 长期（12 个月）：补充 P3 组件，达到 60+ 组件
-
----
-
-### 4. 工程化配置不完善 🔶 **P0 - 高优先级**
-
-#### 现状
-- 有基础构建配置（Gradle）
-- 有 Maven 发布配置
-- 缺少自动化流程
-- 无代码质量检查
-
-#### 需要补充
-
-**CI/CD 配置**
-```yaml
-# .github/workflows/ci.yml
-name: CI
-
-on:
-  push:
-    branches: [ master, develop ]
-  pull_request:
-    branches: [ master ]
-
-jobs:
-  test:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-      - name: Set up JDK 11
-        uses: actions/setup-java@v3
-        with:
-          java-version: '11'
-      - name: Run tests
-        run: ./gradlew test
-      - name: Upload coverage
-        uses: codecov/codecov-action@v3
-
-  lint:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-      - name: Run Detekt
-        run: ./gradlew detekt
-      - name: Run ktlint
-        run: ./gradlew ktlintCheck
-
-  build:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-      - name: Build library
-        run: ./gradlew :palette:build
-```
-
-**代码质量配置**
-```kotlin
-// build.gradle.kts
-plugins {
-    id("io.gitlab.arturbosch.detekt") version "1.23.0"
-    id("org.jlleitschuh.gradle.ktlint") version "11.5.0"
-}
-
-detekt {
-    config = files("config/detekt/detekt.yml")
-    buildUponDefaultConfig = true
-}
-
-ktlint {
-    version.set("0.50.0")
-    android.set(true)
-}
-```
-
-**版本管理**
-- 采用语义化版本控制（Semantic Versioning）
-- 自动生成 CHANGELOG
-- Git 标签管理
-- 发布分支策略
-
-**目标**
-- 每次 PR 自动运行测试和代码检查
-- 代码覆盖率报告自动生成
-- 自动发布到 Maven Central
-- 自动生成版本文档
-
----
-
-### 5. 国际化支持缺失 🔶 **P1 - 中优先级**
-
-#### 现状
-- 组件内部文案硬编码
-- 无多语言支持机制
-- 示例应用仅中文
-
-#### 需要补充
-
-**i18n 框架集成**
-```kotlin
-// 国际化资源定义
-object PaletteStrings {
-    val empty_description = stringResource("palette.empty.description")
-    val loading_text = stringResource("palette.loading.text")
-    val pagination_total = stringResource("palette.pagination.total")
-    // ...
-}
-
-// 使用示例
-@Composable
-fun Empty(
-    description: String = PaletteStrings.empty_description.value
-) {
-    // ...
-}
-```
-
-**多语言资源文件**
-```
-palette/src/commonMain/resources/
-├── strings/
-│   ├── strings_en.xml       # 英文
-│   ├── strings_zh_CN.xml    # 简体中文
-│   ├── strings_zh_TW.xml    # 繁体中文
-│   ├── strings_ja.xml       # 日文
-│   └── strings_ko.xml       # 韩文
-```
-
-**支持的语言**
-- [x] 简体中文（zh-CN）
-- [ ] 英文（en-US）
-- [ ] 繁体中文（zh-TW）
-- [ ] 日文（ja-JP）
-- [ ] 韩文（ko-KR）
-
-**RTL 支持**
-- 从右到左（RTL）布局支持
-- 阿拉伯语、希伯来语等语言支持
-
-**目标**
-- 所有组件内部文案可配置
-- 至少支持中英文双语
-- 提供语言切换 API
-- 文档提供多语言版本
-
----
-
-### 6. 无障碍性验证不足 🔷 **P2 - 低优先级**
-
-#### 现状
-- 代码中提到支持无障碍
-- 未见系统化验证
-- 缺少无障碍性测试
-
-#### 需要补充
-
-**无障碍性测试**
-```kotlin
-@Test
-fun testButtonAccessibility() {
-    composeTestRule.setContent {
-        PButton(onClick = {}) {
-            Text("Submit")
-        }
-    }
-
-    // 验证语义信息
-    composeTestRule.onNode(hasContentDescription("Submit"))
-        .assertExists()
-
-    // 验证可点击
-    composeTestRule.onNode(hasClickAction())
-        .assertExists()
-}
-```
-
-**无障碍性清单**
-- [ ] 屏幕阅读器支持（TalkBack/VoiceOver）
-- [ ] 键盘导航支持
-- [ ] 焦点管理
-- [ ] ARIA 属性完整性
-- [ ] 对比度检查（WCAG AA 标准）
-- [ ] 色盲友好性验证
-- [ ] 文字大小可调整
-- [ ] 触摸目标尺寸（最小 48dp）
-
-**目标**
-- 符合 WCAG 2.1 AA 标准
-- 所有交互组件支持键盘导航
-- 提供无障碍性测试工具
-- 文档包含无障碍性指南
-
----
-
-### 7. 性能优化和监控 🔷 **P2 - 低优先级**
-
-#### 需要补充
-
-**性能基准测试**
-```kotlin
-@RunWith(AndroidJUnit4::class)
-class ButtonBenchmark {
-    @get:Rule
-    val benchmarkRule = BenchmarkRule()
-
-    @Test
-    fun buttonRenderBenchmark() {
-        benchmarkRule.measureRepeated {
-            composeTestRule.setContent {
-                PButton(onClick = {}) {
-                    Text("Benchmark")
-                }
-            }
-        }
-    }
-}
-```
-
-**性能优化清单**
-- [ ] 渲染性能优化
-- [ ] 内存泄漏检测
-- [ ] 大数据量场景优化（虚拟滚动）
-- [ ] 动画性能优化
-- [ ] 图片加载优化
-- [ ] 懒加载支持
-
-**性能监控**
-- 集成性能监控工具
-- 性能回归检测
-- 性能报告自动生成
-
-**目标**
-- 组件渲染时间 < 16ms（60fps）
-- 内存占用合理
-- 大列表流畅滚动（1000+ 项）
-
----
-
-### 8. 生态系统建设 🔷 **P2 - 低优先级**
-
-#### 需要补充
-
-**社区建设**
-```
-.github/
-├── ISSUE_TEMPLATE/
-│   ├── bug_report.md
-│   ├── feature_request.md
-│   └── question.md
-├── PULL_REQUEST_TEMPLATE.md
-├── CODE_OF_CONDUCT.md
-└── CONTRIBUTING.md
-```
-
-**工具链**
-- CLI 工具（快速创建项目）
-  ```bash
-  palette create my-app --template admin
-  ```
-- 主题定制工具（可视化配置）
-- 组件生成器
-- Figma/Sketch 设计资源
-
-**示例项目**
-- 管理后台模板
-- 电商应用模板
-- 社交应用模板
-- 数据可视化模板
-
-**目标**
-- 建立活跃的开发者社区
-- 提供完整的工具链
-- 丰富的示例和模板
-
----
-
-### 9. 发布和分发 🔶 **P1 - 中优先级**
-
-#### 现状
-- 有 Maven 发布配置
-- 未见实际发布记录
-- 无版本管理策略
-
-#### 需要完善
-
-**Maven Central 发布**
-```kotlin
-// build.gradle.kts
-publishing {
-    publications {
-        create<MavenPublication>("release") {
-            groupId = "xyz.junerver.compose"
-            artifactId = "palette"
-            version = "0.1.0"
-
-            pom {
-                name.set("Palette")
-                description.set("A Compose Multiplatform UI library")
-                url.set("https://github.com/junerver/Palette")
-                // ...
-            }
-        }
-    }
-}
-```
-
-**版本号管理**
-- 采用语义化版本：`MAJOR.MINOR.PATCH`
-- 版本发布流程：
-  1. 更新版本号
-  2. 更新 CHANGELOG
-  3. 创建 Git 标签
-  4. 发布到 Maven Central
-  5. 发布 GitHub Release
-
-**发布检查清单**
-- [ ] 所有测试通过
-- [ ] 代码质量检查通过
-- [ ] 文档已更新
-- [ ] CHANGELOG 已更新
-- [ ] 版本号已更新
-- [ ] 多平台产物验证
-
-**目标**
-- 建立规范的发布流程
-- 自动化发布流程
-- 提供稳定的版本发布
-
----
-
-### 10. 平台特性支持 🔷 **P3 - 低优先级**
-
-#### 需要补充
-
-**Android 特性**
-- Material You 动态颜色
-- Widget 支持
-- Wear OS 支持
-
-**iOS 特性**
-- 原生导航集成
-- SwiftUI 互操作
-- iOS 设计规范适配
-
-**Desktop 特性**
-- 窗口管理
-- 系统托盘
-- 原生菜单
-- 快捷键支持
-
-**Web 支持**
-- Compose for Web 集成
-- 浏览器兼容性
-
-**目标**
-- 充分利用各平台特性
-- 提供平台特定组件
-- 保持跨平台一致性
-
----
-
-## 📈 实施路线图
-
-### 第一阶段（1-3 个月）- 基础完善 **P0**
-**目标**：建立质量保障体系
-
-- [ ] 建立测试框架，核心组件测试覆盖率达到 60%+
-- [ ] 完善 API 文档，每个组件都有完整文档
-- [ ] 配置 CI/CD 自动化流程
-- [ ] 建立代码质量检查机制
-- [ ] 完善发布流程，发布 v0.1.0 到 Maven Central
-
-**里程碑**：v0.1.0 发布
-
----
-
-### 第二阶段（4-6 个月）- 功能扩展 **P1**
-**目标**：补充高频使用组件
-
-- [ ] 补充 12 个高优先级组件（DatePicker、Menu、Tabs 等）
-- [ ] 实现国际化支持（中英文）
-- [ ] 建立在线文档站点
-- [ ] 测试覆盖率达到 80%+
-- [ ] 提供 2-3 个完整示例项目
-
-**里程碑**：v0.5.0 发布，组件数量达到 40+
-
----
-
-### 第三阶段（7-9 个月）- 生态建设 **P2**
-**目标**：完善生态系统
-
-- [ ] 补充 10 个中优先级组件
-- [ ] 性能优化和基准测试
-- [ ] 建立社区和贡献者生态
-- [ ] 提供 CLI 工具和主题定制工具
-- [ ] 无障碍性全面验证
-
-**里程碑**：v0.8.0 发布，组件数量达到 50+
-
----
-
-### 第四阶段（10-12 个月）- 成熟稳定 **P3**
-**目标**：达到生产级标准
-
-- [ ] 补充数据可视化组件
-- [ ] 平台特性深度集成
-- [ ] 完整应用模板和最佳实践
-- [ ] 性能和稳定性优化
-- [ ] 发布 v1.0.0
-
-**里程碑**：v1.0.0 发布，成为生产级组件库
-
----
-
-## 🎯 对标成熟组件库
-
-### 与业界标准对比
-
-| 维度 | Palette 现状 | Ant Design | Material-UI | 目标 |
-|------|-------------|-----------|-------------|------|
-| 组件数量 | 26 | 60+ | 50+ | 50+ |
-| 测试覆盖率 | < 5% | 80%+ | 90%+ | 80%+ |
-| 文档完整度 | 基础 | 完善 | 完善 | 完善 |
-| 国际化 | 无 | 支持 | 支持 | 支持 |
-| 主题系统 | ✅ 完善 | ✅ | ✅ | ✅ |
-| 无障碍性 | 部分 | ✅ | ✅ | ✅ |
-| 社区活跃度 | 初期 | 活跃 | 活跃 | 活跃 |
-| 生态工具 | 无 | 丰富 | 丰富 | 丰富 |
-
-### 成熟度评分
-
-- **代码质量**：⭐⭐⭐⭐ (4/5) - 架构清晰，代码规范
-- **功能完整性**：⭐⭐⭐ (3/5) - 基础组件完善，高级组件不足
-- **测试覆盖**：⭐ (1/5) - 严重不足
-- **文档质量**：⭐⭐ (2/5) - 有基础文档，缺少系统化
-- **工程化**：⭐⭐ (2/5) - 基础配置完善，自动化不足
-- **生态系统**：⭐ (1/5) - 初期阶段
-
-**总体成熟度**：⭐⭐⭐ (3/5) - **早期可用阶段**
-
----
-
-## 💡 建议和总结
-
-### 核心建议
-
-1. **优先建立质量保障体系**
-   - 测试是组件库的生命线
-   - 没有测试的组件库不可信赖
-   - 建议先暂停新组件开发，补充测试
-
-2. **文档是第二生命线**
-   - 好的文档能吸引更多用户
-   - 建立独立文档站点
-   - 提供丰富的示例和最佳实践
-
-3. **循序渐进，不要贪多**
-   - 先把现有 26 个组件做到极致
-   - 再考虑扩展新组件
-   - 质量优于数量
-
-4. **建立社区和生态**
-   - 开源项目需要社区支持
-   - 建立贡献者指南
-   - 积极响应 Issue 和 PR
-
-### 成功关键因素
-
-- ✅ **质量第一**：测试覆盖率 80%+
-- ✅ **文档完善**：每个组件都有详细文档
-- ✅ **持续迭代**：定期发布新版本
-- ✅ **社区驱动**：积极的社区参与
-- ✅ **生态丰富**：工具链和示例项目
-
-### 风险提示
-
-- ⚠️ 测试不足可能导致质量问题
-- ⚠️ 文档缺失会影响用户体验
-- ⚠️ 缺少自动化会降低开发效率
-- ⚠️ 社区不活跃会影响项目发展
-
----
-
-## 📞 联系和反馈
-
-如果您对本文档有任何建议或反馈，欢迎：
-- 提交 Issue：[GitHub Issues](https://github.com/junerver/Palette/issues)
-- 提交 PR：[GitHub Pull Requests](https://github.com/junerver/Palette/pulls)
-- 参与讨论：[GitHub Discussions](https://github.com/junerver/Palette/discussions)
-
----
-
-**文档维护者**：Palette 开发团队
-**最后更新**：2026-02-06
-**文档版本**：v1.0
+# Palette 组件库成熟度缺口分析（复核版）
+
+> 复核日期：2026-03-06
+> 复核范围：仓库当前代码、测试、CI、文档
+> 结论：缺口已部分对齐；测试覆盖率 80%+ 指标当前无法证明达成
+
+## 总览
+
+| 维度 | 当前状态 | 结论 |
+| --- | --- | --- |
+| 测试体系 | 已建立 commonTest 逻辑测试与基准测试；`allTests` 可执行 | 部分达成 |
+| 测试覆盖率指标 | 未配置覆盖率统计工具与阈值门禁 | 未达成（无法证明 80%+） |
+| 文档体系 | 有 README 与本分析文档；缺少系统化组件/API 文档站点 | 部分达成 |
+| 高级组件 | P1 列表已完成大部分（仅 Dropdown 缺失） | 部分达成 |
+| 工程化 | 已有 CI、Detekt、Ktlint、发布前校验任务 | 部分达成 |
+| 国际化 | 已有 `PaletteStrings` 中英文与主题注入 | 部分达成 |
+| 性能优化与基准 | 已有 Desktop 逻辑基准与 Android Macrobenchmark | 部分达成 |
+| 无障碍、生态、平台特性 | 仍缺少系统化建设 | 未达成 |
+
+## 缺口同步（按原条目）
+
+### 1) 测试体系（P0）
+
+**已完成**
+- `palette/src/commonTest/kotlin/xyz/junerver/compose/palette` 下已有 16 个测试文件（组件逻辑 + token）。
+- 2026-03-06 本地执行 `./gradlew :palette:allTests --no-daemon` 通过。
+- `palette/build/test-results` 汇总：`tests=182`、`fail=0`、`skipped=0`。
+
+**未完成**
+- 组件级 UI 渲染/交互自动化测试仍不足。
+- Snapshot 测试、Accessibility 测试尚未建立。
+- 覆盖率统计工具未接入（未发现 Kover/Jacoco/Codecov 配置）。
+
+**指标结论**
+- 核心组件覆盖率 **80%+**：当前**不能认定达成**。
+
+### 2) 文档体系（P0）
+
+**已完成**
+- 已有 `README.md`、`README.zh-CN.md`、`docs/maturity-gaps.md`。
+
+**未完成**
+- 尚无系统化组件 API 文档目录与在线文档站点。
+
+### 3) 高级组件（P1）
+
+**P1 组件现状**
+- 已有：DatePicker、TimePicker、Menu、Tabs、Breadcrumb、Steps、Message、Notification、Drawer、Tooltip、Popover。
+- 缺失：Dropdown。
+
+**P2/P3 补充**
+- 已有：Upload、Tree、Tour。
+- 其余（ColorPicker/Transfer/Calendar/Grid/Chart 等）仍缺失。
+
+### 4) 工程化配置（P0）
+
+**已完成**
+- CI：`.github/workflows/ci.yml`（质量检查、测试、构建）。
+- 发布前校验：`.github/workflows/release-check.yml` + `:palette:verifyReleaseReadiness`。
+- 静态检查：根项目启用 Detekt / Ktlint。
+
+**未完成**
+- 覆盖率报告自动生成与门禁未接入。
+- 自动发布到 Maven Central 流程未完成。
+
+### 5) 国际化（P1）
+
+**已完成**
+- `palette/src/commonMain/kotlin/xyz/junerver/compose/palette/core/i18n/PaletteStrings.kt` 已提供 `zhCN()` / `enUS()`。
+- `PaletteTheme` 已支持 `strings` 注入。
+
+**未完成**
+- 未覆盖更多语言（zh-TW/ja/ko 等）。
+- 未见 RTL 与系统化资源文件方案。
+
+### 6) 无障碍性（P2）
+
+- 仍缺少独立无障碍测试与验收基线，判定为未达成。
+
+### 7) 性能优化与监控（P2）
+
+**已完成**
+- Desktop 基准：`palette/src/desktopBenchmark/kotlin/xyz/junerver/compose/palette/benchmark`。
+- Android 宏基准：`benchmark/src/benchmark/kotlin/xyz/junerver/compose/palette/benchmark/PaletteMacrobenchmark.kt`。
+
+**未完成**
+- CI 中未建立自动性能回归门禁。
+- 统一性能报告归档流程未完成。
+
+### 8) 生态系统建设（P2）
+
+- 目前主要为工作流文件，Issue/PR 模板、贡献者体系与工具链仍不足，判定为未达成。
+
+### 9) 发布与分发（P1）
+
+**已完成**
+- `palette/build.gradle.kts` 已启用 `maven-publish` 插件。
+- 已有发布前检查任务 `verifyReleaseReadiness`。
+
+**未完成**
+- 未见完整 `publishing {}` 发布元数据与自动发布流水线。
+- CHANGELOG/版本策略未形成自动化闭环。
+
+### 10) 平台特性支持（P3）
+
+- Android/iOS/Desktop 的平台特性增强项（如 Widget、托盘、快捷键等）暂无系统推进记录，判定为未达成。
+
+## 当前判断
+
+- 是否已经对齐 maturity-gaps 缺口：**部分对齐**。
+- 测试覆盖率是否达到文档指标（80%+）：**目前无法确认，不能视为达标**。
+- 本文档已同步已完成与未完成项，后续建议以“可量化指标 + CI 门禁”持续更新。

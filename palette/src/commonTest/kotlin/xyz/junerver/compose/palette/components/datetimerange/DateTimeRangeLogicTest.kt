@@ -20,7 +20,7 @@ class DateTimeRangeLogicTest {
                 endDate = LocalDate(2026, 3, 5),
                 endTime = LocalTime(18, 30),
             ),
-            range
+            range,
         )
     }
 
@@ -41,7 +41,7 @@ class DateTimeRangeLogicTest {
                 startTime = LocalTime(9, 0),
                 endDate = endDate,
                 endTime = LocalTime(9, 1),
-            )
+            ),
         )
         assertFalse(
             isValidRangeOrder(
@@ -49,20 +49,21 @@ class DateTimeRangeLogicTest {
                 startTime = LocalTime(10, 0),
                 endDate = endDate,
                 endTime = LocalTime(9, 59),
-            )
+            ),
         )
     }
 
     @Test
     fun formatDateTimeRange_shouldOutputStablePattern() {
-        val text = formatDateTimeRange(
-            DateTimeRange(
-                startDate = LocalDate(2026, 3, 1),
-                startTime = LocalTime(9, 0),
-                endDate = LocalDate(2026, 3, 5),
-                endTime = LocalTime(18, 30),
+        val text =
+            formatDateTimeRange(
+                DateTimeRange(
+                    startDate = LocalDate(2026, 3, 1),
+                    startTime = LocalTime(9, 0),
+                    endDate = LocalDate(2026, 3, 5),
+                    endTime = LocalTime(18, 30),
+                ),
             )
-        )
 
         assertEquals("2026-03-01 09:00 - 2026-03-05 18:30", text)
     }

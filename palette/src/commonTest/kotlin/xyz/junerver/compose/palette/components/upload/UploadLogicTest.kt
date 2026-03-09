@@ -33,8 +33,8 @@ class UploadLogicTest {
                 mimeType = "text/plain",
                 sizeBytes = 100,
                 acceptedTypes = listOf("image/*"),
-                maxSizeBytes = 1024
-            )
+                maxSizeBytes = 1024,
+            ),
         )
         assertEquals(
             UploadFileStatus.RejectedSize,
@@ -42,8 +42,8 @@ class UploadLogicTest {
                 mimeType = "image/png",
                 sizeBytes = 2048,
                 acceptedTypes = listOf("image/*"),
-                maxSizeBytes = 1024
-            )
+                maxSizeBytes = 1024,
+            ),
         )
         assertEquals(
             UploadFileStatus.Ready,
@@ -51,8 +51,8 @@ class UploadLogicTest {
                 mimeType = "image/png",
                 sizeBytes = 512,
                 acceptedTypes = listOf("image/*"),
-                maxSizeBytes = 1024
-            )
+                maxSizeBytes = 1024,
+            ),
         )
     }
 }

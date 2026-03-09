@@ -11,37 +11,41 @@ class DataGridLogicTest {
         val city: String?,
     )
 
-    private val rows = listOf(
-        Row(name = "Alice", age = 30, city = "Shanghai"),
-        Row(name = "Bob", age = 25, city = "Beijing"),
-        Row(name = "Cindy", age = 25, city = "Shenzhen"),
-        Row(name = "Daniel", age = 34, city = null),
-    )
+    private val rows =
+        listOf(
+            Row(name = "Alice", age = 30, city = "Shanghai"),
+            Row(name = "Bob", age = 25, city = "Beijing"),
+            Row(name = "Cindy", age = 25, city = "Shenzhen"),
+            Row(name = "Daniel", age = 34, city = null),
+        )
 
     @Test
     fun filterRows_whenKeywordMatched_shouldReturnFilteredRows() {
-        val filtered = filterRows(rows, "bei") { row ->
-            listOf(row.name, row.city.orEmpty())
-        }
+        val filtered =
+            filterRows(rows, "bei") { row ->
+                listOf(row.name, row.city.orEmpty())
+            }
 
         assertEquals(listOf("Bob"), filtered.map { it.name })
     }
 
     @Test
     fun sortRows_whenMultipleSpecs_shouldSortByPriority() {
-        val sorted = sortRows(
-            rows = rows,
-            specs = listOf(
-                DataGridSortSpec<Row>(
-                    selector = { it.age },
-                    direction = DataGridSortDirection.Asc,
-                ),
-                DataGridSortSpec<Row>(
-                    selector = { it.name },
-                    direction = DataGridSortDirection.Desc,
-                ),
+        val sorted =
+            sortRows(
+                rows = rows,
+                specs =
+                    listOf(
+                        DataGridSortSpec<Row>(
+                            selector = { it.age },
+                            direction = DataGridSortDirection.Asc,
+                        ),
+                        DataGridSortSpec<Row>(
+                            selector = { it.name },
+                            direction = DataGridSortDirection.Desc,
+                        ),
+                    ),
             )
-        )
 
         assertEquals(listOf("Cindy", "Bob", "Alice", "Daniel"), sorted.map { it.name })
     }

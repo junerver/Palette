@@ -6,11 +6,12 @@ import kotlin.test.assertEquals
 class SortableLogicTest {
     @Test
     fun moveItem_whenValidIndices_shouldReorder() {
-        val result = moveItem(
-            items = listOf("a", "b", "c", "d"),
-            fromIndex = 1,
-            toIndex = 3,
-        )
+        val result =
+            moveItem(
+                items = listOf("a", "b", "c", "d"),
+                fromIndex = 1,
+                toIndex = 3,
+            )
 
         assertEquals(listOf("a", "c", "d", "b"), result)
     }
@@ -24,11 +25,12 @@ class SortableLogicTest {
 
     @Test
     fun moveItemById_shouldFindAndMove() {
-        val items = listOf(
-            SortableItem(id = "a", payload = 1),
-            SortableItem(id = "b", payload = 2),
-            SortableItem(id = "c", payload = 3),
-        )
+        val items =
+            listOf(
+                SortableItem(id = "a", payload = 1),
+                SortableItem(id = "b", payload = 2),
+                SortableItem(id = "c", payload = 3),
+            )
 
         val result = moveItemById(items, draggingId = "c", targetId = "a")
 

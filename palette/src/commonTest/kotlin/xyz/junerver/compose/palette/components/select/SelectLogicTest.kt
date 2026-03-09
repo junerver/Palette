@@ -8,42 +8,47 @@ import kotlin.test.assertTrue
 class SelectLogicTest {
     @Test
     fun resolveSelectedLabel_whenValueIsNull_shouldReturnPlaceholder() {
-        val options = listOf(
-            SelectOption(label = "Alpha", value = "a"),
-            SelectOption(label = "Beta", value = "b"),
-        )
+        val options =
+            listOf(
+                SelectOption(label = "Alpha", value = "a"),
+                SelectOption(label = "Beta", value = "b"),
+            )
 
-        val label = resolveSelectedLabel(
-            options = options,
-            value = null,
-            placeholder = "请选择"
-        )
+        val label =
+            resolveSelectedLabel(
+                options = options,
+                value = null,
+                placeholder = "请选择",
+            )
 
         assertEquals("请选择", label)
     }
 
     @Test
     fun resolveSelectedLabel_whenValueExists_shouldReturnMatchedLabel() {
-        val options = listOf(
-            SelectOption(label = "Alpha", value = "a"),
-            SelectOption(label = "Beta", value = "b"),
-        )
+        val options =
+            listOf(
+                SelectOption(label = "Alpha", value = "a"),
+                SelectOption(label = "Beta", value = "b"),
+            )
 
-        val label = resolveSelectedLabel(
-            options = options,
-            value = "b",
-            placeholder = "请选择"
-        )
+        val label =
+            resolveSelectedLabel(
+                options = options,
+                value = "b",
+                placeholder = "请选择",
+            )
 
         assertEquals("Beta", label)
     }
 
     @Test
     fun filterSelectOptions_whenQueryBlank_shouldReturnAllOptions() {
-        val options = listOf(
-            SelectOption(label = "Alpha", value = "a"),
-            SelectOption(label = "Beta", value = "b"),
-        )
+        val options =
+            listOf(
+                SelectOption(label = "Alpha", value = "a"),
+                SelectOption(label = "Beta", value = "b"),
+            )
 
         val filtered = filterSelectOptions(options, "   ")
 
@@ -52,11 +57,12 @@ class SelectLogicTest {
 
     @Test
     fun filterSelectOptions_whenQueryPresent_shouldMatchIgnoreCase() {
-        val options = listOf(
-            SelectOption(label = "Apple", value = 1),
-            SelectOption(label = "Banana", value = 2),
-            SelectOption(label = "Grape", value = 3),
-        )
+        val options =
+            listOf(
+                SelectOption(label = "Apple", value = 1),
+                SelectOption(label = "Banana", value = 2),
+                SelectOption(label = "Grape", value = 3),
+            )
 
         val filtered = filterSelectOptions(options, "AP")
 
@@ -84,44 +90,48 @@ class SelectLogicTest {
 
     @Test
     fun toggleMultiSelection_whenMissing_shouldAppendValue() {
-        val selected = toggleMultiSelection(
-            current = listOf("a", "b"),
-            value = "c",
-            maxSelection = 3,
-        )
+        val selected =
+            toggleMultiSelection(
+                current = listOf("a", "b"),
+                value = "c",
+                maxSelection = 3,
+            )
 
         assertEquals(listOf("a", "b", "c"), selected)
     }
 
     @Test
     fun toggleMultiSelection_whenExists_shouldRemoveValue() {
-        val selected = toggleMultiSelection(
-            current = listOf("a", "b"),
-            value = "a",
-            maxSelection = 3,
-        )
+        val selected =
+            toggleMultiSelection(
+                current = listOf("a", "b"),
+                value = "a",
+                maxSelection = 3,
+            )
 
         assertEquals(listOf("b"), selected)
     }
 
     @Test
     fun toggleMultiSelection_whenReachedMax_shouldKeepCurrent() {
-        val selected = toggleMultiSelection(
-            current = listOf("a", "b"),
-            value = "c",
-            maxSelection = 2,
-        )
+        val selected =
+            toggleMultiSelection(
+                current = listOf("a", "b"),
+                value = "c",
+                maxSelection = 2,
+            )
 
         assertEquals(listOf("a", "b"), selected)
     }
 
     @Test
     fun filterSelectedOptions_shouldKeepSelectionOrder() {
-        val options = listOf(
-            SelectOption(label = "Alpha", value = "a"),
-            SelectOption(label = "Beta", value = "b"),
-            SelectOption(label = "Gamma", value = "g"),
-        )
+        val options =
+            listOf(
+                SelectOption(label = "Alpha", value = "a"),
+                SelectOption(label = "Beta", value = "b"),
+                SelectOption(label = "Gamma", value = "g"),
+            )
 
         val selected = filterSelectedOptions(options, selectedValues = listOf("g", "a"))
 

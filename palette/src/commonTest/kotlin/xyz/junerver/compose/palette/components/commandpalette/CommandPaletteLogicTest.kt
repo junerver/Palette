@@ -5,22 +5,23 @@ import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
 class CommandPaletteLogicTest {
-    private val commands = listOf(
-        CommandAction(
-            id = "open-settings",
-            title = "Open Settings",
-            keywords = listOf("preferences"),
-        ),
-        CommandAction(
-            id = "new-file",
-            title = "New File",
-            keywords = listOf("create", "document"),
-        ),
-        CommandAction(
-            id = "search-project",
-            title = "Search Project",
-        ),
-    )
+    private val commands =
+        listOf(
+            CommandAction(
+                id = "open-settings",
+                title = "Open Settings",
+                keywords = listOf("preferences"),
+            ),
+            CommandAction(
+                id = "new-file",
+                title = "New File",
+                keywords = listOf("create", "document"),
+            ),
+            CommandAction(
+                id = "search-project",
+                title = "Search Project",
+            ),
+        )
 
     @Test
     fun filterCommands_whenQueryBlank_shouldReturnAll() {

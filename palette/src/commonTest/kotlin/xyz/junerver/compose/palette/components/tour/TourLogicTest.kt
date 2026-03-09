@@ -6,11 +6,12 @@ import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
 class TourLogicTest {
-    private val steps = listOf(
-        TourStep(id = "intro", title = "Intro"),
-        TourStep(id = "action", title = "Action"),
-        TourStep(id = "done", title = "Done"),
-    )
+    private val steps =
+        listOf(
+            TourStep(id = "intro", title = "Intro"),
+            TourStep(id = "action", title = "Action"),
+            TourStep(id = "done", title = "Done"),
+        )
 
     @Test
     fun resolveInitialStepIndex_whenMissing_shouldReturnZero() {
