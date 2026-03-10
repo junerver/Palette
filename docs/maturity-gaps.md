@@ -9,7 +9,7 @@
 | 维度 | 当前状态 | 结论 |
 | --- | --- | --- |
 | 测试体系 | 已建立 `commonTest` 逻辑测试、`desktopTest` UI/交互测试与基准测试 | 部分达成 |
-| 测试覆盖率指标 | 已接入 Kover 覆盖率统计与 CI 门禁，当前行覆盖率 `90.03%` | 已达成 |
+| 测试覆盖率指标 | 已接入 Kover 覆盖率统计与 CI 门禁（>=`80%`），当前行覆盖率 `90.03%` | 已达成 |
 | 文档体系 | 有 README 与本分析文档；缺少系统化组件/API 文档站点 | 部分达成 |
 | 高级组件 | P1 列表已完成大部分（仅 Dropdown 缺失） | 部分达成 |
 | 工程化 | 已有 CI、Detekt、Ktlint、覆盖率门禁、发布前校验任务 | 部分达成 |
@@ -24,7 +24,7 @@
 **已完成**
 - `palette/src/commonTest/kotlin/xyz/junerver/compose/palette` 当前共有 `42` 个测试文件。
 - `palette/src/desktopTest/kotlin/xyz/junerver/compose/palette` 当前共有 `60` 个测试文件。
-- 本地执行 `./gradlew :palette:desktopTest :palette:runCoverageChecks --no-daemon` 通过。
+- 本地执行 `./gradlew :palette:verifyReleaseReadiness --no-daemon` 通过。
 - `palette/build/test-results` 汇总：`tests=516`、`fail=0`、`skipped=0`。
 - 已建立以功能业务、集成测试为主，单元测试为辅的测试补强基础。
 
@@ -35,6 +35,7 @@
 
 **指标结论**
 - 核心组件覆盖率 **80%+**：当前**已达成**，Kover 行覆盖率为 `90.03%`。
+- 覆盖率门禁阈值为 `80%`（CI 执行 `:palette:runCoverageChecks` 校验）。
 
 ### 2) 文档体系（P0）
 
@@ -57,8 +58,8 @@
 ### 4) 工程化配置（P0）
 
 **已完成**
-- CI：`.github/workflows/ci.yml`（质量检查、测试、覆盖率门禁、构建）。
-- 发布前校验：`.github/workflows/release-check.yml` + `:palette:verifyReleaseReadiness`。
+- CI：`.github/workflows/ci.yml`（JDK 21，质量检查、测试、覆盖率门禁、构建）。
+- 发布前校验：`.github/workflows/release-check.yml`（JDK 21）+ `:palette:verifyReleaseReadiness`。
 - 静态检查：根项目启用 Detekt / Ktlint。
 - 覆盖率门禁：`palette/build.gradle.kts` 已接入 Kover，并定义 `verifyCoverageBaseline`、`runCoverageChecks`、`verifyReleaseReadiness` 任务链。
 
