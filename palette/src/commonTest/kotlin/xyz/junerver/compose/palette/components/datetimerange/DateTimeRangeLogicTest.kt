@@ -66,7 +66,7 @@ class DateTimeRangeLogicTest {
                 startTime = LocalTime(10, 0),
                 endDate = LocalDate(2026, 3, 10),
                 endTime = LocalTime(10, 0),
-            )
+            ),
         )
     }
 

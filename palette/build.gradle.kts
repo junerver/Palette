@@ -160,21 +160,27 @@ tasks.register("verifyCoverageBaseline") {
 
         val documentBuilderFactory = javax.xml.parsers.DocumentBuilderFactory.newInstance()
         val document = documentBuilderFactory.newDocumentBuilder().parse(reportFile)
-        val counters = document.getElementsByTagName("counter")
+        val report = document.documentElement
+        require(report.nodeName == "report") { "Unexpected Kover XML root: ${report.nodeName}" }
 
-        var covered = 0L
-        var missed = 0L
-        for (index in 0 until counters.length) {
-            val counter = counters.item(index) as? org.w3c.dom.Element ?: continue
-            if (counter.getAttribute("type") != "LINE") continue
-            covered += counter.getAttribute("covered").toLong()
-            missed += counter.getAttribute("missed").toLong()
+        var lineCounter: org.w3c.dom.Element? = null
+        val children = report.childNodes
+        for (index in 0 until children.length) {
+            val node = children.item(index) as? org.w3c.dom.Element ?: continue
+            if (node.tagName != "counter") continue
+            if (node.getAttribute("type") != "LINE") continue
+            lineCounter = node
+            break
         }
+        require(lineCounter != null) { "Cannot find LINE counter in Kover report root: $reportFile" }
+
+        val covered = lineCounter!!.getAttribute("covered").toLong()
+        val missed = lineCounter!!.getAttribute("missed").toLong()
 
         val total = covered + missed
         require(total > 0) { "Line coverage is empty in report: $reportFile" }
         val coveragePercent = covered * 100.0 / total
-        val minimumPercent = 16.5
+        val minimumPercent = 80.0
         if (coveragePercent < minimumPercent) {
             error(
                 "Line coverage %.2f%% is below required %.2f%%."

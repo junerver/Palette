@@ -13,4 +13,3 @@ class BadgeDefaultsTest {
         assertTrue(BadgeDefaults.size(ComponentSize.Medium) < BadgeDefaults.size(ComponentSize.Large))
     }
 }
-
