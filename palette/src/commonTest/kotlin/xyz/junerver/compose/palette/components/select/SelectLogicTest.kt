@@ -89,6 +89,13 @@ class SelectLogicTest {
     }
 
     @Test
+    fun isOptionSelectable_whenComponentDisabled_shouldReturnFalse() {
+        val option = SelectOption(label = "Enabled", value = 1, disabled = false)
+
+        assertFalse(isOptionSelectable(option, enabled = false))
+    }
+
+    @Test
     fun toggleMultiSelection_whenMissing_shouldAppendValue() {
         val selected =
             toggleMultiSelection(
@@ -122,6 +129,19 @@ class SelectLogicTest {
             )
 
         assertEquals(listOf("a", "b"), selected)
+    }
+
+    @Test
+    fun filterSelectedOptions_whenNoSelection_shouldReturnEmptyList() {
+        val options =
+            listOf(
+                SelectOption(label = "Alpha", value = "a"),
+                SelectOption(label = "Beta", value = "b"),
+            )
+
+        val selected = filterSelectedOptions(options, selectedValues = emptyList())
+
+        assertTrue(selected.isEmpty())
     }
 
     @Test

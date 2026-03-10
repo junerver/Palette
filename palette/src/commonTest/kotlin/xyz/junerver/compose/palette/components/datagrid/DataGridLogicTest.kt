@@ -65,6 +65,13 @@ class DataGridLogicTest {
     }
 
     @Test
+    fun sortRows_whenSpecsEmpty_shouldKeepOriginalOrder() {
+        val sorted = sortRows(rows = rows, specs = emptyList())
+
+        assertEquals(rows.map { it.name }, sorted.map { it.name })
+    }
+
+    @Test
     fun resolvePageCount_shouldComputeByPageSize() {
         assertEquals(0, resolvePageCount(totalRows = 0, pageSize = 10))
         assertEquals(3, resolvePageCount(totalRows = 21, pageSize = 10))

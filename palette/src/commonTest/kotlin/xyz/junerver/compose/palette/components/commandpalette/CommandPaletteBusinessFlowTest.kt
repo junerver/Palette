@@ -2,6 +2,7 @@ package xyz.junerver.compose.palette.components.commandpalette
 
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertTrue
 
 class CommandPaletteBusinessFlowTest {
     private val actions =
@@ -37,5 +38,12 @@ class CommandPaletteBusinessFlowTest {
         val picked = pickHighlightedCommand(actions, 1)
 
         assertEquals("open-logs", picked?.id)
+    }
+
+    @Test
+    fun commandSearchFlow_shouldReturnEmptyListWhenQueryDoesNotMatchAnything() {
+        val filtered = filterCommands(actions, "security")
+
+        assertTrue(filtered.isEmpty())
     }
 }
