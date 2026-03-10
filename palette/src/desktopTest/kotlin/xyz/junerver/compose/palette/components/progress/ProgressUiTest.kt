@@ -1,11 +1,14 @@
 package xyz.junerver.compose.palette.components.progress
 
 import androidx.compose.foundation.layout.Column
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertTextEquals
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onAllNodesWithText
+import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.platform.testTag
 import org.junit.Rule
 import xyz.junerver.compose.palette.core.theme.PaletteMaterialTheme
 import kotlin.test.Test
@@ -78,5 +81,35 @@ class ProgressUiTest {
         }
 
         rule.onAllNodesWithText("40%").assertCountEquals(0)
+    }
+
+    @Test
+    fun circleProgress_shouldComposeWithFormatter() {
+        rule.setContent {
+            PaletteMaterialTheme {
+                PCircleProgress(
+                    percent = 35f,
+                    modifier = Modifier.testTag("circleProgress"),
+                    formatter = { "${it.toInt()}%" },
+                )
+            }
+        }
+
+        rule.onNodeWithTag("circleProgress").assertExists()
+    }
+
+    @Test
+    fun circleProgress_shouldComposeWhenFormatterIsNull() {
+        rule.setContent {
+            PaletteMaterialTheme {
+                PCircleProgress(
+                    percent = 35f,
+                    modifier = Modifier.testTag("circleProgressNullFormatter"),
+                    formatter = null,
+                )
+            }
+        }
+
+        rule.onNodeWithTag("circleProgressNullFormatter").assertExists()
     }
 }

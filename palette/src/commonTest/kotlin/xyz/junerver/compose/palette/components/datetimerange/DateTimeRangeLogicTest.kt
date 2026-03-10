@@ -31,6 +31,11 @@ class DateTimeRangeLogicTest {
     }
 
     @Test
+    fun parseDateTimeRangeOrNull_whenEndBeforeStart_shouldReturnNull() {
+        assertNull(parseDateTimeRangeOrNull("2026-03-10 11:00 - 2026-03-10 10:00"))
+    }
+
+    @Test
     fun isValidRangeOrder_shouldCheckStartBeforeEnd() {
         val startDate = LocalDate(2026, 3, 1)
         val endDate = LocalDate(2026, 3, 1)
@@ -50,6 +55,18 @@ class DateTimeRangeLogicTest {
                 endDate = endDate,
                 endTime = LocalTime(9, 59),
             ),
+        )
+    }
+
+    @Test
+    fun isValidRangeOrder_whenSameMoment_shouldReturnTrue() {
+        assertTrue(
+            isValidRangeOrder(
+                startDate = LocalDate(2026, 3, 10),
+                startTime = LocalTime(10, 0),
+                endDate = LocalDate(2026, 3, 10),
+                endTime = LocalTime(10, 0),
+            )
         )
     }
 
