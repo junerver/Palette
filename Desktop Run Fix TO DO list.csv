@@ -1,0 +1,4 @@
+id,item,status,done_at,notes
+1,为 testTagsAsResourceId 引入跨平台 expect/actual 封装并改造 BenchmarkApp,DONE,2026-03-10,修复 BenchmarkApp 在 Desktop 编译失败
+2,运行 :app:run 验证 Desktop 可启动,IN_PROGRESS,,已启动 :app:run 等待人工确认窗口
+3,提交并推送,TODO,,

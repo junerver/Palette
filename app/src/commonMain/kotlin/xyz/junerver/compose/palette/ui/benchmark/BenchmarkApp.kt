@@ -7,8 +7,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.semantics.testTagsAsResourceId
 import xyz.junerver.compose.palette.core.i18n.PaletteStrings
 import xyz.junerver.compose.palette.core.theme.PaletteMaterialTheme
 import xyz.junerver.compose.palette.core.tokens.PaletteColors
@@ -29,7 +27,7 @@ fun BenchmarkApp(destination: BenchmarkDestination) {
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .semantics { testTagsAsResourceId = true }
+                .testTagsAsResourceId()
                 .testTag(BenchmarkTags.Root)
                 .background(MaterialTheme.colorScheme.background)
         ) {
