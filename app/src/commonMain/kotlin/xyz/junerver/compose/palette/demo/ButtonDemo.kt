@@ -9,7 +9,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
-import xyz.junerver.compose.palette.components.text.PText
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.runtime.getValue
@@ -25,25 +24,27 @@ import xyz.junerver.compose.palette.components.CodeBlock
 import xyz.junerver.compose.palette.components.button.ButtonSize
 import xyz.junerver.compose.palette.components.button.ButtonType
 import xyz.junerver.compose.palette.components.button.PButton
+import xyz.junerver.compose.palette.components.text.PText
 
 @Composable
 fun ButtonDemo() {
     val text = buttonDemoText()
 
     Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .verticalScroll(rememberScrollState())
-            .padding(24.dp)
+        modifier =
+            Modifier
+                .fillMaxSize()
+                .verticalScroll(rememberScrollState())
+                .padding(24.dp),
     ) {
         PText(
             text = text.title,
-            style = MaterialTheme.typography.headlineMedium
+            style = MaterialTheme.typography.headlineMedium,
         )
         PText(
             text = text.subtitle,
             style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
 
         Spacer(modifier = Modifier.height(32.dp))
@@ -51,7 +52,7 @@ fun ButtonDemo() {
         DemoSection(title = text.typeSectionTitle) {
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(12.dp)
+                verticalArrangement = Arrangement.spacedBy(12.dp),
             ) {
                 PButton(text = text.primaryButtonText, type = ButtonType.PRIMARY) {}
                 PButton(text = text.dangerButtonText, type = ButtonType.DANGER) {}
@@ -64,7 +65,7 @@ fun ButtonDemo() {
         DemoSection(title = text.sizeSectionTitle) {
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(12.dp)
+                verticalArrangement = Arrangement.spacedBy(12.dp),
             ) {
                 PButton(text = text.largeButtonText, size = ButtonSize.LARGE) {}
                 PButton(text = text.mediumButtonText, size = ButtonSize.MEDIUM) {}
@@ -77,7 +78,7 @@ fun ButtonDemo() {
         DemoSection(title = text.disabledSectionTitle) {
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(12.dp)
+                verticalArrangement = Arrangement.spacedBy(12.dp),
             ) {
                 PButton(text = text.disabledButtonText, disabled = true) {}
             }
@@ -88,7 +89,7 @@ fun ButtonDemo() {
         DemoSection(title = text.loadingSectionTitle) {
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(12.dp)
+                verticalArrangement = Arrangement.spacedBy(12.dp),
             ) {
                 var loading by remember { mutableStateOf(false) }
                 PButton(
@@ -96,7 +97,7 @@ fun ButtonDemo() {
                     loading = loading,
                     onClick = {
                         loading = true
-                    }
+                    },
                 )
                 PButton(text = text.resetButtonText) {
                     loading = false
@@ -108,76 +109,81 @@ fun ButtonDemo() {
 
         PText(
             text = text.codeTitle,
-            style = MaterialTheme.typography.titleMedium
+            style = MaterialTheme.typography.titleMedium,
         )
 
         Spacer(modifier = Modifier.height(16.dp))
 
         CodeBlock(
-            code = text.codeBlock
+            code = text.codeBlock,
         )
     }
 }
 
 @Composable
 @ReadOnlyComposable
-private fun buttonDemoText(): ButtonDemoText = when (LocalLanguage.current) {
-    Language.ZH_CN -> ButtonDemoText(
-        title = "Button",
-        subtitle = "按钮组件",
-        typeSectionTitle = "按钮类型",
-        primaryButtonText = "Primary Button",
-        dangerButtonText = "Danger Button",
-        plainButtonText = "Plain Button",
-        sizeSectionTitle = "按钮尺寸",
-        largeButtonText = "Large Button",
-        mediumButtonText = "Medium Button",
-        smallButtonText = "Small Button",
-        disabledSectionTitle = "禁用状态",
-        disabledButtonText = "Disabled Button",
-        loadingSectionTitle = "加载状态",
-        loadingText = "Loading...",
-        clickToLoadText = "Click to Load",
-        resetButtonText = "Reset",
-        codeTitle = "代码示例",
-        codeBlock = """
-PButton(
-    text = "Primary Button",
-    type = ButtonType.PRIMARY,
-    size = ButtonSize.LARGE,
-    onClick = { /* 处理点击 */ }
-)
-        """.trimIndent(),
-    )
+private fun buttonDemoText(): ButtonDemoText =
+    when (LocalLanguage.current) {
+        Language.ZH_CN ->
+            ButtonDemoText(
+                title = "Button",
+                subtitle = "按钮组件",
+                typeSectionTitle = "按钮类型",
+                primaryButtonText = "Primary Button",
+                dangerButtonText = "Danger Button",
+                plainButtonText = "Plain Button",
+                sizeSectionTitle = "按钮尺寸",
+                largeButtonText = "Large Button",
+                mediumButtonText = "Medium Button",
+                smallButtonText = "Small Button",
+                disabledSectionTitle = "禁用状态",
+                disabledButtonText = "Disabled Button",
+                loadingSectionTitle = "加载状态",
+                loadingText = "Loading...",
+                clickToLoadText = "Click to Load",
+                resetButtonText = "Reset",
+                codeTitle = "代码示例",
+                codeBlock =
+                    """
+                    PButton(
+                        text = "Primary Button",
+                        type = ButtonType.PRIMARY,
+                        size = ButtonSize.LARGE,
+                        onClick = { /* 处理点击 */ }
+                    )
+                    """.trimIndent(),
+            )
 
-    Language.EN_US -> ButtonDemoText(
-        title = "Button",
-        subtitle = "Button component.",
-        typeSectionTitle = "Button Types",
-        primaryButtonText = "Primary Button",
-        dangerButtonText = "Danger Button",
-        plainButtonText = "Plain Button",
-        sizeSectionTitle = "Button Sizes",
-        largeButtonText = "Large Button",
-        mediumButtonText = "Medium Button",
-        smallButtonText = "Small Button",
-        disabledSectionTitle = "Disabled State",
-        disabledButtonText = "Disabled Button",
-        loadingSectionTitle = "Loading State",
-        loadingText = "Loading...",
-        clickToLoadText = "Click to Load",
-        resetButtonText = "Reset",
-        codeTitle = "Code Example",
-        codeBlock = """
-PButton(
-    text = "Primary Button",
-    type = ButtonType.PRIMARY,
-    size = ButtonSize.LARGE,
-    onClick = { /* Handle click */ }
-)
-        """.trimIndent(),
-    )
-}
+        Language.EN_US ->
+            ButtonDemoText(
+                title = "Button",
+                subtitle = "Button component.",
+                typeSectionTitle = "Button Types",
+                primaryButtonText = "Primary Button",
+                dangerButtonText = "Danger Button",
+                plainButtonText = "Plain Button",
+                sizeSectionTitle = "Button Sizes",
+                largeButtonText = "Large Button",
+                mediumButtonText = "Medium Button",
+                smallButtonText = "Small Button",
+                disabledSectionTitle = "Disabled State",
+                disabledButtonText = "Disabled Button",
+                loadingSectionTitle = "Loading State",
+                loadingText = "Loading...",
+                clickToLoadText = "Click to Load",
+                resetButtonText = "Reset",
+                codeTitle = "Code Example",
+                codeBlock =
+                    """
+                    PButton(
+                        text = "Primary Button",
+                        type = ButtonType.PRIMARY,
+                        size = ButtonSize.LARGE,
+                        onClick = { /* Handle click */ }
+                    )
+                    """.trimIndent(),
+            )
+    }
 
 private data class ButtonDemoText(
     val title: String,

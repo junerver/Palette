@@ -4,7 +4,6 @@ import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
@@ -39,7 +38,7 @@ import xyz.junerver.compose.palette.ui.theme.Success
 @Composable
 fun CodeBlock(
     code: String,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     val clipboardManager = LocalClipboardManager.current
     var copied by remember { mutableStateOf(false) }
@@ -53,34 +52,36 @@ fun CodeBlock(
 
     val iconTint by animateColorAsState(
         targetValue = if (copied) Success else MaterialTheme.colorScheme.onSurfaceVariant,
-        animationSpec = tween(200)
+        animationSpec = tween(200),
     )
 
     Box(
-        modifier = modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(12.dp))
-            .background(MaterialTheme.colorScheme.surfaceVariant)
-            .border(
-                width = 1.dp,
-                color = MaterialTheme.colorScheme.outline.copy(alpha = 0.5f),
-                shape = RoundedCornerShape(12.dp)
-            )
+        modifier =
+            modifier
+                .fillMaxWidth()
+                .clip(RoundedCornerShape(12.dp))
+                .background(MaterialTheme.colorScheme.surfaceVariant)
+                .border(
+                    width = 1.dp,
+                    color = MaterialTheme.colorScheme.outline.copy(alpha = 0.5f),
+                    shape = RoundedCornerShape(12.dp),
+                ),
     ) {
         Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .horizontalScroll(rememberScrollState())
-                .padding(16.dp)
-                .padding(end = 40.dp),
-            verticalAlignment = Alignment.Top
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .horizontalScroll(rememberScrollState())
+                    .padding(16.dp)
+                    .padding(end = 40.dp),
+            verticalAlignment = Alignment.Top,
         ) {
             Text(
                 text = code.trimIndent(),
                 fontFamily = FontFamily.Monospace,
                 fontSize = 13.sp,
                 lineHeight = 20.sp,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
         }
 
@@ -89,14 +90,15 @@ fun CodeBlock(
                 clipboardManager.setText(AnnotatedString(code.trimIndent()))
                 copied = true
             },
-            modifier = Modifier
-                .align(Alignment.TopEnd)
-                .padding(4.dp)
+            modifier =
+                Modifier
+                    .align(Alignment.TopEnd)
+                    .padding(4.dp),
         ) {
             Icon(
                 imageVector = if (copied) Icons.Default.Done else Icons.Default.ContentCopy,
                 contentDescription = if (copied) "已复制" else "复制代码",
-                tint = iconTint
+                tint = iconTint,
             )
         }
     }

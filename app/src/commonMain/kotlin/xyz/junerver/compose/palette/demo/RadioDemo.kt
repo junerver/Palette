@@ -9,7 +9,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
-import xyz.junerver.compose.palette.components.text.PText
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.runtime.getValue
@@ -24,25 +23,27 @@ import xyz.junerver.compose.palette.components.CodeBlock
 import xyz.junerver.compose.palette.components.radio.PRadio
 import xyz.junerver.compose.palette.components.radio.PRadioGroup
 import xyz.junerver.compose.palette.components.radio.RadioOption
+import xyz.junerver.compose.palette.components.text.PText
 
 @Composable
 fun RadioDemo() {
     val text = radioDemoText()
 
     Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .verticalScroll(rememberScrollState())
-            .padding(24.dp)
+        modifier =
+            Modifier
+                .fillMaxSize()
+                .verticalScroll(rememberScrollState())
+                .padding(24.dp),
     ) {
         PText(
             text = text.title,
-            style = MaterialTheme.typography.headlineMedium
+            style = MaterialTheme.typography.headlineMedium,
         )
         PText(
             text = text.subtitle,
             style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
 
         Spacer(modifier = Modifier.height(32.dp))
@@ -53,7 +54,7 @@ fun RadioDemo() {
                 PRadio(
                     label = text.option1,
                     checked = selected,
-                    onClick = { selected = !selected }
+                    onClick = { selected = !selected },
                 )
             }
         }
@@ -63,13 +64,14 @@ fun RadioDemo() {
         DemoSection(title = text.groupSectionTitle) {
             var selectedValue by remember { mutableStateOf<String?>("option1") }
             PRadioGroup(
-                options = listOf(
-                    RadioOption(label = text.option1, value = "option1"),
-                    RadioOption(label = text.option2, value = "option2"),
-                    RadioOption(label = text.option3, value = "option3")
-                ),
+                options =
+                    listOf(
+                        RadioOption(label = text.option1, value = "option1"),
+                        RadioOption(label = text.option2, value = "option2"),
+                        RadioOption(label = text.option3, value = "option3"),
+                    ),
                 value = selectedValue,
-                onChange = { selectedValue = it }
+                onChange = { selectedValue = it },
             )
         }
 
@@ -78,20 +80,21 @@ fun RadioDemo() {
         DemoSection(title = text.descriptionSectionTitle) {
             var selectedValue by remember { mutableStateOf<String?>("opt1") }
             PRadioGroup(
-                options = listOf(
-                    RadioOption(
-                        label = text.option1,
-                        value = "opt1",
-                        description = text.option1Description
+                options =
+                    listOf(
+                        RadioOption(
+                            label = text.option1,
+                            value = "opt1",
+                            description = text.option1Description,
+                        ),
+                        RadioOption(
+                            label = text.option2,
+                            value = "opt2",
+                            description = text.option2Description,
+                        ),
                     ),
-                    RadioOption(
-                        label = text.option2,
-                        value = "opt2",
-                        description = text.option2Description
-                    )
-                ),
                 value = selectedValue,
-                onChange = { selectedValue = it }
+                onChange = { selectedValue = it },
             )
         }
 
@@ -100,12 +103,13 @@ fun RadioDemo() {
         DemoSection(title = text.disabledSectionTitle) {
             var selectedValue by remember { mutableStateOf<String?>("opt1") }
             PRadioGroup(
-                options = listOf(
-                    RadioOption(label = text.normalOption, value = "opt1"),
-                    RadioOption(label = text.disabledOption, value = "opt2", disabled = true)
-                ),
+                options =
+                    listOf(
+                        RadioOption(label = text.normalOption, value = "opt1"),
+                        RadioOption(label = text.disabledOption, value = "opt2", disabled = true),
+                    ),
                 value = selectedValue,
-                onChange = { selectedValue = it }
+                onChange = { selectedValue = it },
             )
         }
 
@@ -113,78 +117,83 @@ fun RadioDemo() {
 
         PText(
             text = text.codeTitle,
-            style = MaterialTheme.typography.titleMedium
+            style = MaterialTheme.typography.titleMedium,
         )
 
         Spacer(modifier = Modifier.height(16.dp))
 
         CodeBlock(
-            code = text.codeBlock
+            code = text.codeBlock,
         )
     }
 }
 
 @Composable
 @ReadOnlyComposable
-private fun radioDemoText(): RadioDemoText = when (LocalLanguage.current) {
-    Language.ZH_CN -> RadioDemoText(
-        title = "Radio",
-        subtitle = "单选框组件",
-        basicSectionTitle = "基础用法",
-        groupSectionTitle = "单选组",
-        descriptionSectionTitle = "带描述",
-        disabledSectionTitle = "禁用状态",
-        option1 = "选项 1",
-        option2 = "选项 2",
-        option3 = "选项 3",
-        option1Description = "这是选项 1 的描述",
-        option2Description = "这是选项 2 的描述",
-        normalOption = "正常选项",
-        disabledOption = "禁用选项",
-        codeTitle = "代码示例",
-        codeBlock = """
-var selectedValue by remember { mutableStateOf<String?>("option1") }
-PRadioGroup(
-    options = listOf(
-        RadioOption(label = "选项 1", value = "option1"),
-        RadioOption(label = "选项 2", value = "option2"),
-        RadioOption(label = "选项 3", value = "option3")
-    ),
-    value = selectedValue,
-    onChange = { selectedValue = it }
-)
-        """.trimIndent(),
-    )
+private fun radioDemoText(): RadioDemoText =
+    when (LocalLanguage.current) {
+        Language.ZH_CN ->
+            RadioDemoText(
+                title = "Radio",
+                subtitle = "单选框组件",
+                basicSectionTitle = "基础用法",
+                groupSectionTitle = "单选组",
+                descriptionSectionTitle = "带描述",
+                disabledSectionTitle = "禁用状态",
+                option1 = "选项 1",
+                option2 = "选项 2",
+                option3 = "选项 3",
+                option1Description = "这是选项 1 的描述",
+                option2Description = "这是选项 2 的描述",
+                normalOption = "正常选项",
+                disabledOption = "禁用选项",
+                codeTitle = "代码示例",
+                codeBlock =
+                    """
+                    var selectedValue by remember { mutableStateOf<String?>("option1") }
+                    PRadioGroup(
+                        options = listOf(
+                            RadioOption(label = "选项 1", value = "option1"),
+                            RadioOption(label = "选项 2", value = "option2"),
+                            RadioOption(label = "选项 3", value = "option3")
+                        ),
+                        value = selectedValue,
+                        onChange = { selectedValue = it }
+                    )
+                    """.trimIndent(),
+            )
 
-    Language.EN_US -> RadioDemoText(
-        title = "Radio",
-        subtitle = "Radio component.",
-        basicSectionTitle = "Basic Usage",
-        groupSectionTitle = "Radio Group",
-        descriptionSectionTitle = "With Description",
-        disabledSectionTitle = "Disabled State",
-        option1 = "Option 1",
-        option2 = "Option 2",
-        option3 = "Option 3",
-        option1Description = "Description for option 1",
-        option2Description = "Description for option 2",
-        normalOption = "Normal Option",
-        disabledOption = "Disabled Option",
-        codeTitle = "Code Example",
-        codeBlock = """
-var selectedValue by remember { mutableStateOf<String?>("option1") }
-PRadioGroup(
-    options = listOf(
-        RadioOption(label = "Option 1", value = "option1"),
-        RadioOption(label = "Option 2", value = "option2"),
-        RadioOption(label = "Option 3", value = "option3")
-    ),
-    value = selectedValue,
-    onChange = { selectedValue = it }
-)
-        """.trimIndent(),
-    )
-}
+        Language.EN_US ->
+            RadioDemoText(
+                title = "Radio",
+                subtitle = "Radio component.",
+                basicSectionTitle = "Basic Usage",
+                groupSectionTitle = "Radio Group",
+                descriptionSectionTitle = "With Description",
+                disabledSectionTitle = "Disabled State",
+                option1 = "Option 1",
+                option2 = "Option 2",
+                option3 = "Option 3",
+                option1Description = "Description for option 1",
+                option2Description = "Description for option 2",
+                normalOption = "Normal Option",
+                disabledOption = "Disabled Option",
+                codeTitle = "Code Example",
+                codeBlock =
+                    """
+                    var selectedValue by remember { mutableStateOf<String?>("option1") }
+                    PRadioGroup(
+                        options = listOf(
+                            RadioOption(label = "Option 1", value = "option1"),
+                            RadioOption(label = "Option 2", value = "option2"),
+                            RadioOption(label = "Option 3", value = "option3")
+                        ),
+                        value = selectedValue,
+                        onChange = { selectedValue = it }
+                    )
+                    """.trimIndent(),
+            )
+    }
 
 private data class RadioDemoText(
     val title: String,

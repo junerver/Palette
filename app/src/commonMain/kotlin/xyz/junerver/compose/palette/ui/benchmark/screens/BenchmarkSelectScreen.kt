@@ -13,9 +13,10 @@ import xyz.junerver.compose.palette.ui.benchmark.BenchmarkTags
 
 @Composable
 fun BenchmarkSelectScreen() {
-    val options = List(2000) { index ->
-        SelectOption(label = "Option $index", value = index)
-    }
+    val options =
+        List(2000) { index ->
+            SelectOption(label = "Option $index", value = index)
+        }
     Box(modifier = Modifier.fillMaxSize().testTag(BenchmarkTags.Select)) {
         PSelect(
             options = options,
@@ -23,9 +24,10 @@ fun BenchmarkSelectScreen() {
             onValueChange = {},
             searchable = true,
             placeholder = "Select",
-            modifier = Modifier
-                .width(280.dp)
-                .testTag(BenchmarkTags.SelectTrigger)
+            modifier =
+                Modifier
+                    .width(280.dp)
+                    .testTag(BenchmarkTags.SelectTrigger),
         )
     }
 }

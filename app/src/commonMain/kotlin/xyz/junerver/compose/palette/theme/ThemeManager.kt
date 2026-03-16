@@ -17,12 +17,12 @@ import kotlinx.coroutines.runBlocking
 object ThemeManager {
     private val dataStore by lazy { createDataStore() }
     private val scope = CoroutineScope(Dispatchers.Default)
-    
+
     private val THEME_MODE_KEY = stringPreferencesKey("theme_mode")
-    
+
     private val _themeMode = MutableStateFlow(ThemeMode.SYSTEM)
     val themeMode: StateFlow<ThemeMode> = _themeMode.asStateFlow()
-    
+
     init {
         scope.launch {
             dataStore.data.map { preferences ->
@@ -33,7 +33,7 @@ object ThemeManager {
             }
         }
     }
-    
+
     fun setThemeMode(mode: ThemeMode) {
         scope.launch {
             dataStore.edit { preferences ->
@@ -41,7 +41,7 @@ object ThemeManager {
             }
         }
     }
-    
+
     fun loadInitialThemeMode(): ThemeMode {
         return runBlocking {
             dataStore.data.map { preferences ->
@@ -56,7 +56,10 @@ val LocalThemeMode = compositionLocalOf { ThemeMode.SYSTEM }
 val LocalSetThemeMode = compositionLocalOf<(ThemeMode) -> Unit> { {} }
 
 @Composable
-fun isDarkTheme(themeMode: ThemeMode, isSystemInDarkTheme: Boolean): Boolean {
+fun isDarkTheme(
+    themeMode: ThemeMode,
+    isSystemInDarkTheme: Boolean,
+): Boolean {
     return when (themeMode) {
         ThemeMode.SYSTEM -> isSystemInDarkTheme
         ThemeMode.LIGHT -> false

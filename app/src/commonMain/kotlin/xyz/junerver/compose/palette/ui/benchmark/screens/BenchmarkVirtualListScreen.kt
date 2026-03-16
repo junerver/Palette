@@ -15,7 +15,7 @@ fun BenchmarkVirtualListScreen() {
         PVirtualList(
             items = items,
             itemText = { it },
-            key = { it }
+            key = { it },
         )
     }
 }

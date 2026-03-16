@@ -22,14 +22,15 @@ fun BenchmarkApp(destination: BenchmarkDestination) {
     PaletteMaterialTheme(
         colors = PaletteColors.light(),
         strings = PaletteStrings.enUS(),
-        darkTheme = false
+        darkTheme = false,
     ) {
         Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .testTagsAsResourceId()
-                .testTag(BenchmarkTags.Root)
-                .background(MaterialTheme.colorScheme.background)
+            modifier =
+                Modifier
+                    .fillMaxSize()
+                    .testTagsAsResourceId()
+                    .testTag(BenchmarkTags.Root)
+                    .background(MaterialTheme.colorScheme.background),
         ) {
             when (destination) {
                 BenchmarkDestination.CAROUSEL -> BenchmarkCarouselScreen()

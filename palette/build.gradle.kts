@@ -39,7 +39,7 @@ kotlin {
     listOf(
         iosX64(),
         iosArm64(),
-        iosSimulatorArm64()
+        iosSimulatorArm64(),
     ).forEach {
         it.compilerOptions {
             freeCompilerArgs.add("-Xexpect-actual-classes")
@@ -123,7 +123,7 @@ android {
             isMinifyEnabled = false
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
-                "proguard-rules.pro"
+                "proguard-rules.pro",
             )
         }
     }
@@ -150,13 +150,15 @@ tasks.register("verifyCoverageBaseline") {
     dependsOn("koverXmlReport")
 
     doLast {
-        val candidates = listOf(
-            layout.buildDirectory.file("reports/kover/report.xml").get().asFile,
-            layout.buildDirectory.file("reports/kover/xml/report.xml").get().asFile,
-            layout.buildDirectory.file("reports/kover/xmlReport.xml").get().asFile,
-        )
-        val reportFile = candidates.firstOrNull { it.exists() }
-            ?: error("Cannot find Kover XML report. Tried: ${candidates.joinToString()}")
+        val candidates =
+            listOf(
+                layout.buildDirectory.file("reports/kover/report.xml").get().asFile,
+                layout.buildDirectory.file("reports/kover/xml/report.xml").get().asFile,
+                layout.buildDirectory.file("reports/kover/xmlReport.xml").get().asFile,
+            )
+        val reportFile =
+            candidates.firstOrNull { it.exists() }
+                ?: error("Cannot find Kover XML report. Tried: ${candidates.joinToString()}")
 
         val documentBuilderFactory = javax.xml.parsers.DocumentBuilderFactory.newInstance()
         val document = documentBuilderFactory.newDocumentBuilder().parse(reportFile)
@@ -184,12 +186,12 @@ tasks.register("verifyCoverageBaseline") {
         if (coveragePercent < minimumPercent) {
             error(
                 "Line coverage %.2f%% is below required %.2f%%."
-                    .format(coveragePercent, minimumPercent)
+                    .format(coveragePercent, minimumPercent),
             )
         }
         logger.lifecycle(
             "Line coverage %.2f%% (threshold %.2f%%)"
-                .format(coveragePercent, minimumPercent)
+                .format(coveragePercent, minimumPercent),
         )
     }
 }

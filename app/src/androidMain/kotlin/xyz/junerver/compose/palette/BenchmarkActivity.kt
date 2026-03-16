@@ -12,7 +12,7 @@ class BenchmarkActivity : ComponentActivity() {
         val destination = intent?.getStringExtra(EXTRA_BENCHMARK_DESTINATION)
         setContent {
             BenchmarkApp(
-                destination = BenchmarkDestination.fromRoute(destination)
+                destination = BenchmarkDestination.fromRoute(destination),
             )
         }
     }

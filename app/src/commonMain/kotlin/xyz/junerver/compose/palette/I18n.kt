@@ -10,7 +10,8 @@ internal enum class Language {
 
 internal val LocalLanguage = staticCompositionLocalOf { Language.ZH_CN }
 
-internal fun Language.toPaletteStrings(): PaletteStrings = when (this) {
-    Language.ZH_CN -> PaletteStrings.zhCN()
-    Language.EN_US -> PaletteStrings.enUS()
-}
+internal fun Language.toPaletteStrings(): PaletteStrings =
+    when (this) {
+        Language.ZH_CN -> PaletteStrings.zhCN()
+        Language.EN_US -> PaletteStrings.enUS()
+    }

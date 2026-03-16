@@ -16,6 +16,6 @@ private val dataStoreInstance: DataStore<Preferences> by lazy {
     }
     val dataStorePath = File(appDir, "theme_preferences.preferences_pb").absolutePath
     PreferenceDataStoreFactory.createWithPath(
-        produceFile = { dataStorePath.toPath() }
+        produceFile = { dataStorePath.toPath() },
     )
 }

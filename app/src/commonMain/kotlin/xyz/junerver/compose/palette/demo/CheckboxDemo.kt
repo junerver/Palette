@@ -13,7 +13,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import xyz.junerver.compose.palette.components.text.PText
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.runtime.getValue
@@ -27,6 +26,7 @@ import xyz.junerver.compose.palette.Language
 import xyz.junerver.compose.palette.LocalLanguage
 import xyz.junerver.compose.palette.components.CodeBlock
 import xyz.junerver.compose.palette.components.checkbox.ColoredCheckBox
+import xyz.junerver.compose.palette.components.text.PText
 import xyz.junerver.compose.palette.foundation.layout.CenterVerticallyRow
 import xyz.junerver.compose.palette.ui.theme.TextSecondary
 
@@ -41,37 +41,39 @@ fun CheckboxDemo() {
     val colorSectionTitle = demoText("不同颜色", "Different Colors")
     val iconSectionTitle = demoText("配合图标使用", "With Icon")
     val codeTitle = demoText("代码示例", "Code Example")
-    val codeBlock = demoText(
-        """
-var checked by remember { mutableStateOf(false) }
-ColoredCheckBox(
-    checked = checked,
-    onCheckedChange = { checked = it }
-)
-        """.trimIndent(),
-        """
-var checked by remember { mutableStateOf(false) }
-ColoredCheckBox(
-    checked = checked,
-    onCheckedChange = { checked = it }
-)
-        """.trimIndent(),
-    )
+    val codeBlock =
+        demoText(
+            """
+            var checked by remember { mutableStateOf(false) }
+            ColoredCheckBox(
+                checked = checked,
+                onCheckedChange = { checked = it }
+            )
+            """.trimIndent(),
+            """
+            var checked by remember { mutableStateOf(false) }
+            ColoredCheckBox(
+                checked = checked,
+                onCheckedChange = { checked = it }
+            )
+            """.trimIndent(),
+        )
 
     Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .verticalScroll(rememberScrollState())
-            .padding(24.dp)
+        modifier =
+            Modifier
+                .fillMaxSize()
+                .verticalScroll(rememberScrollState())
+                .padding(24.dp),
     ) {
         PText(
             text = title,
-            style = MaterialTheme.typography.headlineMedium
+            style = MaterialTheme.typography.headlineMedium,
         )
         PText(
             text = subtitle,
             style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
 
         Spacer(modifier = Modifier.height(32.dp))
@@ -81,13 +83,13 @@ ColoredCheckBox(
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 ColoredCheckBox(
                     checked = checked,
-                    onCheckedChange = { checked = it }
+                    onCheckedChange = { checked = it },
                 )
                 Spacer(modifier = Modifier.height(8.dp))
                 PText(
                     text = "$statusPrefix${if (checked) checkedText else uncheckedText}",
                     style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
         }
@@ -115,7 +117,7 @@ ColoredCheckBox(
                     imageVector = Icons.Default.Star,
                     contentDescription = null,
                     tint = if (checked) MaterialTheme.colorScheme.primary else TextSecondary,
-                    modifier = Modifier.size(20.dp)
+                    modifier = Modifier.size(20.dp),
                 )
                 ColoredCheckBox(checked = checked, onCheckedChange = { checked = it })
             }
@@ -125,20 +127,24 @@ ColoredCheckBox(
 
         PText(
             text = codeTitle,
-            style = MaterialTheme.typography.titleMedium
+            style = MaterialTheme.typography.titleMedium,
         )
 
         Spacer(modifier = Modifier.height(16.dp))
 
         CodeBlock(
-            code = codeBlock
+            code = codeBlock,
         )
     }
 }
 
 @Composable
 @ReadOnlyComposable
-private fun demoText(zh: String, en: String): String = when (LocalLanguage.current) {
-    Language.ZH_CN -> zh
-    Language.EN_US -> en
-}
+private fun demoText(
+    zh: String,
+    en: String,
+): String =
+    when (LocalLanguage.current) {
+        Language.ZH_CN -> zh
+        Language.EN_US -> en
+    }

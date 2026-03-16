@@ -16,13 +16,14 @@ import xyz.junerver.compose.palette.ui.benchmark.BenchmarkTags
 
 @Composable
 fun BenchmarkCarouselScreen() {
-    val colors = listOf(
-        Color(0xFFE57373),
-        Color(0xFF64B5F6),
-        Color(0xFF81C784),
-        Color(0xFFFFD54F),
-        Color(0xFFBA68C8),
-    )
+    val colors =
+        listOf(
+            Color(0xFFE57373),
+            Color(0xFF64B5F6),
+            Color(0xFF81C784),
+            Color(0xFFFFD54F),
+            Color(0xFFBA68C8),
+        )
     Box(modifier = Modifier.fillMaxSize().testTag(BenchmarkTags.Carousel)) {
         PCarousel(
             items = colors,
@@ -30,15 +31,17 @@ fun BenchmarkCarouselScreen() {
             autoPlayInterval = 2000L,
             showIndicator = true,
             showArrows = false,
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(220.dp)
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .height(220.dp),
         ) { color ->
             Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(color),
-                contentAlignment = Alignment.Center
+                modifier =
+                    Modifier
+                        .fillMaxSize()
+                        .background(color),
+                contentAlignment = Alignment.Center,
             ) {}
         }
     }

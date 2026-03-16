@@ -17,7 +17,9 @@ fun initializeDataStore(context: Context) {
 
 fun getDataStore(): DataStore<Preferences> {
     if (!::dataStoreInstance.isInitialized) {
-        throw IllegalStateException("DataStore not initialized. Call initializeDataStore(context) in Application.onCreate()")
+        throw IllegalStateException(
+            "DataStore not initialized. Call initializeDataStore(context) in Application.onCreate()",
+        )
     }
     return dataStoreInstance
 }

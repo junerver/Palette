@@ -10,7 +10,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
-import xyz.junerver.compose.palette.components.text.PText
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.ui.Alignment
@@ -24,25 +23,27 @@ import xyz.junerver.compose.palette.components.loading.PLoadingBars
 import xyz.junerver.compose.palette.components.loading.PLoadingBounce
 import xyz.junerver.compose.palette.components.loading.PLoadingCircle
 import xyz.junerver.compose.palette.components.loading.PLoadingDots
+import xyz.junerver.compose.palette.components.text.PText
 
 @Composable
 fun LoadingDemo() {
     val text = loadingDemoText()
 
     Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .verticalScroll(rememberScrollState())
-            .padding(24.dp)
+        modifier =
+            Modifier
+                .fillMaxSize()
+                .verticalScroll(rememberScrollState())
+                .padding(24.dp),
     ) {
         PText(
             text = text.title,
-            style = MaterialTheme.typography.headlineMedium
+            style = MaterialTheme.typography.headlineMedium,
         )
         PText(
             text = text.subtitle,
             style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
 
         Spacer(modifier = Modifier.height(32.dp))
@@ -90,7 +91,7 @@ fun LoadingDemo() {
         DemoSection(title = text.allSectionTitle) {
             Row(
                 horizontalArrangement = Arrangement.spacedBy(24.dp),
-                verticalAlignment = Alignment.CenterVertically
+                verticalAlignment = Alignment.CenterVertically,
             ) {
                 PLoadingDots()
                 PLoadingBars()
@@ -103,76 +104,81 @@ fun LoadingDemo() {
 
         PText(
             text = text.codeTitle,
-            style = MaterialTheme.typography.titleMedium
+            style = MaterialTheme.typography.titleMedium,
         )
 
         Spacer(modifier = Modifier.height(16.dp))
 
         CodeBlock(
-            code = text.codeBlock
+            code = text.codeBlock,
         )
     }
 }
 
 @Composable
 @ReadOnlyComposable
-private fun loadingDemoText(): LoadingDemoText = when (LocalLanguage.current) {
-    Language.ZH_CN -> LoadingDemoText(
-        title = "Loading",
-        subtitle = "加载指示器",
-        defaultSectionTitle = "默认加载",
-        dotsSectionTitle = "点状加载",
-        barsSectionTitle = "条状加载",
-        circleSectionTitle = "圆形加载",
-        bounceSectionTitle = "跳动加载",
-        allSectionTitle = "所有样式",
-        codeTitle = "代码示例",
-        codeBlock = """
-// 默认加载
-PLoading()
+private fun loadingDemoText(): LoadingDemoText =
+    when (LocalLanguage.current) {
+        Language.ZH_CN ->
+            LoadingDemoText(
+                title = "Loading",
+                subtitle = "加载指示器",
+                defaultSectionTitle = "默认加载",
+                dotsSectionTitle = "点状加载",
+                barsSectionTitle = "条状加载",
+                circleSectionTitle = "圆形加载",
+                bounceSectionTitle = "跳动加载",
+                allSectionTitle = "所有样式",
+                codeTitle = "代码示例",
+                codeBlock =
+                    """
+                    // 默认加载
+                    PLoading()
 
-// 点状加载
-PLoadingDots()
+                    // 点状加载
+                    PLoadingDots()
 
-// 条状加载
-PLoadingBars()
+                    // 条状加载
+                    PLoadingBars()
 
-// 圆形加载
-PLoadingCircle()
+                    // 圆形加载
+                    PLoadingCircle()
 
-// 跳动加载
-PLoadingBounce()
-        """.trimIndent(),
-    )
+                    // 跳动加载
+                    PLoadingBounce()
+                    """.trimIndent(),
+            )
 
-    Language.EN_US -> LoadingDemoText(
-        title = "Loading",
-        subtitle = "Loading indicators.",
-        defaultSectionTitle = "Default Loading",
-        dotsSectionTitle = "Dots Loading",
-        barsSectionTitle = "Bars Loading",
-        circleSectionTitle = "Circle Loading",
-        bounceSectionTitle = "Bounce Loading",
-        allSectionTitle = "All Styles",
-        codeTitle = "Code Example",
-        codeBlock = """
-// Default loading
-PLoading()
+        Language.EN_US ->
+            LoadingDemoText(
+                title = "Loading",
+                subtitle = "Loading indicators.",
+                defaultSectionTitle = "Default Loading",
+                dotsSectionTitle = "Dots Loading",
+                barsSectionTitle = "Bars Loading",
+                circleSectionTitle = "Circle Loading",
+                bounceSectionTitle = "Bounce Loading",
+                allSectionTitle = "All Styles",
+                codeTitle = "Code Example",
+                codeBlock =
+                    """
+                    // Default loading
+                    PLoading()
 
-// Dots loading
-PLoadingDots()
+                    // Dots loading
+                    PLoadingDots()
 
-// Bars loading
-PLoadingBars()
+                    // Bars loading
+                    PLoadingBars()
 
-// Circle loading
-PLoadingCircle()
+                    // Circle loading
+                    PLoadingCircle()
 
-// Bounce loading
-PLoadingBounce()
-        """.trimIndent(),
-    )
-}
+                    // Bounce loading
+                    PLoadingBounce()
+                    """.trimIndent(),
+            )
+    }
 
 private data class LoadingDemoText(
     val title: String,

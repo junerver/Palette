@@ -8,7 +8,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
-import xyz.junerver.compose.palette.components.text.PText
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.runtime.getValue
@@ -22,25 +21,27 @@ import xyz.junerver.compose.palette.Language
 import xyz.junerver.compose.palette.LocalLanguage
 import xyz.junerver.compose.palette.components.CodeBlock
 import xyz.junerver.compose.palette.components.rate.PRate
+import xyz.junerver.compose.palette.components.text.PText
 
 @Composable
 fun RateDemo() {
     val text = rateDemoText()
 
     Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .verticalScroll(rememberScrollState())
-            .padding(24.dp)
+        modifier =
+            Modifier
+                .fillMaxSize()
+                .verticalScroll(rememberScrollState())
+                .padding(24.dp),
     ) {
         PText(
             text = text.title,
-            style = MaterialTheme.typography.headlineMedium
+            style = MaterialTheme.typography.headlineMedium,
         )
         PText(
             text = text.subtitle,
             style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
 
         Spacer(modifier = Modifier.height(32.dp))
@@ -50,12 +51,12 @@ fun RateDemo() {
                 var rating1 by remember { mutableFloatStateOf(3f) }
                 PRate(
                     value = rating1,
-                    onChange = { rating1 = it }
+                    onChange = { rating1 = it },
                 )
                 Spacer(modifier = Modifier.height(8.dp))
                 PText(
                     text = "${text.ratingPrefix}$rating1",
-                    style = MaterialTheme.typography.bodySmall
+                    style = MaterialTheme.typography.bodySmall,
                 )
             }
         }
@@ -68,12 +69,12 @@ fun RateDemo() {
                 PRate(
                     value = rating2,
                     onChange = { rating2 = it },
-                    allowHalf = true
+                    allowHalf = true,
                 )
                 Spacer(modifier = Modifier.height(8.dp))
                 PText(
                     text = "${text.ratingPrefix}$rating2",
-                    style = MaterialTheme.typography.bodySmall
+                    style = MaterialTheme.typography.bodySmall,
                 )
             }
         }
@@ -86,7 +87,7 @@ fun RateDemo() {
                 PRate(
                     value = rating3,
                     onChange = { rating3 = it },
-                    count = 10
+                    count = 10,
                 )
             }
         }
@@ -97,7 +98,7 @@ fun RateDemo() {
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 PRate(
                     value = 4f,
-                    onChange = null
+                    onChange = null,
                 )
             }
         }
@@ -106,60 +107,65 @@ fun RateDemo() {
 
         PText(
             text = text.codeTitle,
-            style = MaterialTheme.typography.titleMedium
+            style = MaterialTheme.typography.titleMedium,
         )
 
         Spacer(modifier = Modifier.height(16.dp))
 
         CodeBlock(
-            code = text.codeBlock
+            code = text.codeBlock,
         )
     }
 }
 
 @Composable
 @ReadOnlyComposable
-private fun rateDemoText(): RateDemoText = when (LocalLanguage.current) {
-    Language.ZH_CN -> RateDemoText(
-        title = "Rate",
-        subtitle = "评分组件",
-        basicSectionTitle = "基础用法",
-        ratingPrefix = "评分: ",
-        halfSectionTitle = "半星评分",
-        countSectionTitle = "自定义数量",
-        readonlySectionTitle = "只读模式",
-        codeTitle = "代码示例",
-        codeBlock = """
-var rating by remember { mutableFloatStateOf(3f) }
-PRate(
-    value = rating,
-    onChange = { rating = it },
-    count = 5,
-    allowHalf = true
-)
-        """.trimIndent(),
-    )
+private fun rateDemoText(): RateDemoText =
+    when (LocalLanguage.current) {
+        Language.ZH_CN ->
+            RateDemoText(
+                title = "Rate",
+                subtitle = "评分组件",
+                basicSectionTitle = "基础用法",
+                ratingPrefix = "评分: ",
+                halfSectionTitle = "半星评分",
+                countSectionTitle = "自定义数量",
+                readonlySectionTitle = "只读模式",
+                codeTitle = "代码示例",
+                codeBlock =
+                    """
+                    var rating by remember { mutableFloatStateOf(3f) }
+                    PRate(
+                        value = rating,
+                        onChange = { rating = it },
+                        count = 5,
+                        allowHalf = true
+                    )
+                    """.trimIndent(),
+            )
 
-    Language.EN_US -> RateDemoText(
-        title = "Rate",
-        subtitle = "Rating component.",
-        basicSectionTitle = "Basic Usage",
-        ratingPrefix = "Rating: ",
-        halfSectionTitle = "Half-Star Rating",
-        countSectionTitle = "Custom Count",
-        readonlySectionTitle = "Read-Only Mode",
-        codeTitle = "Code Example",
-        codeBlock = """
-var rating by remember { mutableFloatStateOf(3f) }
-PRate(
-    value = rating,
-    onChange = { rating = it },
-    count = 5,
-    allowHalf = true
-)
-        """.trimIndent(),
-    )
-}
+        Language.EN_US ->
+            RateDemoText(
+                title = "Rate",
+                subtitle = "Rating component.",
+                basicSectionTitle = "Basic Usage",
+                ratingPrefix = "Rating: ",
+                halfSectionTitle = "Half-Star Rating",
+                countSectionTitle = "Custom Count",
+                readonlySectionTitle = "Read-Only Mode",
+                codeTitle = "Code Example",
+                codeBlock =
+                    """
+                    var rating by remember { mutableFloatStateOf(3f) }
+                    PRate(
+                        value = rating,
+                        onChange = { rating = it },
+                        count = 5,
+                        allowHalf = true
+                    )
+                    """.trimIndent(),
+            )
+    }
 
 private data class RateDemoText(
     val title: String,

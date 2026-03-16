@@ -10,16 +10,15 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import xyz.junerver.compose.palette.components.text.PText
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import xyz.junerver.compose.palette.Language
 import xyz.junerver.compose.palette.LocalLanguage
-import xyz.junerver.compose.palette.foundation.border.BorderContainer
 import xyz.junerver.compose.palette.components.CodeBlock
+import xyz.junerver.compose.palette.components.text.PText
+import xyz.junerver.compose.palette.foundation.border.BorderContainer
 import xyz.junerver.compose.palette.ui.theme.Primary
 import xyz.junerver.compose.palette.ui.theme.Success
 
@@ -28,19 +27,20 @@ fun BorderBoxDemo() {
     val text = borderBoxDemoText()
 
     Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .verticalScroll(rememberScrollState())
-            .padding(24.dp)
+        modifier =
+            Modifier
+                .fillMaxSize()
+                .verticalScroll(rememberScrollState())
+                .padding(24.dp),
     ) {
         PText(
             text = text.title,
-            style = MaterialTheme.typography.headlineMedium
+            style = MaterialTheme.typography.headlineMedium,
         )
         PText(
             text = text.subtitle,
             style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
 
         Spacer(modifier = Modifier.height(32.dp))
@@ -49,7 +49,7 @@ fun BorderBoxDemo() {
             BorderContainer {
                 PText(
                     text = text.basicContent,
-                    style = MaterialTheme.typography.bodyMedium
+                    style = MaterialTheme.typography.bodyMedium,
                 )
             }
         }
@@ -60,14 +60,14 @@ fun BorderBoxDemo() {
             Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
                 BorderContainer(
                     borderColor = Primary,
-                    borderWidth = 1.dp
+                    borderWidth = 1.dp,
                 ) {
                     Text(text.blueBorderText, color = Primary)
                 }
 
                 BorderContainer(
                     borderColor = Success,
-                    borderWidth = 1.dp
+                    borderWidth = 1.dp,
                 ) {
                     Text(text.greenBorderText, color = Success)
                 }
@@ -81,7 +81,7 @@ fun BorderBoxDemo() {
                 BorderContainer(
                     height = 40.dp,
                     width = 200.dp,
-                    cornerSize = 8.dp
+                    cornerSize = 8.dp,
                 ) {
                     Text(text.largeSizeText)
                 }
@@ -89,7 +89,7 @@ fun BorderBoxDemo() {
                 BorderContainer(
                     height = 24.dp,
                     width = 150.dp,
-                    cornerSize = 4.dp
+                    cornerSize = 4.dp,
                 ) {
                     Text(text.smallSizeText, style = MaterialTheme.typography.bodySmall)
                 }
@@ -100,72 +100,77 @@ fun BorderBoxDemo() {
 
         PText(
             text = text.codeTitle,
-            style = MaterialTheme.typography.titleMedium
+            style = MaterialTheme.typography.titleMedium,
         )
 
         Spacer(modifier = Modifier.height(16.dp))
 
         CodeBlock(
-            code = text.codeBlock
+            code = text.codeBlock,
         )
     }
 }
 
 @Composable
 @ReadOnlyComposable
-private fun borderBoxDemoText(): BorderBoxDemoText = when (LocalLanguage.current) {
-    Language.ZH_CN -> BorderBoxDemoText(
-        title = "BorderContainer",
-        subtitle = "带边框和圆角的内容容器",
-        basicSectionTitle = "基础用法",
-        basicContent = "这是容器内容",
-        colorSectionTitle = "自定义颜色",
-        blueBorderText = "蓝色边框",
-        greenBorderText = "绿色边框",
-        sizeSectionTitle = "不同尺寸",
-        largeSizeText = "较大尺寸",
-        smallSizeText = "较小尺寸",
-        codeTitle = "代码示例",
-        codeBlock = """
-BorderContainer(
-    height = 28.dp,
-    width = 300.dp,
-    borderWidth = 0.5.dp,
-    cornerSize = 5.dp,
-    borderColor = Color(0xFFD9D9D9),
-    backgroundColor = Color.White
-) {
-    Text("内容")
-}
-        """.trimIndent(),
-    )
+private fun borderBoxDemoText(): BorderBoxDemoText =
+    when (LocalLanguage.current) {
+        Language.ZH_CN ->
+            BorderBoxDemoText(
+                title = "BorderContainer",
+                subtitle = "带边框和圆角的内容容器",
+                basicSectionTitle = "基础用法",
+                basicContent = "这是容器内容",
+                colorSectionTitle = "自定义颜色",
+                blueBorderText = "蓝色边框",
+                greenBorderText = "绿色边框",
+                sizeSectionTitle = "不同尺寸",
+                largeSizeText = "较大尺寸",
+                smallSizeText = "较小尺寸",
+                codeTitle = "代码示例",
+                codeBlock =
+                    """
+                    BorderContainer(
+                        height = 28.dp,
+                        width = 300.dp,
+                        borderWidth = 0.5.dp,
+                        cornerSize = 5.dp,
+                        borderColor = Color(0xFFD9D9D9),
+                        backgroundColor = Color.White
+                    ) {
+                        Text("内容")
+                    }
+                    """.trimIndent(),
+            )
 
-    Language.EN_US -> BorderBoxDemoText(
-        title = "BorderContainer",
-        subtitle = "A content container with border and rounded corners.",
-        basicSectionTitle = "Basic Usage",
-        basicContent = "This is container content",
-        colorSectionTitle = "Custom Colors",
-        blueBorderText = "Blue Border",
-        greenBorderText = "Green Border",
-        sizeSectionTitle = "Different Sizes",
-        largeSizeText = "Larger Size",
-        smallSizeText = "Smaller Size",
-        codeTitle = "Code Example",
-        codeBlock = """
-BorderContainer(
-    height = 28.dp,
-    width = 300.dp,
-    borderWidth = 0.5.dp,
-    cornerSize = 5.dp,
-    borderColor = Color(0xFFD9D9D9),
-    backgroundColor = Color.White
-) {
-    Text("Content")
-}
-        """.trimIndent(),
-    )
-}
+        Language.EN_US ->
+            BorderBoxDemoText(
+                title = "BorderContainer",
+                subtitle = "A content container with border and rounded corners.",
+                basicSectionTitle = "Basic Usage",
+                basicContent = "This is container content",
+                colorSectionTitle = "Custom Colors",
+                blueBorderText = "Blue Border",
+                greenBorderText = "Green Border",
+                sizeSectionTitle = "Different Sizes",
+                largeSizeText = "Larger Size",
+                smallSizeText = "Smaller Size",
+                codeTitle = "Code Example",
+                codeBlock =
+                    """
+                    BorderContainer(
+                        height = 28.dp,
+                        width = 300.dp,
+                        borderWidth = 0.5.dp,
+                        cornerSize = 5.dp,
+                        borderColor = Color(0xFFD9D9D9),
+                        backgroundColor = Color.White
+                    ) {
+                        Text("Content")
+                    }
+                    """.trimIndent(),
+            )
+    }
 
 private data class BorderBoxDemoText(
     val title: String,

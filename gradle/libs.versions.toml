@@ -1,8 +1,8 @@
 [versions]
-agp = "8.9.3"
-kotlin = "2.2.21"
-composePlugin = "1.10.0"
-composeHotReload = "1.0.0-beta04"
+agp = "8.13.2"
+kotlin = "2.3.10"
+composePlugin = "1.10.2"
+composeHotReload = "1.1.0-beta01"
 coreKtx = "1.15.0"
 junit = "4.13.2"
 junitVersion = "1.2.1"

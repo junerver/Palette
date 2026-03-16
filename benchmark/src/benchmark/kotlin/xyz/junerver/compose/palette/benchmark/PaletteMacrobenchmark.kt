@@ -55,13 +55,16 @@ class PaletteMacrobenchmark {
                 device.displayHeight * 3 / 4,
                 device.displayWidth / 2,
                 device.displayHeight / 4,
-                20
+                20,
             )
             device.waitForIdle()
         }
     }
 
-    private fun runTapScenario(route: String, targetTag: String) {
+    private fun runTapScenario(
+        route: String,
+        targetTag: String,
+    ) {
         runBenchmark(route = route) { scope ->
             val device = scope.device
             device.waitForIdle()
@@ -76,7 +79,10 @@ class PaletteMacrobenchmark {
         }
     }
 
-    private fun runBenchmark(route: String, measureBlock: (MacrobenchmarkScope) -> Unit) {
+    private fun runBenchmark(
+        route: String,
+        measureBlock: (MacrobenchmarkScope) -> Unit,
+    ) {
         benchmarkRule.measureRepeated(
             packageName = TARGET_PACKAGE,
             metrics = listOf(FrameTimingMetric()),
@@ -86,7 +92,7 @@ class PaletteMacrobenchmark {
             setupBlock = {
                 pressHome()
                 startBenchmarkActivity(route)
-            }
+            },
         ) {
             measureBlock(this)
         }
@@ -97,12 +103,11 @@ class PaletteMacrobenchmark {
             Intent().apply {
                 setClassName(TARGET_PACKAGE, BENCHMARK_ACTIVITY)
                 putExtra(EXTRA_BENCHMARK_DESTINATION, route)
-            }
+            },
         )
     }
 
-    private fun androidx.test.uiautomator.UiDevice.findObjectByTag(tag: String)
-        : androidx.test.uiautomator.UiObject2? {
+    private fun androidx.test.uiautomator.UiDevice.findObjectByTag(tag: String): androidx.test.uiautomator.UiObject2? {
         return findObject(androidx.test.uiautomator.By.res(TARGET_PACKAGE, tag))
     }
 

@@ -7,10 +7,10 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.runtime.remember
-import xyz.junerver.compose.palette.Language
-import xyz.junerver.compose.palette.LocalLanguage
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import xyz.junerver.compose.palette.Language
+import xyz.junerver.compose.palette.LocalLanguage
 import xyz.junerver.compose.palette.components.list.PList
 import xyz.junerver.compose.palette.components.text.PText
 
@@ -19,20 +19,21 @@ fun ListDemo() {
     val text = listDemoText()
 
     Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .verticalScroll(rememberScrollState())
-            .padding(24.dp)
+        modifier =
+            Modifier
+                .fillMaxSize()
+                .verticalScroll(rememberScrollState())
+                .padding(24.dp),
     ) {
         PText(
             text = text.title,
-            style = MaterialTheme.typography.headlineMedium
+            style = MaterialTheme.typography.headlineMedium,
         )
         Spacer(modifier = Modifier.height(8.dp))
         PText(
             text = text.subtitle,
             style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
         Spacer(modifier = Modifier.height(24.dp))
 
@@ -42,11 +43,11 @@ fun ListDemo() {
             Box(modifier = Modifier.height(300.dp)) {
                 PList(
                     data = items,
-                    showDivider = true
+                    showDivider = true,
                 ) { item ->
                     PText(
                         text = item,
-                        modifier = Modifier.padding(16.dp)
+                        modifier = Modifier.padding(16.dp),
                     )
                 }
             }
@@ -56,21 +57,24 @@ fun ListDemo() {
 
 @Composable
 @ReadOnlyComposable
-private fun listDemoText(): ListDemoText = when (LocalLanguage.current) {
-    Language.ZH_CN -> ListDemoText(
-        title = "PList 列表",
-        subtitle = "虚拟滚动列表组件",
-        basicSectionTitle = "基础列表",
-        itemPrefix = "列表项",
-    )
+private fun listDemoText(): ListDemoText =
+    when (LocalLanguage.current) {
+        Language.ZH_CN ->
+            ListDemoText(
+                title = "PList 列表",
+                subtitle = "虚拟滚动列表组件",
+                basicSectionTitle = "基础列表",
+                itemPrefix = "列表项",
+            )
 
-    Language.EN_US -> ListDemoText(
-        title = "PList",
-        subtitle = "Virtual scrolling list component",
-        basicSectionTitle = "Basic List",
-        itemPrefix = "List Item",
-    )
-}
+        Language.EN_US ->
+            ListDemoText(
+                title = "PList",
+                subtitle = "Virtual scrolling list component",
+                basicSectionTitle = "Basic List",
+                itemPrefix = "List Item",
+            )
+    }
 
 private data class ListDemoText(
     val title: String,
