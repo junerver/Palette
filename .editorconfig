@@ -1,9 +1,79 @@
 root = true
 
-[*.{kt,kts}]
-indent_style = space
-indent_size = 4
-insert_final_newline = true
-end_of_line = lf
+[*]
 charset = utf-8
-max_line_length = 120
+indent_size = 4
+indent_style = space
+insert_final_newline = true
+trim_trailing_whitespace = true
+
+[*.java]
+ij_java_use_single_class_imports = true
+
+[*.{kt,kts}]
+max_line_length = 140
+ij_kotlin_code_style_defaults = KOTLIN_OFFICIAL
+ij_kotlin_imports_layout = *
+ij_kotlin_allow_trailing_comma = true
+ij_kotlin_allow_trailing_comma_on_call_site = true
+ij_kotlin_name_count_to_use_star_import = 2147483647
+ij_kotlin_name_count_to_use_star_import_for_members = 2147483647
+ij_kotlin_packages_to_use_import_on_demand = unset
+ktlint_standard_filename = disabled
+ktlint_standard_import-ordering = disabled
+ktlint_standard_max-line-length = disabled
+ktlint_standard_property-naming = disabled
+ktlint_standard_function-signature = disabled
+ktlint_standard_argument-list-wrapping = disabled
+ktlint_standard_no-blank-line-in-list = disabled
+ktlint_standard_no-multi-spaces = disabled
+ktlint_standard_no-trailing-spaces = disabled
+ktlint_standard_blank-line-before-declaration = disabled
+ktlint_standard_no-empty-first-line-in-class-body = disabled
+ktlint_standard_no-empty-first-line-in-method-block = disabled
+ktlint_standard_trailing-comma-on-call-site = disabled
+ktlint_standard_trailing-comma-on-declaration-site = disabled
+ktlint_function_signature_rule_force_multiline_when_parameter_count_greater_or_equal_than = 4
+ktlint_function_signature_body_expression_wrapping = default
+ktlint_standard_multiline-expression-wrapping = disabled
+ktlint_standard_if-else-wrapping = disabled
+ktlint_standard_when-entry-bracing = disabled
+ktlint_standard_blank-line-between-when-conditions = disabled
+ktlint_function_naming_ignore_when_annotated_with = Composable
+ktlint_standard_function-expression-body = disabled
+ktlint_standard_binary-expression-wrapping = disabled
+ktlint_standard_class-signature = disabled
+ktlint_standard_chain-method-continuation = disabled
+ktlint_standard_no-wildcard-imports = disabled
+ktlint_standard_kdoc = disabled
+ktlint_standard_no-consecutive-comments = disabled
+ktlint_standard_spacing-between-declarations-with-comments = disabled
+ktlint_standard_string-template-indent = disabled
+ktlint_standard_if-else-wrapping = disabled
+ktlint_standard_indent = disabled
+ktlint_standard_multiline-if-else = disabled
+ktlint_standard_discouraged-comment-location = disabled
+ktlint_standard_final-newline = disabled
+ktlint_standard_enum-wrapping = disabled
+ktlint_standard_no-consecutive-blank-lines = disabled
+ktlint_standard_if-else-bracing = disabled
+ktlint_standard_spacing-between-declarations-with-annotations = disabled
+ktlint_standard_no-unused-imports = disabled
+
+[**/build/generated/compose/**.kt]
+indent_size = 2
+ktlint_standard_class-naming = disabled
+
+[**/build/generated/ksp/**.kt]
+ktlint_standard_no-trailing-spaces = disabled
+ktlint_standard_spacing-between-declarations-with-comments = disabled
+
+[app/src/**.kt]
+ktlint_standard_function-naming = disabled
+ktlint_standard_max-line-length = disabled
+ktlint_standard_kdoc = disabled
+ktlint_standard_no-consecutive-comments = disabled
+ktlint_standard_property-naming = disabled
+
+[**/build/**]
+ktlint = disabled

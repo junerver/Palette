@@ -40,7 +40,7 @@ enum class ComponentSize(
         horizontalPadding = 20.dp,
         verticalPadding = 12.dp,
         cornerRadius = 8.dp
-    );
+    )
 }
 
 enum class ComponentStatus {
