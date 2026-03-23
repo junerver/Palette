@@ -9,7 +9,7 @@ plugins {
     alias(libs.plugins.androidLibrary)
     alias(libs.plugins.kotlinxBenchmark)
     alias(libs.plugins.kover)
-    id("maven-publish")
+    alias(libs.plugins.mavenPublish)
 }
 
 kotlin {
