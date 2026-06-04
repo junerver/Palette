@@ -35,6 +35,7 @@ import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.delay
 import xyz.junerver.compose.palette.ui.theme.Success
 
+@Suppress("DEPRECATION")
 @Composable
 fun CodeBlock(
     code: String,

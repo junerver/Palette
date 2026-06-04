@@ -1,6 +1,11 @@
 package xyz.junerver.compose.palette
 
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.Assignment
+import androidx.compose.material.icons.automirrored.filled.Label
+import androidx.compose.material.icons.automirrored.filled.List
+import androidx.compose.material.icons.automirrored.filled.Message
+import androidx.compose.material.icons.automirrored.filled.TrendingUp
 import androidx.compose.material.icons.filled.*
 import androidx.compose.ui.graphics.vector.ImageVector
 
@@ -24,15 +29,15 @@ sealed class NavItem(
 
     data object Rate : NavItem("rate", "评分", Icons.Default.Star, ComponentCategory.FORM)
 
-    data object Form : NavItem("form", "表单", Icons.Default.Assignment, ComponentCategory.FORM)
+    data object Form : NavItem("form", "表单", Icons.AutoMirrored.Filled.Assignment, ComponentCategory.FORM)
 
     data object Loading : NavItem("loading", "加载", Icons.Default.Refresh, ComponentCategory.FEEDBACK)
 
-    data object Progress : NavItem("progress", "进度条", Icons.Default.TrendingUp, ComponentCategory.FEEDBACK)
+    data object Progress : NavItem("progress", "进度条", Icons.AutoMirrored.Filled.TrendingUp, ComponentCategory.FEEDBACK)
 
-    data object Badge : NavItem("badge", "徽章", Icons.Filled.Label, ComponentCategory.FEEDBACK)
+    data object Badge : NavItem("badge", "徽章", Icons.AutoMirrored.Filled.Label, ComponentCategory.FEEDBACK)
 
-    data object Dialog : NavItem("dialog", "对话框", Icons.Filled.Message, ComponentCategory.FEEDBACK)
+    data object Dialog : NavItem("dialog", "对话框", Icons.AutoMirrored.Filled.Message, ComponentCategory.FEEDBACK)
 
     data object Toast : NavItem("toast", "轻提示", Icons.Default.Notifications, ComponentCategory.FEEDBACK)
 
@@ -47,7 +52,7 @@ sealed class NavItem(
     // Data Display Components
     data object Table : NavItem("table", "表格", Icons.Default.TableChart, ComponentCategory.DATA_DISPLAY)
 
-    data object List : NavItem("list", "列表", Icons.Default.List, ComponentCategory.DATA_DISPLAY)
+    data object List : NavItem("list", "列表", Icons.AutoMirrored.Filled.List, ComponentCategory.DATA_DISPLAY)
 
     data object Descriptions : NavItem(
         "descriptions",
@@ -78,7 +83,7 @@ sealed class NavItem(
     data object Collapse : NavItem("collapse", "折叠面板", Icons.Default.ExpandMore, ComponentCategory.LAYOUT)
 
     // Feedback Components (additional)
-    data object Tag : NavItem("tag", "标签", Icons.Default.Label, ComponentCategory.FEEDBACK)
+    data object Tag : NavItem("tag", "标签", Icons.AutoMirrored.Filled.Label, ComponentCategory.FEEDBACK)
 
     companion object {
         val all =

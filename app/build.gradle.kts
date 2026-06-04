@@ -36,11 +36,11 @@ kotlin {
         }
 
         commonMain.dependencies {
-            implementation(compose.runtime)
-            implementation(compose.foundation)
-            implementation(compose.material3)
-            implementation(compose.materialIconsExtended)
-            implementation(compose.ui)
+            implementation(libs.jb.compose.runtime)
+            implementation(libs.jb.compose.foundation)
+            implementation(libs.jb.compose.material3)
+            implementation(libs.jb.compose.material.icons.extended)
+            implementation(libs.jb.compose.ui)
             implementation(project(":palette"))
             implementation(libs.androidx.datastore.preferences.core)
         }
@@ -61,6 +61,7 @@ kotlin {
 android {
     namespace = "xyz.junerver.compose.palette"
     compileSdk = 35
+    buildToolsVersion = "34.0.0"
 
     sourceSets["main"].manifest.srcFile("src/androidMain/AndroidManifest.xml")
     sourceSets["main"].res.srcDirs("src/androidMain/res")

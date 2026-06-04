@@ -3,7 +3,7 @@ package xyz.junerver.compose.palette.components.timeline
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material3.Divider
+import androidx.compose.material3.VerticalDivider
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -45,10 +45,9 @@ fun PTimeline(
                     }
 
                     if (index < items.size - 1) {
-                        Divider(
-                            modifier = Modifier
-                                .width(TimelineDefaults.LineWidth)
-                                .height(TimelineDefaults.ItemSpacing),
+                        VerticalDivider(
+                            modifier = Modifier.height(TimelineDefaults.ItemSpacing),
+                            thickness = TimelineDefaults.LineWidth,
                             color = lineColor
                         )
                     }

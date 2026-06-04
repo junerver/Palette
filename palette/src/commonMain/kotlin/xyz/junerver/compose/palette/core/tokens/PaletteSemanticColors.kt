@@ -53,6 +53,18 @@ data class PaletteSemanticColors(
         surfaceContainer = surface,
         surfaceContainerHigh = surface,
         surfaceContainerHighest = surface,
+        primaryFixed = primary,
+        primaryFixedDim = primary,
+        onPrimaryFixed = onPrimary,
+        onPrimaryFixedVariant = onPrimary,
+        secondaryFixed = primary,
+        secondaryFixedDim = primary,
+        onSecondaryFixed = onPrimary,
+        onSecondaryFixedVariant = onPrimary,
+        tertiaryFixed = success,
+        tertiaryFixedDim = success,
+        onTertiaryFixed = onPrimary,
+        onTertiaryFixedVariant = onPrimary,
     )
 }
 

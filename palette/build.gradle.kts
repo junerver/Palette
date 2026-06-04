@@ -37,7 +37,6 @@ kotlin {
     }
 
     listOf(
-        iosX64(),
         iosArm64(),
         iosSimulatorArm64(),
     ).forEach {
@@ -55,14 +54,14 @@ kotlin {
     sourceSets {
         val commonMain by getting {
             dependencies {
-                implementation(compose.runtime)
-                implementation(compose.foundation)
-                implementation(compose.ui)
-                implementation(compose.material3)
+                implementation(libs.jb.compose.runtime)
+                implementation(libs.jb.compose.foundation)
+                implementation(libs.jb.compose.ui)
+                implementation(libs.jb.compose.material3)
                 implementation(libs.kotlinx.coroutines.core)
                 implementation(libs.kotlinx.datetime)
                 implementation(libs.kotlinx.collections.immutable)
-                implementation(compose.materialIconsExtended)
+                implementation(libs.jb.compose.material.icons.extended)
                 api(libs.hooks)
             }
         }
@@ -100,7 +99,7 @@ kotlin {
         val androidUnitTest by getting
         val desktopTest by getting {
             dependencies {
-                implementation(compose.desktop.uiTestJUnit4)
+                implementation(libs.jb.compose.uitest.junit4)
                 implementation(compose.desktop.currentOs)
             }
         }
@@ -111,6 +110,7 @@ kotlin {
 android {
     namespace = "xyz.junerver.compose.palette"
     compileSdk = 35
+    buildToolsVersion = "34.0.0"
 
     defaultConfig {
         minSdk = 24
@@ -174,10 +174,12 @@ tasks.register("verifyCoverageBaseline") {
             lineCounter = node
             break
         }
-        require(lineCounter != null) { "Cannot find LINE counter in Kover report root: $reportFile" }
+        val counter =
+            lineCounter
+                ?: error("Cannot find LINE counter in Kover report root: $reportFile")
 
-        val covered = lineCounter!!.getAttribute("covered").toLong()
-        val missed = lineCounter!!.getAttribute("missed").toLong()
+        val covered = counter.getAttribute("covered").toLong()
+        val missed = counter.getAttribute("missed").toLong()
 
         val total = covered + missed
         require(total > 0) { "Line coverage is empty in report: $reportFile" }

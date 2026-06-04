@@ -1,7 +1,7 @@
 package xyz.junerver.compose.palette.components.select
 
 import androidx.compose.ui.test.assertTextEquals
-import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.onNodeWithText
 import org.junit.Rule
 import xyz.junerver.compose.palette.core.theme.PaletteMaterialTheme
