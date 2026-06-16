@@ -2,7 +2,11 @@
 
 package xyz.junerver.compose.palette
 
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.Dp
 import xyz.junerver.compose.palette.components.avatar.AvatarDefaults as AvatarDefaultsImpl
 import xyz.junerver.compose.palette.components.avatar.AvatarSize as AvatarSizeImpl
 import xyz.junerver.compose.palette.components.badge.BadgeDefaults as BadgeDefaultsImpl
@@ -21,10 +25,14 @@ import xyz.junerver.compose.palette.components.dialog.DialogDefaults as DialogDe
 import xyz.junerver.compose.palette.components.dialog.DialogState as DialogStateImpl
 import xyz.junerver.compose.palette.components.empty.EmptyDefaults as EmptyDefaultsImpl
 import xyz.junerver.compose.palette.components.image.ImageDefaults as ImageDefaultsImpl
+import xyz.junerver.compose.palette.components.infinitescroll.InfiniteScrollDefaults as InfiniteScrollDefaultsImpl
+import xyz.junerver.compose.palette.components.infinitescroll.PInfiniteScroll as PInfiniteScrollImpl
 import xyz.junerver.compose.palette.components.list.ListDefaults as ListDefaultsImpl
 import xyz.junerver.compose.palette.components.loading.LoadingDefaults as LoadingDefaultsImpl
 import xyz.junerver.compose.palette.components.pagination.PaginationColors as PaginationColorsImpl
 import xyz.junerver.compose.palette.components.pagination.PaginationDefaults as PaginationDefaultsImpl
+import xyz.junerver.compose.palette.components.progress.DashboardProgressDefaults as DashboardProgressDefaultsImpl
+import xyz.junerver.compose.palette.components.progress.PDashboardProgress as PDashboardProgressImpl
 import xyz.junerver.compose.palette.components.progress.ProgressDefaults as ProgressDefaultsImpl
 import xyz.junerver.compose.palette.components.radio.RadioDefaults as RadioDefaultsImpl
 import xyz.junerver.compose.palette.components.rate.RateDefaults as RateDefaultsImpl
@@ -60,6 +68,8 @@ import xyz.junerver.compose.palette.components.tooltip.PTooltip as PTooltipImpl
 import xyz.junerver.compose.palette.components.tooltip.TooltipDefaults as TooltipDefaultsImpl
 import xyz.junerver.compose.palette.components.popover.PPopover as PPopoverImpl
 import xyz.junerver.compose.palette.components.popover.PopoverDefaults as PopoverDefaultsImpl
+import xyz.junerver.compose.palette.components.popup.PPopup as PPopupImpl
+import xyz.junerver.compose.palette.components.popup.PopupDefaults as PopupDefaultsImpl
 import xyz.junerver.compose.palette.components.drawer.PDrawer as PDrawerImpl
 import xyz.junerver.compose.palette.components.drawer.DrawerDefaults as DrawerDefaultsImpl
 import xyz.junerver.compose.palette.components.drawer.DrawerPlacement as DrawerPlacementImpl
@@ -118,6 +128,80 @@ import xyz.junerver.compose.palette.components.sortable.SortableDefaults as Sort
 import xyz.junerver.compose.palette.components.sortable.SortableItem as SortableItemImpl
 import xyz.junerver.compose.palette.components.virtuallist.PVirtualList as PVirtualListImpl
 import xyz.junerver.compose.palette.components.virtuallist.VirtualListDefaults as VirtualListDefaultsImpl
+import xyz.junerver.compose.palette.components.searchbar.PSearchBar as PSearchBarImpl
+import xyz.junerver.compose.palette.components.searchbar.SearchBarDefaults as SearchBarDefaultsImpl
+import xyz.junerver.compose.palette.components.backtop.BacktopDefaults as BacktopDefaultsImpl
+import xyz.junerver.compose.palette.components.backtop.PBacktop as PBacktopImpl
+import xyz.junerver.compose.palette.components.actionsheet.PActionSheet as PActionSheetImpl
+import xyz.junerver.compose.palette.components.actionsheet.ActionSheetDefaults as ActionSheetDefaultsImpl
+import xyz.junerver.compose.palette.components.actionsheet.ActionSheetItem as ActionSheetItemImpl
+import xyz.junerver.compose.palette.components.actionsheet.ActionSheetState as ActionSheetStateImpl
+import xyz.junerver.compose.palette.components.actionsheet.rememberActionSheetState as rememberActionSheetStateImpl
+import xyz.junerver.compose.palette.components.autocomplete.AutocompleteDefaults as AutocompleteDefaultsImpl
+import xyz.junerver.compose.palette.components.autocomplete.AutocompleteOption as AutocompleteOptionImpl
+import xyz.junerver.compose.palette.components.autocomplete.PAutocomplete as PAutocompleteImpl
+import xyz.junerver.compose.palette.components.affix.AffixDefaults as AffixDefaultsImpl
+import xyz.junerver.compose.palette.components.affix.AffixPosition as AffixPositionImpl
+import xyz.junerver.compose.palette.components.affix.PAffix as PAffixImpl
+import xyz.junerver.compose.palette.components.calendar.CalendarDefaults as CalendarDefaultsImpl
+import xyz.junerver.compose.palette.components.calendar.PCalendar as PCalendarImpl
+import xyz.junerver.compose.palette.components.inputnumber.InputNumberDefaults as InputNumberDefaultsImpl
+import xyz.junerver.compose.palette.components.inputnumber.PInputNumber as PInputNumberImpl
+import xyz.junerver.compose.palette.components.inputotp.InputOTPDefaults as InputOTPDefaultsImpl
+import xyz.junerver.compose.palette.components.inputotp.PInputOTP as PInputOTPImpl
+import xyz.junerver.compose.palette.components.cascader.CascaderColors as CascaderColorsImpl
+import xyz.junerver.compose.palette.components.cascader.CascaderDefaults as CascaderDefaultsImpl
+import xyz.junerver.compose.palette.components.cascader.CascaderExpandTrigger as CascaderExpandTriggerImpl
+import xyz.junerver.compose.palette.components.cascader.CascaderOption as CascaderOptionImpl
+import xyz.junerver.compose.palette.components.cascader.PCascader as PCascaderImpl
+import xyz.junerver.compose.palette.components.cascaderpanel.CascaderPanelDefaults as CascaderPanelDefaultsImpl
+import xyz.junerver.compose.palette.components.cascaderpanel.PCascaderPanel as PCascaderPanelImpl
+import xyz.junerver.compose.palette.components.treeselect.PTreeSelect as PTreeSelectImpl
+import xyz.junerver.compose.palette.components.treeselect.TreeSelectDefaults as TreeSelectDefaultsImpl
+import xyz.junerver.compose.palette.components.treeselect.TreeSelectNode as TreeSelectNodeImpl
+import xyz.junerver.compose.palette.components.alert.AlertDefaults as AlertDefaultsImpl
+import xyz.junerver.compose.palette.components.alert.AlertType as AlertTypeImpl
+import xyz.junerver.compose.palette.components.alert.PAlert as PAlertImpl
+import xyz.junerver.compose.palette.components.contextmenu.PContextMenu as PContextMenuImpl
+import xyz.junerver.compose.palette.components.contextmenu.ContextMenuDefaults as ContextMenuDefaultsImpl
+import xyz.junerver.compose.palette.components.contextmenu.ContextMenuState as ContextMenuStateImpl
+import xyz.junerver.compose.palette.components.contextmenu.ContextMenuItem as ContextMenuItemImpl
+import xyz.junerver.compose.palette.components.contextmenu.rememberContextMenuState as rememberContextMenuStateImpl
+import xyz.junerver.compose.palette.components.popconfirm.PPopconfirm as PPopconfirmImpl
+import xyz.junerver.compose.palette.components.popconfirm.PopconfirmDefaults as PopconfirmDefaultsImpl
+import xyz.junerver.compose.palette.components.transfer.PTransfer as PTransferImpl
+import xyz.junerver.compose.palette.components.transfer.TransferDefaults as TransferDefaultsImpl
+import xyz.junerver.compose.palette.components.transfer.TransferItem as TransferItemImpl
+import xyz.junerver.compose.palette.components.result.PResult as PResultImpl
+import xyz.junerver.compose.palette.components.result.ResultDefaults as ResultDefaultsImpl
+import xyz.junerver.compose.palette.components.result.ResultStatus as ResultStatusImpl
+import xyz.junerver.compose.palette.components.segmented.PSegmented as PSegmentedImpl
+import xyz.junerver.compose.palette.components.segmented.SegmentedDefaults as SegmentedDefaultsImpl
+import xyz.junerver.compose.palette.components.segmented.SegmentedOption as SegmentedOptionImpl
+import xyz.junerver.compose.palette.components.colorpicker.ColorPickerDefaults as ColorPickerDefaultsImpl
+import xyz.junerver.compose.palette.components.colorpicker.PColorPicker as PColorPickerImpl
+import xyz.junerver.compose.palette.components.qrcode.PQRCode as PQRCodeImpl
+import xyz.junerver.compose.palette.components.qrcode.QRCodeDefaults as QRCodeDefaultsImpl
+import xyz.junerver.compose.palette.components.watermark.PWatermark as PWatermarkImpl
+import xyz.junerver.compose.palette.components.watermark.WatermarkDefaults as WatermarkDefaultsImpl
+import xyz.junerver.compose.palette.components.toggle.PToggle as PToggleImpl
+import xyz.junerver.compose.palette.components.toggle.PToggleGroup as PToggleGroupImpl
+import xyz.junerver.compose.palette.components.toggle.ToggleDefaults as ToggleDefaultsImpl
+import xyz.junerver.compose.palette.components.toggle.ToggleVariant as ToggleVariantImpl
+import xyz.junerver.compose.palette.components.toggle.ToggleItem as ToggleItemImpl
+import xyz.junerver.compose.palette.components.mentions.PMentions as PMentionsImpl
+import xyz.junerver.compose.palette.components.mentions.MentionsDefaults as MentionsDefaultsImpl
+import xyz.junerver.compose.palette.components.mentions.MentionsOption as MentionsOptionImpl
+import xyz.junerver.compose.palette.components.pageheader.PPageHeader as PPageHeaderImpl
+import xyz.junerver.compose.palette.components.pageheader.PageHeaderDefaults as PageHeaderDefaultsImpl
+import xyz.junerver.compose.palette.components.floatbutton.FloatButtonDefaults as FloatButtonDefaultsImpl
+import xyz.junerver.compose.palette.components.floatbutton.FloatButtonShape as FloatButtonShapeImpl
+import xyz.junerver.compose.palette.components.floatbutton.PFloatButton as PFloatButtonImpl
+import xyz.junerver.compose.palette.components.grid.GridDefaults as GridDefaultsImpl
+import xyz.junerver.compose.palette.components.grid.PRow as PRowImpl
+import xyz.junerver.compose.palette.components.space.PSpace as PSpaceImpl
+import xyz.junerver.compose.palette.components.space.SpaceDefaults as SpaceDefaultsImpl
+import xyz.junerver.compose.palette.components.space.SpaceDirection as SpaceDirectionImpl
 import xyz.junerver.compose.palette.core.spec.ComponentInteraction as ComponentInteractionImpl
 import xyz.junerver.compose.palette.core.spec.ComponentSize as ComponentSizeImpl
 import xyz.junerver.compose.palette.core.spec.ComponentState as ComponentStateImpl
@@ -248,6 +332,8 @@ val PopoverDefaults = PopoverDefaultsImpl
 val PDrawer = ::PDrawerImpl
 val DrawerDefaults = DrawerDefaultsImpl
 typealias DrawerPlacement = DrawerPlacementImpl
+val PPopup = ::PPopupImpl
+val PopupDefaults = PopupDefaultsImpl
 
 // Components - Navigation
 val PMenu = ::PMenuImpl
@@ -271,12 +357,22 @@ val TimePickerDefaults = TimePickerDefaultsImpl
 val PUpload = ::PUploadImpl
 val UploadDefaults = UploadDefaultsImpl
 typealias UploadFile = UploadFileImpl
+val PInputNumber = ::PInputNumberImpl
+val InputNumberDefaults = InputNumberDefaultsImpl
+val PInputOTP = ::PInputOTPImpl
+val InputOTPDefaults = InputOTPDefaultsImpl
+
+// Components - Calendar
+val PCalendar = ::PCalendarImpl
+val CalendarDefaults = CalendarDefaultsImpl
 
 // Components - Loading
 val LoadingDefaults = LoadingDefaultsImpl
 
 // Components - Progress
 val ProgressDefaults = ProgressDefaultsImpl
+val PDashboardProgress = ::PDashboardProgressImpl
+val DashboardProgressDefaults = DashboardProgressDefaultsImpl
 
 // Components - Button
 typealias ButtonType = ButtonTypeImpl
@@ -353,6 +449,10 @@ typealias TimelineItemData = TimelineItemDataImpl
 // Components - Image
 val ImageDefaults = ImageDefaultsImpl
 
+// Components - InfiniteScroll
+val PInfiniteScroll = ::PInfiniteScrollImpl
+val InfiniteScrollDefaults = InfiniteScrollDefaultsImpl
+
 // Components - List
 val ListDefaults = ListDefaultsImpl
 
@@ -426,3 +526,117 @@ fun <T> PVirtualList(
     key = key,
 )
 val VirtualListDefaults = VirtualListDefaultsImpl
+
+// Components - SearchBar
+val PSearchBar = ::PSearchBarImpl
+val SearchBarDefaults = SearchBarDefaultsImpl
+
+// Components - ContextMenu
+val PContextMenu = ::PContextMenuImpl
+val ContextMenuDefaults = ContextMenuDefaultsImpl
+typealias ContextMenuState = ContextMenuStateImpl
+typealias ContextMenuItem = ContextMenuItemImpl
+val rememberContextMenuState = ::rememberContextMenuStateImpl
+
+// Components - ActionSheet
+val PActionSheet = ::PActionSheetImpl
+val ActionSheetDefaults = ActionSheetDefaultsImpl
+typealias ActionSheetItem = ActionSheetItemImpl
+typealias ActionSheetState = ActionSheetStateImpl
+val rememberActionSheetState = ::rememberActionSheetStateImpl
+
+// Components - Autocomplete
+val PAutocomplete = ::PAutocompleteImpl
+val AutocompleteDefaults = AutocompleteDefaultsImpl
+typealias AutocompleteOption = AutocompleteOptionImpl
+
+// Components - Affix
+val PAffix = ::PAffixImpl
+val AffixDefaults = AffixDefaultsImpl
+typealias AffixPosition = AffixPositionImpl
+
+// Components - Alert
+val PAlert = ::PAlertImpl
+val AlertDefaults = AlertDefaultsImpl
+typealias AlertType = AlertTypeImpl
+
+// Components - Cascader
+val PCascader = ::PCascaderImpl
+val CascaderDefaults = CascaderDefaultsImpl
+typealias CascaderOption = CascaderOptionImpl
+typealias CascaderExpandTrigger = CascaderExpandTriggerImpl
+typealias CascaderColors = CascaderColorsImpl
+
+// Components - CascaderPanel
+val PCascaderPanel = ::PCascaderPanelImpl
+val CascaderPanelDefaults = CascaderPanelDefaultsImpl
+
+// Components - TreeSelect
+val PTreeSelect = ::PTreeSelectImpl
+val TreeSelectDefaults = TreeSelectDefaultsImpl
+typealias TreeSelectNode = TreeSelectNodeImpl
+
+// Components - Popconfirm
+val PPopconfirm = ::PPopconfirmImpl
+val PopconfirmDefaults = PopconfirmDefaultsImpl
+
+// Components - Transfer
+val PTransfer = ::PTransferImpl
+val TransferDefaults = TransferDefaultsImpl
+typealias TransferItem = TransferItemImpl
+
+// Components - Result
+val PResult = ::PResultImpl
+val ResultDefaults = ResultDefaultsImpl
+typealias ResultStatus = ResultStatusImpl
+
+// Components - Segmented
+val PSegmented = ::PSegmentedImpl
+val SegmentedDefaults = SegmentedDefaultsImpl
+typealias SegmentedOption = SegmentedOptionImpl
+
+// Components - Space
+val PSpace = ::PSpaceImpl
+val SpaceDefaults = SpaceDefaultsImpl
+typealias SpaceDirection = SpaceDirectionImpl
+
+// Components - Grid
+val PRow = ::PRowImpl
+val GridDefaults = GridDefaultsImpl
+
+// Components - QRCode
+val PQRCode = ::PQRCodeImpl
+val QRCodeDefaults = QRCodeDefaultsImpl
+
+// Components - ColorPicker
+val PColorPicker = ::PColorPickerImpl
+val ColorPickerDefaults = ColorPickerDefaultsImpl
+
+// Components - Backtop
+val PBacktop = ::PBacktopImpl
+val BacktopDefaults = BacktopDefaultsImpl
+
+// Components - FloatButton
+val PFloatButton = ::PFloatButtonImpl
+val FloatButtonDefaults = FloatButtonDefaultsImpl
+typealias FloatButtonShape = FloatButtonShapeImpl
+
+// Components - Watermark
+val PWatermark = ::PWatermarkImpl
+val WatermarkDefaults = WatermarkDefaultsImpl
+
+// Components - Toggle
+val PToggle = ::PToggleImpl
+val PToggleGroup = ::PToggleGroupImpl
+val ToggleDefaults = ToggleDefaultsImpl
+typealias ToggleVariant = ToggleVariantImpl
+typealias ToggleItem = ToggleItemImpl
+
+// Components - Mentions
+val PMentions = ::PMentionsImpl
+val MentionsDefaults = MentionsDefaultsImpl
+typealias MentionsOption = MentionsOptionImpl
+
+// Components - PageHeader
+val PPageHeader = ::PPageHeaderImpl
+val PageHeaderDefaults = PageHeaderDefaultsImpl

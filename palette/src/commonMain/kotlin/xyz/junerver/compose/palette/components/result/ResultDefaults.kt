@@ -1,0 +1,56 @@
+package xyz.junerver.compose.palette.components.result
+
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.TextUnit
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import xyz.junerver.compose.palette.core.theme.PaletteTheme
+
+enum class ResultStatus {
+    Success, Error, Info, Warning, NotFound, NetworkError
+}
+
+object ResultDefaults {
+    val IconSize: Dp = 64.dp
+    val TitleFontSize: TextUnit = 20.sp
+    val SubtitleFontSize: TextUnit = 14.sp
+    val IconToTitleSpacing: Dp = 16.dp
+    val TitleToSubtitleSpacing: Dp = 8.dp
+    val SubtitleToExtraSpacing: Dp = 24.dp
+
+    fun defaultTitle(status: ResultStatus): String = when (status) {
+        ResultStatus.Success -> "操作成功"
+        ResultStatus.Error -> "操作失败"
+        ResultStatus.Info -> "信息提示"
+        ResultStatus.Warning -> "警告提示"
+        ResultStatus.NotFound -> "404"
+        ResultStatus.NetworkError -> "网络异常"
+    }
+
+    fun defaultSubtitle(status: ResultStatus): String = when (status) {
+        ResultStatus.Success -> "您的操作已成功完成"
+        ResultStatus.Error -> "请稍后重试或联系管理员"
+        ResultStatus.Info -> "请留意相关提示信息"
+        ResultStatus.Warning -> "请注意核实相关信息"
+        ResultStatus.NotFound -> "抱歉，您访问的页面不存在"
+        ResultStatus.NetworkError -> "网络连接异常，请检查网络设置"
+    }
+
+    @Composable
+    fun iconColor(status: ResultStatus): Color = when (status) {
+        ResultStatus.Success -> PaletteTheme.colors.success
+        ResultStatus.Error -> PaletteTheme.colors.error
+        ResultStatus.Info -> PaletteTheme.colors.primary
+        ResultStatus.Warning -> PaletteTheme.colors.warning
+        ResultStatus.NotFound -> PaletteTheme.colors.hint
+        ResultStatus.NetworkError -> PaletteTheme.colors.hint
+    }
+
+    @Composable
+    fun titleColor(): Color = PaletteTheme.colors.onSurface
+
+    @Composable
+    fun subtitleColor(): Color = PaletteTheme.colors.hint
+}

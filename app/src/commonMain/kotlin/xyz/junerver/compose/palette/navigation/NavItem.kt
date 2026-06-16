@@ -85,6 +85,46 @@ sealed class NavItem(
     // Feedback Components (additional)
     data object Tag : NavItem("tag", "标签", Icons.AutoMirrored.Filled.Label, ComponentCategory.FEEDBACK)
 
+    data object Popup : NavItem("popup", "弹出层", Icons.Default.CallToAction, ComponentCategory.FEEDBACK)
+
+    data object ActionSheet : NavItem("actionsheet", "操作菜单", Icons.Default.MenuOpen, ComponentCategory.FEEDBACK)
+
+    data object SearchBar : NavItem("searchbar", "搜索栏", Icons.Default.Search, ComponentCategory.FORM)
+
+    data object ContextMenu : NavItem("contextmenu", "上下文菜单", Icons.Default.TouchApp, ComponentCategory.FEEDBACK)
+
+    data object DashboardProgress : NavItem(
+        "dashboardprogress",
+        "仪表盘进度",
+        Icons.Default.Speed,
+        ComponentCategory.FEEDBACK,
+    )
+
+    data object Alert : NavItem("alert", "告警提示", Icons.Default.Warning, ComponentCategory.FEEDBACK)
+    data object InputNumber : NavItem("inputnumber", "数字输入", Icons.Default.Pin, ComponentCategory.FORM)
+    data object Cascader : NavItem("cascader", "级联选择", Icons.Default.AccountTree, ComponentCategory.FORM)
+    data object Transfer : NavItem("transfer", "穿梭框", Icons.Default.SwapHoriz, ComponentCategory.FORM)
+    data object Calendar : NavItem("calendar", "日历", Icons.Default.CalendarMonth, ComponentCategory.FORM)
+    data object Segmented : NavItem("segmented", "分段控制器", Icons.Default.ToggleOn, ComponentCategory.FORM)
+    data object Popconfirm : NavItem("popconfirm", "气泡确认", Icons.Default.HelpOutline, ComponentCategory.FEEDBACK)
+    data object Result : NavItem("result", "结果页", Icons.Default.CheckCircleOutline, ComponentCategory.FEEDBACK)
+    data object Affix : NavItem("affix", "固钉", Icons.Default.PushPin, ComponentCategory.NAVIGATION)
+    data object InputOTP : NavItem("inputotp", "验证码输入", Icons.Default.Password, ComponentCategory.FORM)
+    data object Autocomplete : NavItem("autocomplete", "自动完成", Icons.Default.Lightbulb, ComponentCategory.FORM)
+    data object TreeSelect : NavItem("treeselect", "树形选择", Icons.Default.AccountTree, ComponentCategory.FORM)
+    data object ColorPicker : NavItem("colorpicker", "颜色选择", Icons.Default.Palette, ComponentCategory.FORM)
+    data object Grid : NavItem("grid", "栅格布局", Icons.Default.GridView, ComponentCategory.LAYOUT)
+    data object Space : NavItem("space", "间距", Icons.Default.SpaceBar, ComponentCategory.LAYOUT)
+    data object InfiniteScroll : NavItem("infinitescroll", "无限滚动", Icons.Default.VerticalAlignBottom, ComponentCategory.FEEDBACK)
+    data object Backtop : NavItem("backtop", "回到顶部", Icons.Default.ArrowUpward, ComponentCategory.NAVIGATION)
+    data object Watermark : NavItem("watermark", "水印", Icons.Default.Opacity, ComponentCategory.FEEDBACK)
+    data object QRCode : NavItem("qrcode", "二维码", Icons.Default.QrCode, ComponentCategory.DATA_DISPLAY)
+    data object FloatButton : NavItem("floatbutton", "浮动按钮", Icons.Default.AddCircle, ComponentCategory.FEEDBACK)
+    data object PageHeader : NavItem("pageheader", "页头", Icons.Default.ArrowBack, ComponentCategory.NAVIGATION)
+    data object Toggle : NavItem("toggle", "切换按钮", Icons.Default.ToggleOn, ComponentCategory.FORM)
+    data object Mentions : NavItem("mentions", "提及输入", Icons.Default.AlternateEmail, ComponentCategory.FORM)
+    data object CascaderPanel : NavItem("cascaderpanel", "级联面板", Icons.Default.AccountTree, ComponentCategory.FORM)
+
     companion object {
         val all =
             listOf(
@@ -94,7 +134,12 @@ sealed class NavItem(
                 RowLayout, BorderBox,
                 Table, List, Descriptions, Statistic, Timeline, Tree, Image, Carousel, Pagination, Empty,
                 Card, Avatar, Collapse,
-                Tag,
+                Tag, Popup, ActionSheet, SearchBar, ContextMenu, DashboardProgress,
+                Alert, InputNumber, Cascader, Transfer, Calendar,
+                Segmented, Popconfirm, Result, Affix, InputOTP,
+                Autocomplete, TreeSelect, ColorPicker, Grid, Space,
+                InfiniteScroll, Backtop, Watermark, QRCode, FloatButton,
+                PageHeader, Toggle, Mentions, CascaderPanel,
             )
 
         fun fromRoute(route: String?) = all.find { it.route == route }
