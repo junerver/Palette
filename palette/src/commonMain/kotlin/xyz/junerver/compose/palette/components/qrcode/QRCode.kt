@@ -38,7 +38,7 @@ fun PQRCode(
             for (col in matrix.indices) {
                 if (matrix[row][col]) {
                     drawRect(
-                        color = color,
+                        color = resolvedColor,
                         topLeft = Offset(offset + col * cellSize, offset + row * cellSize),
                         size = Size(cellSize, cellSize),
                     )
@@ -51,16 +51,16 @@ fun PQRCode(
 internal object QRCodeEncoder {
 
     fun encode(text: String, ecLevel: Int): Array<BooleanArray> {
-        val dataBytes = encodeToBytes(text)
-        val version = selectVersion(dataBytes.size, ecLevel)
+        val textBytes = text.encodeToByteArray()
+        // 选择版本：根据数据长度选择最小可用版本
+        val version = selectVersion(textBytes.size, ecLevel)
         val totalDataCodewords = DATA_CODEWORDS[version][ecLevel]
         val ecCodewordsPerBlock = EC_CODEWORDS_PER_BLOCK[version][ecLevel]
         val numBlocks = NUM_EC_BLOCKS[version][ecLevel]
-        val dataCodewords = IntArray(totalDataCodewords)
-        for (i in 0 until dataBytes.size.coerceAtMost(totalDataCodewords)) {
-            dataCodewords[i] = dataBytes[i] and 0xFF
-        }
+        // 编码数据为字节
+        val dataCodewords = encodeData(textBytes, version, totalDataCodewords)
         val totalCodewords = TOTAL_CODEWORDS[version]
+        // 分块
         val remainder = totalDataCodewords % numBlocks
         val blockSizes = IntArray(numBlocks) { i ->
             totalDataCodewords / numBlocks + if (i < remainder) 1 else 0
@@ -75,6 +75,7 @@ internal object QRCodeEncoder {
             blocks.add(block)
             ecBlocks.add(rsEncode(block, ecCodewordsPerBlock))
         }
+        // 交错
         val interleaved = IntArray(totalCodewords)
         var pos = 0
         val maxBlockSize = blockSizes.max()
@@ -90,6 +91,7 @@ internal object QRCodeEncoder {
                 interleaved[pos++] = ecBlocks[i][j]
             }
         }
+        // 创建矩阵
         val moduleCount = version * 4 + 17
         val matrix = Array(moduleCount) { BooleanArray(moduleCount) }
         val isFunction = Array(moduleCount) { BooleanArray(moduleCount) }
@@ -112,22 +114,60 @@ internal object QRCodeEncoder {
         return matrix
     }
 
-    private fun encodeToBytes(text: String): IntArray {
-        val bytes = mutableListOf<Int>()
-        bytes.add(0x40)
-        val textBytes = text.encodeToByteArray()
+    private fun encodeData(textBytes: ByteArray, version: Int, capacity: Int): IntArray {
         val len = textBytes.size
-        bytes.add((len shr 8) and 0xFF)
-        bytes.add(len and 0xFF)
+        // 位缓冲区
+        val bits = mutableListOf<Int>()
+        // 模式指示符: 字节模式 = 0100 (4位)
+        bits.addAll(listOf(0, 1, 0, 0))
+        // 字符计数指示符长度取决于版本
+        val countBits = if (version <= 9) 8 else 16
+        for (i in countBits - 1 downTo 0) {
+            bits.add((len shr i) and 1)
+        }
+        // 数据 (每个字节8位)
         for (b in textBytes) {
-            bytes.add(b.toInt() and 0xFF)
+            for (i in 7 downTo 0) {
+                bits.add((b.toInt() shr i) and 1)
+            }
+        }
+        // 添加终止符 (最多4位)
+        val terminatorLength = minOf(4, capacity * 8 - bits.size)
+        repeat(terminatorLength) { bits.add(0) }
+        // 填充到字节边界
+        while (bits.size % 8 != 0) { bits.add(0) }
+        // 转换为字节数组
+        val bytes = mutableListOf<Int>()
+        var i = 0
+        while (i < bits.size) {
+            var byte = 0
+            for (j in 0 until 8) {
+                byte = byte shl 1
+                if (i + j < bits.size) {
+                    byte = byte or bits[i + j]
+                }
+            }
+            bytes.add(byte)
+            i += 8
+        }
+        // 填充到容量
+        val paddingBytes = intArrayOf(0xEC, 0x11)
+        var padIdx = 0
+        while (bytes.size < capacity) {
+            bytes.add(paddingBytes[padIdx % 2])
+            padIdx++
         }
         return bytes.toIntArray()
     }
 
-    private fun selectVersion(dataLen: Int, ecLevel: Int): Int {
+    private fun selectVersion(dataLength: Int, ecLevel: Int): Int {
+        // dataLength是原始字节长度，需要加上模式指示符和字符计数的开销
+        // 字节模式：4位模式 + 8/16位计数 + 8*dataLength位数据
         for (v in 1..40) {
-            if (DATA_CODEWORDS[v][ecLevel] >= dataLen + 4) return v
+            val countBits = if (v <= 9) 8 else 16
+            val totalBits = 4 + countBits + 8 * dataLength
+            val capacityBits = DATA_CODEWORDS[v][ecLevel] * 8
+            if (capacityBits >= totalBits) return v
         }
         return 40
     }
@@ -213,6 +253,12 @@ internal object QRCodeEncoder {
         isFunction: Array<BooleanArray>,
         size: Int,
     ) {
+        // Timing patterns at (6, 8) and (8, 6) intersect with finder separator
+        // areas already marked by placeFinders — place them explicitly before the loop
+        matrix[6][8] = true
+        isFunction[6][8] = true
+        matrix[8][6] = true
+        isFunction[8][6] = true
         for (i in 8 until size - 8) {
             val dark = i % 2 == 0
             if (!isFunction[6][i]) {
@@ -253,10 +299,16 @@ internal object QRCodeEncoder {
         isFunction: Array<BooleanArray>,
         size: Int,
     ) {
+        // First copy: around top-left finder pattern
         for (i in 0..8) {
-            isFunction[i][8] = true
-            isFunction[8][i] = true
+            if (i != 6) { // Skip (6, 8) - it's timing pattern
+                isFunction[i][8] = true
+            }
+            if (i != 6) { // Skip (8, 6) - it's timing pattern
+                isFunction[8][i] = true
+            }
         }
+        // Second copy: bottom-left and top-right
         for (i in 0..7) {
             isFunction[size - 1 - i][8] = true
             isFunction[8][size - 1 - i] = true
@@ -405,26 +457,22 @@ internal object QRCodeEncoder {
             }
         }
         bits = ((data shl 10) or bits) xor 0x5412
-        for (i in 0..14) {
-            val dark = (bits shr i) and 1 == 1
-            when {
-                i <= 5 -> {
-                    matrix[i][8] = dark
-                    matrix[8][size - 1 - i] = dark
-                }
-                i == 6 -> {
-                    matrix[i + 1][8] = dark
-                    matrix[8][size - 1 - i] = dark
-                }
-                i == 7 -> {
-                    matrix[8][8] = dark
-                    matrix[8][size - 8] = dark
-                }
-                else -> {
-                    matrix[8][14 - i] = dark
-                    matrix[size - 15 + i][8] = dark
-                }
-            }
+        // First copy: bits 0-6 in column 8 (skip row 6), bit 7 at corner, bits 8-14 in row 8
+        for (i in 0..5) {
+            matrix[i][8] = (bits shr i) and 1 == 1
+        }
+        matrix[7][8] = (bits shr 6) and 1 == 1
+        matrix[8][8] = (bits shr 7) and 1 == 1
+        for (i in 8..14) {
+            matrix[8][14 - i] = (bits shr i) and 1 == 1
+        }
+        // Second copy: bits 0-7 in row 8 (right), bits 8-14 in column 8 (below first copy)
+        for (i in 0..7) {
+            matrix[8][size - 1 - i] = (bits shr i) and 1 == 1
+        }
+        for (i in 8..14) {
+            // Rows 9..15, avoiding first copy positions (rows 0-5, 7, 8)
+            matrix[i + 1][8] = (bits shr i) and 1 == 1
         }
     }
 
