@@ -193,7 +193,7 @@ internal object QRCodeEncoder {
         return EXP[(LOG[a] + LOG[b]) % 255]
     }
 
-    private fun rsEncode(data: IntArray, ecLen: Int): IntArray {
+    internal fun rsEncode(data: IntArray, ecLen: Int): IntArray {
         val gen = rsGeneratorPoly(ecLen)
         val result = IntArray(ecLen)
         for (i in data.indices) {
@@ -499,7 +499,7 @@ internal object QRCodeEncoder {
         }
     }
 
-    private val ALIGNMENT_POSITIONS: Map<Int, IntArray> = buildMap {
+    internal val ALIGNMENT_POSITIONS: Map<Int, IntArray> = buildMap {
         put(2, intArrayOf(6, 18))
         put(3, intArrayOf(6, 22))
         put(4, intArrayOf(6, 26))
@@ -541,7 +541,7 @@ internal object QRCodeEncoder {
         put(40, intArrayOf(6, 30, 58, 86, 114, 142, 170))
     }
 
-    private val TOTAL_CODEWORDS: IntArray = intArrayOf(
+    internal val TOTAL_CODEWORDS: IntArray = intArrayOf(
         0,
         26, 44, 70, 100, 134, 172, 196, 242, 292, 346,
         404, 466, 532, 581, 655, 733, 815, 901, 991, 1085,
@@ -549,7 +549,7 @@ internal object QRCodeEncoder {
         2323, 2465, 2611, 2761, 2876, 3034, 3196, 3362, 3532, 3706,
     )
 
-    private val DATA_CODEWORDS: Array<IntArray> = arrayOf(
+    internal val DATA_CODEWORDS: Array<IntArray> = arrayOf(
         intArrayOf(),
         intArrayOf(19, 16, 13, 9),
         intArrayOf(34, 28, 22, 16),
@@ -593,7 +593,7 @@ internal object QRCodeEncoder {
         intArrayOf(2956, 2334, 1666, 1276),
     )
 
-    private val EC_CODEWORDS_PER_BLOCK: Array<IntArray> = arrayOf(
+    internal val EC_CODEWORDS_PER_BLOCK: Array<IntArray> = arrayOf(
         intArrayOf(),
         intArrayOf(7, 10, 13, 17),
         intArrayOf(10, 16, 22, 28),
@@ -637,7 +637,7 @@ internal object QRCodeEncoder {
         intArrayOf(30, 28, 30, 30),
     )
 
-    private val NUM_EC_BLOCKS: Array<IntArray> = arrayOf(
+    internal val NUM_EC_BLOCKS: Array<IntArray> = arrayOf(
         intArrayOf(),
         intArrayOf(1, 1, 1, 1),
         intArrayOf(1, 1, 1, 1),
