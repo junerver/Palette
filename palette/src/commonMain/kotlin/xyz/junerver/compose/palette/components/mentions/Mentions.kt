@@ -38,7 +38,6 @@ import androidx.compose.ui.window.PopupProperties
 import xyz.junerver.compose.hooks.useState
 import xyz.junerver.compose.palette.components.text.PText
 import xyz.junerver.compose.palette.components.textfield.TextArea
-import xyz.junerver.compose.palette.core.theme.PaletteTheme
 
 @Composable
 fun PMentions(
@@ -63,6 +62,14 @@ fun PMentions(
 
     val density = LocalDensity.current
     val dropdownWidth = with(density) { anchorWidth.toDp() }
+    val dropdownContainerColor = MentionsDefaults.dropdownContainerColor()
+    val dropdownMaxHeight = MentionsDefaults.dropdownMaxHeight()
+    val optionHeight = MentionsDefaults.optionHeight()
+    val optionPaddingHorizontal = MentionsDefaults.optionPaddingHorizontal()
+    val optionFontSize = MentionsDefaults.fontSize()
+    val optionTextStyle = MentionsDefaults.optionTextStyle()
+    val cornerRadius = MentionsDefaults.cornerRadius()
+    val loadingTextColor = MentionsDefaults.disabledOptionColor()
 
     LaunchedEffect(value) {
         if (value != editorValue.text) {
@@ -182,25 +189,26 @@ fun PMentions(
                 LazyColumn(
                     modifier = Modifier
                         .width(dropdownWidth)
-                        .heightIn(max = MentionsDefaults.DropdownMaxHeight)
-                        .clip(RoundedCornerShape(MentionsDefaults.CornerRadius))
-                        .background(PaletteTheme.colors.surface)
+                        .heightIn(max = dropdownMaxHeight)
+                        .clip(RoundedCornerShape(cornerRadius))
+                        .background(dropdownContainerColor)
                 ) {
                     if (loading) {
                         item {
                             Box(
                                 modifier = Modifier
                                     .fillMaxWidth()
+                                    .heightIn(min = optionHeight)
                                     .padding(
-                                        horizontal = MentionsDefaults.OptionPaddingHorizontal,
-                                        vertical = MentionsDefaults.OptionHeight / 4,
+                                        horizontal = optionPaddingHorizontal,
+                                        vertical = optionHeight / 4,
                                     )
                             ) {
                                 PText(
                                     text = "Loading...",
-                                    fontSize = MentionsDefaults.FontSize,
-                                    color = PaletteTheme.colors.hint,
-                                    style = PaletteTheme.typography.body,
+                                    fontSize = optionFontSize,
+                                    color = loadingTextColor,
+                                    style = optionTextStyle,
                                 )
                             }
                         }
@@ -211,6 +219,12 @@ fun PMentions(
                     ) { option ->
                         MentionsOptionItem(
                             option = option,
+                            dropdownContainerColor = dropdownContainerColor,
+                            optionHeight = optionHeight,
+                            optionPaddingHorizontal = optionPaddingHorizontal,
+                            optionFontSize = optionFontSize,
+                            optionTextStyle = optionTextStyle,
+                            cornerRadius = cornerRadius,
                             onClick = {
                                 if (!option.disabled) {
                                     onSelect?.invoke(option)
@@ -355,24 +369,31 @@ internal class MentionsHighlightTransformation(
 @Composable
 private fun MentionsOptionItem(
     option: MentionsOption,
+    dropdownContainerColor: Color,
+    optionHeight: androidx.compose.ui.unit.Dp,
+    optionPaddingHorizontal: androidx.compose.ui.unit.Dp,
+    optionFontSize: androidx.compose.ui.unit.TextUnit,
+    optionTextStyle: androidx.compose.ui.text.TextStyle,
+    cornerRadius: androidx.compose.ui.unit.Dp,
     onClick: () -> Unit,
 ) {
     val interactionSource = remember { MutableInteractionSource() }
     val isHovered by interactionSource.collectIsHoveredAsState()
 
     val backgroundColor = when {
-        isHovered -> PaletteTheme.colors.border
-        else -> PaletteTheme.colors.surface
+        isHovered -> MentionsDefaults.hoverOptionColor()
+        else -> dropdownContainerColor
     }
     val textColor = when {
-        option.disabled -> PaletteTheme.colors.hint
+        option.disabled -> MentionsDefaults.disabledOptionColor()
         else -> MentionsDefaults.optionTextColor()
     }
 
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(MentionsDefaults.CornerRadius))
+            .heightIn(min = optionHeight)
+            .clip(RoundedCornerShape(cornerRadius))
             .background(backgroundColor)
             .clickable(
                 enabled = !option.disabled,
@@ -381,15 +402,15 @@ private fun MentionsOptionItem(
                 onClick = onClick,
             )
             .padding(
-                horizontal = MentionsDefaults.OptionPaddingHorizontal,
-                vertical = MentionsDefaults.OptionHeight / 4,
+                horizontal = optionPaddingHorizontal,
+                vertical = optionHeight / 4,
             )
     ) {
         PText(
             text = option.label,
-            fontSize = MentionsDefaults.FontSize,
+            fontSize = optionFontSize,
             color = textColor,
-            style = PaletteTheme.typography.body,
+            style = optionTextStyle,
         )
     }
 }

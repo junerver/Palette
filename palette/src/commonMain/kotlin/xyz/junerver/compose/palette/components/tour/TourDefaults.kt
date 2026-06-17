@@ -3,6 +3,7 @@ package xyz.junerver.compose.palette.components.tour
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import xyz.junerver.compose.palette.core.theme.PaletteTheme
@@ -13,13 +14,37 @@ object TourDefaults {
 
     @Composable
     @ReadOnlyComposable
-    fun containerColor(): Color = PaletteTheme.colors.surface
+    fun cornerRadius(): Dp = PaletteTheme.componentThemes.floatingLayer.tourCornerRadius
 
     @Composable
     @ReadOnlyComposable
-    fun titleColor(): Color = PaletteTheme.colors.onSurface
+    fun contentPadding(): Dp = PaletteTheme.componentThemes.floatingLayer.tourContentPadding
 
     @Composable
     @ReadOnlyComposable
-    fun descriptionColor(): Color = PaletteTheme.colors.hint
+    fun itemSpacing(): Dp = PaletteTheme.componentThemes.floatingLayer.tourItemSpacing
+
+    @Composable
+    @ReadOnlyComposable
+    fun buttonSpacing(): Dp = PaletteTheme.componentThemes.floatingLayer.tourButtonSpacing
+
+    @Composable
+    @ReadOnlyComposable
+    fun titleTextStyle(): TextStyle = PaletteTheme.componentThemes.floatingLayer.tourTitleTextStyle
+
+    @Composable
+    @ReadOnlyComposable
+    fun descriptionTextStyle(): TextStyle = PaletteTheme.componentThemes.floatingLayer.tourDescriptionTextStyle
+
+    @Composable
+    @ReadOnlyComposable
+    fun containerColor(): Color = PaletteTheme.componentThemes.floatingLayer.tourContainerColor
+
+    @Composable
+    @ReadOnlyComposable
+    fun titleColor(): Color = PaletteTheme.componentThemes.floatingLayer.tourTitleColor
+
+    @Composable
+    @ReadOnlyComposable
+    fun descriptionColor(): Color = PaletteTheme.componentThemes.floatingLayer.tourDescriptionColor
 }

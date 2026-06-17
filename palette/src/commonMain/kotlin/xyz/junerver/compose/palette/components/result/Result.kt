@@ -16,7 +16,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import xyz.junerver.compose.palette.components.text.PText
 
@@ -44,31 +43,30 @@ fun PResult(
                 imageVector = iconForStatus(status),
                 contentDescription = null,
                 tint = iconColor,
-                modifier = Modifier.size(ResultDefaults.IconSize)
+                modifier = Modifier.size(ResultDefaults.iconSize())
             )
         }
 
-        Spacer(modifier = Modifier.height(ResultDefaults.IconToTitleSpacing))
+        Spacer(modifier = Modifier.height(ResultDefaults.iconToTitleSpacing()))
 
         PText(
             text = displayTitle,
             color = ResultDefaults.titleColor(),
-            fontSize = ResultDefaults.TitleFontSize,
-            fontWeight = FontWeight.Bold,
+            style = ResultDefaults.titleTextStyle(),
             textAlign = TextAlign.Center
         )
 
-        Spacer(modifier = Modifier.height(ResultDefaults.TitleToSubtitleSpacing))
+        Spacer(modifier = Modifier.height(ResultDefaults.titleToSubtitleSpacing()))
 
         PText(
             text = displaySubtitle,
             color = ResultDefaults.subtitleColor(),
-            fontSize = ResultDefaults.SubtitleFontSize,
+            style = ResultDefaults.subtitleTextStyle(),
             textAlign = TextAlign.Center
         )
 
         if (extra != null) {
-            Spacer(modifier = Modifier.height(ResultDefaults.SubtitleToExtraSpacing))
+            Spacer(modifier = Modifier.height(ResultDefaults.subtitleToExtraSpacing()))
             extra()
         }
     }

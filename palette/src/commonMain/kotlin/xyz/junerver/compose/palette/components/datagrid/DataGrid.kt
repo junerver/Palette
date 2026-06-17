@@ -4,6 +4,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
@@ -22,14 +23,16 @@ fun <T> PDataGrid(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
+                    .height(DataGridDefaults.headerHeight())
                     .background(DataGridDefaults.headerContainerColor())
-                    .padding(DataGridDefaults.CellPadding),
-                horizontalArrangement = Arrangement.spacedBy(DataGridDefaults.CellPadding)
+                    .padding(DataGridDefaults.cellPadding()),
+                horizontalArrangement = Arrangement.spacedBy(DataGridDefaults.cellPadding())
             ) {
                 columns.forEach { column ->
                     Text(
                         text = column.title,
                         color = DataGridDefaults.headerContentColor(),
+                        style = DataGridDefaults.headerTextStyle(),
                         modifier = Modifier.weight(column.weight)
                     )
                 }
@@ -39,14 +42,16 @@ fun <T> PDataGrid(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
+                    .height(DataGridDefaults.rowHeight())
                     .background(DataGridDefaults.rowContainerColor())
-                    .padding(DataGridDefaults.CellPadding),
-                horizontalArrangement = Arrangement.spacedBy(DataGridDefaults.CellPadding)
+                    .padding(DataGridDefaults.cellPadding()),
+                horizontalArrangement = Arrangement.spacedBy(DataGridDefaults.cellPadding())
             ) {
                 columns.forEach { column ->
                     Text(
                         text = column.value(row),
                         color = DataGridDefaults.rowContentColor(),
+                        style = DataGridDefaults.rowTextStyle(),
                         modifier = Modifier.weight(column.weight)
                     )
                 }

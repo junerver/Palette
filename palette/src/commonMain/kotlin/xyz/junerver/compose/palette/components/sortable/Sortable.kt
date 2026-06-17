@@ -17,15 +17,17 @@ fun <T> PSortable(
 ) {
     Column(
         modifier = modifier,
-        verticalArrangement = Arrangement.spacedBy(SortableDefaults.ItemSpacing)
+        verticalArrangement = Arrangement.spacedBy(SortableDefaults.itemSpacing())
     ) {
         items.forEach { item ->
             Text(
                 text = itemText(item),
+                color = SortableDefaults.itemTextColor(),
+                style = SortableDefaults.textStyle(),
                 modifier = Modifier
                     .fillMaxWidth()
                     .background(SortableDefaults.itemColor())
-                    .padding(SortableDefaults.ItemPadding)
+                    .padding(SortableDefaults.itemPadding())
             )
         }
     }

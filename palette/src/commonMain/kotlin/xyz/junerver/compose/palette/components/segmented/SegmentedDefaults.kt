@@ -14,17 +14,36 @@ object SegmentedDefaults {
     val DisabledAlpha: Float = 0.5f
 
     @Composable
-    fun containerColor(): Color = PaletteTheme.colors.border
+    fun cornerRadius(): Dp = PaletteTheme.componentThemes.selectionControl.segmentedCornerRadius
 
     @Composable
-    fun selectedItemColor(): Color = PaletteTheme.colors.surface
+    fun itemPaddingHorizontal(): Dp = PaletteTheme.componentThemes.selectionControl.segmentedItemPaddingHorizontal
 
     @Composable
-    fun textColor(): Color = PaletteTheme.colors.onSurface
+    fun itemPaddingVertical(): Dp = PaletteTheme.componentThemes.selectionControl.segmentedItemPaddingVertical
 
     @Composable
-    fun selectedTextColor(): Color = PaletteTheme.colors.onSurface
+    fun itemIconSpacing(): Dp = PaletteTheme.componentThemes.selectionControl.segmentedItemIconSpacing
 
     @Composable
-    fun disabledTextColor(): Color = PaletteTheme.colors.hint
+    fun indicatorAnimationDurationMillis(): Int =
+        PaletteTheme.componentThemes.selectionControl.segmentedIndicatorAnimationDurationMillis
+
+    @Composable
+    fun disabledAlpha(): Float = PaletteTheme.componentThemes.selectionControl.segmentedDisabledAlpha
+
+    @Composable
+    fun containerColor(): Color = PaletteTheme.componentThemes.selectionControl.segmentedContainerColor
+
+    @Composable
+    fun selectedItemColor(): Color = PaletteTheme.componentThemes.selectionControl.segmentedSelectedItemColor
+
+    @Composable
+    fun textColor(): Color = PaletteTheme.componentThemes.selectionControl.segmentedTextColor
+
+    @Composable
+    fun selectedTextColor(): Color = PaletteTheme.componentThemes.selectionControl.segmentedSelectedTextColor
+
+    @Composable
+    fun disabledTextColor(): Color = PaletteTheme.componentThemes.selectionControl.segmentedDisabledTextColor
 }

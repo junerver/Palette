@@ -13,8 +13,20 @@ object TimelineDefaults {
     val ItemSpacing: Dp = 24.dp
 
     @Composable
-    fun lineColor(): Color = PaletteTheme.colors.border
+    fun dotSize(): Dp = PaletteTheme.componentThemes.dataEntry.timelineDotSize
 
     @Composable
-    fun dotColor(): Color = PaletteTheme.colors.primary
+    fun lineWidth(): Dp = PaletteTheme.componentThemes.dataEntry.timelineLineWidth
+
+    @Composable
+    fun dotToContent(): Dp = PaletteTheme.componentThemes.dataEntry.timelineDotToContent
+
+    @Composable
+    fun itemSpacing(): Dp = PaletteTheme.componentThemes.dataEntry.timelineItemSpacing
+
+    @Composable
+    fun lineColor(): Color = PaletteTheme.componentThemes.dataEntry.timelineLineColor
+
+    @Composable
+    fun dotColor(): Color = PaletteTheme.componentThemes.dataEntry.timelineDotColor
 }

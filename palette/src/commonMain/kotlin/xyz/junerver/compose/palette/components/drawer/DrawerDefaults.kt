@@ -18,8 +18,20 @@ object DrawerDefaults {
     val ContentPadding: Dp = 16.dp
 
     @Composable
-    fun containerColor(): Color = PaletteTheme.colors.surface
+    fun width(): Dp = PaletteTheme.componentThemes.drawer.width
 
     @Composable
-    fun overlayColor(): Color = PaletteTheme.colors.onSurface.copy(alpha = OverlayAlpha)
+    fun elevation(): Dp = PaletteTheme.componentThemes.drawer.elevation
+
+    @Composable
+    fun contentPadding(): Dp = PaletteTheme.componentThemes.drawer.contentPadding
+
+    @Composable
+    fun animationDurationMillis(): Int = PaletteTheme.componentThemes.drawer.animationDurationMillis
+
+    @Composable
+    fun containerColor(): Color = PaletteTheme.componentThemes.drawer.containerColor
+
+    @Composable
+    fun overlayColor(): Color = PaletteTheme.componentThemes.drawer.overlayColor
 }

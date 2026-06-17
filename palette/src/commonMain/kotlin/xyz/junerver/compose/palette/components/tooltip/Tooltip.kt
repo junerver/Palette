@@ -46,18 +46,19 @@ fun PTooltip(
             ) {
                 Box(
                     modifier = Modifier
-                        .padding(bottom = TooltipDefaults.OffsetY)
-                        .widthIn(max = 320.dp)
-                        .clip(RoundedCornerShape(TooltipDefaults.CornerRadius))
+                        .padding(bottom = TooltipDefaults.offsetY())
+                        .widthIn(max = TooltipDefaults.maxWidth())
+                        .clip(RoundedCornerShape(TooltipDefaults.cornerRadius()))
                         .background(backgroundColor)
                         .padding(
-                            horizontal = TooltipDefaults.HorizontalPadding,
-                            vertical = TooltipDefaults.VerticalPadding
+                            horizontal = TooltipDefaults.horizontalPadding(),
+                            vertical = TooltipDefaults.verticalPadding()
                         )
                 ) {
                     Text(
                         text = text,
-                        color = textColor
+                        color = textColor,
+                        style = TooltipDefaults.textStyle()
                     )
                 }
             }

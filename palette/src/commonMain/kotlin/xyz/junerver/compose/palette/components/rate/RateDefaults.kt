@@ -6,7 +6,6 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import xyz.junerver.compose.palette.core.spec.ComponentSize
 import xyz.junerver.compose.palette.core.theme.PaletteTheme
-import xyz.junerver.compose.palette.core.tokens.disabledBorder
 
 object RateDefaults {
     val StarSize: Dp = 26.dp
@@ -19,11 +18,24 @@ object RateDefaults {
     }
 
     @Composable
-    fun activeColor(): Color = PaletteTheme.colors.warning
+    fun starSize(): Dp = PaletteTheme.componentThemes.selectionControl.rateMediumStarSize
 
     @Composable
-    fun inactiveColor(): Color = PaletteTheme.colors.border
+    fun componentStarSize(size: ComponentSize): Dp = when (size) {
+        ComponentSize.Small -> PaletteTheme.componentThemes.selectionControl.rateSmallStarSize
+        ComponentSize.Medium -> PaletteTheme.componentThemes.selectionControl.rateMediumStarSize
+        ComponentSize.Large -> PaletteTheme.componentThemes.selectionControl.rateLargeStarSize
+    }
+
+    @Composable
+    fun disabledAlpha(): Float = PaletteTheme.componentThemes.selectionControl.sliderDisabledAlpha
+
+    @Composable
+    fun activeColor(): Color = PaletteTheme.componentThemes.selectionControl.rateActiveColor
+
+    @Composable
+    fun inactiveColor(): Color = PaletteTheme.componentThemes.selectionControl.rateInactiveColor
     
     @Composable
-    fun disabledColor(): Color = PaletteTheme.colors.disabledBorder
+    fun disabledColor(): Color = PaletteTheme.componentThemes.selectionControl.rateDisabledColor
 }

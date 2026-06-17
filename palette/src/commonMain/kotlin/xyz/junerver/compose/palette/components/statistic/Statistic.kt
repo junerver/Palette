@@ -5,8 +5,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.unit.dp
-import xyz.junerver.compose.palette.core.theme.PaletteTheme
 
 enum class TrendType {
     Up, Down, None
@@ -25,38 +23,38 @@ fun PStatistic(
 ) {
     Column(
         modifier = modifier,
-        verticalArrangement = Arrangement.spacedBy(StatisticDefaults.Spacing)
+        verticalArrangement = Arrangement.spacedBy(StatisticDefaults.spacing())
     ) {
         title?.let {
             Text(
                 text = it,
                 color = titleColor,
-                style = PaletteTheme.typography.body
+                style = StatisticDefaults.titleTextStyle()
             )
         }
 
         Row(
-            horizontalArrangement = Arrangement.spacedBy(4.dp)
+            horizontalArrangement = Arrangement.spacedBy(StatisticDefaults.rowItemSpacing())
         ) {
             prefix?.let {
                 Text(
                     text = it,
                     color = valueColor,
-                    style = PaletteTheme.typography.title
+                    style = StatisticDefaults.valueTextStyle()
                 )
             }
 
             Text(
                 text = value,
                 color = valueColor,
-                style = PaletteTheme.typography.title
+                style = StatisticDefaults.valueTextStyle()
             )
 
             suffix?.let {
                 Text(
                     text = it,
                     color = valueColor,
-                    style = PaletteTheme.typography.title
+                    style = StatisticDefaults.valueTextStyle()
                 )
             }
 
@@ -64,12 +62,12 @@ fun PStatistic(
                 TrendType.Up -> Text(
                     text = "▲",
                     color = StatisticDefaults.trendUpColor(),
-                    style = PaletteTheme.typography.body
+                    style = StatisticDefaults.trendTextStyle()
                 )
                 TrendType.Down -> Text(
                     text = "▼",
                     color = StatisticDefaults.trendDownColor(),
-                    style = PaletteTheme.typography.body
+                    style = StatisticDefaults.trendTextStyle()
                 )
                 TrendType.None -> {}
             }

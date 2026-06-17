@@ -18,14 +18,14 @@ object ScreenDefaults {
     @Composable
     fun colors(
         status: ComponentStatus = ComponentStatus.Default,
-        backgroundColor: Color = PaletteTheme.colors.surface,
-        contentColor: Color = PaletteTheme.colors.onSurface,
+        backgroundColor: Color = PaletteTheme.componentThemes.screen.backgroundColor,
+        contentColor: Color = PaletteTheme.componentThemes.screen.contentColor,
     ): ScreenColors = ScreenColors(
         backgroundColor = when (status) {
             ComponentStatus.Default -> backgroundColor
-            ComponentStatus.Success -> PaletteTheme.colors.success
-            ComponentStatus.Warning -> PaletteTheme.colors.warning
-            ComponentStatus.Error -> PaletteTheme.colors.error
+            ComponentStatus.Success -> PaletteTheme.componentThemes.screen.successBackgroundColor
+            ComponentStatus.Warning -> PaletteTheme.componentThemes.screen.warningBackgroundColor
+            ComponentStatus.Error -> PaletteTheme.componentThemes.screen.errorBackgroundColor
         },
         contentColor = contentColor,
     )

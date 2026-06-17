@@ -15,7 +15,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.layout.ContentScale
-import xyz.junerver.compose.palette.core.theme.PaletteTheme
 
 @Composable
 fun PAvatar(
@@ -32,7 +31,7 @@ fun PAvatar(
 ) {
     Box(
         modifier = modifier
-            .size(size.size)
+            .size(AvatarDefaults.size(size))
             .clip(shape)
             .background(backgroundColor),
         contentAlignment = Alignment.Center
@@ -51,11 +50,7 @@ fun PAvatar(
             Text(
                 text = initials,
                 color = textColor,
-                style = when (size) {
-                    AvatarSize.Small -> PaletteTheme.typography.label
-                    AvatarSize.Medium -> PaletteTheme.typography.body
-                    else -> PaletteTheme.typography.title
-                }
+                style = AvatarDefaults.textStyle(size)
             )
         }
     }

@@ -44,19 +44,22 @@ fun PSegmented(
     modifier: Modifier = Modifier,
     size: ComponentSize = ComponentSize.Medium,
 ) {
-    val shape = RoundedCornerShape(SegmentedDefaults.CornerRadius)
+    val shape = RoundedCornerShape(SegmentedDefaults.cornerRadius())
+    val itemPaddingHorizontal = SegmentedDefaults.itemPaddingHorizontal()
+    val itemPaddingVertical = SegmentedDefaults.itemPaddingVertical()
+    val indicatorAnimationDurationMillis = SegmentedDefaults.indicatorAnimationDurationMillis()
 
     var indicatorX by remember { mutableStateOf(0.dp) }
     var indicatorWidth by remember { mutableStateOf(0.dp) }
 
     val animatedX by animateDpAsState(
         targetValue = indicatorX,
-        animationSpec = tween(durationMillis = SegmentedDefaults.IndicatorAnimationDuration),
+        animationSpec = tween(durationMillis = indicatorAnimationDurationMillis),
         label = "SegmentedIndicatorX"
     )
     val animatedWidth by animateDpAsState(
         targetValue = indicatorWidth,
-        animationSpec = tween(durationMillis = SegmentedDefaults.IndicatorAnimationDuration),
+        animationSpec = tween(durationMillis = indicatorAnimationDurationMillis),
         label = "SegmentedIndicatorWidth"
     )
 
@@ -65,8 +68,8 @@ fun PSegmented(
             .clip(shape)
             .background(SegmentedDefaults.containerColor())
             .padding(
-                horizontal = SegmentedDefaults.ItemPaddingHorizontal / 2,
-                vertical = SegmentedDefaults.ItemPaddingVertical / 2
+                horizontal = itemPaddingHorizontal / 2,
+                vertical = itemPaddingVertical / 2
             ),
         contentAlignment = Alignment.TopStart
     ) {
@@ -93,6 +96,8 @@ fun PSegmented(
                         isSelected = isSelected,
                         isDisabled = isDisabled,
                         size = size,
+                        itemPaddingHorizontal = itemPaddingHorizontal,
+                        itemPaddingVertical = itemPaddingVertical,
                         onItemClick = {
                             if (!isDisabled) onValueChange(option.value)
                         },
@@ -115,6 +120,8 @@ private fun SegmentedItem(
     isSelected: Boolean,
     isDisabled: Boolean,
     size: ComponentSize,
+    itemPaddingHorizontal: Dp,
+    itemPaddingVertical: Dp,
     onItemClick: () -> Unit,
     onGloballyPositioned: (x: Dp, width: Dp) -> Unit,
 ) {
@@ -134,7 +141,7 @@ private fun SegmentedItem(
                 val x = with(density) { pos.x.toDp() }
                 onGloballyPositioned(x, w)
             }
-            .alpha(if (isDisabled) SegmentedDefaults.DisabledAlpha else 1f)
+            .alpha(if (isDisabled) SegmentedDefaults.disabledAlpha() else 1f)
             .then(
                 if (!isDisabled) {
                     Modifier.clickableWithoutRipple(onClick = onItemClick)
@@ -143,14 +150,14 @@ private fun SegmentedItem(
                 }
             )
             .padding(
-                horizontal = SegmentedDefaults.ItemPaddingHorizontal,
-                vertical = SegmentedDefaults.ItemPaddingVertical
+                horizontal = itemPaddingHorizontal,
+                vertical = itemPaddingVertical
             ),
         contentAlignment = Alignment.Center
     ) {
         Row(
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(4.dp)
+            horizontalArrangement = Arrangement.spacedBy(SegmentedDefaults.itemIconSpacing())
         ) {
             option.icon?.invoke()
             PText(

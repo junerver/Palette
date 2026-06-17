@@ -21,11 +21,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.unit.dp
 import xyz.junerver.compose.hooks.useCreation
 import xyz.junerver.compose.palette.components.popup.PPopup
 import xyz.junerver.compose.palette.components.text.PText
-import xyz.junerver.compose.palette.core.theme.PaletteTheme
 
 data class ActionSheetItem(
     val label: String,
@@ -44,24 +42,44 @@ fun PActionSheet(
     title: String? = null,
     cancelText: String = "取消"
 ) {
+    val containerColor = ActionSheetDefaults.containerColor()
+    val titleColor = ActionSheetDefaults.titleColor()
+    val itemTextColor = ActionSheetDefaults.itemTextColor()
+    val descriptionColor = ActionSheetDefaults.descriptionColor()
+    val cancelTextColor = ActionSheetDefaults.cancelTextColor()
+    val dividerColor = ActionSheetDefaults.dividerColor()
+    val titleHeight = ActionSheetDefaults.titleHeight()
+    val itemHeight = ActionSheetDefaults.itemHeight()
+    val cancelHeight = ActionSheetDefaults.cancelHeight()
+    val itemPadding = ActionSheetDefaults.itemPadding()
+    val iconSpacing = ActionSheetDefaults.iconSpacing()
+    val gapHeight = ActionSheetDefaults.gapHeight()
+    val dividerThickness = ActionSheetDefaults.dividerThickness()
+    val disabledAlpha = ActionSheetDefaults.disabledAlpha()
+    val titleTextStyle = ActionSheetDefaults.titleTextStyle()
+    val itemTextStyle = ActionSheetDefaults.itemTextStyle()
+    val descriptionTextStyle = ActionSheetDefaults.descriptionTextStyle()
+    val cancelTextStyle = ActionSheetDefaults.cancelTextStyle()
+
     PPopup(
         visible = visible,
         onClose = onDismiss,
-        draggable = false
+        draggable = false,
+        containerColor = containerColor
     ) {
         Column {
             title?.let {
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .heightIn(ActionSheetDefaults.TitleHeight)
-                        .padding(ActionSheetDefaults.ItemPadding),
+                        .heightIn(titleHeight)
+                        .padding(itemPadding),
                     contentAlignment = Alignment.Center
                 ) {
                     PText(
                         text = it,
-                        color = ActionSheetDefaults.titleColor(),
-                        fontSize = ActionSheetDefaults.TitleFontSize
+                        color = titleColor,
+                        style = titleTextStyle
                     )
                 }
             }
@@ -69,15 +87,15 @@ fun PActionSheet(
             options.forEachIndexed { index, item ->
                 if (index > 0 || title != null) {
                     HorizontalDivider(
-                        color = ActionSheetDefaults.dividerColor(),
-                        thickness = 0.5.dp
+                        color = dividerColor,
+                        thickness = dividerThickness
                     )
                 }
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .heightIn(ActionSheetDefaults.ItemHeight)
-                        .alpha(if (item.disabled) ActionSheetDefaults.DisabledAlpha else 1f)
+                        .heightIn(itemHeight)
+                        .alpha(if (item.disabled) disabledAlpha else 1f)
                         .then(
                             if (!item.disabled) {
                                 Modifier.clickable {
@@ -88,24 +106,24 @@ fun PActionSheet(
                                 Modifier
                             }
                         )
-                        .padding(ActionSheetDefaults.ItemPadding),
+                        .padding(itemPadding),
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.Center
                 ) {
                     if (item.icon != null) {
                         item.icon.invoke()
-                        Spacer(modifier = Modifier.width(ActionSheetDefaults.IconSpacing))
+                        Spacer(modifier = Modifier.width(iconSpacing))
                     }
                     PText(
                         text = item.label,
-                        color = item.color ?: ActionSheetDefaults.itemTextColor(),
-                        fontSize = ActionSheetDefaults.ItemFontSize
+                        color = item.color ?: itemTextColor,
+                        style = itemTextStyle
                     )
                     item.description?.let {
                         PText(
                             text = it,
-                            color = ActionSheetDefaults.descriptionColor(),
-                            fontSize = ActionSheetDefaults.DescriptionFontSize
+                            color = descriptionColor,
+                            style = descriptionTextStyle
                         )
                     }
                 }
@@ -113,23 +131,23 @@ fun PActionSheet(
 
             Spacer(
                 modifier = Modifier
-                    .height(ActionSheetDefaults.GapHeight)
+                    .height(gapHeight)
                     .fillMaxWidth()
-                    .background(ActionSheetDefaults.dividerColor())
+                    .background(dividerColor)
             )
 
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(ActionSheetDefaults.CancelHeight)
+                    .height(cancelHeight)
                     .clickable { onDismiss() },
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Center
             ) {
                 PText(
                     text = cancelText,
-                    color = ActionSheetDefaults.cancelTextColor(),
-                    fontSize = ActionSheetDefaults.CancelFontSize
+                    color = cancelTextColor,
+                    style = cancelTextStyle
                 )
             }
         }

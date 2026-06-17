@@ -27,16 +27,24 @@ fun PTour(
 
     Column(
         modifier = modifier
-            .clip(RoundedCornerShape(TourDefaults.CornerRadius))
+            .clip(RoundedCornerShape(TourDefaults.cornerRadius()))
             .background(TourDefaults.containerColor())
-            .padding(TourDefaults.ContentPadding),
-        verticalArrangement = Arrangement.spacedBy(TourDefaults.ContentPadding)
+            .padding(TourDefaults.contentPadding()),
+        verticalArrangement = Arrangement.spacedBy(TourDefaults.itemSpacing())
     ) {
-        Text(text = step.title, color = TourDefaults.titleColor())
+        Text(
+            text = step.title,
+            color = TourDefaults.titleColor(),
+            style = TourDefaults.titleTextStyle()
+        )
         if (!step.description.isNullOrBlank()) {
-            Text(text = step.description, color = TourDefaults.descriptionColor())
+            Text(
+                text = step.description,
+                color = TourDefaults.descriptionColor(),
+                style = TourDefaults.descriptionTextStyle()
+            )
         }
-        Row(horizontalArrangement = Arrangement.spacedBy(TourDefaults.ContentPadding)) {
+        Row(horizontalArrangement = Arrangement.spacedBy(TourDefaults.buttonSpacing())) {
             PButton(
                 text = if (isLast) PaletteTheme.strings.tourFinishText else PaletteTheme.strings.tourPreviousText,
                 onClick = {

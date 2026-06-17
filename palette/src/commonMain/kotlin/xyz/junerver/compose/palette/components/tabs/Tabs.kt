@@ -30,7 +30,7 @@ fun PTabs(
 ) {
     Row(
         modifier = modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(TabsDefaults.ItemSpacing)
+        horizontalArrangement = Arrangement.spacedBy(TabsDefaults.itemSpacing())
     ) {
         items.forEach { item ->
             val selected = item.key == selectedKey
@@ -42,20 +42,21 @@ fun PTabs(
             ) {
                 Text(
                     text = item.label,
+                    style = TabsDefaults.textStyle(),
                     color = when {
-                        item.disabled -> TabsDefaults.inactiveColor().copy(alpha = 0.45f)
+                        item.disabled -> TabsDefaults.disabledColor()
                         selected -> TabsDefaults.activeColor()
                         else -> TabsDefaults.inactiveColor()
                     },
                     modifier = Modifier.padding(
-                        horizontal = TabsDefaults.HorizontalPadding,
-                        vertical = TabsDefaults.VerticalPadding
+                        horizontal = TabsDefaults.horizontalPadding(),
+                        vertical = TabsDefaults.verticalPadding()
                     )
                 )
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(TabsDefaults.IndicatorHeight)
+                        .height(TabsDefaults.indicatorHeight())
                         .background(if (selected) TabsDefaults.activeColor() else Color.Transparent)
                 )
             }

@@ -2,6 +2,7 @@ package xyz.junerver.compose.palette.components.dialog
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
@@ -21,5 +22,53 @@ object DialogDefaults {
     val ButtonFontSize: TextUnit = 17.sp
 
     @Composable
-    fun okColor(): Color = PaletteTheme.colors.primary
+    fun containerColor(): Color = PaletteTheme.componentThemes.dialog.containerColor
+
+    @Composable
+    fun titleColor(): Color = PaletteTheme.componentThemes.dialog.titleColor
+
+    @Composable
+    fun contentColor(): Color = PaletteTheme.componentThemes.dialog.contentColor
+
+    @Composable
+    fun cancelColor(): Color = PaletteTheme.componentThemes.dialog.cancelColor
+
+    @Composable
+    fun okColor(): Color = PaletteTheme.componentThemes.dialog.okColor
+
+    @Composable
+    fun dividerColor(): Color = PaletteTheme.componentThemes.dialog.dividerColor
+
+    @Composable
+    fun borderRadius(): Dp = PaletteTheme.componentThemes.dialog.borderRadius
+
+    @Composable
+    fun widthFraction(): Float = PaletteTheme.componentThemes.dialog.widthFraction
+
+    @Composable
+    fun titlePaddingTop(): Dp = PaletteTheme.componentThemes.dialog.titlePaddingTop
+
+    @Composable
+    fun titlePaddingBottom(): Dp = PaletteTheme.componentThemes.dialog.titlePaddingBottom
+
+    @Composable
+    fun contentPaddingBottom(): Dp = PaletteTheme.componentThemes.dialog.contentPaddingBottom
+
+    @Composable
+    fun horizontalPadding(): Dp = PaletteTheme.componentThemes.dialog.horizontalPadding
+
+    @Composable
+    fun buttonHeight(): Dp = PaletteTheme.componentThemes.dialog.buttonHeight
+
+    @Composable
+    fun dividerWidth(): Dp = PaletteTheme.componentThemes.dialog.dividerWidth
+
+    @Composable
+    fun titleTextStyle(): TextStyle = PaletteTheme.componentThemes.dialog.titleTextStyle
+
+    @Composable
+    fun contentTextStyle(): TextStyle = PaletteTheme.componentThemes.dialog.contentTextStyle
+
+    @Composable
+    fun buttonTextStyle(): TextStyle = PaletteTheme.componentThemes.dialog.buttonTextStyle
 }

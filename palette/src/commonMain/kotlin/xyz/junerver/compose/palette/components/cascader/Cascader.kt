@@ -41,7 +41,6 @@ import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.IntRect
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.LayoutDirection
-import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Popup
 import androidx.compose.ui.window.PopupPositionProvider
 import androidx.compose.ui.window.PopupProperties
@@ -87,6 +86,14 @@ fun PCascader(
     val isPlaceholder = value.isEmpty() || selectedPath.isEmpty()
 
     val shape = RoundedCornerShape(size.cornerRadius)
+    val borderWidth = CascaderDefaults.borderWidth()
+    val trailingIconAlpha = CascaderDefaults.trailingIconAlpha()
+    val columnMaxHeight = CascaderDefaults.columnMaxHeight()
+    val columnWidth = CascaderDefaults.columnWidth()
+    val itemHeight = CascaderDefaults.itemHeight()
+    val itemPaddingHorizontal = CascaderDefaults.itemPaddingHorizontal()
+    val itemFontSize = CascaderDefaults.fontSize()
+    val arrowSize = CascaderDefaults.arrowSize()
     val currentBorderColor = when {
         !disabled && isHovered -> colors.borderColor
         !disabled -> colors.borderColor
@@ -103,7 +110,7 @@ fun PCascader(
                 .onSizeChanged { setAnchorWidth(it.width) }
                 .height(size.height)
                 .border(
-                    width = CascaderDefaults.BorderWidth,
+                    width = borderWidth,
                     color = currentBorderColor,
                     shape = shape
                 )
@@ -138,7 +145,7 @@ fun PCascader(
                 imageVector = if (expanded) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
                 contentDescription = null,
                 tint = if (disabled) colors.disabledTextColor else colors.textColor,
-                modifier = Modifier.alpha(CascaderDefaults.TrailingIconAlpha)
+                modifier = Modifier.alpha(trailingIconAlpha)
             )
         }
 
@@ -172,10 +179,10 @@ fun PCascader(
                 Row(
                     modifier = Modifier
                         .widthIn(min = dropdownWidth)
-                        .heightIn(max = CascaderDefaults.ColumnMaxHeight)
+                        .heightIn(max = columnMaxHeight)
                         .background(colors.dropdownContainerColor)
                         .border(
-                            width = CascaderDefaults.BorderWidth,
+                            width = borderWidth,
                             color = colors.borderColor,
                             shape = RoundedCornerShape(size.cornerRadius)
                         )
@@ -184,7 +191,7 @@ fun PCascader(
                         if (index > 0) {
                             Box(
                                 modifier = Modifier
-                                    .width(CascaderDefaults.BorderWidth)
+                                    .width(borderWidth)
                                     .fillMaxHeight()
                                     .background(colors.borderColor)
                             )
@@ -192,6 +199,12 @@ fun PCascader(
                         CascaderColumn(
                             items = column,
                             colors = colors,
+                            columnWidth = columnWidth,
+                            itemHeight = itemHeight,
+                            itemPaddingHorizontal = itemPaddingHorizontal,
+                            itemFontSize = itemFontSize,
+                            arrowSize = arrowSize,
+                            trailingIconAlpha = trailingIconAlpha,
                             expandTrigger = expandTrigger,
                             hoveredItem = hoveredItem,
                             onHoverItem = { hoveredItemState.value = it },
@@ -217,6 +230,12 @@ fun PCascader(
 private fun CascaderColumn(
     items: CascaderColumnData,
     colors: CascaderColors,
+    columnWidth: androidx.compose.ui.unit.Dp,
+    itemHeight: androidx.compose.ui.unit.Dp,
+    itemPaddingHorizontal: androidx.compose.ui.unit.Dp,
+    itemFontSize: androidx.compose.ui.unit.TextUnit,
+    arrowSize: androidx.compose.ui.unit.Dp,
+    trailingIconAlpha: Float,
     expandTrigger: CascaderExpandTrigger,
     hoveredItem: String?,
     onHoverItem: (String?) -> Unit,
@@ -224,7 +243,7 @@ private fun CascaderColumn(
 ) {
     LazyColumn(
         modifier = Modifier
-            .width(CascaderDefaults.ColumnWidth)
+            .width(columnWidth)
             .fillMaxHeight()
     ) {
         items(
@@ -237,7 +256,7 @@ private fun CascaderColumn(
             val interactionSource = remember { MutableInteractionSource() }
 
             val backgroundColor = when {
-                isSelected -> colors.selectedItemTextColor.copy(alpha = 0.08f)
+                isSelected -> colors.selectedItemContainerColor
                 isHovered -> colors.hoverColor
                 else -> Color.Transparent
             }
@@ -250,17 +269,17 @@ private fun CascaderColumn(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(CascaderDefaults.ItemHeight)
+                    .height(itemHeight)
                     .hoverable(interactionSource, enabled = !option.disabled)
                     .background(backgroundColor)
                     .clickable(enabled = !option.disabled) { onItemClick(option) }
-                    .padding(horizontal = CascaderDefaults.ItemPaddingHorizontal),
+                    .padding(horizontal = itemPaddingHorizontal),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
                     text = option.label,
                     modifier = Modifier.weight(1f),
-                    style = PaletteTheme.typography.body.copy(fontSize = CascaderDefaults.FontSize),
+                    style = PaletteTheme.typography.body.copy(fontSize = itemFontSize),
                     color = textColor,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
@@ -270,9 +289,9 @@ private fun CascaderColumn(
                         imageVector = Icons.Default.ChevronRight,
                         contentDescription = null,
                         tint = if (option.disabled) colors.disabledItemTextColor else colors.itemTextColor.copy(
-                            alpha = CascaderDefaults.TrailingIconAlpha
+                            alpha = trailingIconAlpha
                         ),
-                        modifier = Modifier.size(CascaderDefaults.ArrowSize)
+                        modifier = Modifier.size(arrowSize)
                     )
                 }
             }

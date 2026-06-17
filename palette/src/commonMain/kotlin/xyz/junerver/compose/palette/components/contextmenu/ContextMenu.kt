@@ -66,8 +66,8 @@ interface ContextMenuState {
 
 @Composable
 fun rememberContextMenuState(
-    menuWidth: Dp = ContextMenuDefaults.MenuWidth,
-    itemHeight: Dp = ContextMenuDefaults.ItemHeight
+    menuWidth: Dp = ContextMenuDefaults.menuWidth(),
+    itemHeight: Dp = ContextMenuDefaults.itemHeight()
 ): ContextMenuState {
     return useCreation { ContextMenuStateImpl(menuWidth, itemHeight) }.current
 }
@@ -131,6 +131,8 @@ fun PContextMenu(
 
     var isVisible by remember { mutableStateOf(false) }
     var hasShown by remember { mutableStateOf(false) }
+    val animationDurationMillis = ContextMenuDefaults.animationDurationMillis()
+    val dismissAnimationDurationMillis = ContextMenuDefaults.dismissAnimationDurationMillis()
 
     LaunchedEffect(state.visible) {
         if (state.visible) {
@@ -138,7 +140,7 @@ fun PContextMenu(
             isVisible = true
         } else if (hasShown) {
             isVisible = false
-            delay(ContextMenuDefaults.DismissAnimationDuration.toLong())
+            delay(dismissAnimationDurationMillis.toLong())
             hasShown = false
         }
     }
@@ -159,13 +161,13 @@ fun PContextMenu(
         properties = PopupProperties(focusable = true)
     ) {
         val animationSpec = tween<Float>(
-            durationMillis = ContextMenuDefaults.AnimationDuration,
+            durationMillis = animationDurationMillis,
             easing = LinearOutSlowInEasing
         )
 
         LaunchedEffect(isVisible) {
             if (!isVisible && hasShown) {
-                delay(ContextMenuDefaults.DismissAnimationDuration.toLong())
+                delay(dismissAnimationDurationMillis.toLong())
                 impl.hide()
             }
         }
@@ -203,13 +205,16 @@ private fun ContextMenuContent(
     itemHeight: Dp,
     onItemClick: (Int) -> Unit
 ) {
-    Box(modifier = Modifier.padding(ContextMenuDefaults.ContentPadding)) {
+    val cornerRadius = ContextMenuDefaults.cornerRadius()
+    val menuShadowElevation = ContextMenuDefaults.shadowElevation()
+    val textStyle = ContextMenuDefaults.textStyle()
+    Box(modifier = Modifier.padding(ContextMenuDefaults.contentPadding())) {
         Column(
             modifier = Modifier
                 .width(menuWidth)
                 .graphicsLayer {
-                    shadowElevation = ContextMenuDefaults.ShadowElevation.toPx()
-                    shape = RoundedCornerShape(ContextMenuDefaults.CornerRadius)
+                    shadowElevation = menuShadowElevation.toPx()
+                    shape = RoundedCornerShape(cornerRadius)
                     clip = true
                 }
                 .background(ContextMenuDefaults.containerColor())
@@ -219,7 +224,7 @@ private fun ContextMenuContent(
                     modifier = Modifier
                         .fillMaxWidth()
                         .heightIn(itemHeight)
-                        .alpha(if (item.disabled) 0.4f else 1f)
+                        .alpha(if (item.disabled) ContextMenuDefaults.disabledAlpha() else 1f)
                         .then(
                             if (!item.disabled) {
                                 Modifier.clickable { onItemClick(index) }
@@ -227,12 +232,12 @@ private fun ContextMenuContent(
                                 Modifier
                             }
                         )
-                        .padding(horizontal = ContextMenuDefaults.ItemPaddingHorizontal),
+                        .padding(horizontal = ContextMenuDefaults.itemPaddingHorizontal()),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
                         text = item.label,
-                        fontSize = ContextMenuDefaults.FontSize,
+                        style = textStyle,
                         color = if (item.disabled) {
                             ContextMenuDefaults.disabledTextColor()
                         } else {

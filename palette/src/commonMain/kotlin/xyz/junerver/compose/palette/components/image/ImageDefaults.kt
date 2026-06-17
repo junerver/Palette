@@ -11,5 +11,11 @@ object ImageDefaults {
     val Shape: Shape = RoundedCornerShape(8.dp)
 
     @Composable
-    fun containerColor(): Color = PaletteTheme.colors.surface
+    fun shape(): Shape = RoundedCornerShape(PaletteTheme.componentThemes.media.imageCornerRadius)
+
+    @Composable
+    fun containerColor(): Color = PaletteTheme.componentThemes.media.imageContainerColor
+
+    @Composable
+    fun previewOverlayColor(): Color = PaletteTheme.componentThemes.media.imagePreviewOverlayColor
 }

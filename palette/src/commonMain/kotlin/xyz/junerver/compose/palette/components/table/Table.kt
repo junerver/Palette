@@ -83,7 +83,7 @@ fun <T> PTable(
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(TableDefaults.HeaderHeight)
+                            .height(TableDefaults.headerHeight())
                             .background(colors.headerContainerColor),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
@@ -95,7 +95,7 @@ fun <T> PTable(
 
                             Box(
                                 modifier = Modifier
-                                    .width(48.dp)
+                                    .width(TableDefaults.selectionColumnWidth())
                                     .fillMaxHeight(),
                                 contentAlignment = Alignment.Center
                             ) {
@@ -133,7 +133,7 @@ fun <T> PTable(
                                     .clickable(enabled = isSortable) {
                                         table.toggleSorting(column.id, null)
                                     }
-                                    .padding(horizontal = TableDefaults.CellContentPadding),
+                                    .padding(horizontal = TableDefaults.cellContentPadding()),
                                 contentAlignment = Alignment.CenterStart
                             ) {
                                 Row(
@@ -142,7 +142,7 @@ fun <T> PTable(
                                 ) {
                                     Text(
                                         text = column.header,
-                                        style = PaletteTheme.typography.title,
+                                        style = TableDefaults.headerTextStyle(),
                                         color = colors.headerContentColor,
                                         maxLines = 1,
                                         overflow = TextOverflow.Ellipsis
@@ -155,7 +155,7 @@ fun <T> PTable(
                                                 Icons.Filled.ArrowDropDown,
                                             contentDescription = null,
                                             tint = colors.headerContentColor,
-                                            modifier = Modifier.height(16.dp)
+                                            modifier = Modifier.height(TableDefaults.sortIconHeight())
                                         )
                                     }
                                 }
@@ -163,7 +163,7 @@ fun <T> PTable(
                         }
                     }
                     HorizontalDivider(
-                        thickness = TableDefaults.DividerThickness,
+                        thickness = TableDefaults.dividerThickness(),
                         color = colors.dividerColor
                     )
                 }
@@ -176,7 +176,7 @@ fun <T> PTable(
             if (emptyContent != null) {
                 item {
                     Box(
-                        modifier = Modifier.fillMaxWidth().padding(32.dp),
+                        modifier = Modifier.fillMaxWidth().padding(TableDefaults.emptyContentPadding()),
                         contentAlignment = Alignment.Center
                     ) {
                         emptyContent()
@@ -190,7 +190,7 @@ fun <T> PTable(
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(TableDefaults.RowHeight)
+                        .height(TableDefaults.rowHeight())
                         .background(
                             if (isSelected) colors.selectedRowContainerColor
                             else colors.rowContainerColor
@@ -204,7 +204,7 @@ fun <T> PTable(
                     if (state.rowSelection.selectedRowIds.isNotEmpty() || table.rowModel.value.totalRows > 0) {
                         Box(
                             modifier = Modifier
-                                .width(48.dp)
+                                .width(TableDefaults.selectionColumnWidth())
                                 .fillMaxHeight(),
                             contentAlignment = Alignment.Center
                         ) {
@@ -235,7 +235,7 @@ fun <T> PTable(
                             modifier = Modifier
                                 .then(widthModifier)
                                 .fillMaxHeight()
-                                .padding(horizontal = TableDefaults.CellContentPadding),
+                                .padding(horizontal = TableDefaults.cellContentPadding()),
                             contentAlignment = Alignment.CenterStart
                         ) {
                             CompositionLocalProvider(
@@ -246,7 +246,7 @@ fun <T> PTable(
                                 val cellValue = row.getValue(column)
                                 Text(
                                     text = cellValue?.toString().orEmpty(),
-                                    style = PaletteTheme.typography.body,
+                                    style = TableDefaults.bodyTextStyle(),
                                     maxLines = 1,
                                     overflow = TextOverflow.Ellipsis
                                 )
@@ -255,7 +255,7 @@ fun <T> PTable(
                     }
                 }
                 HorizontalDivider(
-                    thickness = TableDefaults.DividerThickness,
+                    thickness = TableDefaults.dividerThickness(),
                     color = colors.dividerColor
                 )
             }
@@ -335,7 +335,7 @@ private fun <T> TableHeaderSection(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(TableDefaults.HeaderHeight)
+                    .height(TableDefaults.headerHeight())
                     .background(colors.headerContainerColor),
                 verticalAlignment = Alignment.CenterVertically
             ) {
@@ -347,7 +347,7 @@ private fun <T> TableHeaderSection(
 
                     Box(
                         modifier = Modifier
-                            .width(48.dp)
+                            .width(TableDefaults.selectionColumnWidth())
                             .fillMaxHeight(),
                         contentAlignment = Alignment.Center
                     ) {
@@ -385,7 +385,7 @@ private fun <T> TableHeaderSection(
                             .clickable(enabled = isSortable) {
                                 table.toggleSorting(column.id, null)
                             }
-                            .padding(horizontal = TableDefaults.CellContentPadding),
+                            .padding(horizontal = TableDefaults.cellContentPadding()),
                         contentAlignment = Alignment.CenterStart
                     ) {
                         Row(
@@ -394,7 +394,7 @@ private fun <T> TableHeaderSection(
                         ) {
                             Text(
                                 text = column.header,
-                                style = PaletteTheme.typography.title,
+                                style = TableDefaults.headerTextStyle(),
                                 color = colors.headerContentColor,
                                 maxLines = 1,
                                 overflow = TextOverflow.Ellipsis
@@ -407,7 +407,7 @@ private fun <T> TableHeaderSection(
                                         Icons.Filled.ArrowDropDown,
                                     contentDescription = null,
                                     tint = colors.headerContentColor,
-                                    modifier = Modifier.height(16.dp)
+                                    modifier = Modifier.height(TableDefaults.sortIconHeight())
                                 )
                             }
                         }
@@ -415,7 +415,7 @@ private fun <T> TableHeaderSection(
                 }
             }
             HorizontalDivider(
-                thickness = TableDefaults.DividerThickness,
+                thickness = TableDefaults.dividerThickness(),
                 color = colors.dividerColor
             )
         }
@@ -439,7 +439,7 @@ private fun <T> TableBodySection(
     if (rows.isEmpty()) {
         if (emptyContent != null) {
             Box(
-                modifier = Modifier.fillMaxWidth().padding(32.dp),
+                modifier = Modifier.fillMaxWidth().padding(TableDefaults.emptyContentPadding()),
                 contentAlignment = Alignment.Center
             ) {
                 emptyContent()
@@ -452,7 +452,7 @@ private fun <T> TableBodySection(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(TableDefaults.RowHeight)
+                    .height(TableDefaults.rowHeight())
                     .background(
                         if (isSelected) colors.selectedRowContainerColor
                         else colors.rowContainerColor
@@ -466,7 +466,7 @@ private fun <T> TableBodySection(
                 if (state.rowSelection.selectedRowIds.isNotEmpty() || table.rowModel.value.totalRows > 0) {
                     Box(
                         modifier = Modifier
-                            .width(48.dp)
+                            .width(TableDefaults.selectionColumnWidth())
                             .fillMaxHeight(),
                         contentAlignment = Alignment.Center
                     ) {
@@ -497,7 +497,7 @@ private fun <T> TableBodySection(
                         modifier = Modifier
                             .then(widthModifier)
                             .fillMaxHeight()
-                            .padding(horizontal = TableDefaults.CellContentPadding),
+                            .padding(horizontal = TableDefaults.cellContentPadding()),
                         contentAlignment = Alignment.CenterStart
                     ) {
                         CompositionLocalProvider(
@@ -508,7 +508,7 @@ private fun <T> TableBodySection(
                             val cellValue = row.getValue(column)
                             Text(
                                 text = cellValue?.toString().orEmpty(),
-                                style = PaletteTheme.typography.body,
+                                style = TableDefaults.bodyTextStyle(),
                                 maxLines = 1,
                                 overflow = TextOverflow.Ellipsis
                             )
@@ -517,7 +517,7 @@ private fun <T> TableBodySection(
                 }
             }
             HorizontalDivider(
-                thickness = TableDefaults.DividerThickness,
+                thickness = TableDefaults.dividerThickness(),
                 color = colors.dividerColor
             )
         }
@@ -554,9 +554,9 @@ private fun PTablePagination(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .height(56.dp)
+            .height(TableDefaults.paginationHeight())
             .background(colors.headerContainerColor)
-            .padding(horizontal = TableDefaults.CellContentPadding),
+            .padding(horizontal = TableDefaults.cellContentPadding()),
         horizontalArrangement = Arrangement.End,
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -565,7 +565,7 @@ private fun PTablePagination(
                 paginationScope.pageIndex + 1,
                 paginationScope.pageCount,
             ),
-            style = PaletteTheme.typography.body,
+            style = TableDefaults.bodyTextStyle(),
             color = colors.headerContentColor
         )
     }

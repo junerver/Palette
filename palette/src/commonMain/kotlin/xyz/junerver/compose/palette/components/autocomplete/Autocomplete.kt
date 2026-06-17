@@ -25,7 +25,6 @@ import xyz.junerver.compose.palette.components.text.PText
 import xyz.junerver.compose.palette.components.textfield.BorderTextField
 import xyz.junerver.compose.palette.core.spec.ComponentSize
 import xyz.junerver.compose.palette.core.spec.ComponentStatus
-import xyz.junerver.compose.palette.core.theme.PaletteTheme
 
 @Composable
 fun PAutocomplete(
@@ -81,10 +80,10 @@ fun PAutocomplete(
             onDismissRequest = { setExpanded(false) },
             modifier = Modifier
                 .width(dropdownWidth)
-                .background(PaletteTheme.colors.surface)
+                .background(AutocompleteDefaults.dropdownContainerColor())
         ) {
             LazyColumn(
-                modifier = Modifier.heightIn(max = AutocompleteDefaults.DropdownMaxHeight)
+                modifier = Modifier.heightIn(max = AutocompleteDefaults.dropdownMaxHeight())
             ) {
                 items(
                     items = filteredOptions,
@@ -119,9 +118,9 @@ private fun AutocompleteOptionItem(
     val isHovered by interactionSource.collectIsHoveredAsState()
 
     val backgroundColor = when {
-        selected -> AutocompleteDefaults.selectedOptionColor().copy(alpha = 0.12f)
+        selected -> AutocompleteDefaults.selectedOptionContainerColor()
         isHovered -> AutocompleteDefaults.hoverOptionColor()
-        else -> PaletteTheme.colors.surface
+        else -> AutocompleteDefaults.dropdownContainerColor()
     }
     val textColor = when {
         option.disabled -> AutocompleteDefaults.disabledOptionColor()
@@ -132,7 +131,8 @@ private fun AutocompleteOptionItem(
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(AutocompleteDefaults.CornerRadius))
+            .heightIn(min = AutocompleteDefaults.optionHeight())
+            .clip(RoundedCornerShape(AutocompleteDefaults.cornerRadius()))
             .background(backgroundColor)
             .clickable(
                 enabled = !option.disabled,
@@ -141,15 +141,15 @@ private fun AutocompleteOptionItem(
                 onClick = onClick,
             )
             .padding(
-                horizontal = AutocompleteDefaults.OptionPaddingHorizontal,
+                horizontal = AutocompleteDefaults.optionPaddingHorizontal(),
                 vertical = size.verticalPadding,
             )
     ) {
         PText(
             text = option.label,
-            fontSize = AutocompleteDefaults.FontSize,
+            fontSize = AutocompleteDefaults.fontSize(),
             color = textColor,
-            style = PaletteTheme.typography.body,
+            style = AutocompleteDefaults.optionTextStyle(),
         )
     }
 }

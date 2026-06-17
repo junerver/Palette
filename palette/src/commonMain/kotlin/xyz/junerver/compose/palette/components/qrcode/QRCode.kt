@@ -23,7 +23,7 @@ import kotlin.math.roundToInt
 fun PQRCode(
     value: String,
     modifier: Modifier = Modifier,
-    size: Dp = QRCodeDefaults.Size,
+    size: Dp = QRCodeDefaults.size(),
     color: Color = Color.Unspecified,
     backgroundColor: Color = Color.Unspecified,
     errorCorrectionLevel: Int = QRCodeDefaults.ErrorCorrectionLevel,

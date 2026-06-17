@@ -9,12 +9,14 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.PointerEventPass
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.semantics.onClick
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.window.Popup
 import xyz.junerver.compose.hooks.useState
 
@@ -25,6 +27,11 @@ fun PPopover(
     onVisibleChange: ((Boolean) -> Unit)? = null,
     containerColor: Color = PopoverDefaults.containerColor(),
     borderColor: Color = PopoverDefaults.borderColor(),
+    cornerRadius: Dp = PopoverDefaults.cornerRadius(),
+    borderWidth: Dp = PopoverDefaults.borderWidth(),
+    elevation: Dp = PopoverDefaults.elevation(),
+    contentPadding: Dp = PopoverDefaults.padding(),
+    offset: Dp = PopoverDefaults.offset(),
     trigger: @Composable () -> Unit,
     content: @Composable () -> Unit,
 ) {
@@ -46,17 +53,19 @@ fun PPopover(
 
         if (shown) {
             Popup(onDismissRequest = { setShown(false) }) {
+                val shape = RoundedCornerShape(cornerRadius)
                 Box(
                     modifier = Modifier
-                        .padding(top = PopoverDefaults.Padding)
-                        .clip(RoundedCornerShape(PopoverDefaults.CornerRadius))
+                        .padding(top = offset)
+                        .shadow(elevation, shape)
+                        .clip(shape)
                         .border(
-                            width = PopoverDefaults.BorderWidth,
+                            width = borderWidth,
                             color = borderColor,
-                            shape = RoundedCornerShape(PopoverDefaults.CornerRadius)
+                            shape = shape
                         )
                         .background(containerColor)
-                        .padding(PopoverDefaults.Padding)
+                        .padding(contentPadding)
                 ) {
                     content()
                 }

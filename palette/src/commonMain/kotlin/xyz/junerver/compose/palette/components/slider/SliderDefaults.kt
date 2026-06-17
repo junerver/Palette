@@ -2,13 +2,13 @@ package xyz.junerver.compose.palette.components.slider
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import xyz.junerver.compose.palette.core.theme.PaletteTheme
 import xyz.junerver.compose.palette.core.tokens.FormTokens
-import xyz.junerver.compose.palette.core.tokens.disabledBorder
 
 object SliderDefaults {
     val Height: Dp = 48.dp
@@ -21,20 +21,47 @@ object SliderDefaults {
     val DisabledAlpha: Float = 0.5f
 
     @Composable
-    fun activeTrackColor(): Color = PaletteTheme.colors.primary
+    fun height(): Dp = PaletteTheme.componentThemes.selectionControl.sliderHeight
 
     @Composable
-    fun inactiveTrackColor(): Color = PaletteTheme.colors.border
+    fun trackHeight(): Dp = PaletteTheme.componentThemes.selectionControl.sliderTrackHeight
 
     @Composable
-    fun thumbColor(): Color = PaletteTheme.colors.primary
+    fun thumbSize(): Dp = PaletteTheme.componentThemes.selectionControl.sliderThumbSize
 
     @Composable
-    fun labelColor(): Color = PaletteTheme.colors.onSurface
+    fun thumbShadowElevation(): Dp = PaletteTheme.componentThemes.selectionControl.sliderThumbShadowElevation
 
     @Composable
-    fun thumbShadowColor(): Color = PaletteTheme.colors.border
+    fun labelSpacing(): Dp = PaletteTheme.componentThemes.selectionControl.sliderLabelSpacing
+
+    @Composable
+    fun labelWidth(): Dp = PaletteTheme.componentThemes.selectionControl.sliderLabelWidth
+
+    @Composable
+    fun labelTextStyle(): TextStyle = PaletteTheme.componentThemes.selectionControl.sliderLabelTextStyle
+
+    @Composable
+    fun labelFontSize(): TextUnit = PaletteTheme.componentThemes.selectionControl.sliderLabelTextStyle.fontSize
+
+    @Composable
+    fun disabledAlpha(): Float = PaletteTheme.componentThemes.selectionControl.sliderDisabledAlpha
+
+    @Composable
+    fun activeTrackColor(): Color = PaletteTheme.componentThemes.selectionControl.sliderActiveTrackColor
+
+    @Composable
+    fun inactiveTrackColor(): Color = PaletteTheme.componentThemes.selectionControl.sliderInactiveTrackColor
+
+    @Composable
+    fun thumbColor(): Color = PaletteTheme.componentThemes.selectionControl.sliderThumbColor
+
+    @Composable
+    fun labelColor(): Color = PaletteTheme.componentThemes.selectionControl.sliderLabelColor
+
+    @Composable
+    fun thumbShadowColor(): Color = PaletteTheme.componentThemes.selectionControl.sliderThumbShadowColor
     
     @Composable
-    fun disabledTrackColor(): Color = PaletteTheme.colors.disabledBorder
+    fun disabledTrackColor(): Color = PaletteTheme.componentThemes.selectionControl.sliderDisabledTrackColor
 }

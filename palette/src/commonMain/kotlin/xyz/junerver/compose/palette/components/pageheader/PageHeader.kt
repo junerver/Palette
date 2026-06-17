@@ -15,7 +15,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.font.FontWeight
 import xyz.junerver.compose.palette.components.text.PText
 import xyz.junerver.compose.palette.core.util.clickableWithoutRipple
 
@@ -33,13 +32,13 @@ fun PPageHeader(
         modifier = modifier
             .fillMaxWidth()
             .background(PageHeaderDefaults.backgroundColor())
-            .padding(PageHeaderDefaults.Padding)
+            .padding(PageHeaderDefaults.padding())
     ) {
         if (breadcrumb != null) {
             breadcrumb()
         }
         Row(
-            modifier = Modifier.fillMaxWidth().height(PageHeaderDefaults.Height),
+            modifier = Modifier.fillMaxWidth().height(PageHeaderDefaults.height()),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             if (onBack != null) {
@@ -50,30 +49,29 @@ fun PPageHeader(
                     Icon(
                         imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                         contentDescription = null,
-                        modifier = Modifier.size(PageHeaderDefaults.BackIconSize),
+                        modifier = Modifier.size(PageHeaderDefaults.backIconSize()),
                         tint = PageHeaderDefaults.backColor(),
                     )
-                    Spacer(modifier = Modifier.width(PageHeaderDefaults.BackSpacing))
+                    Spacer(modifier = Modifier.width(PageHeaderDefaults.backSpacing()))
                     PText(
                         text = backText,
                         color = PageHeaderDefaults.backColor(),
-                        fontSize = PageHeaderDefaults.TitleFontSize,
+                        style = PageHeaderDefaults.backTextStyle(),
                     )
                 }
-                Spacer(modifier = Modifier.width(PageHeaderDefaults.Padding))
+                Spacer(modifier = Modifier.width(PageHeaderDefaults.backSectionSpacing()))
             }
             Column(modifier = Modifier.weight(1f)) {
                 PText(
                     text = title,
                     color = PageHeaderDefaults.titleColor(),
-                    fontSize = PageHeaderDefaults.TitleFontSize,
-                    fontWeight = FontWeight.Bold,
+                    style = PageHeaderDefaults.titleTextStyle(),
                 )
                 if (subtitle != null) {
                     PText(
                         text = subtitle,
                         color = PageHeaderDefaults.subtitleColor(),
-                        fontSize = PageHeaderDefaults.SubtitleFontSize,
+                        style = PageHeaderDefaults.subtitleTextStyle(),
                     )
                 }
             }

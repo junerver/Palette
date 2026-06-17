@@ -11,7 +11,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
 import xyz.junerver.compose.palette.core.theme.PaletteTheme
 
 data class UploadFile(
@@ -34,17 +33,18 @@ fun PUpload(
         modifier = modifier
             .fillMaxWidth()
             .border(
-                width = UploadDefaults.BorderWidth,
+                width = UploadDefaults.borderWidth(),
                 color = UploadDefaults.borderColor(),
-                shape = RoundedCornerShape(UploadDefaults.BorderRadius)
+                shape = RoundedCornerShape(UploadDefaults.borderRadius())
             )
-            .background(androidx.compose.ui.graphics.Color.Transparent)
-            .padding(UploadDefaults.ContentPadding),
-        verticalArrangement = Arrangement.spacedBy(8.dp)
+            .background(UploadDefaults.backgroundColor(), RoundedCornerShape(UploadDefaults.borderRadius()))
+            .padding(UploadDefaults.contentPadding()),
+        verticalArrangement = Arrangement.spacedBy(UploadDefaults.itemSpacing())
     ) {
         Text(
             text = triggerText,
             color = UploadDefaults.contentColor(),
+            style = UploadDefaults.textStyle(),
             modifier = Modifier.clickable(enabled = !disabled) {
                 onFilesChange(files)
             }
@@ -69,7 +69,8 @@ fun PUpload(
             }
             Text(
                 text = "${file.name} ($suffix)",
-                color = color
+                color = color,
+                style = UploadDefaults.textStyle()
             )
         }
     }

@@ -18,8 +18,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.unit.dp
-import xyz.junerver.compose.palette.core.theme.PaletteTheme
 
 @Composable
 internal fun PFormItem(
@@ -43,22 +41,22 @@ internal fun PFormItem(
             if (label.isNotEmpty()) {
                 Row(
                     modifier = Modifier
-                        .width(FormDefaults.LabelWidth)
-                        .padding(top = 6.dp) // Align with common input height
-                        .padding(end = FormDefaults.LabelInputSpacing),
+                        .width(FormDefaults.labelWidth())
+                        .padding(top = FormDefaults.labelTopPadding())
+                        .padding(end = FormDefaults.labelInputSpacing()),
                     horizontalArrangement = Arrangement.End
                 ) {
                     if (required) {
                         Text(
                             text = "* ",
-                            color = PaletteTheme.colors.error,
-                            fontSize = FormDefaults.LabelFontSize
+                            color = FormDefaults.requiredColor,
+                            style = FormDefaults.labelTextStyle()
                         )
                     }
                     Text(
                         text = "$label :",
                         color = FormDefaults.labelColor,
-                        fontSize = FormDefaults.LabelFontSize,
+                        style = FormDefaults.labelTextStyle(),
                         textAlign = TextAlign.End
                     )
                 }
@@ -75,20 +73,20 @@ internal fun PFormItem(
             // Label Row
             if (label.isNotEmpty()) {
                 Row(
-                    modifier = Modifier.padding(bottom = FormDefaults.LabelInputSpacing),
+                    modifier = Modifier.padding(bottom = FormDefaults.labelInputSpacing()),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     if (required) {
                         Text(
                             text = "* ",
-                            color = PaletteTheme.colors.error,
-                            fontSize = FormDefaults.LabelFontSize
+                            color = FormDefaults.requiredColor,
+                            style = FormDefaults.labelTextStyle()
                         )
                     }
                     Text(
                         text = label,
                         color = FormDefaults.labelColor,
-                        fontSize = FormDefaults.LabelFontSize
+                        style = FormDefaults.labelTextStyle()
                     )
                 }
             }
@@ -107,7 +105,7 @@ private fun FormItemErrorAndHelp(
 ) {
     if (error != null || help != null) {
         Column(
-            modifier = Modifier.padding(top = FormDefaults.InputHelperSpacing)
+            modifier = Modifier.padding(top = FormDefaults.inputHelperSpacing())
         ) {
             AnimatedVisibility(
                 visible = error != null,
@@ -118,7 +116,7 @@ private fun FormItemErrorAndHelp(
                     Text(
                         text = error,
                         color = FormDefaults.errorColor,
-                        fontSize = FormDefaults.HelperFontSize
+                        style = FormDefaults.helperTextStyle()
                     )
                 }
             }
@@ -127,7 +125,7 @@ private fun FormItemErrorAndHelp(
                 Text(
                     text = help,
                     color = FormDefaults.helpColor,
-                    fontSize = FormDefaults.HelperFontSize
+                    style = FormDefaults.helperTextStyle()
                 )
             }
         }

@@ -17,7 +17,7 @@ import androidx.compose.ui.unit.dp
 @Composable
 fun PRow(
     modifier: Modifier = Modifier,
-    gutter: Dp = GridDefaults.DefaultGutter,
+    gutter: Dp = GridDefaults.defaultGutter(),
     horizontalArrangement: Arrangement.Horizontal = Arrangement.Start,
     verticalAlignment: Alignment.Vertical = Alignment.Top,
     content: @Composable PRowScope.() -> Unit,

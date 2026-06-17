@@ -13,6 +13,22 @@ class PaletteSpacing(
     val large: Dp = 24.dp,
     val extraLarge: Dp = 32.dp,
 ) {
+    fun copy(
+        none: Dp = this.none,
+        extraSmall: Dp = this.extraSmall,
+        small: Dp = this.small,
+        medium: Dp = this.medium,
+        large: Dp = this.large,
+        extraLarge: Dp = this.extraLarge,
+    ): PaletteSpacing = PaletteSpacing(
+        none = none,
+        extraSmall = extraSmall,
+        small = small,
+        medium = medium,
+        large = large,
+        extraLarge = extraLarge,
+    )
+
     companion object {
         fun default() = PaletteSpacing()
     }

@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.material3.Icon
@@ -16,15 +17,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
-import androidx.compose.ui.unit.sp
-import xyz.junerver.compose.palette.core.theme.PaletteTheme
 
 @Composable
 fun Toolbar(
     modifier: Modifier = Modifier,
     title: String = "",
     colors: ToolbarColors = ToolbarDefaults.colors(),
-    height: Dp = ToolbarDefaults.Height,
+    height: Dp = ToolbarDefaults.height(),
     onNavigationClick: () -> Unit = {},
 ) {
     Row(
@@ -39,6 +38,7 @@ fun Toolbar(
                 Icon(
                     imageVector = Icons.AutoMirrored.Rounded.ArrowBack,
                     contentDescription = null,
+                    modifier = Modifier.size(ToolbarDefaults.iconSize()),
                     tint = colors.contentColor
                 )
             }
@@ -49,8 +49,7 @@ fun Toolbar(
                 color = colors.contentColor,
                 textAlign = TextAlign.Center,
                 modifier = Modifier.fillMaxWidth(),
-                style = PaletteTheme.typography.title,
-                fontSize = 20.sp,
+                style = ToolbarDefaults.titleTextStyle(),
             )
         }
         Spacer(modifier = Modifier.weight(1f))

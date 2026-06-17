@@ -1,6 +1,8 @@
 package xyz.junerver.compose.palette.core.tokens
 
+import androidx.compose.runtime.Composable
 import androidx.compose.ui.unit.dp
+import xyz.junerver.compose.palette.core.theme.PaletteTheme
 
 object FormTokens {
     val BorderWidthDefault = 1.dp
@@ -29,4 +31,28 @@ object FormTokens {
 
     val FocusRingOffset = 2.dp
     val ShadowBlur = 4.dp
+
+    @Composable
+    fun borderWidthDefault() = PaletteTheme.control.borderWidth
+
+    @Composable
+    fun borderWidthFocus() = PaletteTheme.control.focusBorderWidth
+
+    @Composable
+    fun borderWidthDisabled() = PaletteTheme.control.disabledBorderWidth
+
+    @Composable
+    fun durationFast() = PaletteTheme.motion.durationFast
+
+    @Composable
+    fun durationNormal() = PaletteTheme.motion.durationNormal
+
+    @Composable
+    fun durationSlow() = PaletteTheme.motion.durationSlow
+
+    @Composable
+    fun focusRingOffset() = PaletteTheme.control.focusRingOffset
+
+    @Composable
+    fun shadowBlur() = PaletteTheme.elevation.focusShadowBlur
 }

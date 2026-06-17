@@ -11,24 +11,24 @@ import xyz.junerver.compose.palette.core.theme.PaletteTheme
 object TextDefaults {
     /**
      * Default text color that adapts to the current theme.
-     * Returns [PaletteTheme.colors.onSurface] for primary text.
+     * Returns [PaletteTheme.colors.textPrimary] for primary text.
      */
     @Composable
-    fun color(): Color = PaletteTheme.colors.onSurface
+    fun color(): Color = PaletteTheme.colors.textPrimary
 
     /**
-     * Secondary text color with reduced opacity.
+     * Secondary text color from the theme text hierarchy.
      * Suitable for less prominent text like descriptions or captions.
      */
     @Composable
-    fun secondaryColor(): Color = PaletteTheme.colors.onSurface.copy(alpha = 0.6f)
+    fun secondaryColor(): Color = PaletteTheme.colors.textSecondary
 
     /**
-     * Disabled text color with further reduced opacity.
+     * Disabled text color from the theme text hierarchy.
      * Suitable for disabled or inactive text.
      */
     @Composable
-    fun disabledColor(): Color = PaletteTheme.colors.hint
+    fun disabledColor(): Color = PaletteTheme.colors.textDisabled
 
     /**
      * Default text style from the theme.

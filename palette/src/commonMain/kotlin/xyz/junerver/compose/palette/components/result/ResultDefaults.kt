@@ -2,6 +2,7 @@ package xyz.junerver.compose.palette.components.result
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
@@ -19,6 +20,30 @@ object ResultDefaults {
     val IconToTitleSpacing: Dp = 16.dp
     val TitleToSubtitleSpacing: Dp = 8.dp
     val SubtitleToExtraSpacing: Dp = 24.dp
+
+    @Composable
+    fun iconSize(): Dp = PaletteTheme.componentThemes.feedbackDisplay.resultIconSize
+
+    @Composable
+    fun titleTextStyle(): TextStyle = PaletteTheme.componentThemes.feedbackDisplay.resultTitleTextStyle
+
+    @Composable
+    fun titleFontSize(): TextUnit = PaletteTheme.componentThemes.feedbackDisplay.resultTitleTextStyle.fontSize
+
+    @Composable
+    fun subtitleTextStyle(): TextStyle = PaletteTheme.componentThemes.feedbackDisplay.resultSubtitleTextStyle
+
+    @Composable
+    fun subtitleFontSize(): TextUnit = PaletteTheme.componentThemes.feedbackDisplay.resultSubtitleTextStyle.fontSize
+
+    @Composable
+    fun iconToTitleSpacing(): Dp = PaletteTheme.componentThemes.feedbackDisplay.resultIconToTitleSpacing
+
+    @Composable
+    fun titleToSubtitleSpacing(): Dp = PaletteTheme.componentThemes.feedbackDisplay.resultTitleToSubtitleSpacing
+
+    @Composable
+    fun subtitleToExtraSpacing(): Dp = PaletteTheme.componentThemes.feedbackDisplay.resultSubtitleToExtraSpacing
 
     fun defaultTitle(status: ResultStatus): String = when (status) {
         ResultStatus.Success -> "操作成功"
@@ -40,17 +65,17 @@ object ResultDefaults {
 
     @Composable
     fun iconColor(status: ResultStatus): Color = when (status) {
-        ResultStatus.Success -> PaletteTheme.colors.success
-        ResultStatus.Error -> PaletteTheme.colors.error
-        ResultStatus.Info -> PaletteTheme.colors.primary
-        ResultStatus.Warning -> PaletteTheme.colors.warning
-        ResultStatus.NotFound -> PaletteTheme.colors.hint
-        ResultStatus.NetworkError -> PaletteTheme.colors.hint
+        ResultStatus.Success -> PaletteTheme.componentThemes.feedbackDisplay.successColor
+        ResultStatus.Error -> PaletteTheme.componentThemes.feedbackDisplay.errorColor
+        ResultStatus.Info -> PaletteTheme.componentThemes.feedbackDisplay.infoColor
+        ResultStatus.Warning -> PaletteTheme.componentThemes.feedbackDisplay.warningColor
+        ResultStatus.NotFound -> PaletteTheme.componentThemes.feedbackDisplay.neutralColor
+        ResultStatus.NetworkError -> PaletteTheme.componentThemes.feedbackDisplay.neutralColor
     }
 
     @Composable
-    fun titleColor(): Color = PaletteTheme.colors.onSurface
+    fun titleColor(): Color = PaletteTheme.componentThemes.feedbackDisplay.titleColor
 
     @Composable
-    fun subtitleColor(): Color = PaletteTheme.colors.hint
+    fun subtitleColor(): Color = PaletteTheme.componentThemes.feedbackDisplay.subtleColor
 }

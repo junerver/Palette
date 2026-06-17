@@ -24,39 +24,44 @@ fun PButton(
     modifier: Modifier = Modifier,
     type: ButtonType = ButtonType.PRIMARY,
     size: ButtonSize = ButtonSize.LARGE,
-    width: Dp = ButtonDefaults.DefaultWidth,
+    width: Dp = ButtonDefaults.defaultWidth(),
     disabled: Boolean = false,
     loading: Boolean = false,
     onClick: (() -> Unit)? = null
 ) {
     val colors = buttonColorsOf(type)
     val localDisabled = disabled || loading
+    val borderRadius = ButtonDefaults.borderRadius(size)
+    val padding = ButtonDefaults.padding(size)
+    val fontSize = ButtonDefaults.fontSize(size)
+    val loadingSpacing = ButtonDefaults.loadingSpacing()
+    val disabledAlpha = ButtonDefaults.disabledAlpha()
 
     Box(
         Modifier
             .width(if (size != ButtonSize.SMALL) width else Dp.Unspecified)
-            .clip(RoundedCornerShape(size.borderRadius))
+            .clip(RoundedCornerShape(borderRadius))
             .clickable(enabled = !localDisabled) {
                 if (!localDisabled) {
                     onClick?.invoke()
                 }
             }
             .background(colors.containerColor)
-            .padding(size.padding)
-            .alpha(if (disabled) ButtonDefaults.DisabledAlpha else 1f)
+            .padding(padding)
+            .alpha(if (disabled) disabledAlpha else 1f)
             .then(modifier),
         contentAlignment = Alignment.Center
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             if (loading) {
                 PLoading(color = colors.contentColor)
-                Spacer(Modifier.width(ButtonDefaults.LoadingSpacing))
+                Spacer(Modifier.width(loadingSpacing))
             }
 
             Text(
                 text,
                 color = colors.contentColor,
-                fontSize = size.fontSize
+                fontSize = fontSize
             )
         }
     }

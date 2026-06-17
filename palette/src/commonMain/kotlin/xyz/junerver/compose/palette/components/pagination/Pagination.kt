@@ -1,15 +1,13 @@
 package xyz.junerver.compose.palette.components.pagination
 
 import androidx.compose.foundation.layout.*
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.ButtonDefaults as MaterialButtonDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.unit.dp
 import xyz.junerver.compose.palette.core.theme.PaletteTheme
 
 @Composable
@@ -26,7 +24,7 @@ fun PPagination(
     
     Row(
         modifier = modifier,
-        horizontalArrangement = Arrangement.spacedBy(PaginationDefaults.Spacing),
+        horizontalArrangement = Arrangement.spacedBy(PaginationDefaults.spacing()),
         verticalAlignment = Alignment.CenterVertically
     ) {
         PaginationButton(
@@ -43,7 +41,8 @@ fun PPagination(
                     -1 -> Text(
                         text = PaletteTheme.strings.paginationEllipsis,
                         color = colors.textColor,
-                        modifier = Modifier.padding(horizontal = 8.dp)
+                        style = PaginationDefaults.textStyle(),
+                        modifier = Modifier.padding(horizontal = PaginationDefaults.ellipsisPaddingHorizontal())
                     )
                     else -> PaginationButton(
                         text = page.toString(),
@@ -57,7 +56,7 @@ fun PPagination(
             Text(
                 text = PaletteTheme.strings.tablePaginationSummary(currentPage, totalPages),
                 color = colors.textColor,
-                style = PaletteTheme.typography.body
+                style = PaginationDefaults.textStyle()
             )
         }
         
@@ -78,23 +77,40 @@ private fun PaginationButton(
     isActive: Boolean = false,
     enabled: Boolean = true
 ) {
+    val contentColor = when {
+        !enabled -> colors.disabledColor
+        isActive -> colors.activeColor
+        else -> colors.textColor
+    }
+    val containerColor = when {
+        !enabled -> colors.disabledBackgroundColor
+        isActive -> colors.activeBackgroundColor
+        else -> colors.backgroundColor
+    }
+
     TextButton(
         onClick = onClick,
         enabled = enabled,
         modifier = Modifier.defaultMinSize(
-            minWidth = PaginationDefaults.MinTouchSize,
-            minHeight = PaginationDefaults.MinTouchSize
+            minWidth = PaginationDefaults.minTouchSize(),
+            minHeight = PaginationDefaults.minTouchSize()
         ),
-        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 8.dp)
+        contentPadding = PaddingValues(
+            horizontal = PaginationDefaults.contentPaddingHorizontal(),
+            vertical = PaginationDefaults.contentPaddingVertical()
+        ),
+        shape = RoundedCornerShape(PaginationDefaults.cornerRadius()),
+        colors = MaterialButtonDefaults.textButtonColors(
+            containerColor = containerColor,
+            contentColor = contentColor,
+            disabledContainerColor = colors.disabledBackgroundColor,
+            disabledContentColor = colors.disabledColor
+        )
     ) {
         Text(
             text = text,
-            color = when {
-                !enabled -> colors.disabledColor
-                isActive -> colors.activeColor
-                else -> colors.textColor
-            },
-            style = PaletteTheme.typography.body
+            color = contentColor,
+            style = PaginationDefaults.textStyle()
         )
     }
 }

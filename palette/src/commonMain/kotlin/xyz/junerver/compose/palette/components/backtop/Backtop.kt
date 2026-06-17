@@ -1,6 +1,7 @@
 package xyz.junerver.compose.palette.components.backtop
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.ScrollState
@@ -50,8 +51,8 @@ fun PBacktop(
     Box(modifier = modifier.fillMaxSize()) {
         AnimatedVisibility(
             visible = visible,
-            enter = fadeIn(),
-            exit = fadeOut(),
+            enter = fadeIn(animationSpec = tween(BacktopDefaults.animationDurationMillis())),
+            exit = fadeOut(animationSpec = tween(BacktopDefaults.animationDurationMillis())),
             modifier = Modifier
                 .align(Alignment.BottomEnd)
                 .offset(x = -right, y = -bottom)
@@ -61,17 +62,18 @@ fun PBacktop(
                     onClick?.invoke()
                     setScrollToTop(true)
                 },
-                shape = RoundedCornerShape(BacktopDefaults.CornerRadius),
+                modifier = Modifier.size(BacktopDefaults.size()),
+                shape = RoundedCornerShape(BacktopDefaults.cornerRadius()),
                 containerColor = BacktopDefaults.containerColor(),
                 elevation = FloatingActionButtonDefaults.elevation(
-                    defaultElevation = BacktopDefaults.Elevation
+                    defaultElevation = BacktopDefaults.elevation()
                 ),
             ) {
                 Icon(
                     imageVector = Icons.Default.KeyboardArrowUp,
                     contentDescription = null,
                     tint = BacktopDefaults.iconColor(),
-                    modifier = Modifier.size(BacktopDefaults.IconSize)
+                    modifier = Modifier.size(BacktopDefaults.iconSize())
                 )
             }
         }

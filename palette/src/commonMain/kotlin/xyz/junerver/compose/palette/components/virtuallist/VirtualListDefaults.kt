@@ -3,6 +3,7 @@ package xyz.junerver.compose.palette.components.virtuallist
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import xyz.junerver.compose.palette.core.theme.PaletteTheme
@@ -14,9 +15,21 @@ object VirtualListDefaults {
 
     @Composable
     @ReadOnlyComposable
-    fun itemColor(): Color = PaletteTheme.colors.surface
+    fun itemHeight(): Dp = PaletteTheme.componentThemes.dataEntry.virtualListItemHeight
 
     @Composable
     @ReadOnlyComposable
-    fun itemContentColor(): Color = PaletteTheme.colors.onSurface
+    fun itemPadding(): Dp = PaletteTheme.componentThemes.dataEntry.virtualListItemPadding
+
+    @Composable
+    @ReadOnlyComposable
+    fun textStyle(): TextStyle = PaletteTheme.componentThemes.dataEntry.virtualListTextStyle
+
+    @Composable
+    @ReadOnlyComposable
+    fun itemColor(): Color = PaletteTheme.componentThemes.dataEntry.virtualListItemColor
+
+    @Composable
+    @ReadOnlyComposable
+    fun itemContentColor(): Color = PaletteTheme.componentThemes.dataEntry.virtualListItemContentColor
 }

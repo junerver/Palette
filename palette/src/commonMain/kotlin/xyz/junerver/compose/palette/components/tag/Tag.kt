@@ -47,13 +47,13 @@ fun PTag(
         color = colors.containerColor,
         contentColor = colors.contentColor,
         border = if (variant == TagVariant.Outlined) {
-            BorderStroke(TagDefaults.BorderWidth, colors.borderColor)
+            BorderStroke(TagDefaults.borderWidth(), colors.borderColor)
         } else null,
         onClick = onClick ?: {}
     ) {
         Row(
             modifier = Modifier.padding(horizontal = sizeTokens.horizontalPadding),
-            horizontalArrangement = Arrangement.spacedBy(4.dp),
+            horizontalArrangement = Arrangement.spacedBy(TagDefaults.itemSpacing()),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
@@ -69,7 +69,7 @@ fun PTag(
                     Icon(
                         imageVector = Icons.Default.Close,
                         contentDescription = "Close",
-                        modifier = Modifier.size(sizeTokens.closeButtonSize * 0.7f)
+                        modifier = Modifier.size(sizeTokens.closeButtonSize * TagDefaults.closeIconScale())
                     )
                 }
             }

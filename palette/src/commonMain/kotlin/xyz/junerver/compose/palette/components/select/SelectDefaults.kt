@@ -4,7 +4,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import xyz.junerver.compose.palette.components.textfield.TextFieldDefaults
 import xyz.junerver.compose.palette.core.spec.ComponentStatus
@@ -31,6 +33,46 @@ object SelectDefaults {
     val TrailingIconAlpha: Float = 0.72f
 
     @Composable
+    @ReadOnlyComposable
+    fun borderWidth(): Dp = PaletteTheme.componentThemes.select.borderWidth
+
+    @Composable
+    @ReadOnlyComposable
+    fun dropdownMaxHeight(): Dp = PaletteTheme.componentThemes.select.dropdownMaxHeight
+
+    @Composable
+    @ReadOnlyComposable
+    fun searchFieldPadding(): Dp = PaletteTheme.componentThemes.select.searchFieldPadding
+
+    @Composable
+    @ReadOnlyComposable
+    fun optionHeight(): Dp = PaletteTheme.componentThemes.select.optionHeight
+
+    @Composable
+    @ReadOnlyComposable
+    fun optionPaddingHorizontal(): Dp = PaletteTheme.componentThemes.select.optionPaddingHorizontal
+
+    @Composable
+    @ReadOnlyComposable
+    fun optionTextStyle(): TextStyle = PaletteTheme.componentThemes.select.optionTextStyle
+
+    @Composable
+    @ReadOnlyComposable
+    fun optionFontSize(): TextUnit = PaletteTheme.componentThemes.select.optionTextStyle.fontSize
+
+    @Composable
+    @ReadOnlyComposable
+    fun optionCornerRadius(): Dp = PaletteTheme.componentThemes.select.optionCornerRadius
+
+    @Composable
+    @ReadOnlyComposable
+    fun arrowSize(): Dp = PaletteTheme.componentThemes.select.arrowSize
+
+    @Composable
+    @ReadOnlyComposable
+    fun trailingIconAlpha(): Float = PaletteTheme.componentThemes.select.trailingIconAlpha
+
+    @Composable
     fun borderColor(
         status: ComponentStatus = ComponentStatus.Default,
         isFocused: Boolean = false,
@@ -46,15 +88,15 @@ object SelectDefaults {
     @Composable
     @ReadOnlyComposable
     fun colors(
-        textColor: Color = PaletteTheme.colors.onSurface,
-        placeholderColor: Color = PaletteTheme.colors.hint,
-        disabledTextColor: Color = PaletteTheme.colors.onSurface.copy(alpha = 0.5f),
-        containerColor: Color = PaletteTheme.colors.surface,
-        dropdownContainerColor: Color = PaletteTheme.colors.surface,
-        optionTextColor: Color = PaletteTheme.colors.onSurface,
-        selectedOptionTextColor: Color = PaletteTheme.colors.primary,
-        selectedOptionContainerColor: Color = PaletteTheme.colors.primary.copy(alpha = 0.12f),
-        disabledOptionTextColor: Color = PaletteTheme.colors.hint,
+        textColor: Color = PaletteTheme.componentThemes.select.textColor,
+        placeholderColor: Color = PaletteTheme.componentThemes.select.placeholderColor,
+        disabledTextColor: Color = PaletteTheme.componentThemes.select.disabledTextColor,
+        containerColor: Color = PaletteTheme.componentThemes.select.containerColor,
+        dropdownContainerColor: Color = PaletteTheme.componentThemes.select.dropdownContainerColor,
+        optionTextColor: Color = PaletteTheme.componentThemes.select.optionTextColor,
+        selectedOptionTextColor: Color = PaletteTheme.componentThemes.select.selectedOptionTextColor,
+        selectedOptionContainerColor: Color = PaletteTheme.componentThemes.select.selectedOptionContainerColor,
+        disabledOptionTextColor: Color = PaletteTheme.componentThemes.select.disabledOptionTextColor,
     ): SelectColors = SelectColors(
         textColor = textColor,
         placeholderColor = placeholderColor,

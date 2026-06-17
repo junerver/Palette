@@ -2,6 +2,7 @@ package xyz.junerver.compose.palette.components.popconfirm
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
@@ -18,11 +19,35 @@ object PopconfirmDefaults {
     val MaxWidth: Dp = 280.dp
 
     @Composable
-    fun containerColor(): Color = PaletteTheme.colors.surface
+    fun cornerRadius(): Dp = PaletteTheme.componentThemes.floatingLayer.popconfirmCornerRadius
 
     @Composable
-    fun titleColor(): Color = PaletteTheme.colors.onSurface
+    fun padding(): Dp = PaletteTheme.componentThemes.floatingLayer.popconfirmPadding
 
     @Composable
-    fun descriptionColor(): Color = PaletteTheme.colors.hint
+    fun titleTextStyle(): TextStyle = PaletteTheme.componentThemes.floatingLayer.popconfirmTitleTextStyle
+
+    @Composable
+    fun descriptionTextStyle(): TextStyle = PaletteTheme.componentThemes.floatingLayer.popconfirmDescriptionTextStyle
+
+    @Composable
+    fun descriptionSpacing(): Dp = PaletteTheme.componentThemes.floatingLayer.popconfirmDescriptionSpacing
+
+    @Composable
+    fun buttonSpacing(): Dp = PaletteTheme.componentThemes.floatingLayer.popconfirmButtonSpacing
+
+    @Composable
+    fun elevation(): Dp = PaletteTheme.componentThemes.floatingLayer.popconfirmElevation
+
+    @Composable
+    fun maxWidth(): Dp = PaletteTheme.componentThemes.floatingLayer.popconfirmMaxWidth
+
+    @Composable
+    fun containerColor(): Color = PaletteTheme.componentThemes.floatingLayer.popconfirmContainerColor
+
+    @Composable
+    fun titleColor(): Color = PaletteTheme.componentThemes.floatingLayer.popconfirmTitleColor
+
+    @Composable
+    fun descriptionColor(): Color = PaletteTheme.componentThemes.floatingLayer.popconfirmDescriptionColor
 }

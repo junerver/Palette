@@ -9,7 +9,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextAlign
-import xyz.junerver.compose.palette.core.theme.PaletteTheme
 
 @Composable
 fun PEmpty(
@@ -29,31 +28,31 @@ fun PEmpty(
     ) {
         icon?.let {
             CompositionLocalProvider(LocalContentColor provides iconColor) {
-                Box(modifier = Modifier.size(EmptyDefaults.IconSize)) {
+                Box(modifier = Modifier.size(EmptyDefaults.iconSize())) {
                     it()
                 }
             }
-            Spacer(modifier = Modifier.height(EmptyDefaults.IconToTitle))
+            Spacer(modifier = Modifier.height(EmptyDefaults.iconToTitleSpacing()))
         }
         
         title?.let {
             Text(
                 text = it,
-                style = PaletteTheme.typography.title,
+                style = EmptyDefaults.titleTextStyle(),
                 color = titleColor,
                 textAlign = TextAlign.Center
             )
-            Spacer(modifier = Modifier.height(EmptyDefaults.TitleToDescription))
+            Spacer(modifier = Modifier.height(EmptyDefaults.titleToDescriptionSpacing()))
         }
         
         description?.let {
             Text(
                 text = it,
-                style = PaletteTheme.typography.body,
+                style = EmptyDefaults.descriptionTextStyle(),
                 color = descriptionColor,
                 textAlign = TextAlign.Center
             )
-            Spacer(modifier = Modifier.height(EmptyDefaults.DescriptionToAction))
+            Spacer(modifier = Modifier.height(EmptyDefaults.descriptionToActionSpacing()))
         }
         
         action?.invoke()

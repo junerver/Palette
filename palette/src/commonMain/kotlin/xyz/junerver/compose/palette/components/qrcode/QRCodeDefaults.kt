@@ -4,6 +4,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import xyz.junerver.compose.palette.core.theme.PaletteTheme
 
 object QRCodeDefaults {
     val Size: Dp = 120.dp
@@ -12,8 +13,11 @@ object QRCodeDefaults {
     internal const val IntrinsicModuleScale: Float = 10f
 
     @Composable
-    fun color(): Color = Color.Black
+    fun size(): Dp = PaletteTheme.componentThemes.utility.qrCodeSize
 
     @Composable
-    fun backgroundColor(): Color = Color.White
+    fun color(): Color = PaletteTheme.componentThemes.utility.qrCodeColor
+
+    @Composable
+    fun backgroundColor(): Color = PaletteTheme.componentThemes.utility.qrCodeBackgroundColor
 }

@@ -60,17 +60,17 @@ enum class ComponentStatus {
     @Composable
     fun backgroundColor(): Color = when (this) {
         Default -> PaletteTheme.colors.surface
-        Success -> PaletteTheme.colors.success.copy(alpha = 0.1f)
-        Warning -> PaletteTheme.colors.warning.copy(alpha = 0.1f)
-        Error -> PaletteTheme.colors.error.copy(alpha = 0.1f)
+        Success -> PaletteTheme.colors.success.copy(alpha = PaletteTheme.opacity.selected)
+        Warning -> PaletteTheme.colors.warning.copy(alpha = PaletteTheme.opacity.selected)
+        Error -> PaletteTheme.colors.error.copy(alpha = PaletteTheme.opacity.selected)
     }
 
     @Composable
     fun shadowColor(): Color = when (this) {
-        Default -> PaletteTheme.colors.primary.copy(alpha = 0.2f)
-        Success -> PaletteTheme.colors.success.copy(alpha = 0.2f)
-        Warning -> PaletteTheme.colors.warning.copy(alpha = 0.2f)
-        Error -> PaletteTheme.colors.error.copy(alpha = 0.2f)
+        Default -> PaletteTheme.colors.focusShadow
+        Success -> PaletteTheme.componentThemes.textField.successShadowColor
+        Warning -> PaletteTheme.componentThemes.textField.warningShadowColor
+        Error -> PaletteTheme.componentThemes.textField.errorShadowColor
     }
 }
 
@@ -80,3 +80,28 @@ enum class ComponentState {
     Readonly,
     Loading,
 }
+
+@Composable
+fun ComponentSize.tokens(): PaletteControlSizeTokens = when (this) {
+    ComponentSize.Small -> PaletteTheme.control.small
+    ComponentSize.Medium -> PaletteTheme.control.medium
+    ComponentSize.Large -> PaletteTheme.control.large
+}
+
+@Composable
+fun ComponentSize.tokenHeight(): Dp = tokens().height
+
+@Composable
+fun ComponentSize.tokenFontSize(): TextUnit = tokens().fontSize
+
+@Composable
+fun ComponentSize.tokenIconSize(): Dp = tokens().iconSize
+
+@Composable
+fun ComponentSize.tokenHorizontalPadding(): Dp = tokens().horizontalPadding
+
+@Composable
+fun ComponentSize.tokenVerticalPadding(): Dp = tokens().verticalPadding
+
+@Composable
+fun ComponentSize.tokenCornerRadius(): Dp = tokens().cornerRadius

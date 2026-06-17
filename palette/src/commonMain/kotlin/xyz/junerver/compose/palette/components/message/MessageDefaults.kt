@@ -2,6 +2,7 @@ package xyz.junerver.compose.palette.components.message
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import xyz.junerver.compose.palette.core.theme.PaletteTheme
@@ -26,25 +27,54 @@ object MessageDefaults {
     val IconSpacing: Dp = 8.dp
 
     @Composable
-    fun containerColor(): Color = if (PaletteTheme.isDark) {
-        PaletteTheme.colors.surface.copy(alpha = 0.95f)
-    } else {
-        PaletteTheme.colors.surface
-    }
+    fun defaultDuration(): Long = PaletteTheme.componentThemes.message.defaultDurationMillis
+
+    @Composable
+    fun animationDuration(): Int = PaletteTheme.componentThemes.message.animationDurationMillis
+
+    @Composable
+    fun topPadding(): Dp = PaletteTheme.componentThemes.message.topPadding
+
+    @Composable
+    fun screenHorizontalPadding(): Dp = PaletteTheme.componentThemes.message.screenHorizontalPadding
+
+    @Composable
+    fun horizontalPadding(): Dp = PaletteTheme.componentThemes.message.horizontalPadding
+
+    @Composable
+    fun verticalPadding(): Dp = PaletteTheme.componentThemes.message.verticalPadding
+
+    @Composable
+    fun borderRadius(): Dp = PaletteTheme.componentThemes.message.borderRadius
+
+    @Composable
+    fun borderWidth(): Dp = PaletteTheme.componentThemes.message.borderWidth
+
+    @Composable
+    fun iconSize(): Dp = PaletteTheme.componentThemes.message.iconSize
+
+    @Composable
+    fun iconSpacing(): Dp = PaletteTheme.componentThemes.message.iconSpacing
+
+    @Composable
+    fun textStyle(): TextStyle = PaletteTheme.componentThemes.message.textStyle
+
+    @Composable
+    fun containerColor(): Color = PaletteTheme.componentThemes.message.containerColor
 
     @Composable
     fun borderColor(type: MessageType): Color = when (type) {
-        MessageType.Info -> PaletteTheme.colors.primary.copy(alpha = 0.45f)
-        MessageType.Success -> PaletteTheme.colors.success.copy(alpha = 0.5f)
-        MessageType.Warning -> PaletteTheme.colors.warning.copy(alpha = 0.5f)
-        MessageType.Error -> PaletteTheme.colors.error.copy(alpha = 0.5f)
+        MessageType.Info -> PaletteTheme.componentThemes.message.infoBorderColor
+        MessageType.Success -> PaletteTheme.componentThemes.message.successBorderColor
+        MessageType.Warning -> PaletteTheme.componentThemes.message.warningBorderColor
+        MessageType.Error -> PaletteTheme.componentThemes.message.errorBorderColor
     }
 
     @Composable
     fun textColor(type: MessageType): Color = when (type) {
-        MessageType.Info -> PaletteTheme.colors.primary
-        MessageType.Success -> PaletteTheme.colors.success
-        MessageType.Warning -> PaletteTheme.colors.warning
-        MessageType.Error -> PaletteTheme.colors.error
+        MessageType.Info -> PaletteTheme.componentThemes.message.infoColor
+        MessageType.Success -> PaletteTheme.componentThemes.message.successColor
+        MessageType.Warning -> PaletteTheme.componentThemes.message.warningColor
+        MessageType.Error -> PaletteTheme.componentThemes.message.errorColor
     }
 }

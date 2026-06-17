@@ -30,14 +30,11 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.platform.LocalFocusManager
-import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.ImeAction
 import kotlin.time.Duration
 import xyz.junerver.compose.hooks.useDebounce
 import xyz.junerver.compose.hooks.useLatestState
 import xyz.junerver.compose.hooks.useState
-import xyz.junerver.compose.palette.core.theme.PaletteTheme
-import xyz.junerver.compose.palette.core.tokens.FormTokens
 import xyz.junerver.compose.palette.core.util.clickableWithoutRipple
 
 @Composable
@@ -49,7 +46,7 @@ fun PSearchBar(
     enabled: Boolean = true,
     onSearch: ((String) -> Unit)? = null,
     debounce: Boolean = false,
-    debounceWait: Duration = SearchBarDefaults.DebounceWait,
+    debounceWait: Duration = SearchBarDefaults.debounceWait(),
 ) {
     val interactionSource = remember { MutableInteractionSource() }
     val isFocused by interactionSource.collectIsFocusedAsState()
@@ -62,10 +59,10 @@ fun PSearchBar(
         wait = debounceWait
     }
 
-    val shape = RoundedCornerShape(SearchBarDefaults.CornerRadius)
+    val shape = RoundedCornerShape(SearchBarDefaults.cornerRadius())
     val backgroundColor by animateColorAsState(
         targetValue = SearchBarDefaults.backgroundColor(enabled),
-        animationSpec = tween(FormTokens.DurationFast),
+        animationSpec = tween(SearchBarDefaults.animationDurationMillis()),
     )
     val borderColor by animateColorAsState(
         targetValue = SearchBarDefaults.borderColor(
@@ -73,7 +70,7 @@ fun PSearchBar(
             isHovered = isHovered,
             enabled = enabled,
         ),
-        animationSpec = tween(FormTokens.DurationFast),
+        animationSpec = tween(SearchBarDefaults.animationDurationMillis()),
     )
     val textColor = SearchBarDefaults.textColor(enabled)
     val iconColor = SearchBarDefaults.iconColor(enabled)
@@ -95,25 +92,25 @@ fun PSearchBar(
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .height(SearchBarDefaults.Height)
-            .border(SearchBarDefaults.BorderWidth, borderColor, shape)
+            .height(SearchBarDefaults.height())
+            .border(SearchBarDefaults.borderWidth(), borderColor, shape)
             .clip(shape)
             .background(backgroundColor)
             .hoverable(interactionSource = interactionSource, enabled = enabled)
             .clickableWithoutRipple(enabled) {
                 focusRequester.requestFocus()
             }
-            .padding(horizontal = SearchBarDefaults.ContentPadding),
+            .padding(horizontal = SearchBarDefaults.contentPadding()),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Icon(
             imageVector = Icons.Default.Search,
             contentDescription = null,
             tint = iconColor,
-            modifier = Modifier.size(SearchBarDefaults.IconSize),
+            modifier = Modifier.size(SearchBarDefaults.iconSize()),
         )
 
-        Spacer(modifier = Modifier.width(SearchBarDefaults.IconTextSpacing))
+        Spacer(modifier = Modifier.width(SearchBarDefaults.iconTextSpacing()))
 
         Box(
             modifier = Modifier.weight(1f),
@@ -122,8 +119,7 @@ fun PSearchBar(
             if (value.isEmpty()) {
                 Text(
                     text = placeholder,
-                    style = PaletteTheme.typography.body.copy(
-                        fontSize = SearchBarDefaults.FontSize,
+                    style = SearchBarDefaults.textStyle().copy(
                         color = placeholderColor,
                     ),
                 )
@@ -134,8 +130,7 @@ fun PSearchBar(
                 onValueChange = onValueChange,
                 enabled = enabled,
                 singleLine = true,
-                textStyle = TextStyle(
-                    fontSize = SearchBarDefaults.FontSize,
+                textStyle = SearchBarDefaults.textStyle().copy(
                     color = textColor,
                 ),
                 cursorBrush = SolidColor(SearchBarDefaults.cursorColor()),
@@ -163,13 +158,13 @@ fun PSearchBar(
                     onValueChange("")
                     focusRequester.requestFocus()
                 },
-                modifier = Modifier.size(SearchBarDefaults.ClearButtonSize),
+                modifier = Modifier.size(SearchBarDefaults.clearButtonSize()),
             ) {
                 Icon(
                     imageVector = Icons.Default.Close,
                     contentDescription = "Clear",
                     tint = clearIconColor,
-                    modifier = Modifier.size(SearchBarDefaults.ClearIconSize),
+                    modifier = Modifier.size(SearchBarDefaults.clearIconSize()),
                 )
             }
         }

@@ -25,7 +25,6 @@ import androidx.compose.ui.unit.dp
 import xyz.junerver.compose.palette.core.spec.ComponentSize
 import xyz.junerver.compose.palette.core.spec.ComponentStatus
 import xyz.junerver.compose.palette.core.theme.PaletteTheme
-import xyz.junerver.compose.palette.core.tokens.FormTokens
 
 @Composable
 fun TextArea(
@@ -48,6 +47,8 @@ fun TextArea(
     val interactionSource = remember { MutableInteractionSource() }
     val isFocused by interactionSource.collectIsFocusedAsState()
     val isHovered by interactionSource.collectIsHoveredAsState()
+    val fieldTokens = PaletteTheme.componentThemes.textField
+    val sizeTokens = TextFieldDefaults.sizeTokens(size)
 
     val borderColor by animateColorAsState(
         targetValue = TextFieldDefaults.borderColor(
@@ -56,47 +57,47 @@ fun TextArea(
             isHovered = isHovered,
             enabled = enabled
         ),
-        animationSpec = androidx.compose.animation.core.tween(FormTokens.DurationNormal)
+        animationSpec = androidx.compose.animation.core.tween(TextFieldDefaults.motionDuration())
     )
 
     val shadowColor by animateColorAsState(
         targetValue = TextFieldDefaults.shadowColor(status, isFocused),
-        animationSpec = androidx.compose.animation.core.tween(FormTokens.DurationNormal)
+        animationSpec = androidx.compose.animation.core.tween(TextFieldDefaults.motionDuration())
     )
 
     val borderWidth by animateDpAsState(
-        targetValue = if (isFocused) FormTokens.BorderWidthFocus else FormTokens.BorderWidthDefault,
-        animationSpec = androidx.compose.animation.core.tween(FormTokens.DurationNormal)
+        targetValue = if (isFocused) TextFieldDefaults.focusBorderWidth() else TextFieldDefaults.borderWidth(),
+        animationSpec = androidx.compose.animation.core.tween(TextFieldDefaults.motionDuration())
     )
 
     val backgroundColor = TextFieldDefaults.backgroundColor(enabled)
-    val shape = RoundedCornerShape(size.cornerRadius)
-    val textColor = if (enabled) PaletteTheme.colors.onSurface else PaletteTheme.colors.onSurface.copy(alpha = 0.5f)
+    val shape = RoundedCornerShape(sizeTokens.cornerRadius)
+    val textColor = if (enabled) fieldTokens.textColor else fieldTokens.disabledTextColor
 
     Column(modifier = modifier) {
         Box(
             modifier = Modifier
                 .fillMaxWidth()
                 .shadow(
-                    elevation = if (isFocused) FormTokens.ShadowBlur else 0.dp,
+                    elevation = if (isFocused) TextFieldDefaults.shadowElevation() else 0.dp,
                     shape = shape,
                     spotColor = shadowColor
                 )
                 .border(borderWidth, borderColor, shape)
                 .clip(shape)
                 .background(backgroundColor)
-                .defaultMinSize(minHeight = size.height * minLines)
+                .defaultMinSize(minHeight = sizeTokens.height * minLines)
         ) {
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = size.horizontalPadding, vertical = size.verticalPadding)
+                    .padding(horizontal = sizeTokens.horizontalPadding, vertical = sizeTokens.verticalPadding)
             ) {
                 if (value.isEmpty() && placeholder.isNotEmpty()) {
                     Text(
                         text = placeholder,
-                        fontSize = size.fontSize,
-                        color = PaletteTheme.colors.hint,
+                        fontSize = sizeTokens.fontSize,
+                        color = fieldTokens.placeholderColor,
                         style = PaletteTheme.typography.body
                     )
                 }
@@ -111,10 +112,10 @@ fun TextArea(
                     enabled = enabled,
                     readOnly = readOnly,
                     textStyle = PaletteTheme.typography.body.copy(
-                        fontSize = size.fontSize,
+                        fontSize = sizeTokens.fontSize,
                         color = textColor
                     ),
-                    cursorBrush = SolidColor(PaletteTheme.colors.primary),
+                    cursorBrush = SolidColor(fieldTokens.cursorColor),
                     modifier = Modifier.fillMaxWidth(),
                     keyboardOptions = keyboardOptions,
                     keyboardActions = keyboardActions,
@@ -130,7 +131,7 @@ fun TextArea(
             Text(
                 text = "${value.length}${maxLength?.let { "/$it" } ?: ""}",
                 fontSize = PaletteTheme.typography.label.fontSize,
-                color = PaletteTheme.colors.onSurface.copy(alpha = 0.45f),
+                color = fieldTokens.countColor,
                 modifier = Modifier
                     .align(Alignment.End)
                     .padding(top = 4.dp)
@@ -160,6 +161,8 @@ fun TextArea(
     val interactionSource = remember { MutableInteractionSource() }
     val isFocused by interactionSource.collectIsFocusedAsState()
     val isHovered by interactionSource.collectIsHoveredAsState()
+    val fieldTokens = PaletteTheme.componentThemes.textField
+    val sizeTokens = TextFieldDefaults.sizeTokens(size)
 
     val borderColor by animateColorAsState(
         targetValue = TextFieldDefaults.borderColor(
@@ -168,47 +171,47 @@ fun TextArea(
             isHovered = isHovered,
             enabled = enabled
         ),
-        animationSpec = androidx.compose.animation.core.tween(FormTokens.DurationNormal)
+        animationSpec = androidx.compose.animation.core.tween(TextFieldDefaults.motionDuration())
     )
 
     val shadowColor by animateColorAsState(
         targetValue = TextFieldDefaults.shadowColor(status, isFocused),
-        animationSpec = androidx.compose.animation.core.tween(FormTokens.DurationNormal)
+        animationSpec = androidx.compose.animation.core.tween(TextFieldDefaults.motionDuration())
     )
 
     val borderWidth by animateDpAsState(
-        targetValue = if (isFocused) FormTokens.BorderWidthFocus else FormTokens.BorderWidthDefault,
-        animationSpec = androidx.compose.animation.core.tween(FormTokens.DurationNormal)
+        targetValue = if (isFocused) TextFieldDefaults.focusBorderWidth() else TextFieldDefaults.borderWidth(),
+        animationSpec = androidx.compose.animation.core.tween(TextFieldDefaults.motionDuration())
     )
 
     val backgroundColor = TextFieldDefaults.backgroundColor(enabled)
-    val shape = RoundedCornerShape(size.cornerRadius)
-    val textColor = if (enabled) PaletteTheme.colors.onSurface else PaletteTheme.colors.onSurface.copy(alpha = 0.5f)
+    val shape = RoundedCornerShape(sizeTokens.cornerRadius)
+    val textColor = if (enabled) fieldTokens.textColor else fieldTokens.disabledTextColor
 
     Column(modifier = modifier) {
         Box(
             modifier = Modifier
                 .fillMaxWidth()
                 .shadow(
-                    elevation = if (isFocused) FormTokens.ShadowBlur else 0.dp,
+                    elevation = if (isFocused) TextFieldDefaults.shadowElevation() else 0.dp,
                     shape = shape,
                     spotColor = shadowColor
                 )
                 .border(borderWidth, borderColor, shape)
                 .clip(shape)
                 .background(backgroundColor)
-                .defaultMinSize(minHeight = size.height * minLines)
+                .defaultMinSize(minHeight = sizeTokens.height * minLines)
         ) {
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = size.horizontalPadding, vertical = size.verticalPadding)
+                    .padding(horizontal = sizeTokens.horizontalPadding, vertical = sizeTokens.verticalPadding)
             ) {
                 if (value.text.isEmpty() && placeholder.isNotEmpty()) {
                     Text(
                         text = placeholder,
-                        fontSize = size.fontSize,
-                        color = PaletteTheme.colors.hint,
+                        fontSize = sizeTokens.fontSize,
+                        color = fieldTokens.placeholderColor,
                         style = PaletteTheme.typography.body
                     )
                 }
@@ -223,10 +226,10 @@ fun TextArea(
                     enabled = enabled,
                     readOnly = readOnly,
                     textStyle = PaletteTheme.typography.body.copy(
-                        fontSize = size.fontSize,
+                        fontSize = sizeTokens.fontSize,
                         color = textColor
                     ),
-                    cursorBrush = SolidColor(PaletteTheme.colors.primary),
+                    cursorBrush = SolidColor(fieldTokens.cursorColor),
                     modifier = Modifier.fillMaxWidth(),
                     keyboardOptions = keyboardOptions,
                     keyboardActions = keyboardActions,
@@ -242,7 +245,7 @@ fun TextArea(
             Text(
                 text = "${value.text.length}${maxLength?.let { "/$it" } ?: ""}",
                 fontSize = PaletteTheme.typography.label.fontSize,
-                color = PaletteTheme.colors.onSurface.copy(alpha = 0.45f),
+                color = fieldTokens.countColor,
                 modifier = Modifier
                     .align(Alignment.End)
                     .padding(top = 4.dp)

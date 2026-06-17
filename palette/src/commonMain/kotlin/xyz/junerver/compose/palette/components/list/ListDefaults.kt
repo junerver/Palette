@@ -12,5 +12,14 @@ object ListDefaults {
     val ContentPadding: Dp = 16.dp
 
     @Composable
-    fun dividerColor(): Color = PaletteTheme.colors.border
+    fun itemHeight(): Dp = PaletteTheme.componentThemes.dataDisplay.listItemHeight
+
+    @Composable
+    fun dividerHeight(): Dp = PaletteTheme.componentThemes.dataDisplay.listDividerHeight
+
+    @Composable
+    fun contentPadding(): Dp = PaletteTheme.componentThemes.dataDisplay.listContentPadding
+
+    @Composable
+    fun dividerColor(): Color = PaletteTheme.componentThemes.dataDisplay.listDividerColor
 }

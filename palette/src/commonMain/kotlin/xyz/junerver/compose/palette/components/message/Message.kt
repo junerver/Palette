@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Error
@@ -29,7 +30,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Popup
 import kotlinx.coroutines.delay
 import xyz.junerver.compose.hooks.useLatestState
@@ -41,11 +41,12 @@ fun PMessage(
     visible: Boolean,
     text: String,
     type: MessageType = MessageType.Info,
-    duration: Long = MessageDefaults.DefaultDuration,
+    duration: Long = MessageDefaults.defaultDuration(),
     onClose: () -> Unit,
 ) {
     val (localVisible, setLocalVisible) = useState(visible)
     val latestOnClose = useLatestState(onClose)
+    val animationDuration = MessageDefaults.animationDuration()
 
     LaunchedEffect(visible, text, duration) {
         if (visible && duration > 0) {
@@ -54,8 +55,8 @@ fun PMessage(
         }
     }
 
-    LaunchedEffect(visible) {
-        if (!visible) delay(MessageDefaults.AnimationDuration.toLong())
+    LaunchedEffect(visible, animationDuration) {
+        if (!visible) delay(animationDuration.toLong())
         setLocalVisible(visible)
     }
 
@@ -67,34 +68,36 @@ fun PMessage(
             enter = slideInVertically { -it / 2 } + fadeIn(),
             exit = slideOutVertically { -it / 2 } + fadeOut(),
         ) {
-            val shape = RoundedCornerShape(MessageDefaults.BorderRadius)
+            val shape = RoundedCornerShape(MessageDefaults.borderRadius())
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(top = MessageDefaults.TopPadding)
-                    .padding(horizontal = 16.dp)
+                    .padding(top = MessageDefaults.topPadding())
+                    .padding(horizontal = MessageDefaults.screenHorizontalPadding())
                     .clip(shape)
                     .border(
-                        width = MessageDefaults.BorderWidth,
+                        width = MessageDefaults.borderWidth(),
                         color = MessageDefaults.borderColor(type),
                         shape = shape
                     )
                     .background(MessageDefaults.containerColor())
                     .padding(
-                        horizontal = MessageDefaults.HorizontalPadding,
-                        vertical = MessageDefaults.VerticalPadding
+                        horizontal = MessageDefaults.horizontalPadding(),
+                        vertical = MessageDefaults.verticalPadding()
                     ),
-                horizontalArrangement = Arrangement.spacedBy(MessageDefaults.IconSpacing),
+                horizontalArrangement = Arrangement.spacedBy(MessageDefaults.iconSpacing()),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Icon(
                     imageVector = iconForType(type),
                     contentDescription = null,
-                    tint = MessageDefaults.textColor(type)
+                    tint = MessageDefaults.textColor(type),
+                    modifier = Modifier.size(MessageDefaults.iconSize())
                 )
                 Text(
                     text = text,
-                    color = MessageDefaults.textColor(type)
+                    color = MessageDefaults.textColor(type),
+                    style = MessageDefaults.textStyle()
                 )
             }
         }

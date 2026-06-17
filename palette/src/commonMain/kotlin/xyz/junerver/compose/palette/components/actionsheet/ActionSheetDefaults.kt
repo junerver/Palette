@@ -2,6 +2,7 @@ package xyz.junerver.compose.palette.components.actionsheet
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
@@ -22,23 +23,71 @@ object ActionSheetDefaults {
     val DisabledAlpha: Float = 0.4f
 
     @Composable
-    fun containerColor(): Color = PaletteTheme.colors.surface
+    fun itemHeight(): Dp = PaletteTheme.componentThemes.actionSheet.itemHeight
 
     @Composable
-    fun titleColor(): Color = PaletteTheme.colors.hint
+    fun titleHeight(): Dp = PaletteTheme.componentThemes.actionSheet.titleHeight
 
     @Composable
-    fun itemTextColor(): Color = PaletteTheme.colors.onSurface
+    fun titleTextStyle(): TextStyle = PaletteTheme.componentThemes.actionSheet.titleTextStyle
 
     @Composable
-    fun descriptionColor(): Color = PaletteTheme.colors.hint
+    fun titleFontSize(): TextUnit = PaletteTheme.componentThemes.actionSheet.titleTextStyle.fontSize
 
     @Composable
-    fun cancelTextColor(): Color = PaletteTheme.colors.onSurface
+    fun itemTextStyle(): TextStyle = PaletteTheme.componentThemes.actionSheet.itemTextStyle
 
     @Composable
-    fun dividerColor(): Color = PaletteTheme.colors.border
+    fun itemFontSize(): TextUnit = PaletteTheme.componentThemes.actionSheet.itemTextStyle.fontSize
 
     @Composable
-    fun dangerColor(): Color = PaletteTheme.colors.error
+    fun descriptionTextStyle(): TextStyle = PaletteTheme.componentThemes.actionSheet.descriptionTextStyle
+
+    @Composable
+    fun descriptionFontSize(): TextUnit = PaletteTheme.componentThemes.actionSheet.descriptionTextStyle.fontSize
+
+    @Composable
+    fun cancelTextStyle(): TextStyle = PaletteTheme.componentThemes.actionSheet.cancelTextStyle
+
+    @Composable
+    fun cancelFontSize(): TextUnit = PaletteTheme.componentThemes.actionSheet.cancelTextStyle.fontSize
+
+    @Composable
+    fun iconSpacing(): Dp = PaletteTheme.componentThemes.actionSheet.iconSpacing
+
+    @Composable
+    fun itemPadding(): Dp = PaletteTheme.componentThemes.actionSheet.itemPadding
+
+    @Composable
+    fun gapHeight(): Dp = PaletteTheme.componentThemes.actionSheet.gapHeight
+
+    @Composable
+    fun cancelHeight(): Dp = PaletteTheme.componentThemes.actionSheet.cancelHeight
+
+    @Composable
+    fun dividerThickness(): Dp = PaletteTheme.componentThemes.actionSheet.dividerThickness
+
+    @Composable
+    fun disabledAlpha(): Float = PaletteTheme.componentThemes.actionSheet.disabledAlpha
+
+    @Composable
+    fun containerColor(): Color = PaletteTheme.componentThemes.actionSheet.containerColor
+
+    @Composable
+    fun titleColor(): Color = PaletteTheme.componentThemes.actionSheet.titleColor
+
+    @Composable
+    fun itemTextColor(): Color = PaletteTheme.componentThemes.actionSheet.itemTextColor
+
+    @Composable
+    fun descriptionColor(): Color = PaletteTheme.componentThemes.actionSheet.descriptionColor
+
+    @Composable
+    fun cancelTextColor(): Color = PaletteTheme.componentThemes.actionSheet.cancelTextColor
+
+    @Composable
+    fun dividerColor(): Color = PaletteTheme.componentThemes.actionSheet.dividerColor
+
+    @Composable
+    fun dangerColor(): Color = PaletteTheme.componentThemes.actionSheet.dangerColor
 }

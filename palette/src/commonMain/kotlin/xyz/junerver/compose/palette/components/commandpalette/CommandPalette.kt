@@ -5,6 +5,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
@@ -13,7 +14,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
 import xyz.junerver.compose.palette.components.textfield.BorderTextField
 import xyz.junerver.compose.palette.core.spec.ComponentSize
 import xyz.junerver.compose.palette.core.theme.PaletteTheme
@@ -32,9 +32,10 @@ fun PCommandPalette(
 
     LazyColumn(
         modifier = modifier
-            .widthIn(max = CommandPaletteDefaults.Width)
+            .widthIn(max = CommandPaletteDefaults.width())
+            .heightIn(max = CommandPaletteDefaults.maxHeight())
             .background(CommandPaletteDefaults.containerColor()),
-        verticalArrangement = Arrangement.spacedBy(4.dp)
+        verticalArrangement = Arrangement.spacedBy(CommandPaletteDefaults.itemSpacing())
     ) {
         item {
             BorderTextField(
@@ -57,11 +58,19 @@ fun PCommandPalette(
                         else androidx.compose.ui.graphics.Color.Transparent
                     )
                     .clickable { onCommandClick(action) }
-                    .padding(CommandPaletteDefaults.ItemPadding)
+                    .padding(CommandPaletteDefaults.itemPadding())
             ) {
-                Text(text = action.title, color = CommandPaletteDefaults.titleColor())
+                Text(
+                    text = action.title,
+                    color = CommandPaletteDefaults.titleColor(),
+                    style = CommandPaletteDefaults.titleTextStyle()
+                )
                 if (!action.subtitle.isNullOrBlank()) {
-                    Text(text = action.subtitle, color = CommandPaletteDefaults.subtitleColor())
+                    Text(
+                        text = action.subtitle,
+                        color = CommandPaletteDefaults.subtitleColor(),
+                        style = CommandPaletteDefaults.subtitleTextStyle()
+                    )
                 }
             }
         }

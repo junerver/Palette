@@ -15,8 +15,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.unit.dp
 
 data class StepItem(
     val title: String,
@@ -31,7 +29,7 @@ fun PSteps(
 ) {
     Column(
         modifier = modifier,
-        verticalArrangement = Arrangement.spacedBy(10.dp)
+        verticalArrangement = Arrangement.spacedBy(StepsDefaults.itemSpacing())
     ) {
         items.forEachIndexed { index, item ->
             val stateColor = when {
@@ -42,42 +40,49 @@ fun PSteps(
 
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                horizontalArrangement = Arrangement.spacedBy(StepsDefaults.rowSpacing()),
                 verticalAlignment = Alignment.Top
             ) {
+                val dotSize = StepsDefaults.dotSize()
+                val lineWidth = StepsDefaults.lineWidth()
+                val lineHeight = StepsDefaults.lineHeight()
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     Box(
                         modifier = Modifier
-                            .size(StepsDefaults.DotSize)
+                            .size(dotSize)
                             .background(stateColor, CircleShape),
                         contentAlignment = Alignment.Center
                     ) {
                         Text(
                             text = "${index + 1}",
-                            color = Color.White
+                            color = StepsDefaults.dotTextColor()
                         )
                     }
                     if (index < items.lastIndex) {
                         Spacer(
                             modifier = Modifier
-                                .height(24.dp)
+                                .height(lineHeight)
                                 .fillMaxWidth()
-                                .padding(horizontal = (StepsDefaults.DotSize - StepsDefaults.LineWidth) / 2)
-                                .size(StepsDefaults.LineWidth, 24.dp)
+                                .padding(horizontal = (dotSize - lineWidth) / 2)
+                                .size(lineWidth, lineHeight)
                                 .background(StepsDefaults.pendingColor())
                         )
                     }
                 }
 
                 Column(
-                    modifier = Modifier.padding(top = 2.dp),
-                    verticalArrangement = Arrangement.spacedBy(2.dp)
+                    modifier = Modifier.padding(top = StepsDefaults.titleTopPadding()),
+                    verticalArrangement = Arrangement.spacedBy(StepsDefaults.titleDescriptionSpacing())
                 ) {
-                    Text(text = item.title)
+                    Text(
+                        text = item.title,
+                        style = StepsDefaults.titleTextStyle()
+                    )
                     if (!item.description.isNullOrBlank()) {
                         Text(
                             text = item.description,
-                            color = StepsDefaults.pendingColor()
+                            color = StepsDefaults.pendingColor(),
+                            style = StepsDefaults.descriptionTextStyle()
                         )
                     }
                 }

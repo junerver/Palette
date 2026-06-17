@@ -55,7 +55,7 @@ fun PasswordField(
                 Icon(
                     imageVector = if (passwordVisible) Icons.Default.Visibility else Icons.Default.VisibilityOff,
                     contentDescription = if (passwordVisible) "Hide password" else "Show password",
-                    tint = PaletteTheme.colors.onSurface.copy(alpha = 0.6f)
+                    tint = PaletteTheme.componentThemes.textField.prefixSuffixColor
                 )
             }
         },

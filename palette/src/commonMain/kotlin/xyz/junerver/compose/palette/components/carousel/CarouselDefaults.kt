@@ -15,14 +15,38 @@ object CarouselDefaults {
     val ArrowContainerSize: Dp = 40.dp
 
     @Composable
-    fun indicatorColor(): Color = PaletteTheme.colors.onSurface.copy(alpha = 0.38f)
+    fun height(): Dp = PaletteTheme.componentThemes.media.carouselHeight
 
     @Composable
-    fun activeIndicatorColor(): Color = PaletteTheme.colors.primary
+    fun indicatorSize(): Dp = PaletteTheme.componentThemes.media.carouselIndicatorSize
 
     @Composable
-    fun arrowContainerColor(): Color = PaletteTheme.colors.surface.copy(alpha = 0.6f)
+    fun activeIndicatorSize(): Dp = PaletteTheme.componentThemes.media.carouselActiveIndicatorSize
 
     @Composable
-    fun arrowContentColor(): Color = PaletteTheme.colors.onSurface
+    fun inactiveIndicatorSize(): Dp = PaletteTheme.componentThemes.media.carouselInactiveIndicatorSize
+
+    @Composable
+    fun indicatorSpacing(): Dp = PaletteTheme.componentThemes.media.carouselIndicatorSpacing
+
+    @Composable
+    fun arrowContainerSize(): Dp = PaletteTheme.componentThemes.media.carouselArrowContainerSize
+
+    @Composable
+    fun arrowInset(): Dp = PaletteTheme.componentThemes.media.carouselArrowInset
+
+    @Composable
+    fun indicatorBottomPadding(): Dp = PaletteTheme.componentThemes.media.carouselIndicatorBottomPadding
+
+    @Composable
+    fun indicatorColor(): Color = PaletteTheme.componentThemes.media.carouselIndicatorColor
+
+    @Composable
+    fun activeIndicatorColor(): Color = PaletteTheme.componentThemes.media.carouselActiveIndicatorColor
+
+    @Composable
+    fun arrowContainerColor(): Color = PaletteTheme.componentThemes.media.carouselArrowContainerColor
+
+    @Composable
+    fun arrowContentColor(): Color = PaletteTheme.componentThemes.media.carouselArrowContentColor
 }

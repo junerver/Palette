@@ -13,15 +13,23 @@ object DatePickerDefaults {
 
     @Composable
     @ReadOnlyComposable
-    fun placeholderColor(): Color = PaletteTheme.colors.hint
+    fun iconSpacing(): Dp = PaletteTheme.componentThemes.dateTime.inputIconSpacing
 
     @Composable
     @ReadOnlyComposable
-    fun textColor(): Color = PaletteTheme.colors.onSurface
+    fun placeholderColor(): Color = PaletteTheme.componentThemes.dateTime.inputPlaceholderColor
 
     @Composable
     @ReadOnlyComposable
-    fun invalidColor(): Color = PaletteTheme.colors.error
+    fun textColor(): Color = PaletteTheme.componentThemes.dateTime.inputTextColor
+
+    @Composable
+    @ReadOnlyComposable
+    fun invalidColor(): Color = PaletteTheme.componentThemes.dateTime.inputInvalidColor
+
+    @Composable
+    @ReadOnlyComposable
+    fun iconColor(): Color = PaletteTheme.componentThemes.dateTime.inputIconColor
 
     fun format(date: LocalDate): String = date.toString()
 }

@@ -64,24 +64,24 @@ fun PInputOTP(
     }
 
     val disabledAlpha by animateFloatAsState(
-        targetValue = if (disabled) InputOTPDefaults.DisabledAlpha else 1f,
-        animationSpec = tween(100)
+        targetValue = if (disabled) InputOTPDefaults.disabledAlpha() else 1f,
+        animationSpec = tween(InputOTPDefaults.animationDurationMillis())
     )
     val cursorTransition = rememberInfiniteTransition(label = "InputOTPCursorTransition")
     val cursorAlpha by cursorTransition.animateFloat(
         initialValue = 1f,
         targetValue = 0f,
         animationSpec = infiniteRepeatable(
-            animation = tween(InputOTPDefaults.CursorBlinkDurationMillis),
+            animation = tween(InputOTPDefaults.cursorBlinkDurationMillis()),
         ),
         label = "InputOTPCursorAlpha",
     )
 
-    val shape = RoundedCornerShape(InputOTPDefaults.CellCornerRadius)
+    val shape = RoundedCornerShape(InputOTPDefaults.cellCornerRadius())
 
     Box(modifier = modifier) {
         Row(
-            horizontalArrangement = Arrangement.spacedBy(InputOTPDefaults.CellSpacing),
+            horizontalArrangement = Arrangement.spacedBy(InputOTPDefaults.cellSpacing()),
             verticalAlignment = Alignment.CenterVertically
         ) {
             for (i in 0 until length) {
@@ -93,10 +93,10 @@ fun PInputOTP(
 
                 Box(
                     modifier = Modifier
-                        .width(InputOTPDefaults.CellWidth)
-                        .height(InputOTPDefaults.CellHeight)
+                        .width(InputOTPDefaults.cellWidth())
+                        .height(InputOTPDefaults.cellHeight())
                         .alpha(disabledAlpha)
-                        .border(InputOTPDefaults.CellBorderWidth, borderColor, shape)
+                        .border(InputOTPDefaults.cellBorderWidth(), borderColor, shape)
                         .clip(shape)
                         .background(InputOTPDefaults.cellBackgroundColor())
                         .then(
@@ -110,14 +110,13 @@ fun PInputOTP(
                         PText(
                             text = displayChar,
                             color = InputOTPDefaults.textColor(),
-                            fontSize = InputOTPDefaults.FontSize,
                             textAlign = TextAlign.Center,
-                            style = TextStyle(textAlign = TextAlign.Center)
+                            style = InputOTPDefaults.textStyle()
                         )
                     } else if (cellFocused) {
                         Box(
                             modifier = Modifier
-                                .size(InputOTPDefaults.CursorWidth, InputOTPDefaults.CursorHeight)
+                                .size(InputOTPDefaults.cursorWidth(), InputOTPDefaults.cursorHeight())
                                 .alpha(cursorAlpha)
                                 .background(InputOTPDefaults.cursorColor())
                         )

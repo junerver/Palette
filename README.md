@@ -6,7 +6,7 @@ A Compose Multiplatform component library supporting Android, Desktop (JVM), and
 
 - **Multiplatform Support**: Android (API 24+), Desktop (JVM), iOS (x64, arm64, simulatorArm64)
 - **Design Tokens**: Centralized colors, spacing, shapes, and typography
-- **Theme System**: `PaletteTheme` with dark/light mode support
+- **Theme System**: `PaletteTheme` with dark/light mode and root-level component token overrides
 - **UI Components**: Badge, Checkbox, TextField, Toolbar, Screen, and more
 - **State Management**: Integration with [compose-hooks](https://github.com/junerver/compose-hooks) for React-style state management
 
@@ -38,6 +38,10 @@ fun MyApp() {
 ./gradlew :palette:build
 ./gradlew :app:run
 ```
+
+## Theming
+
+Palette supports core semantic tokens plus `PaletteComponentThemes` for root-level component overrides. See [docs/theming.md](docs/theming.md) for precedence rules, migration guidance, and component token examples.
 
 ## Project Structure
 

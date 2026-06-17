@@ -8,7 +8,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.rotate
-import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.drawText
 import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.unit.Dp
@@ -18,15 +17,15 @@ import androidx.compose.ui.unit.TextUnit
 fun PWatermark(
     text: String,
     modifier: Modifier = Modifier,
-    fontSize: TextUnit = WatermarkDefaults.FontSize,
+    fontSize: TextUnit = WatermarkDefaults.fontSize(),
     color: Color = WatermarkDefaults.color(),
-    rotate: Float = WatermarkDefaults.Rotate,
-    gapX: Dp = WatermarkDefaults.GapX,
-    gapY: Dp = WatermarkDefaults.GapY,
+    rotate: Float = WatermarkDefaults.rotate(),
+    gapX: Dp = WatermarkDefaults.gapX(),
+    gapY: Dp = WatermarkDefaults.gapY(),
     content: @Composable () -> Unit,
 ) {
     val textMeasurer = rememberTextMeasurer()
-    val textStyle = TextStyle(fontSize = fontSize, color = color)
+    val textStyle = WatermarkDefaults.textStyle().copy(fontSize = fontSize, color = color)
 
     Box(modifier = modifier) {
         content()

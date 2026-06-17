@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -36,6 +37,7 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.style.TextOverflow
 import xyz.junerver.compose.hooks.useState
 import xyz.junerver.compose.palette.components.textfield.BorderTextField
+import xyz.junerver.compose.palette.components.textfield.TextFieldDefaults
 import xyz.junerver.compose.palette.core.spec.ComponentSize
 import xyz.junerver.compose.palette.core.spec.ComponentStatus
 import xyz.junerver.compose.palette.core.theme.PaletteTheme
@@ -77,7 +79,8 @@ fun <T> PSelect(
             options
         }
     }
-    val shape = RoundedCornerShape(size.cornerRadius)
+    val sizeTokens = TextFieldDefaults.sizeTokens(size)
+    val shape = RoundedCornerShape(sizeTokens.cornerRadius)
     val borderColor = SelectDefaults.borderColor(
         status = status,
         isFocused = isFocused,
@@ -92,8 +95,8 @@ fun <T> PSelect(
             modifier = Modifier
                 .fillMaxWidth()
                 .onSizeChanged { setAnchorWidth(it.width) }
-                .height(size.height)
-                .border(width = SelectDefaults.BorderWidth, color = borderColor, shape = shape)
+                .height(sizeTokens.height)
+                .border(width = SelectDefaults.borderWidth(), color = borderColor, shape = shape)
                 .clip(shape)
                 .background(colors.containerColor)
                 .clickable(
@@ -110,14 +113,14 @@ fun <T> PSelect(
                         setSearchQuery("")
                     }
                 }
-                .padding(horizontal = size.horizontalPadding, vertical = size.verticalPadding),
+                .padding(horizontal = sizeTokens.horizontalPadding, vertical = sizeTokens.verticalPadding),
             verticalAlignment = Alignment.CenterVertically
         ) {
             val isPlaceholder = value == null || selectedLabel == placeholder
             Text(
                 text = selectedLabel,
                 modifier = Modifier.weight(1f),
-                style = PaletteTheme.typography.body.copy(fontSize = size.fontSize),
+                style = PaletteTheme.typography.body.copy(fontSize = sizeTokens.fontSize),
                 color = when {
                     !enabled -> colors.disabledTextColor
                     isPlaceholder -> colors.placeholderColor
@@ -130,7 +133,9 @@ fun <T> PSelect(
                 imageVector = if (expanded) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
                 contentDescription = null,
                 tint = if (enabled) colors.textColor else colors.disabledTextColor,
-                modifier = Modifier.alpha(SelectDefaults.TrailingIconAlpha)
+                modifier = Modifier
+                    .size(SelectDefaults.arrowSize())
+                    .alpha(SelectDefaults.trailingIconAlpha())
             )
         }
 
@@ -146,7 +151,7 @@ fun <T> PSelect(
         ) {
             if (searchable) {
                 Box(
-                    modifier = Modifier.padding(SelectDefaults.SearchFieldPadding)
+                    modifier = Modifier.padding(SelectDefaults.searchFieldPadding())
                 ) {
                     BorderTextField(
                         value = searchQuery,
@@ -170,7 +175,7 @@ fun <T> PSelect(
                 )
             } else {
                 LazyColumn(
-                    modifier = Modifier.heightIn(max = SelectDefaults.DropdownMaxHeight)
+                    modifier = Modifier.heightIn(max = SelectDefaults.dropdownMaxHeight())
                 ) {
                     items(
                         items = filteredOptions,
@@ -186,7 +191,7 @@ fun <T> PSelect(
                                 } else {
                                     Text(
                                         text = option.label,
-                                        style = PaletteTheme.typography.body,
+                                        style = SelectDefaults.optionTextStyle(),
                                         color = when {
                                             !selectable -> colors.disabledOptionTextColor
                                             isSelected -> colors.selectedOptionTextColor
@@ -203,14 +208,18 @@ fun <T> PSelect(
                                 }
                             },
                             enabled = selectable,
-                            modifier = if (isSelected) {
-                                Modifier
-                                    .padding(horizontal = SelectDefaults.SearchFieldPadding)
-                                    .clip(RoundedCornerShape(SelectDefaults.OptionCornerRadius))
-                                    .background(colors.selectedOptionContainerColor)
-                            } else {
-                                Modifier
-                            }
+                            modifier = Modifier
+                                .heightIn(min = SelectDefaults.optionHeight())
+                                .then(
+                                    if (isSelected) {
+                                        Modifier
+                                            .padding(horizontal = SelectDefaults.optionPaddingHorizontal())
+                                            .clip(RoundedCornerShape(SelectDefaults.optionCornerRadius()))
+                                            .background(colors.selectedOptionContainerColor)
+                                    } else {
+                                        Modifier
+                                    }
+                                )
                         )
                     }
                 }

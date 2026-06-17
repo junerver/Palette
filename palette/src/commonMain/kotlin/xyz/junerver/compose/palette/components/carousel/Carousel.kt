@@ -31,10 +31,8 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlin.math.abs
@@ -116,7 +114,7 @@ fun <T> PCarousel(
             Box(
                 modifier = Modifier
                     .align(Alignment.CenterStart)
-                    .padding(start = 16.dp)
+                    .padding(start = CarouselDefaults.arrowInset())
             ) {
                 if (prevArrow != null) {
                     prevArrow {
@@ -133,7 +131,7 @@ fun <T> PCarousel(
                                 pagerState.animateScrollToPage(prevPage)
                             }
                         },
-                        modifier = Modifier.size(CarouselDefaults.ArrowContainerSize),
+                        modifier = Modifier.size(CarouselDefaults.arrowContainerSize()),
                         colors = IconButtonDefaults.iconButtonColors(
                             containerColor = CarouselDefaults.arrowContainerColor(),
                             contentColor = CarouselDefaults.arrowContentColor()
@@ -151,7 +149,7 @@ fun <T> PCarousel(
             Box(
                 modifier = Modifier
                     .align(Alignment.CenterEnd)
-                    .padding(end = 16.dp)
+                    .padding(end = CarouselDefaults.arrowInset())
             ) {
                 if (nextArrow != null) {
                     nextArrow {
@@ -168,7 +166,7 @@ fun <T> PCarousel(
                                 pagerState.animateScrollToPage(nextPage)
                             }
                         },
-                        modifier = Modifier.size(CarouselDefaults.ArrowContainerSize),
+                        modifier = Modifier.size(CarouselDefaults.arrowContainerSize()),
                         colors = IconButtonDefaults.iconButtonColors(
                             containerColor = CarouselDefaults.arrowContainerColor(),
                             contentColor = CarouselDefaults.arrowContentColor()
@@ -187,7 +185,7 @@ fun <T> PCarousel(
             Row(
                 modifier = Modifier
                     .align(Alignment.BottomCenter)
-                    .padding(bottom = 16.dp)
+                    .padding(bottom = CarouselDefaults.indicatorBottomPadding())
                     .fillMaxWidth(),
                 horizontalArrangement = Arrangement.Center,
                 verticalAlignment = Alignment.CenterVertically
@@ -195,13 +193,13 @@ fun <T> PCarousel(
                 repeat(items.size) { index ->
                     val isActive = pagerState.currentPage == index
                     val targetColor = if (isActive) CarouselDefaults.activeIndicatorColor() else CarouselDefaults.indicatorColor()
-                    val targetSize = if (isActive) CarouselDefaults.ActiveIndicatorSize else CarouselDefaults.InactiveIndicatorSize
+                    val targetSize = if (isActive) CarouselDefaults.activeIndicatorSize() else CarouselDefaults.inactiveIndicatorSize()
                     val color by animateColorAsState(targetColor)
                     val size by animateDpAsState(targetSize)
                     
                     Box(
                         modifier = Modifier
-                            .padding(horizontal = CarouselDefaults.IndicatorSpacing / 2)
+                            .padding(horizontal = CarouselDefaults.indicatorSpacing() / 2)
                             .size(size)
                             .clip(CircleShape)
                             .background(color)

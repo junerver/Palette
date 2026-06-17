@@ -41,7 +41,8 @@ import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.IntRect
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.LayoutDirection
-import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.window.Popup
 import androidx.compose.ui.window.PopupPositionProvider
 import androidx.compose.ui.window.PopupProperties
@@ -96,6 +97,16 @@ fun PTreeSelect(
     }
 
     val shape = RoundedCornerShape(size.cornerRadius)
+    val borderWidth = TreeSelectDefaults.borderWidth()
+    val dropdownMinWidth = TreeSelectDefaults.dropdownWidth()
+    val dropdownMaxHeight = TreeSelectDefaults.dropdownMaxHeight()
+    val nodeHeight = TreeSelectDefaults.nodeHeight()
+    val indent = TreeSelectDefaults.indent()
+    val arrowSize = TreeSelectDefaults.arrowSize()
+    val iconSpacing = TreeSelectDefaults.searchPadding() / 2
+    val searchPadding = TreeSelectDefaults.searchPadding()
+    val fontSize = TreeSelectDefaults.fontSize()
+    val trailingIconAlpha = TreeSelectDefaults.trailingIconAlpha()
     val currentBorderColor = when {
         !disabled && isHovered -> colors.borderColor
         !disabled -> colors.borderColor
@@ -112,7 +123,7 @@ fun PTreeSelect(
                 .onSizeChanged { setAnchorWidth(it.width) }
                 .height(size.height)
                 .border(
-                    width = TreeSelectDefaults.BorderWidth,
+                    width = borderWidth,
                     color = currentBorderColor,
                     shape = shape
                 )
@@ -150,7 +161,7 @@ fun PTreeSelect(
                 imageVector = if (expanded) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
                 contentDescription = null,
                 tint = if (disabled) colors.disabledTextColor else colors.textColor,
-                modifier = Modifier.alpha(TreeSelectDefaults.TrailingIconAlpha)
+                modifier = Modifier.alpha(trailingIconAlpha)
             )
         }
 
@@ -182,20 +193,20 @@ fun PTreeSelect(
             ) {
                 Column(
                     modifier = Modifier
-                        .width(dropdownWidth.coerceAtLeast(TreeSelectDefaults.DropdownWidth))
+                        .width(dropdownWidth.coerceAtLeast(dropdownMinWidth))
                         .background(
                             colors.dropdownContainerColor,
                             RoundedCornerShape(size.cornerRadius)
                         )
                         .border(
-                            width = TreeSelectDefaults.BorderWidth,
+                            width = borderWidth,
                             color = colors.borderColor,
                             shape = RoundedCornerShape(size.cornerRadius)
                         )
                 ) {
                     if (showSearch) {
                         Box(
-                            modifier = Modifier.padding(TreeSelectDefaults.SearchPadding)
+                            modifier = Modifier.padding(searchPadding)
                         ) {
                             BorderTextField(
                                 value = searchQuery,
@@ -209,15 +220,15 @@ fun PTreeSelect(
                     val scrollState = rememberScrollState()
                     Column(
                         modifier = Modifier
-                            .heightIn(max = TreeSelectDefaults.DropdownMaxHeight)
+                            .heightIn(max = dropdownMaxHeight)
                             .verticalScroll(scrollState)
                     ) {
                         if (displayNodes.isEmpty()) {
                             Text(
                                 text = PaletteTheme.strings.selectNoResult,
-                                modifier = Modifier.padding(TreeSelectDefaults.SearchPadding),
+                                modifier = Modifier.padding(searchPadding),
                                 color = colors.placeholderColor,
-                                style = PaletteTheme.typography.body.copy(fontSize = TreeSelectDefaults.FontSize),
+                                style = PaletteTheme.typography.body.copy(fontSize = fontSize),
                             )
                         } else {
                             displayNodes.forEach { node ->
@@ -228,6 +239,11 @@ fun PTreeSelect(
                                     expandedKeys = expandedKeys,
                                     hoveredKey = hoveredKey,
                                     colors = colors,
+                                    nodeHeight = nodeHeight,
+                                    indent = indent,
+                                    arrowSize = arrowSize,
+                                    iconSpacing = iconSpacing,
+                                    fontSize = fontSize,
                                     onExpandToggle = { key ->
                                         setExpandedKeys(
                                             if (key in expandedKeys) expandedKeys - key
@@ -258,6 +274,11 @@ private fun TreeNodeItem(
     expandedKeys: Set<String>,
     hoveredKey: String?,
     colors: TreeSelectColors,
+    nodeHeight: Dp,
+    indent: Dp,
+    arrowSize: Dp,
+    iconSpacing: Dp,
+    fontSize: TextUnit,
     onExpandToggle: (String) -> Unit,
     onHover: (String?) -> Unit,
     onSelect: (String) -> Unit,
@@ -270,7 +291,7 @@ private fun TreeNodeItem(
     val isItemHovered by interactionSource.collectIsHoveredAsState()
 
     val backgroundColor = when {
-        isSelected -> colors.selectedNodeTextColor.copy(alpha = 0.08f)
+        isSelected -> colors.selectedNodeContainerColor
         isHovered || isItemHovered -> colors.hoverColor
         else -> Color.Transparent
     }
@@ -283,13 +304,13 @@ private fun TreeNodeItem(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .height(TreeSelectDefaults.NodeHeight)
+            .height(nodeHeight)
             .hoverable(interactionSource, enabled = !node.disabled)
             .background(backgroundColor)
             .clickable(enabled = !node.disabled) {
                 onSelect(node.value)
             }
-            .padding(start = (level * TreeSelectDefaults.Indent.value).dp),
+            .padding(start = indent * level.toFloat()),
         verticalAlignment = Alignment.CenterVertically
     ) {
         if (hasChildren) {
@@ -297,21 +318,21 @@ private fun TreeNodeItem(
                 imageVector = if (isExpanded) Icons.Default.KeyboardArrowDown else Icons.AutoMirrored.Filled.KeyboardArrowRight,
                 contentDescription = null,
                 modifier = Modifier
-                    .size(TreeSelectDefaults.ArrowSize)
+                    .size(arrowSize)
                     .clickable(enabled = !node.disabled) {
                         onExpandToggle(node.value)
                     },
                 tint = if (node.disabled) colors.disabledNodeTextColor else colors.iconColor
             )
-            Spacer(modifier = Modifier.width(4.dp))
+            Spacer(modifier = Modifier.width(iconSpacing))
         } else {
-            Spacer(modifier = Modifier.width(TreeSelectDefaults.ArrowSize + 4.dp))
+            Spacer(modifier = Modifier.width(arrowSize + iconSpacing))
         }
 
         Text(
             text = node.label,
             modifier = Modifier.weight(1f),
-            style = PaletteTheme.typography.body.copy(fontSize = TreeSelectDefaults.FontSize),
+            style = PaletteTheme.typography.body.copy(fontSize = fontSize),
             color = textColor,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis
@@ -327,6 +348,11 @@ private fun TreeNodeItem(
                 expandedKeys = expandedKeys,
                 hoveredKey = hoveredKey,
                 colors = colors,
+                nodeHeight = nodeHeight,
+                indent = indent,
+                arrowSize = arrowSize,
+                iconSpacing = iconSpacing,
+                fontSize = fontSize,
                 onExpandToggle = onExpandToggle,
                 onHover = onHover,
                 onSelect = onSelect

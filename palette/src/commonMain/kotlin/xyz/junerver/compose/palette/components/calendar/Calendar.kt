@@ -25,9 +25,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.unit.dp
 import kotlinx.datetime.Clock
 import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.DayOfWeek
@@ -65,7 +63,7 @@ fun PCalendar(
     val gridData = computeCalendarGridData(currentYear, currentMonth)
 
     Surface(
-        modifier = modifier.clip(RoundedCornerShape(CalendarDefaults.CornerRadius)),
+        modifier = modifier.clip(RoundedCornerShape(CalendarDefaults.cornerRadius())),
         color = CalendarDefaults.containerColor(),
     ) {
         Column {
@@ -106,7 +104,7 @@ private fun CalendarHeader(
     onNext: () -> Unit,
 ) {
     Row(
-        modifier = Modifier.fillMaxWidth().height(CalendarDefaults.HeaderHeight),
+        modifier = Modifier.fillMaxWidth().height(CalendarDefaults.headerHeight()),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically,
     ) {
@@ -120,8 +118,7 @@ private fun CalendarHeader(
         Text(
             text = "${year}年${month.toString().padStart(2, '0')}月",
             color = CalendarDefaults.headerColor(),
-            fontSize = CalendarDefaults.HeaderFontSize,
-            fontWeight = FontWeight.Medium,
+            style = CalendarDefaults.headerTextStyle(),
         )
         IconButton(onClick = onNext) {
             Icon(
@@ -136,19 +133,19 @@ private fun CalendarHeader(
 @Composable
 private fun DayOfWeekRow() {
     Row(
-        modifier = Modifier.fillMaxWidth().height(CalendarDefaults.DayOfWeekHeight),
+        modifier = Modifier.fillMaxWidth().height(CalendarDefaults.dayOfWeekHeight()),
         horizontalArrangement = Arrangement.SpaceEvenly,
         verticalAlignment = Alignment.CenterVertically,
     ) {
         DAY_OF_WEEK_LABELS.forEach { label ->
             Box(
-                modifier = Modifier.size(CalendarDefaults.CellSize),
+                modifier = Modifier.size(CalendarDefaults.cellSize()),
                 contentAlignment = Alignment.Center,
             ) {
                 Text(
                     text = label,
                     color = CalendarDefaults.dayOfWeekColor(),
-                    fontSize = CalendarDefaults.DayOfWeekFontSize,
+                    style = CalendarDefaults.dayOfWeekTextStyle(),
                     textAlign = TextAlign.Center,
                 )
             }
@@ -168,8 +165,12 @@ private fun CalendarGrid(
     val selectedColor = CalendarDefaults.selectedColor()
     val selectedTextColor = CalendarDefaults.selectedTextColor()
     val todayBorderColor = CalendarDefaults.todayBorderColor()
+    val todayBorderWidth = CalendarDefaults.todayBorderWidth()
     val dayColor = CalendarDefaults.dayColor()
     val disabledColor = CalendarDefaults.disabledColor()
+    val selectedCircleSize = CalendarDefaults.selectedCircleSize()
+    val cellSize = CalendarDefaults.cellSize()
+    val dayTextStyle = CalendarDefaults.dayTextStyle()
 
     Column(modifier = Modifier.fillMaxWidth()) {
         gridData.forEach { week ->
@@ -186,8 +187,12 @@ private fun CalendarGrid(
                         selectedColor = selectedColor,
                         selectedTextColor = selectedTextColor,
                         todayBorderColor = todayBorderColor,
+                        todayBorderWidth = todayBorderWidth,
                         dayColor = dayColor,
                         disabledColor = disabledColor,
+                        selectedCircleSize = selectedCircleSize,
+                        cellSize = cellSize,
+                        dayTextStyle = dayTextStyle,
                         onDateSelect = onDateSelect,
                     )
                 }
@@ -205,8 +210,12 @@ private fun CalendarDayCell(
     selectedColor: Color,
     selectedTextColor: Color,
     todayBorderColor: Color,
+    todayBorderWidth: androidx.compose.ui.unit.Dp,
     dayColor: Color,
     disabledColor: Color,
+    selectedCircleSize: androidx.compose.ui.unit.Dp,
+    cellSize: androidx.compose.ui.unit.Dp,
+    dayTextStyle: androidx.compose.ui.text.TextStyle,
     onDateSelect: (LocalDate) -> Unit,
 ) {
     val textColor = when {
@@ -217,12 +226,12 @@ private fun CalendarDayCell(
 
     val circleModifier = when {
         isSelected -> Modifier
-            .size(CalendarDefaults.SelectedCircleSize)
+            .size(selectedCircleSize)
             .background(selectedColor, CircleShape)
         isToday -> Modifier
-            .size(CalendarDefaults.SelectedCircleSize)
-            .border(1.dp, todayBorderColor, CircleShape)
-        else -> Modifier.size(CalendarDefaults.SelectedCircleSize)
+            .size(selectedCircleSize)
+            .border(todayBorderWidth, todayBorderColor, CircleShape)
+        else -> Modifier.size(selectedCircleSize)
     }
 
     val clickableModifier = if (cell.date != null && isEnabled) {
@@ -232,7 +241,7 @@ private fun CalendarDayCell(
     }
 
     Box(
-        modifier = Modifier.size(CalendarDefaults.CellSize),
+        modifier = Modifier.size(cellSize),
         contentAlignment = Alignment.Center,
     ) {
         Box(
@@ -243,7 +252,7 @@ private fun CalendarDayCell(
                 Text(
                     text = cell.day.toString(),
                     color = textColor,
-                    fontSize = CalendarDefaults.FontSize,
+                    style = dayTextStyle,
                     textAlign = TextAlign.Center,
                 )
             }

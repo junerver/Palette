@@ -10,9 +10,13 @@ object TimePickerDefaults {
 
     @Composable
     @ReadOnlyComposable
-    fun placeholderColor(): Color = PaletteTheme.colors.hint
+    fun placeholderColor(): Color = PaletteTheme.componentThemes.dateTime.inputPlaceholderColor
 
     @Composable
     @ReadOnlyComposable
-    fun textColor(): Color = PaletteTheme.colors.onSurface
+    fun textColor(): Color = PaletteTheme.componentThemes.dateTime.inputTextColor
+
+    @Composable
+    @ReadOnlyComposable
+    fun iconColor(): Color = PaletteTheme.componentThemes.dateTime.inputIconColor
 }

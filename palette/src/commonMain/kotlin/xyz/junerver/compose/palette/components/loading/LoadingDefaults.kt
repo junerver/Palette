@@ -18,13 +18,61 @@ object LoadingDefaults {
     val AnimationDuration: Int = 1000
 
     @Composable
-    fun color(): Color = PaletteTheme.colors.primary
+    fun size(): Dp = PaletteTheme.componentThemes.progress.loadingSize
 
     @Composable
-    fun outlineColor(): Color = PaletteTheme.colors.border
+    fun dotSize(): Dp = PaletteTheme.componentThemes.progress.loadingDotSize
 
     @Composable
-    fun onPrimaryColor(): Color = PaletteTheme.colors.onPrimary
+    fun strokeWidth(): Dp = PaletteTheme.componentThemes.progress.loadingStrokeWidth
+
+    @Composable
+    fun mobileSize(): Dp = PaletteTheme.componentThemes.progress.loadingMobileSize
+
+    @Composable
+    fun webSize(): Dp = PaletteTheme.componentThemes.progress.loadingWebSize
+
+    @Composable
+    fun multipointWidth(): Dp = PaletteTheme.componentThemes.progress.loadingMultipointWidth
+
+    @Composable
+    fun multipointHeight(): Dp = PaletteTheme.componentThemes.progress.loadingMultipointHeight
+
+    @Composable
+    fun minDotsWidth(): Dp = PaletteTheme.componentThemes.progress.loadingMinDotsWidth
+
+    @Composable
+    fun circleOrbitInset(): Dp = PaletteTheme.componentThemes.progress.loadingCircleOrbitInset
+
+    @Composable
+    fun bounceOffset(): Dp = PaletteTheme.componentThemes.progress.loadingBounceOffset
+
+    @Composable
+    fun activeDotAlpha(): Float = PaletteTheme.componentThemes.progress.loadingActiveDotAlpha
+
+    @Composable
+    fun inactiveDotAlpha(): Float = PaletteTheme.componentThemes.progress.loadingInactiveDotAlpha
+
+    @Composable
+    fun animationDurationMillis(): Int = PaletteTheme.componentThemes.progress.loadingDotsAnimationDurationMillis
+
+    @Composable
+    fun barsAnimationDurationMillis(): Int = PaletteTheme.componentThemes.progress.loadingBarsAnimationDurationMillis
+
+    @Composable
+    fun barsDelayMillis(): Int = PaletteTheme.componentThemes.progress.loadingBarsDelayMillis
+
+    @Composable
+    fun circleAnimationDurationMillis(): Int = PaletteTheme.componentThemes.progress.loadingCircleAnimationDurationMillis
+
+    @Composable
+    fun color(): Color = PaletteTheme.componentThemes.progress.loadingColor
+
+    @Composable
+    fun outlineColor(): Color = PaletteTheme.componentThemes.progress.loadingOutlineColor
+
+    @Composable
+    fun onPrimaryColor(): Color = PaletteTheme.componentThemes.progress.loadingOnPrimaryColor
 }
 
 

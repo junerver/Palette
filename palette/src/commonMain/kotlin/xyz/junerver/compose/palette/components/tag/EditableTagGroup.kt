@@ -40,11 +40,12 @@ fun PEditableTagGroup(
     val (isEditing, setIsEditing) = useState(false)
     val (inputText, setInputText) = useState("")
     val sizeTokens = TagDefaults.sizeTokens(size)
+    val fieldTokens = PaletteTheme.componentThemes.textField
 
     FlowRow(
         modifier = modifier,
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
-        verticalArrangement = Arrangement.spacedBy(8.dp)
+        horizontalArrangement = Arrangement.spacedBy(TagDefaults.itemSpacing()),
+        verticalArrangement = Arrangement.spacedBy(TagDefaults.itemSpacing())
     ) {
         // 显示现有标签
         tags.forEach { tag ->
@@ -66,10 +67,10 @@ fun PEditableTagGroup(
             Surface(
                 modifier = Modifier.padding(0.dp),
                 shape = RoundedCornerShape(sizeTokens.cornerRadius),
-                color = PaletteTheme.colors.surface,
+                color = fieldTokens.backgroundColor,
                 border = androidx.compose.foundation.BorderStroke(
-                    1.dp,
-                    PaletteTheme.colors.border
+                    TagDefaults.borderWidth(),
+                    fieldTokens.borderColor
                 )
             ) {
                 Row(
@@ -77,7 +78,7 @@ fun PEditableTagGroup(
                         .padding(horizontal = sizeTokens.horizontalPadding)
                         .size(width = 120.dp, height = sizeTokens.height),
                     verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(4.dp)
+                        horizontalArrangement = Arrangement.spacedBy(4.dp)
                 ) {
                     BasicTextField(
                         value = inputText,
@@ -85,9 +86,9 @@ fun PEditableTagGroup(
                         modifier = Modifier.weight(1f),
                         textStyle = PaletteTheme.typography.body.copy(
                             fontSize = sizeTokens.fontSize,
-                            color = PaletteTheme.colors.onSurface
+                            color = fieldTokens.textColor
                         ),
-                        cursorBrush = SolidColor(PaletteTheme.colors.primary),
+                        cursorBrush = SolidColor(fieldTokens.cursorColor),
                         singleLine = true,
                         decorationBox = { innerTextField ->
                             if (inputText.isEmpty()) {
@@ -95,7 +96,7 @@ fun PEditableTagGroup(
                                     text = placeholder,
                                     style = PaletteTheme.typography.body.copy(
                                         fontSize = sizeTokens.fontSize,
-                                        color = PaletteTheme.colors.hint
+                                        color = fieldTokens.placeholderColor
                                     )
                                 )
                             }
@@ -118,7 +119,7 @@ fun PEditableTagGroup(
                             imageVector = Icons.Default.Check,
                             contentDescription = "Confirm",
                             tint = PaletteTheme.colors.success,
-                            modifier = Modifier.size(sizeTokens.closeButtonSize * 0.7f)
+                            modifier = Modifier.size(sizeTokens.closeButtonSize * TagDefaults.closeIconScale())
                         )
                     }
 
@@ -134,7 +135,7 @@ fun PEditableTagGroup(
                             imageVector = Icons.Default.Close,
                             contentDescription = "Cancel",
                             tint = PaletteTheme.colors.error,
-                            modifier = Modifier.size(sizeTokens.closeButtonSize * 0.7f)
+                            modifier = Modifier.size(sizeTokens.closeButtonSize * TagDefaults.closeIconScale())
                         )
                     }
                 }
@@ -145,8 +146,8 @@ fun PEditableTagGroup(
                 onClick = { setIsEditing(true) },
                 modifier = Modifier.size(height = sizeTokens.height, width = sizeTokens.height),
                 shape = RoundedCornerShape(sizeTokens.cornerRadius),
-                color = PaletteTheme.colors.primary.copy(alpha = 0.12f),
-                contentColor = PaletteTheme.colors.primary
+                color = TagDefaults.defaultColors().containerColor,
+                contentColor = TagDefaults.defaultColors().contentColor
             ) {
                 Row(
                     modifier = Modifier.padding(4.dp),

@@ -1,6 +1,7 @@
 package xyz.junerver.compose.palette.components.progress
 
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
@@ -20,17 +21,20 @@ import androidx.compose.ui.unit.TextUnit
 fun PDashboardProgress(
     percent: Float,
     modifier: Modifier = Modifier,
-    size: Dp = DashboardProgressDefaults.Size,
-    strokeWidth: Dp = DashboardProgressDefaults.StrokeWidth,
-    fontSize: TextUnit = DashboardProgressDefaults.FontSize,
+    size: Dp = DashboardProgressDefaults.size(),
+    strokeWidth: Dp = DashboardProgressDefaults.strokeWidth(),
+    fontSize: TextUnit = DashboardProgressDefaults.fontSize(),
     progressColor: Color = DashboardProgressDefaults.progressColor(),
     trackColor: Color = DashboardProgressDefaults.trackColor(),
     textColor: Color = DashboardProgressDefaults.textColor(),
     formatter: ((Float) -> String)? = DashboardProgressDefaults::defaultFormatter
 ) {
     val localPercent = percent.coerceIn(0f, 100f)
+    val startAngle = DashboardProgressDefaults.startAngle()
+    val sweepAngle = DashboardProgressDefaults.sweepAngle()
     val animatedSweep by animateFloatAsState(
-        targetValue = DashboardProgressDefaults.SweepAngle * (localPercent / 100f),
+        targetValue = sweepAngle * (localPercent / 100f),
+        animationSpec = tween(DashboardProgressDefaults.animationDurationMillis()),
         label = "DashboardProgressAnimation"
     )
 
@@ -41,8 +45,8 @@ fun PDashboardProgress(
         Canvas(modifier = Modifier.fillMaxSize()) {
             drawArc(
                 color = trackColor,
-                startAngle = DashboardProgressDefaults.StartAngle,
-                sweepAngle = DashboardProgressDefaults.SweepAngle,
+                startAngle = startAngle,
+                sweepAngle = sweepAngle,
                 useCenter = false,
                 style = Stroke(
                     width = strokeWidth.toPx(),
@@ -51,7 +55,7 @@ fun PDashboardProgress(
             )
             drawArc(
                 color = progressColor,
-                startAngle = DashboardProgressDefaults.StartAngle,
+                startAngle = startAngle,
                 sweepAngle = animatedSweep,
                 useCenter = false,
                 style = Stroke(
@@ -65,7 +69,8 @@ fun PDashboardProgress(
             Text(
                 text = it(localPercent),
                 color = textColor,
-                fontSize = fontSize
+                fontSize = fontSize,
+                style = DashboardProgressDefaults.textStyle()
             )
         }
     }

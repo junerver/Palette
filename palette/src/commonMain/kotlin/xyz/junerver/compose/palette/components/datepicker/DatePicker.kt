@@ -43,7 +43,7 @@ fun PDatePicker(
         status = ComponentStatus.Default,
         trailingIcon = {
             Row(
-                horizontalArrangement = Arrangement.spacedBy(DatePickerDefaults.CalendarIconSpacing),
+                horizontalArrangement = Arrangement.spacedBy(DatePickerDefaults.iconSpacing()),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 if (value != null) {
@@ -55,7 +55,7 @@ fun PDatePicker(
                 Icon(
                     imageVector = Icons.Default.DateRange,
                     contentDescription = null,
-                    tint = DatePickerDefaults.placeholderColor()
+                    tint = DatePickerDefaults.iconColor()
                 )
             }
         }

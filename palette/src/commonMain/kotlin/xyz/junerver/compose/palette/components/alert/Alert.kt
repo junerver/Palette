@@ -27,8 +27,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.dp
 import xyz.junerver.compose.hooks.useState
 import xyz.junerver.compose.palette.components.text.PText
 
@@ -52,15 +50,18 @@ fun PAlert(
         val containerColor = AlertDefaults.containerColor(type)
         val borderColor = AlertDefaults.borderColor(type)
         val contentColor = AlertDefaults.contentColor(type)
-        val shape = RoundedCornerShape(AlertDefaults.CornerRadius)
+        val iconSize = AlertDefaults.iconSize()
+        val iconSpacing = AlertDefaults.iconSpacing()
+        val closeIconSize = AlertDefaults.closeIconSize()
+        val shape = RoundedCornerShape(AlertDefaults.cornerRadius())
 
         Row(
             modifier = modifier
                 .fillMaxWidth()
                 .clip(shape)
                 .background(containerColor)
-                .border(AlertDefaults.BorderWidth, borderColor, shape)
-                .padding(AlertDefaults.ContentPadding),
+                .border(AlertDefaults.borderWidth(), borderColor, shape)
+                .padding(AlertDefaults.contentPadding()),
             verticalAlignment = Alignment.Top
         ) {
             if (icon != null) {
@@ -70,48 +71,47 @@ fun PAlert(
                     imageVector = iconForType(type),
                     contentDescription = null,
                     tint = contentColor,
-                    modifier = Modifier.size(AlertDefaults.IconSize)
+                    modifier = Modifier.size(iconSize)
                 )
             }
 
-            Spacer(modifier = Modifier.width(AlertDefaults.IconSpacing))
+            Spacer(modifier = Modifier.width(iconSpacing))
 
             Column(modifier = Modifier.weight(1f)) {
                 PText(
                     text = message,
                     color = contentColor,
-                    fontSize = AlertDefaults.MessageFontSize,
-                    fontWeight = FontWeight.Bold
+                    style = AlertDefaults.messageTextStyle()
                 )
                 if (description != null) {
-                    Spacer(modifier = Modifier.height(4.dp))
+                    Spacer(modifier = Modifier.height(AlertDefaults.messageDescriptionSpacing()))
                     PText(
                         text = description,
-                        color = contentColor.copy(alpha = 0.8f),
-                        fontSize = AlertDefaults.DescriptionFontSize
+                        color = contentColor.copy(alpha = AlertDefaults.descriptionAlpha()),
+                        style = AlertDefaults.descriptionTextStyle()
                     )
                 }
             }
 
             if (action != null) {
-                Spacer(modifier = Modifier.width(AlertDefaults.IconSpacing))
+                Spacer(modifier = Modifier.width(iconSpacing))
                 action()
             }
 
             if (closable) {
-                Spacer(modifier = Modifier.width(AlertDefaults.IconSpacing))
+                Spacer(modifier = Modifier.width(iconSpacing))
                 IconButton(
                     onClick = {
                         setVisible(false)
                         onClose?.invoke()
                     },
-                    modifier = Modifier.size(AlertDefaults.CloseIconSize)
+                    modifier = Modifier.size(closeIconSize)
                 ) {
                     Icon(
                         imageVector = Icons.Default.Close,
                         contentDescription = "Close",
-                        tint = contentColor.copy(alpha = 0.6f),
-                        modifier = Modifier.size(AlertDefaults.CloseIconSize * 0.75f)
+                        tint = contentColor.copy(alpha = AlertDefaults.closeIconAlpha()),
+                        modifier = Modifier.size(closeIconSize * 0.75f)
                     )
                 }
             }

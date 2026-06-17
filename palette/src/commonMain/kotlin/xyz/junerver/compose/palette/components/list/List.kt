@@ -67,7 +67,7 @@ fun <T> PList(
                 itemContent(item)
                 if (showDivider) {
                     HorizontalDivider(
-                        thickness = ListDefaults.DividerHeight,
+                        thickness = ListDefaults.dividerHeight(),
                         color = ListDefaults.dividerColor()
                     )
                 }

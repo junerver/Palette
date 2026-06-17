@@ -29,9 +29,13 @@ import kotlin.math.sin
 @Composable
 fun PLoadingDots(
     color: Color = LoadingDefaults.outlineColor(),
-    animationSpec: DurationBasedAnimationSpec<Float> = tween(durationMillis = 1000),
-    width: Dp = LoadingDefaults.MPWidth
+    animationSpec: DurationBasedAnimationSpec<Float> = tween(durationMillis = LoadingDefaults.animationDurationMillis()),
+    width: Dp = LoadingDefaults.multipointWidth()
 ) {
+    val dotSize = LoadingDefaults.dotSize()
+    val multipointHeight = LoadingDefaults.multipointHeight()
+    val activeDotAlpha = LoadingDefaults.activeDotAlpha()
+    val inactiveDotAlpha = LoadingDefaults.inactiveDotAlpha()
     val infiniteTransition = rememberInfiniteTransition(label = "")
     val currentIndex by infiniteTransition.animateFloat(
         initialValue = 0f,
@@ -43,14 +47,14 @@ fun PLoadingDots(
         label = "PLoadingDotsAnimation"
     )
 
-    val resolvedWidth = width.coerceAtLeast(LoadingDefaults.MinDotsWidth)
-    Canvas(modifier = Modifier.size(width = resolvedWidth, height = LoadingDefaults.MPHeight)) {
-        val dotRadius = LoadingDefaults.DotSize.toPx()
+    val resolvedWidth = width.coerceAtLeast(LoadingDefaults.minDotsWidth())
+    Canvas(modifier = Modifier.size(width = resolvedWidth, height = multipointHeight)) {
+        val dotRadius = dotSize.toPx()
         val spacing = (size.width - 2 * dotRadius) / 2
 
         repeat(3) { index ->
             val isActive = index == currentIndex.roundToInt()
-            val dotColor = color.copy(alpha = if (isActive) 0.8f else 0.4f)
+            val dotColor = color.copy(alpha = if (isActive) activeDotAlpha else inactiveDotAlpha)
             val center = Offset(
                 x = dotRadius + spacing * index,
                 y = size.height / 2
@@ -67,6 +71,10 @@ fun PLoadingDots(
 
 @Composable
 fun PLoadingBars(color: Color = LoadingDefaults.color()) {
+    val webSize = LoadingDefaults.webSize()
+    val strokeWidthToken = LoadingDefaults.strokeWidth()
+    val animationDurationMillis = LoadingDefaults.barsAnimationDurationMillis()
+    val delayMillis = LoadingDefaults.barsDelayMillis()
     val infiniteTransition = rememberInfiniteTransition(label = "")
     val animations = List(3) { index ->
         val alpha by infiniteTransition.animateFloat(
@@ -74,8 +82,8 @@ fun PLoadingBars(color: Color = LoadingDefaults.color()) {
             targetValue = 1f,
             animationSpec = infiniteRepeatable(
                 animation = tween(
-                    durationMillis = 400,
-                    delayMillis = index * 100,
+                    durationMillis = animationDurationMillis,
+                    delayMillis = index * delayMillis,
                     easing = LinearEasing
                 ),
                 repeatMode = RepeatMode.Reverse
@@ -87,8 +95,8 @@ fun PLoadingBars(color: Color = LoadingDefaults.color()) {
             targetValue = 1f,
             animationSpec = infiniteRepeatable(
                 animation = tween(
-                    durationMillis = 400,
-                    delayMillis = index * 100,
+                    durationMillis = animationDurationMillis,
+                    delayMillis = index * delayMillis,
                     easing = LinearEasing
                 ),
                 repeatMode = RepeatMode.Reverse
@@ -98,9 +106,9 @@ fun PLoadingBars(color: Color = LoadingDefaults.color()) {
         Pair(alpha, scaleY)
     }
 
-    Canvas(modifier = Modifier.size(LoadingDefaults.WebSize)) {
+    Canvas(modifier = Modifier.size(webSize)) {
         animations.forEachIndexed { index, item ->
-            val strokeWidth = LoadingDefaults.StrokeWidth.toPx() * 2
+            val strokeWidth = strokeWidthToken.toPx() * 2
             val spacing = (size.width - (3 * strokeWidth)) / 2
 
             scale(scaleX = 1f, scaleY = item.second) {
@@ -126,10 +134,14 @@ fun PLoadingCircle(
     borderColor: Color = LoadingDefaults.onPrimaryColor(),
     dotColor: Color = borderColor,
     animationSpec: DurationBasedAnimationSpec<Float> = tween(
-        durationMillis = 1200,
+        durationMillis = LoadingDefaults.circleAnimationDurationMillis(),
         easing = LinearEasing
     )
 ) {
+    val mobileSize = LoadingDefaults.mobileSize()
+    val strokeWidth = LoadingDefaults.strokeWidth()
+    val circleOrbitInset = LoadingDefaults.circleOrbitInset()
+    val dotSize = LoadingDefaults.dotSize()
     val infiniteTransition = rememberInfiniteTransition(label = "")
     val angle = infiniteTransition.animateFloat(
         initialValue = 0f,
@@ -143,11 +155,11 @@ fun PLoadingCircle(
 
     Canvas(
         modifier = Modifier
-            .size(LoadingDefaults.MobileSize)
-            .border(LoadingDefaults.StrokeWidth, borderColor, CircleShape)
+            .size(mobileSize)
+            .border(strokeWidth, borderColor, CircleShape)
     ) {
-        val circleRadius = size.minDimension / 2 - Dp(8f).toPx()
-        val dotRadius = LoadingDefaults.DotSize.toPx()
+        val circleRadius = size.minDimension / 2 - circleOrbitInset.toPx()
+        val dotRadius = dotSize.toPx()
         val center = size.center
         val angleRad = angle.value * PI / 180.0
         val dotX = cos(angleRad) * circleRadius + center.x
@@ -160,10 +172,13 @@ fun PLoadingCircle(
 @Composable
 fun PLoadingBounce(
     color: Color = LoadingDefaults.color(),
-    width: Dp = LoadingDefaults.MPWidth
+    width: Dp = LoadingDefaults.multipointWidth()
 ) {
+    val multipointHeight = LoadingDefaults.multipointHeight()
+    val dotSize = LoadingDefaults.dotSize()
+    val bounceOffset = LoadingDefaults.bounceOffset()
     val infiniteTransition = rememberInfiniteTransition(label = "")
-    val offsetY = LocalDensity.current.run { 3.toDp().toPx() }
+    val offsetY = LocalDensity.current.run { bounceOffset.toPx() }
     val animations = List(3) { index ->
         val value by infiniteTransition.animateFloat(
             initialValue = -offsetY,
@@ -181,8 +196,8 @@ fun PLoadingBounce(
         value
     }
 
-    Canvas(modifier = Modifier.size(width = width, height = LoadingDefaults.MPHeight)) {
-        val dotRadius = LoadingDefaults.DotSize.toPx()
+    Canvas(modifier = Modifier.size(width = width, height = multipointHeight)) {
+        val dotRadius = dotSize.toPx()
         val spacing = (size.width - 2 * dotRadius) / 2
 
         animations.forEachIndexed { index, item ->
@@ -202,12 +217,12 @@ fun PLoadingBounce(
 
 @Composable
 fun PLoading(
-    size: Dp = LoadingDefaults.Size,
+    size: Dp = LoadingDefaults.size(),
     color: Color = LoadingDefaults.color()
 ) {
     PLoadingDots(
         color = color,
-        animationSpec = tween(durationMillis = LoadingDefaults.AnimationDuration),
+        animationSpec = tween(durationMillis = LoadingDefaults.animationDurationMillis()),
         width = size
     )
 }

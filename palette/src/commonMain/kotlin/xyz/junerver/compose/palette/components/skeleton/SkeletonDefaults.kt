@@ -18,9 +18,44 @@ object SkeletonDefaults {
     val LineBorderRadius: Dp = 8.dp
 
     @Composable
-    fun backgroundColor(): Color = if (PaletteTheme.isDark) {
-        PaletteTheme.colors.onSurface.copy(alpha = 0.12f)
-    } else {
-        PaletteTheme.colors.onSurface.copy(alpha = 0.08f)
-    }
+    fun circleSize(): Dp = PaletteTheme.componentThemes.progress.skeletonCircleSize
+
+    @Composable
+    fun squareSize(): Dp = PaletteTheme.componentThemes.progress.skeletonSquareSize
+
+    @Composable
+    fun squareBorderRadius(): Dp = PaletteTheme.componentThemes.progress.skeletonSquareBorderRadius
+
+    @Composable
+    fun rectangleHeight(): Dp = PaletteTheme.componentThemes.progress.skeletonRectangleHeight
+
+    @Composable
+    fun rectangleBorderRadius(): Dp = PaletteTheme.componentThemes.progress.skeletonRectangleBorderRadius
+
+    @Composable
+    fun lineLongWidth(): Dp = PaletteTheme.componentThemes.progress.skeletonLineLongWidth
+
+    @Composable
+    fun lineShortWidth(): Dp = PaletteTheme.componentThemes.progress.skeletonLineShortWidth
+
+    @Composable
+    fun lineHeight(): Dp = PaletteTheme.componentThemes.progress.skeletonLineHeight
+
+    @Composable
+    fun lineBorderRadius(): Dp = PaletteTheme.componentThemes.progress.skeletonLineBorderRadius
+
+    @Composable
+    fun shimmerStartColor(): Color = PaletteTheme.componentThemes.progress.skeletonShimmerStartColor
+
+    @Composable
+    fun shimmerCenterColor(): Color = PaletteTheme.componentThemes.progress.skeletonShimmerCenterColor
+
+    @Composable
+    fun shimmerEndColor(): Color = PaletteTheme.componentThemes.progress.skeletonShimmerEndColor
+
+    @Composable
+    fun shimmerAnimationDurationMillis(): Int = PaletteTheme.componentThemes.progress.skeletonShimmerAnimationDurationMillis
+
+    @Composable
+    fun backgroundColor(): Color = PaletteTheme.componentThemes.progress.skeletonBackgroundColor
 }

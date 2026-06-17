@@ -12,11 +12,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.Dp
-import androidx.compose.ui.unit.dp
 
 @Composable
 fun PSkeletonCircle(
-    size: Dp = SkeletonDefaults.CircleSize,
+    size: Dp = SkeletonDefaults.circleSize(),
     isActive: Boolean = true,
     backgroundColor: Color = SkeletonDefaults.backgroundColor()
 ) {
@@ -31,8 +30,8 @@ fun PSkeletonCircle(
 
 @Composable
 fun PSkeletonSquare(
-    size: Dp = SkeletonDefaults.SquareSize,
-    borderRadius: Dp = SkeletonDefaults.SquareBorderRadius,
+    size: Dp = SkeletonDefaults.squareSize(),
+    borderRadius: Dp = SkeletonDefaults.squareBorderRadius(),
     isActive: Boolean = true,
     backgroundColor: Color = SkeletonDefaults.backgroundColor()
 ) {
@@ -47,8 +46,8 @@ fun PSkeletonSquare(
 
 @Composable
 fun PSkeletonRectangle(
-    height: Dp = SkeletonDefaults.RectangleHeight,
-    borderRadius: Dp = SkeletonDefaults.RectangleBorderRadius,
+    height: Dp = SkeletonDefaults.rectangleHeight(),
+    borderRadius: Dp = SkeletonDefaults.rectangleBorderRadius(),
     isActive: Boolean = true,
     backgroundColor: Color = SkeletonDefaults.backgroundColor()
 ) {
@@ -64,9 +63,9 @@ fun PSkeletonRectangle(
 
 @Composable
 fun PSkeletonLine(
-    width: Dp = SkeletonDefaults.LineLongWidth,
-    height: Dp = SkeletonDefaults.LineHeight,
-    borderRadius: Dp = SkeletonDefaults.LineBorderRadius,
+    width: Dp = SkeletonDefaults.lineLongWidth(),
+    height: Dp = SkeletonDefaults.lineHeight(),
+    borderRadius: Dp = SkeletonDefaults.lineBorderRadius(),
     isActive: Boolean = true,
     backgroundColor: Color = SkeletonDefaults.backgroundColor()
 ) {

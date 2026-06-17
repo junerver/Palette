@@ -2,6 +2,7 @@ package xyz.junerver.compose.palette.components.menu
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import xyz.junerver.compose.palette.core.theme.PaletteTheme
@@ -12,14 +13,29 @@ object MenuDefaults {
     val ItemCornerRadius: Dp = 8.dp
 
     @Composable
-    fun selectedContainerColor(): Color = PaletteTheme.colors.primary.copy(alpha = 0.12f)
+    fun itemPaddingHorizontal(): Dp = PaletteTheme.componentThemes.navigationMenu.itemPaddingHorizontal
 
     @Composable
-    fun selectedTextColor(): Color = PaletteTheme.colors.primary
+    fun itemPaddingVertical(): Dp = PaletteTheme.componentThemes.navigationMenu.itemPaddingVertical
 
     @Composable
-    fun textColor(): Color = PaletteTheme.colors.onSurface
+    fun itemCornerRadius(): Dp = PaletteTheme.componentThemes.navigationMenu.itemCornerRadius
 
     @Composable
-    fun disabledTextColor(): Color = PaletteTheme.colors.hint
+    fun itemOuterSpacing(): Dp = PaletteTheme.componentThemes.navigationMenu.itemOuterSpacing
+
+    @Composable
+    fun itemTextStyle(): TextStyle = PaletteTheme.componentThemes.navigationMenu.itemTextStyle
+
+    @Composable
+    fun selectedContainerColor(): Color = PaletteTheme.componentThemes.navigationMenu.selectedContainerColor
+
+    @Composable
+    fun selectedTextColor(): Color = PaletteTheme.componentThemes.navigationMenu.selectedTextColor
+
+    @Composable
+    fun textColor(): Color = PaletteTheme.componentThemes.navigationMenu.textColor
+
+    @Composable
+    fun disabledTextColor(): Color = PaletteTheme.componentThemes.navigationMenu.disabledTextColor
 }

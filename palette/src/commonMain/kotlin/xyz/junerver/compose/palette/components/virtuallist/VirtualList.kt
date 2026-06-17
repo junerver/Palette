@@ -25,11 +25,12 @@ fun <T> PVirtualList(
             Text(
                 text = itemText(item),
                 color = VirtualListDefaults.itemContentColor(),
+                style = VirtualListDefaults.textStyle(),
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(VirtualListDefaults.ItemHeight)
+                    .height(VirtualListDefaults.itemHeight())
                     .background(VirtualListDefaults.itemColor())
-                    .padding(VirtualListDefaults.ItemPadding)
+                    .padding(VirtualListDefaults.itemPadding())
             )
         }
     }

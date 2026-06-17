@@ -27,18 +27,18 @@ fun PTimeline(
         items.forEachIndexed { index, item ->
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(TimelineDefaults.DotToContent)
+                horizontalArrangement = Arrangement.spacedBy(TimelineDefaults.dotToContent())
             ) {
                 Column(
                     horizontalAlignment = Alignment.CenterHorizontally,
-                    modifier = Modifier.width(TimelineDefaults.DotSize)
+                    modifier = Modifier.width(TimelineDefaults.dotSize())
                 ) {
                     if (item.dot != null) {
                         item.dot.invoke()
                     } else {
                         Box(
                             modifier = Modifier
-                                .size(TimelineDefaults.DotSize)
+                                .size(TimelineDefaults.dotSize())
                                 .clip(CircleShape)
                                 .background(item.color ?: TimelineDefaults.dotColor())
                         )
@@ -46,8 +46,8 @@ fun PTimeline(
 
                     if (index < items.size - 1) {
                         VerticalDivider(
-                            modifier = Modifier.height(TimelineDefaults.ItemSpacing),
-                            thickness = TimelineDefaults.LineWidth,
+                            modifier = Modifier.height(TimelineDefaults.itemSpacing()),
+                            thickness = TimelineDefaults.lineWidth(),
                             color = lineColor
                         )
                     }
@@ -56,7 +56,7 @@ fun PTimeline(
                 Box(
                     modifier = Modifier
                         .weight(1f)
-                        .padding(bottom = if (index < items.size - 1) TimelineDefaults.ItemSpacing else 0.dp)
+                        .padding(bottom = if (index < items.size - 1) TimelineDefaults.itemSpacing() else 0.dp)
                 ) {
                     item.content()
                 }

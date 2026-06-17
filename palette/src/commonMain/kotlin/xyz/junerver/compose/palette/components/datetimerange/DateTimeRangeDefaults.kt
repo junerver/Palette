@@ -8,13 +8,13 @@ import xyz.junerver.compose.palette.core.theme.PaletteTheme
 object DateTimeRangeDefaults {
     @Composable
     @ReadOnlyComposable
-    fun placeholderColor(): Color = PaletteTheme.colors.hint
+    fun placeholderColor(): Color = PaletteTheme.componentThemes.dateTime.inputPlaceholderColor
 
     @Composable
     @ReadOnlyComposable
-    fun textColor(): Color = PaletteTheme.colors.onSurface
+    fun textColor(): Color = PaletteTheme.componentThemes.dateTime.inputTextColor
 
     @Composable
     @ReadOnlyComposable
-    fun invalidColor(): Color = PaletteTheme.colors.error
+    fun invalidColor(): Color = PaletteTheme.componentThemes.dateTime.inputInvalidColor
 }

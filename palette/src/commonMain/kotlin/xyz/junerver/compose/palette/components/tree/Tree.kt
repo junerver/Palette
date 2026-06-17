@@ -62,13 +62,13 @@ private fun <T> TreeNodeItem(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .height(TreeDefaults.NodeHeight)
+            .height(TreeDefaults.nodeHeight())
             .background(
-                if (isSelected) TreeDefaults.selectedColor().copy(alpha = 0.12f)
+                if (isSelected) TreeDefaults.selectedContainerColor()
                 else Color.Transparent
             )
             .clickable { onSelect(node.key) }
-            .padding(start = (level * TreeDefaults.Indent.value).dp),
+            .padding(start = (level * TreeDefaults.indent().value).dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         if (hasChildren) {
@@ -80,7 +80,7 @@ private fun <T> TreeNodeItem(
                     PaletteTheme.strings.commonExpand
                 },
                 modifier = Modifier
-                    .size(TreeDefaults.IconSize)
+                    .size(TreeDefaults.iconSize())
                     .clickable {
                         val newKeys = if (isExpanded) {
                             expandedKeys - node.key
@@ -91,9 +91,9 @@ private fun <T> TreeNodeItem(
                     },
                 tint = TreeDefaults.iconColor()
             )
-            Spacer(modifier = Modifier.width(8.dp))
+            Spacer(modifier = Modifier.width(TreeDefaults.iconTextSpacing()))
         } else {
-            Spacer(modifier = Modifier.width(TreeDefaults.IconSize + 8.dp))
+            Spacer(modifier = Modifier.width(TreeDefaults.iconSize() + TreeDefaults.iconTextSpacing()))
         }
 
         nodeContent(node)

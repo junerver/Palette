@@ -20,6 +20,7 @@ data class TreeSelectColors(
     val dropdownContainerColor: Color,
     val nodeTextColor: Color,
     val selectedNodeTextColor: Color,
+    val selectedNodeContainerColor: Color,
     val disabledNodeTextColor: Color,
     val hoverColor: Color,
     val iconColor: Color,
@@ -42,19 +43,56 @@ object TreeSelectDefaults {
 
     @Composable
     @ReadOnlyComposable
+    fun borderWidth(): Dp = PaletteTheme.componentThemes.select.borderWidth
+
+    @Composable
+    @ReadOnlyComposable
+    fun dropdownWidth(): Dp = PaletteTheme.componentThemes.select.dropdownMinWidth
+
+    @Composable
+    @ReadOnlyComposable
+    fun dropdownMaxHeight(): Dp = PaletteTheme.componentThemes.select.dropdownMaxHeight
+
+    @Composable
+    @ReadOnlyComposable
+    fun nodeHeight(): Dp = PaletteTheme.componentThemes.select.optionHeight
+
+    @Composable
+    @ReadOnlyComposable
+    fun indent(): Dp = PaletteTheme.componentThemes.select.treeIndent
+
+    @Composable
+    @ReadOnlyComposable
+    fun fontSize(): TextUnit = PaletteTheme.componentThemes.select.optionTextStyle.fontSize
+
+    @Composable
+    @ReadOnlyComposable
+    fun arrowSize(): Dp = PaletteTheme.componentThemes.select.arrowSize
+
+    @Composable
+    @ReadOnlyComposable
+    fun searchPadding(): Dp = PaletteTheme.componentThemes.select.searchFieldPadding
+
+    @Composable
+    @ReadOnlyComposable
+    fun trailingIconAlpha(): Float = PaletteTheme.componentThemes.select.trailingIconAlpha
+
+    @Composable
+    @ReadOnlyComposable
     fun colors(
-        textColor: Color = PaletteTheme.colors.onSurface,
-        placeholderColor: Color = PaletteTheme.colors.hint,
-        disabledTextColor: Color = PaletteTheme.colors.onSurface.copy(alpha = 0.5f),
-        containerColor: Color = PaletteTheme.colors.surface,
-        dropdownContainerColor: Color = PaletteTheme.colors.surface,
-        nodeTextColor: Color = PaletteTheme.colors.onSurface,
-        selectedNodeTextColor: Color = PaletteTheme.colors.primary,
-        disabledNodeTextColor: Color = PaletteTheme.colors.hint,
-        hoverColor: Color = PaletteTheme.colors.border.copy(alpha = 0.5f),
-        iconColor: Color = PaletteTheme.colors.hint,
-        borderColor: Color = PaletteTheme.colors.border,
-        disabledBorderColor: Color = PaletteTheme.colors.border.copy(alpha = 0.5f),
+        textColor: Color = PaletteTheme.componentThemes.select.textColor,
+        placeholderColor: Color = PaletteTheme.componentThemes.select.placeholderColor,
+        disabledTextColor: Color = PaletteTheme.componentThemes.select.disabledTextColor,
+        containerColor: Color = PaletteTheme.componentThemes.select.containerColor,
+        dropdownContainerColor: Color = PaletteTheme.componentThemes.select.dropdownContainerColor,
+        nodeTextColor: Color = PaletteTheme.componentThemes.select.optionTextColor,
+        selectedNodeTextColor: Color = PaletteTheme.componentThemes.select.selectedOptionTextColor,
+        selectedNodeContainerColor: Color = PaletteTheme.componentThemes.select.selectedOptionContainerColor,
+        disabledNodeTextColor: Color = PaletteTheme.componentThemes.select.disabledOptionTextColor,
+        hoverColor: Color = PaletteTheme.componentThemes.select.hoverOptionContainerColor,
+        iconColor: Color = PaletteTheme.componentThemes.select.iconColor,
+        borderColor: Color = PaletteTheme.componentThemes.select.borderColor,
+        disabledBorderColor: Color = PaletteTheme.componentThemes.select.disabledBorderColor,
     ): TreeSelectColors = TreeSelectColors(
         textColor = textColor,
         placeholderColor = placeholderColor,
@@ -63,6 +101,7 @@ object TreeSelectDefaults {
         dropdownContainerColor = dropdownContainerColor,
         nodeTextColor = nodeTextColor,
         selectedNodeTextColor = selectedNodeTextColor,
+        selectedNodeContainerColor = selectedNodeContainerColor,
         disabledNodeTextColor = disabledNodeTextColor,
         hoverColor = hoverColor,
         iconColor = iconColor,

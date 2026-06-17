@@ -27,14 +27,14 @@ fun PFloatButton(
 ) {
     val resolvedShape: Shape = when (shape) {
         FloatButtonShape.Circle -> CircleShape
-        FloatButtonShape.Square -> RoundedCornerShape(FloatButtonDefaults.CornerRadius)
+        FloatButtonShape.Square -> RoundedCornerShape(FloatButtonDefaults.cornerRadius())
     }
     val containerColor = FloatButtonDefaults.containerColor()
 
     Box(
         modifier = modifier
-            .size(FloatButtonDefaults.Size)
-            .shadow(FloatButtonDefaults.Elevation, resolvedShape)
+            .size(FloatButtonDefaults.size())
+            .shadow(FloatButtonDefaults.elevation(), resolvedShape)
             .clip(resolvedShape)
             .background(containerColor)
             .clickable { onClick() },
@@ -44,12 +44,12 @@ fun PFloatButton(
             icon?.invoke()
             if (text != null) {
                 if (icon != null) {
-                    Spacer(modifier = Modifier.height(FloatButtonDefaults.TextPadding))
+                    Spacer(modifier = Modifier.height(FloatButtonDefaults.textPadding()))
                 }
                 PText(
                     text = text,
                     color = FloatButtonDefaults.textColor(),
-                    fontSize = FloatButtonDefaults.TextFontSize
+                    style = FloatButtonDefaults.textStyle()
                 )
             }
         }

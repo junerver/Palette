@@ -23,13 +23,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import xyz.junerver.compose.hooks.useCreation
-import xyz.junerver.compose.palette.core.theme.PaletteTheme
 
 @Composable
 fun PDialog(
@@ -50,9 +48,9 @@ fun PDialog(
     ) {
         Box(
             modifier = Modifier
-                .clip(RoundedCornerShape(DialogDefaults.BorderRadius))
-                .fillMaxWidth(0.8f)
-                .background(PaletteTheme.colors.surface)
+                .clip(RoundedCornerShape(DialogDefaults.borderRadius()))
+                .fillMaxWidth(DialogDefaults.widthFraction())
+                .background(DialogDefaults.containerColor())
         ) {
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
@@ -63,14 +61,13 @@ fun PDialog(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(
-                            top = DialogDefaults.TitlePaddingTop,
-                            bottom = if (content != null) DialogDefaults.TitlePaddingBottom else 0.dp,
-                            start = DialogDefaults.HorizontalPadding,
-                            end = DialogDefaults.HorizontalPadding
+                            top = DialogDefaults.titlePaddingTop(),
+                            bottom = if (content != null) DialogDefaults.titlePaddingBottom() else 0.dp,
+                            start = DialogDefaults.horizontalPadding(),
+                            end = DialogDefaults.horizontalPadding()
                         ),
-                    color = PaletteTheme.colors.onSurface,
-                    fontSize = DialogDefaults.TitleFontSize,
-                    fontWeight = FontWeight.Bold,
+                    color = DialogDefaults.titleColor(),
+                    style = DialogDefaults.titleTextStyle(),
                     textAlign = TextAlign.Center
                 )
                 if (content != null) {
@@ -78,14 +75,14 @@ fun PDialog(
                         text = content,
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(horizontal = DialogDefaults.HorizontalPadding),
-                        color = PaletteTheme.colors.onSurface,
-                        fontSize = DialogDefaults.ContentFontSize,
+                            .padding(horizontal = DialogDefaults.horizontalPadding()),
+                        color = DialogDefaults.contentColor(),
+                        style = DialogDefaults.contentTextStyle(),
                         textAlign = TextAlign.Center
                     )
                 }
-                Spacer(modifier = Modifier.height(DialogDefaults.ContentPaddingBottom))
-                HorizontalDivider(color = PaletteTheme.colors.border)
+                Spacer(modifier = Modifier.height(DialogDefaults.contentPaddingBottom()))
+                HorizontalDivider(color = DialogDefaults.dividerColor())
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween
@@ -94,35 +91,33 @@ fun PDialog(
                         Box(
                             modifier = Modifier
                                 .weight(1f)
-                                .height(DialogDefaults.ButtonHeight)
+                                .height(DialogDefaults.buttonHeight())
                                 .clickable(onClick = onCancel),
                             contentAlignment = Alignment.Center
                         ) {
                             Text(
                                 text = cancelText,
-                                color = PaletteTheme.colors.onSurface,
-                                fontSize = DialogDefaults.ButtonFontSize,
-                                fontWeight = FontWeight.Bold
+                                color = DialogDefaults.cancelColor(),
+                                style = DialogDefaults.buttonTextStyle()
                             )
                         }
                         Box(
                             modifier = Modifier
-                                .size(DialogDefaults.DividerWidth, DialogDefaults.ButtonHeight)
-                                .background(PaletteTheme.colors.border)
+                                .size(DialogDefaults.dividerWidth(), DialogDefaults.buttonHeight())
+                                .background(DialogDefaults.dividerColor())
                         )
                     }
                     Box(
                         modifier = Modifier
                             .weight(1f)
-                            .height(DialogDefaults.ButtonHeight)
+                            .height(DialogDefaults.buttonHeight())
                             .clickable(onClick = onOk),
                         contentAlignment = Alignment.Center
                     ) {
                         Text(
                             text = okText,
                             color = okColor,
-                            fontSize = DialogDefaults.ButtonFontSize,
-                            fontWeight = FontWeight.Bold
+                            style = DialogDefaults.buttonTextStyle()
                         )
                     }
                 }

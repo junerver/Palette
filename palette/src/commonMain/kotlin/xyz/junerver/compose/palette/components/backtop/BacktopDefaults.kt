@@ -15,8 +15,23 @@ object BacktopDefaults {
     val AnimationDuration: Int = 300
 
     @Composable
-    fun containerColor(): Color = PaletteTheme.colors.surface
+    fun size(): Dp = PaletteTheme.componentThemes.floatingAction.backtopSize
 
     @Composable
-    fun iconColor(): Color = PaletteTheme.colors.onSurface
+    fun iconSize(): Dp = PaletteTheme.componentThemes.floatingAction.backtopIconSize
+
+    @Composable
+    fun cornerRadius(): Dp = PaletteTheme.componentThemes.floatingAction.backtopCornerRadius
+
+    @Composable
+    fun elevation(): Dp = PaletteTheme.componentThemes.floatingAction.backtopElevation
+
+    @Composable
+    fun animationDurationMillis(): Int = PaletteTheme.componentThemes.floatingAction.backtopAnimationDurationMillis
+
+    @Composable
+    fun containerColor(): Color = PaletteTheme.componentThemes.floatingAction.backtopContainerColor
+
+    @Composable
+    fun iconColor(): Color = PaletteTheme.componentThemes.floatingAction.backtopIconColor
 }

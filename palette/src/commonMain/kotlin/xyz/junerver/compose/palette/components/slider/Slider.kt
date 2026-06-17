@@ -20,6 +20,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
@@ -51,6 +52,9 @@ fun PSlider(
     val (sliderWidth, setSliderWidth) = useState(0)
     val (percent, setPercent) = useState(0f)
     val (offsetX, setOffsetX) = useState(Dp(0f))
+    val trackHeight = SliderDefaults.trackHeight()
+    val thumbSize = SliderDefaults.thumbSize()
+    val resolvedInactiveTrackColor = if (disabled) SliderDefaults.disabledTrackColor() else inactiveTrackColor
 
     LaunchedEffect(value, sliderWidth, range) {
         val nextPercent = if (max - min > 0f) (value.coerceIn(min, max) - min) / (max - min) else 0f
@@ -70,7 +74,8 @@ fun PSlider(
 
     Row(
         modifier = Modifier
-            .height(SliderDefaults.Height)
+            .height(SliderDefaults.height())
+            .alpha(if (disabled) SliderDefaults.disabledAlpha() else 1f)
             .then(modifier),
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -99,23 +104,23 @@ fun PSlider(
             Box(
                 Modifier
                     .fillMaxWidth()
-                    .height(SliderDefaults.TrackHeight)
-                    .background(inactiveTrackColor),
+                    .height(trackHeight)
+                    .background(resolvedInactiveTrackColor),
                 contentAlignment = Alignment.CenterStart
             ) {
                 Box(
                     Modifier
                         .fillMaxWidth(percent)
-                        .height(SliderDefaults.TrackHeight)
+                        .height(trackHeight)
                         .background(activeTrackColor)
                 )
             }
             Box(
                 Modifier
-                    .size(SliderDefaults.ThumbSize)
-                    .offset(offsetX - SliderDefaults.ThumbSize / 2)
+                    .size(thumbSize)
+                    .offset(offsetX - thumbSize / 2)
                     .shadow(
-                        SliderDefaults.ThumbShadowElevation,
+                        SliderDefaults.thumbShadowElevation(),
                         CircleShape,
                         spotColor = SliderDefaults.thumbShadowColor()
                     )
@@ -124,12 +129,12 @@ fun PSlider(
         }
 
         formatter?.let {
-            Spacer(modifier = Modifier.width(SliderDefaults.LabelSpacing))
+            Spacer(modifier = Modifier.width(SliderDefaults.labelSpacing()))
             Text(
                 text = it(value),
-                modifier = Modifier.widthIn(SliderDefaults.LabelWidth),
+                modifier = Modifier.widthIn(SliderDefaults.labelWidth()),
                 color = labelColor,
-                fontSize = SliderDefaults.LabelFontSize,
+                style = SliderDefaults.labelTextStyle(),
                 textAlign = TextAlign.End
             )
         }

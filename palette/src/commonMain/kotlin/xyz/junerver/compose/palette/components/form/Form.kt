@@ -33,7 +33,7 @@ fun PForm(
         ) {
             Column(
                 modifier = modifier,
-                verticalArrangement = Arrangement.spacedBy(FormDefaults.ItemSpacing)
+                verticalArrangement = Arrangement.spacedBy(FormDefaults.itemSpacing())
             ) {
                 content()
             }

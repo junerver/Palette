@@ -32,9 +32,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.IntRect
 import androidx.compose.ui.unit.IntSize
@@ -61,13 +61,23 @@ fun PToast(
     visible: Boolean,
     title: String,
     icon: ToastIcon = ToastIcon.NONE,
-    duration: Long = ToastDefaults.DefaultDuration,
+    duration: Long = ToastDefaults.defaultDuration(),
     mask: Boolean = false,
     onClose: () -> Unit
 ) {
     val hasIcon = icon != ToastIcon.NONE
     val (localVisible, setLocalVisible) = useState(visible)
     val latestOnClose = useLatestState(onClose)
+    val animationDuration = ToastDefaults.animationDuration()
+    val exitDelay = ToastDefaults.exitDelay()
+    val iconSize = ToastDefaults.iconSize()
+    val noIconWidth = ToastDefaults.noIconWidth()
+    val noIconMinHeight = ToastDefaults.noIconMinHeight()
+    val loadingSize = ToastDefaults.loadingSize()
+    val iconSpacing = ToastDefaults.iconSpacing()
+    val iconTextStyle = ToastDefaults.iconTextStyle()
+    val noIconTextStyle = ToastDefaults.noIconTextStyle()
+    val iconTextMaxWidthPx = ToastDefaults.iconTextMaxWidthPx()
 
     LaunchedEffect(visible, duration, title) {
         if (visible && duration > 0) {
@@ -76,9 +86,9 @@ fun PToast(
         }
     }
 
-    LaunchedEffect(visible) {
+    LaunchedEffect(visible, exitDelay) {
         if (!visible) {
-            delay(150)
+            delay(exitDelay)
         }
         setLocalVisible(visible)
     }
@@ -102,23 +112,23 @@ fun PToast(
                 modifier = if (mask) {
                     Modifier.fillMaxSize()
                 } else {
-                    Modifier.toastSize(hasIcon)
+                    Modifier.toastSize(hasIcon, iconSize, noIconWidth, noIconMinHeight)
                 },
                 contentAlignment = Alignment.Center
             ) {
                 AnimatedVisibility(
                     visible = visible && localVisible,
-                    enter = fadeIn() + scaleIn(tween(ToastDefaults.AnimationDuration), initialScale = 0.8f),
-                    exit = fadeOut() + scaleOut(tween(ToastDefaults.AnimationDuration), targetScale = 0.8f)
+                    enter = fadeIn() + scaleIn(tween(animationDuration), initialScale = 0.8f),
+                    exit = fadeOut() + scaleOut(tween(animationDuration), targetScale = 0.8f)
                 ) {
                     Box(
                         modifier = Modifier
-                            .toastSize(hasIcon)
+                            .toastSize(hasIcon, iconSize, noIconWidth, noIconMinHeight)
                             .clip(
                                 if (icon != ToastIcon.NONE) {
-                                    RoundedCornerShape(ToastDefaults.IconBorderRadius)
+                                    RoundedCornerShape(ToastDefaults.iconBorderRadius())
                                 } else {
-                                    RoundedCornerShape(ToastDefaults.NoIconBorderRadius)
+                                    RoundedCornerShape(ToastDefaults.noIconBorderRadius())
                                 }
                             )
                             .background(ToastDefaults.backgroundColor()),
@@ -128,10 +138,10 @@ fun PToast(
                             when (icon) {
                                 ToastIcon.LOADING -> {
                                     PLoading(
-                                        size = ToastDefaults.LoadingSize,
+                                        size = loadingSize,
                                         color = ToastDefaults.textColor()
                                     )
-                                    Spacer(modifier = Modifier.height(ToastDefaults.IconSpacing))
+                                    Spacer(modifier = Modifier.height(iconSpacing))
                                 }
 
                                 ToastIcon.SUCCESS,
@@ -147,7 +157,7 @@ fun PToast(
                                         } else {
                                             PaletteTheme.strings.toastFailContentDescription
                                         },
-                                        modifier = Modifier.size(ToastDefaults.LoadingSize),
+                                        modifier = Modifier.size(loadingSize),
                                         tint = ToastDefaults.textColor()
                                     )
                                 }
@@ -156,20 +166,21 @@ fun PToast(
                             }
 
                             val textMeasurer = rememberTextMeasurer()
-                            val textLayoutResult = remember(title) {
-                                textMeasurer.measure(title, TextStyle(fontSize = ToastDefaults.IconFontSize))
+                            val textLayoutResult = remember(title, iconTextStyle) {
+                                textMeasurer.measure(title, iconTextStyle)
+                            }
+                            val textStyle = if (hasIcon && textLayoutResult.size.width <= iconTextMaxWidthPx) {
+                                iconTextStyle
+                            } else {
+                                noIconTextStyle
                             }
                             Text(
                                 text = title,
                                 color = ToastDefaults.textColor(),
-                                fontSize = if (hasIcon && textLayoutResult.size.width <= 354) {
-                                    ToastDefaults.IconFontSize
-                                } else {
-                                    ToastDefaults.NoIconFontSize
-                                },
+                                style = textStyle,
                                 modifier = Modifier.padding(
-                                    horizontal = ToastDefaults.TextPaddingHorizontal,
-                                    vertical = ToastDefaults.TextPaddingVertical
+                                    horizontal = ToastDefaults.textPaddingHorizontal(),
+                                    vertical = ToastDefaults.textPaddingVertical()
                                 ),
                                 textAlign = TextAlign.Center
                             )
@@ -181,13 +192,18 @@ fun PToast(
     }
 }
 
-private fun Modifier.toastSize(hasIcon: Boolean): Modifier {
+private fun Modifier.toastSize(
+    hasIcon: Boolean,
+    iconSize: Dp,
+    noIconWidth: Dp,
+    noIconMinHeight: Dp,
+): Modifier {
     return if (hasIcon) {
-        this.size(ToastDefaults.IconSize)
+        this.size(iconSize)
     } else {
         this
-            .width(ToastDefaults.NoIconWidth)
-            .heightIn(ToastDefaults.NoIconMinHeight)
+            .width(noIconWidth)
+            .heightIn(noIconMinHeight)
     }
 }
 

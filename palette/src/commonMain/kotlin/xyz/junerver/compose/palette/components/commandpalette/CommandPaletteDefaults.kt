@@ -3,6 +3,7 @@ package xyz.junerver.compose.palette.components.commandpalette
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import xyz.junerver.compose.palette.core.theme.PaletteTheme
@@ -14,17 +15,42 @@ object CommandPaletteDefaults {
 
     @Composable
     @ReadOnlyComposable
-    fun containerColor(): Color = PaletteTheme.colors.surface
+    fun width(): Dp = PaletteTheme.componentThemes.navigationMenu.commandPaletteWidth
 
     @Composable
     @ReadOnlyComposable
-    fun titleColor(): Color = PaletteTheme.colors.onSurface
+    fun maxHeight(): Dp = PaletteTheme.componentThemes.navigationMenu.commandPaletteMaxHeight
 
     @Composable
     @ReadOnlyComposable
-    fun subtitleColor(): Color = PaletteTheme.colors.hint
+    fun itemPadding(): Dp = PaletteTheme.componentThemes.navigationMenu.commandPaletteItemPadding
 
     @Composable
     @ReadOnlyComposable
-    fun highlightedContainerColor(): Color = PaletteTheme.colors.primary.copy(alpha = 0.12f)
+    fun itemSpacing(): Dp = PaletteTheme.componentThemes.navigationMenu.commandPaletteItemSpacing
+
+    @Composable
+    @ReadOnlyComposable
+    fun titleTextStyle(): TextStyle = PaletteTheme.componentThemes.navigationMenu.commandPaletteTitleTextStyle
+
+    @Composable
+    @ReadOnlyComposable
+    fun subtitleTextStyle(): TextStyle = PaletteTheme.componentThemes.navigationMenu.commandPaletteSubtitleTextStyle
+
+    @Composable
+    @ReadOnlyComposable
+    fun containerColor(): Color = PaletteTheme.componentThemes.navigationMenu.containerColor
+
+    @Composable
+    @ReadOnlyComposable
+    fun titleColor(): Color = PaletteTheme.componentThemes.navigationMenu.textColor
+
+    @Composable
+    @ReadOnlyComposable
+    fun subtitleColor(): Color = PaletteTheme.componentThemes.navigationMenu.subtitleColor
+
+    @Composable
+    @ReadOnlyComposable
+    fun highlightedContainerColor(): Color =
+        PaletteTheme.componentThemes.navigationMenu.commandPaletteHighlightedContainerColor
 }

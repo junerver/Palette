@@ -12,11 +12,26 @@ object TreeDefaults {
     val IconSize: Dp = 16.dp
 
     @Composable
-    fun nodeColor(): Color = PaletteTheme.colors.onSurface
+    fun nodeHeight(): Dp = PaletteTheme.componentThemes.dataEntry.treeNodeHeight
 
     @Composable
-    fun selectedColor(): Color = PaletteTheme.colors.primary
+    fun indent(): Dp = PaletteTheme.componentThemes.dataEntry.treeIndent
 
     @Composable
-    fun iconColor(): Color = PaletteTheme.colors.hint
+    fun iconSize(): Dp = PaletteTheme.componentThemes.dataEntry.treeIconSize
+
+    @Composable
+    fun iconTextSpacing(): Dp = PaletteTheme.componentThemes.dataEntry.treeIconTextSpacing
+
+    @Composable
+    fun nodeColor(): Color = PaletteTheme.componentThemes.dataEntry.treeNodeColor
+
+    @Composable
+    fun selectedColor(): Color = PaletteTheme.componentThemes.dataEntry.treeSelectedColor
+
+    @Composable
+    fun selectedContainerColor(): Color = PaletteTheme.componentThemes.dataEntry.treeSelectedContainerColor
+
+    @Composable
+    fun iconColor(): Color = PaletteTheme.componentThemes.dataEntry.treeIconColor
 }

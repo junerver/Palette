@@ -3,6 +3,7 @@ package xyz.junerver.compose.palette.components.calendar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
@@ -21,33 +22,69 @@ object CalendarDefaults {
 
     @Composable
     @ReadOnlyComposable
-    fun containerColor(): Color = PaletteTheme.colors.surface
+    fun cellSize(): Dp = PaletteTheme.componentThemes.dateTime.calendarCellSize
 
     @Composable
     @ReadOnlyComposable
-    fun headerColor(): Color = PaletteTheme.colors.onSurface
+    fun headerHeight(): Dp = PaletteTheme.componentThemes.dateTime.calendarHeaderHeight
 
     @Composable
     @ReadOnlyComposable
-    fun dayOfWeekColor(): Color = PaletteTheme.colors.hint
+    fun dayOfWeekHeight(): Dp = PaletteTheme.componentThemes.dateTime.calendarDayOfWeekHeight
 
     @Composable
     @ReadOnlyComposable
-    fun dayColor(): Color = PaletteTheme.colors.onSurface
+    fun selectedCircleSize(): Dp = PaletteTheme.componentThemes.dateTime.calendarSelectedCircleSize
 
     @Composable
     @ReadOnlyComposable
-    fun selectedColor(): Color = PaletteTheme.colors.primary
+    fun cornerRadius(): Dp = PaletteTheme.componentThemes.dateTime.calendarCornerRadius
 
     @Composable
     @ReadOnlyComposable
-    fun selectedTextColor(): Color = PaletteTheme.colors.surface
+    fun todayBorderWidth(): Dp = PaletteTheme.componentThemes.dateTime.calendarTodayBorderWidth
 
     @Composable
     @ReadOnlyComposable
-    fun disabledColor(): Color = PaletteTheme.colors.hint
+    fun dayTextStyle(): TextStyle = PaletteTheme.componentThemes.dateTime.calendarDayTextStyle
 
     @Composable
     @ReadOnlyComposable
-    fun todayBorderColor(): Color = PaletteTheme.colors.primary
+    fun headerTextStyle(): TextStyle = PaletteTheme.componentThemes.dateTime.calendarHeaderTextStyle
+
+    @Composable
+    @ReadOnlyComposable
+    fun dayOfWeekTextStyle(): TextStyle = PaletteTheme.componentThemes.dateTime.calendarDayOfWeekTextStyle
+
+    @Composable
+    @ReadOnlyComposable
+    fun containerColor(): Color = PaletteTheme.componentThemes.dateTime.calendarContainerColor
+
+    @Composable
+    @ReadOnlyComposable
+    fun headerColor(): Color = PaletteTheme.componentThemes.dateTime.calendarHeaderColor
+
+    @Composable
+    @ReadOnlyComposable
+    fun dayOfWeekColor(): Color = PaletteTheme.componentThemes.dateTime.calendarDayOfWeekColor
+
+    @Composable
+    @ReadOnlyComposable
+    fun dayColor(): Color = PaletteTheme.componentThemes.dateTime.calendarDayColor
+
+    @Composable
+    @ReadOnlyComposable
+    fun selectedColor(): Color = PaletteTheme.componentThemes.dateTime.calendarSelectedColor
+
+    @Composable
+    @ReadOnlyComposable
+    fun selectedTextColor(): Color = PaletteTheme.componentThemes.dateTime.calendarSelectedTextColor
+
+    @Composable
+    @ReadOnlyComposable
+    fun disabledColor(): Color = PaletteTheme.componentThemes.dateTime.calendarDisabledColor
+
+    @Composable
+    @ReadOnlyComposable
+    fun todayBorderColor(): Color = PaletteTheme.componentThemes.dateTime.calendarTodayBorderColor
 }

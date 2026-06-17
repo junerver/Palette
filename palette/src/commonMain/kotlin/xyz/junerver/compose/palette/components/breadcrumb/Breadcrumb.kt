@@ -7,7 +7,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
 
 data class BreadcrumbItem(
     val key: String,
@@ -23,20 +22,22 @@ fun PBreadcrumb(
 ) {
     Row(
         modifier = modifier,
-        horizontalArrangement = Arrangement.spacedBy(6.dp),
+        horizontalArrangement = Arrangement.spacedBy(BreadcrumbDefaults.itemSpacing()),
         verticalAlignment = Alignment.CenterVertically
     ) {
         items.forEachIndexed { index, item ->
             val isLast = index == items.lastIndex
             Text(
                 text = item.label,
+                style = BreadcrumbDefaults.textStyle(),
                 color = if (isLast) BreadcrumbDefaults.currentColor() else BreadcrumbDefaults.textColor(),
                 modifier = if (isLast) Modifier else Modifier.clickable { onClick(item.key) }
             )
             if (!isLast) {
                 Text(
                     text = separator,
-                    color = BreadcrumbDefaults.textColor()
+                    style = BreadcrumbDefaults.textStyle(),
+                    color = BreadcrumbDefaults.separatorColor()
                 )
             }
         }

@@ -13,21 +13,36 @@ object CardDefaults {
     val BorderWidth: Dp = 1.dp
 
     @Composable
+    fun cornerRadius(): Dp = PaletteTheme.componentThemes.card.cornerRadius
+
+    @Composable
+    fun contentPadding(): Dp = PaletteTheme.componentThemes.card.contentPadding
+
+    @Composable
+    fun elevation(): Dp = PaletteTheme.componentThemes.card.elevation
+
+    @Composable
+    fun borderWidth(): Dp = PaletteTheme.componentThemes.card.borderWidth
+
+    @Composable
+    fun outlinedBorderColor(): Color = PaletteTheme.componentThemes.card.outlinedBorderColor
+
+    @Composable
     fun elevatedColors(): CardColors = CardColors(
-        containerColor = PaletteTheme.colors.surface,
-        contentColor = PaletteTheme.colors.onSurface
+        containerColor = PaletteTheme.componentThemes.card.elevatedContainerColor,
+        contentColor = PaletteTheme.componentThemes.card.elevatedContentColor
     )
 
     @Composable
     fun filledColors(): CardColors = CardColors(
-        containerColor = PaletteTheme.colors.surface,
-        contentColor = PaletteTheme.colors.onSurface
+        containerColor = PaletteTheme.componentThemes.card.filledContainerColor,
+        contentColor = PaletteTheme.componentThemes.card.filledContentColor
     )
 
     @Composable
     fun outlinedColors(): CardColors = CardColors(
-        containerColor = PaletteTheme.colors.surface,
-        contentColor = PaletteTheme.colors.onSurface
+        containerColor = PaletteTheme.componentThemes.card.outlinedContainerColor,
+        contentColor = PaletteTheme.componentThemes.card.outlinedContentColor
     )
 }
 

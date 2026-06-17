@@ -1,6 +1,7 @@
 package xyz.junerver.compose.palette.components.drawer
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInHorizontally
@@ -16,7 +17,9 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.window.Popup
 
 @Composable
@@ -25,7 +28,10 @@ fun PDrawer(
     onClose: () -> Unit,
     modifier: Modifier = Modifier,
     placement: DrawerPlacement = DrawerPlacement.End,
-    width: androidx.compose.ui.unit.Dp = DrawerDefaults.Width,
+    width: Dp = DrawerDefaults.width(),
+    elevation: Dp = DrawerDefaults.elevation(),
+    contentPadding: Dp = DrawerDefaults.contentPadding(),
+    animationDurationMillis: Int = DrawerDefaults.animationDurationMillis(),
     containerColor: Color = DrawerDefaults.containerColor(),
     overlayColor: Color = DrawerDefaults.overlayColor(),
     content: @Composable () -> Unit,
@@ -35,8 +41,8 @@ fun PDrawer(
     Popup(onDismissRequest = onClose) {
         AnimatedVisibility(
             visible = visible,
-            enter = fadeIn(),
-            exit = fadeOut()
+            enter = fadeIn(animationSpec = tween(animationDurationMillis)),
+            exit = fadeOut(animationSpec = tween(animationDurationMillis))
         ) {
             Row(
                 modifier = modifier.fillMaxSize()
@@ -53,15 +59,20 @@ fun PDrawer(
 
                 AnimatedVisibility(
                     visible = visible,
-                    enter = slideInHorizontally { if (placement == DrawerPlacement.End) it else -it },
-                    exit = slideOutHorizontally { if (placement == DrawerPlacement.End) it else -it }
+                    enter = slideInHorizontally(
+                        animationSpec = tween(animationDurationMillis)
+                    ) { if (placement == DrawerPlacement.End) it else -it },
+                    exit = slideOutHorizontally(
+                        animationSpec = tween(animationDurationMillis)
+                    ) { if (placement == DrawerPlacement.End) it else -it }
                 ) {
                     Box(
                         modifier = Modifier
                             .width(width)
                             .fillMaxSize()
+                            .shadow(elevation)
                             .background(containerColor)
-                            .padding(DrawerDefaults.ContentPadding)
+                            .padding(contentPadding)
                     ) {
                         content()
                     }

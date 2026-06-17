@@ -20,7 +20,7 @@ import androidx.compose.ui.zIndex
 @Composable
 fun PAffix(
     modifier: Modifier = Modifier,
-    offset: Dp = AffixDefaults.DefaultOffset,
+    offset: Dp = AffixDefaults.defaultOffset(),
     position: AffixPosition = AffixPosition.Top,
     content: @Composable BoxScope.() -> Unit,
 ) {

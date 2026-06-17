@@ -24,11 +24,6 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
 import xyz.junerver.compose.palette.core.spec.ComponentSize
-import xyz.junerver.compose.palette.core.theme.PaletteTheme
-import xyz.junerver.compose.palette.core.tokens.FormTokens
-import xyz.junerver.compose.palette.core.tokens.focusBorder
-import xyz.junerver.compose.palette.core.tokens.hoverBorder
-import xyz.junerver.compose.palette.core.tokens.disabledBorder
 
 data class RadioOption<T>(
     val label: String,
@@ -54,38 +49,32 @@ fun PRadio(
     val interactionSource = remember { MutableInteractionSource() }
     val isFocused by interactionSource.collectIsFocusedAsState()
     val isHovered by interactionSource.collectIsHoveredAsState()
-
-    val radioSize = when (size) {
-        ComponentSize.Small -> 14.dp
-        ComponentSize.Medium -> 16.dp
-        ComponentSize.Large -> 20.dp
-    }
-
-    val innerCircleSize = when (size) {
-        ComponentSize.Small -> 6.dp
-        ComponentSize.Medium -> 8.dp
-        ComponentSize.Large -> 10.dp
-    }
+    val sizeTokens = RadioDefaults.sizeTokens(size)
+    val radioSize = sizeTokens.outerSize
+    val innerCircleSize = sizeTokens.innerSize
+    val motionDuration = RadioDefaults.motionDuration()
+    val focusRingAlpha = RadioDefaults.focusRingAlpha()
+    val hoverBackgroundAlpha = RadioDefaults.hoverBackgroundAlpha()
 
     val borderColor by animateColorAsState(
         targetValue = when {
             !disabled && checked -> checkedColor
-            !disabled && isFocused -> PaletteTheme.colors.focusBorder
-            !disabled && isHovered -> PaletteTheme.colors.hoverBorder
-            disabled -> PaletteTheme.colors.disabledBorder
+            !disabled && isFocused -> RadioDefaults.focusColor()
+            !disabled && isHovered -> RadioDefaults.hoverColor()
+            disabled -> RadioDefaults.disabledColor()
             else -> uncheckedColor
         },
-        animationSpec = tween(FormTokens.DurationNormal)
+        animationSpec = tween(motionDuration)
     )
 
     val innerCircleAlpha by animateDpAsState(
         targetValue = if (checked) innerCircleSize else 0.dp,
-        animationSpec = tween(FormTokens.DurationNormal)
+        animationSpec = tween(motionDuration)
     )
 
     Row(
         modifier = modifier
-            .clip(RoundedCornerShape(RadioDefaults.BorderRadius))
+            .clip(RoundedCornerShape(RadioDefaults.borderRadius()))
             .selectable(
                 selected = checked,
                 enabled = !disabled,
@@ -94,41 +83,41 @@ fun PRadio(
                 indication = null,
                 onClick = onClick
             )
-            .padding(RadioDefaults.Padding)
-            .alpha(if (disabled) RadioDefaults.DisabledAlpha else 1f),
+            .padding(RadioDefaults.padding())
+            .alpha(if (disabled) RadioDefaults.disabledAlpha() else 1f),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Column(modifier = Modifier.weight(1f)) {
             Text(
                 text = label,
                 color = labelColor,
-                fontSize = RadioDefaults.LabelFontSize
+                style = RadioDefaults.labelTextStyle()
             )
             description?.let {
-                Spacer(modifier = Modifier.height(RadioDefaults.DescriptionSpacing))
+                Spacer(modifier = Modifier.height(RadioDefaults.descriptionSpacing()))
                 Text(
                     text = it,
                     color = descriptionColor,
-                    fontSize = RadioDefaults.DescriptionFontSize
+                    style = RadioDefaults.descriptionTextStyle()
                 )
             }
         }
 
         Box(
-            modifier = Modifier.size(radioSize + 8.dp),
+            modifier = Modifier.size(radioSize + sizeTokens.touchPadding),
             contentAlignment = Alignment.Center
         ) {
             Canvas(modifier = Modifier.size(radioSize)) {
                 val canvasSize = radioSize.toPx()
-                val strokeWidth = 2.dp.toPx()
+                val strokeWidth = sizeTokens.strokeWidth.toPx()
                 val radius = canvasSize / 2f
                 val center = Offset(radius, radius)
 
                 // Focus ring
                 if (isFocused) {
                     drawCircle(
-                        color = borderColor.copy(alpha = 0.3f),
-                        radius = radius + 2.dp.toPx(),
+                        color = borderColor.copy(alpha = focusRingAlpha),
+                        radius = radius + sizeTokens.focusRingOffset.toPx(),
                         center = center
                     )
                 }
@@ -136,7 +125,7 @@ fun PRadio(
                 // Hover background
                 if (isHovered && !checked) {
                     drawCircle(
-                        color = borderColor.copy(alpha = 0.1f),
+                        color = borderColor.copy(alpha = hoverBackgroundAlpha),
                         radius = radius,
                         center = center
                     )

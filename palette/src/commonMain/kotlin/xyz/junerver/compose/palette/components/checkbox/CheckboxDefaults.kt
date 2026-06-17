@@ -3,10 +3,10 @@ package xyz.junerver.compose.palette.components.checkbox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.unit.Dp
 import xyz.junerver.compose.palette.core.theme.PaletteTheme
-import xyz.junerver.compose.palette.core.tokens.disabledBorder
-import xyz.junerver.compose.palette.core.tokens.focusBorder
-import xyz.junerver.compose.palette.core.tokens.hoverBorder
+import xyz.junerver.compose.palette.core.spec.ComponentSize
+import xyz.junerver.compose.palette.core.tokens.PaletteCheckboxSizeTokens
 
 @Immutable
 data class CheckboxColors(
@@ -20,16 +20,38 @@ data class CheckboxColors(
 
 object CheckboxDefaults {
     @Composable
-    fun color(): Color = PaletteTheme.colors.primary
+    fun color(): Color = PaletteTheme.componentThemes.checkbox.checkedColor
+
+    @Composable
+    fun sizeTokens(size: ComponentSize): PaletteCheckboxSizeTokens = when (size) {
+        ComponentSize.Small -> PaletteTheme.componentThemes.checkbox.small
+        ComponentSize.Medium -> PaletteTheme.componentThemes.checkbox.medium
+        ComponentSize.Large -> PaletteTheme.componentThemes.checkbox.large
+    }
+
+    @Composable
+    fun motionDuration(): Int = PaletteTheme.componentThemes.checkbox.motionDuration
+
+    @Composable
+    fun disabledBorderAlpha(): Float = PaletteTheme.componentThemes.checkbox.disabledBorderAlpha
+
+    @Composable
+    fun focusRingAlpha(): Float = PaletteTheme.componentThemes.checkbox.focusRingAlpha
+
+    @Composable
+    fun hoverBackgroundAlpha(): Float = PaletteTheme.componentThemes.checkbox.hoverBackgroundAlpha
+
+    @Composable
+    fun touchPadding(size: ComponentSize): Dp = sizeTokens(size).touchPadding
 
     @Composable
     fun colors(
-        checkedColor: Color = PaletteTheme.colors.primary,
-        uncheckedColor: Color = PaletteTheme.colors.border,
-        checkmarkColor: Color = Color.White,
-        disabledColor: Color = PaletteTheme.colors.disabledBorder,
-        focusColor: Color = PaletteTheme.colors.focusBorder,
-        hoverColor: Color = PaletteTheme.colors.hoverBorder
+        checkedColor: Color = PaletteTheme.componentThemes.checkbox.checkedColor,
+        uncheckedColor: Color = PaletteTheme.componentThemes.checkbox.uncheckedColor,
+        checkmarkColor: Color = PaletteTheme.componentThemes.checkbox.checkmarkColor,
+        disabledColor: Color = PaletteTheme.componentThemes.checkbox.disabledColor,
+        focusColor: Color = PaletteTheme.componentThemes.checkbox.focusColor,
+        hoverColor: Color = PaletteTheme.componentThemes.checkbox.hoverColor
     ): CheckboxColors = CheckboxColors(
         checkedColor = checkedColor,
         uncheckedColor = uncheckedColor,

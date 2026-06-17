@@ -23,7 +23,7 @@ enum class SpaceSize {
 fun PSpace(
     modifier: Modifier = Modifier,
     direction: SpaceDirection = SpaceDirection.Horizontal,
-    size: Dp = SpaceDefaults.MediumSpacing,
+    size: Dp = SpaceDefaults.mediumSpacing(),
     wrap: Boolean = false,
     align: Alignment.Vertical = Alignment.CenterVertically,
     content: @Composable () -> Unit,

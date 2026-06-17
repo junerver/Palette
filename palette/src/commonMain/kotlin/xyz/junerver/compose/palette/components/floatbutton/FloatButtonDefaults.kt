@@ -2,6 +2,7 @@ package xyz.junerver.compose.palette.components.floatbutton
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
@@ -21,11 +22,29 @@ object FloatButtonDefaults {
     val TextFontSize: TextUnit = 14.sp
 
     @Composable
-    fun containerColor(): Color = PaletteTheme.colors.surface
+    fun size(): Dp = PaletteTheme.componentThemes.floatingAction.floatButtonSize
 
     @Composable
-    fun iconColor(): Color = PaletteTheme.colors.onSurface
+    fun iconSize(): Dp = PaletteTheme.componentThemes.floatingAction.floatButtonIconSize
 
     @Composable
-    fun textColor(): Color = PaletteTheme.colors.onSurface
+    fun cornerRadius(): Dp = PaletteTheme.componentThemes.floatingAction.floatButtonCornerRadius
+
+    @Composable
+    fun elevation(): Dp = PaletteTheme.componentThemes.floatingAction.floatButtonElevation
+
+    @Composable
+    fun textPadding(): Dp = PaletteTheme.componentThemes.floatingAction.floatButtonTextPadding
+
+    @Composable
+    fun textStyle(): TextStyle = PaletteTheme.componentThemes.floatingAction.floatButtonTextStyle
+
+    @Composable
+    fun containerColor(): Color = PaletteTheme.componentThemes.floatingAction.floatButtonContainerColor
+
+    @Composable
+    fun iconColor(): Color = PaletteTheme.componentThemes.floatingAction.floatButtonIconColor
+
+    @Composable
+    fun textColor(): Color = PaletteTheme.componentThemes.floatingAction.floatButtonTextColor
 }

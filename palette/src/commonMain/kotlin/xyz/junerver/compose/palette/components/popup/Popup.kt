@@ -32,18 +32,18 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
 import androidx.compose.ui.input.nestedscroll.NestedScrollSource
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.layout.onSizeChanged
-import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.Velocity
-import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import kotlinx.coroutines.delay
-import xyz.junerver.compose.palette.core.theme.PaletteTheme
 import xyz.junerver.compose.palette.core.util.clickableWithoutRipple
 import kotlin.math.roundToInt
 
@@ -54,13 +54,24 @@ fun PPopup(
     modifier: Modifier = Modifier,
     title: String? = null,
     draggable: Boolean = true,
+    cornerRadius: Dp = PopupDefaults.cornerRadius(),
+    contentPadding: Dp = PopupDefaults.contentPadding(),
+    containerColor: Color = PopupDefaults.containerColor(),
+    titleColor: Color = PopupDefaults.titleColor(),
+    titleTextStyle: TextStyle = PopupDefaults.titleTextStyle(),
+    titleHeight: Dp = PopupDefaults.titleHeight(),
+    draggableLineColor: Color = PopupDefaults.draggableLineColor(),
+    draggableLineLength: Dp = PopupDefaults.draggableLineLength(),
+    draggableLineThickness: Dp = PopupDefaults.draggableLineThickness(),
+    draggableLineOffset: Dp = PopupDefaults.draggableLineOffset(),
+    animationDurationMillis: Int = PopupDefaults.animationDurationMillis(),
     content: @Composable ColumnScope.() -> Unit
 ) {
     var localVisible by remember { mutableStateOf(false) }
 
-    LaunchedEffect(visible) {
+    LaunchedEffect(visible, animationDurationMillis) {
         if (!visible) {
-            delay(PopupDefaults.AnimationDuration.toLong() + 50L)
+            delay(animationDurationMillis.toLong() + 50L)
         }
         localVisible = visible
     }
@@ -68,7 +79,8 @@ fun PPopup(
     if (visible || localVisible) {
         PopupDialogContainer(
             visible = visible && localVisible,
-            onClose = onClose
+            onClose = onClose,
+            animationDurationMillis = animationDurationMillis
         ) {
             var height by remember { mutableIntStateOf(0) }
             val offsetY = remember { mutableIntStateOf(0) }
@@ -104,21 +116,32 @@ fun PPopup(
                     )
                     .clip(
                         RoundedCornerShape(
-                            topStart = PopupDefaults.CornerRadius,
-                            topEnd = PopupDefaults.CornerRadius
+                            topStart = cornerRadius,
+                            topEnd = cornerRadius
                         )
                     )
-                    .background(PopupDefaults.containerColor())
+                    .background(containerColor)
                     .clickableWithoutRipple { }
-                    .padding(PopupDefaults.ContentPadding)
+                    .padding(contentPadding)
                     .onSizeChanged { height = it.height }
             ) {
                 Column {
                     if (draggable) {
-                        DraggableLine()
+                        DraggableLine(
+                            lineOffset = draggableLineOffset,
+                            contentPadding = contentPadding,
+                            lineLength = draggableLineLength,
+                            lineThickness = draggableLineThickness,
+                            lineColor = draggableLineColor,
+                        )
                     }
                     title?.let {
-                        PopupTitle(title = it)
+                        PopupTitle(
+                            title = it,
+                            titleColor = titleColor,
+                            titleTextStyle = titleTextStyle,
+                            titleHeight = titleHeight,
+                        )
                     }
                     content()
                 }
@@ -131,6 +154,7 @@ fun PPopup(
 private fun PopupDialogContainer(
     visible: Boolean,
     onClose: () -> Unit,
+    animationDurationMillis: Int,
     content: @Composable () -> Unit
 ) {
     Dialog(
@@ -146,11 +170,11 @@ private fun PopupDialogContainer(
             AnimatedVisibility(
                 visible = visible,
                 enter = slideInVertically(
-                    animationSpec = tween(PopupDefaults.AnimationDuration),
+                    animationSpec = tween(animationDurationMillis),
                     initialOffsetY = { it }
                 ),
                 exit = slideOutVertically(
-                    animationSpec = tween(PopupDefaults.AnimationDuration),
+                    animationSpec = tween(animationDurationMillis),
                     targetOffsetY = { it }
                 )
             ) {
@@ -161,38 +185,48 @@ private fun PopupDialogContainer(
 }
 
 @Composable
-private fun DraggableLine() {
+private fun DraggableLine(
+    lineOffset: Dp,
+    contentPadding: Dp,
+    lineLength: Dp,
+    lineThickness: Dp,
+    lineColor: Color,
+) {
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .offset(y = PopupDefaults.DraggableLineOffset)
-            .padding(top = PopupDefaults.ContentPadding),
+            .offset(y = lineOffset)
+            .padding(top = contentPadding),
         contentAlignment = Alignment.Center
     ) {
         Box(
             modifier = Modifier
-                .size(PopupDefaults.DraggableLineLength, PopupDefaults.DraggableLineThickness)
+                .size(lineLength, lineThickness)
                 .background(
-                    PopupDefaults.draggableLineColor(),
-                    RoundedCornerShape(PopupDefaults.DraggableLineThickness / 2)
+                    lineColor,
+                    RoundedCornerShape(lineThickness / 2)
                 )
         )
     }
 }
 
 @Composable
-private fun PopupTitle(title: String) {
+private fun PopupTitle(
+    title: String,
+    titleColor: Color,
+    titleTextStyle: TextStyle,
+    titleHeight: Dp,
+) {
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .heightIn(PopupDefaults.TitleHeight),
+            .heightIn(titleHeight),
         contentAlignment = Alignment.Center
     ) {
         Text(
             text = title,
-            color = PopupDefaults.titleColor(),
-            fontSize = PopupDefaults.TitleFontSize,
-            fontWeight = FontWeight.Bold
+            color = titleColor,
+            style = titleTextStyle,
         )
     }
 }

@@ -25,14 +25,47 @@ object ToggleDefaults {
     val DisabledAlpha: Float = 0.5f
 
     @Composable
+    fun cornerRadius(): Dp = PaletteTheme.componentThemes.selectionControl.toggleCornerRadius
+
+    @Composable
+    fun paddingHorizontal(): Dp = PaletteTheme.componentThemes.selectionControl.togglePaddingHorizontal
+
+    @Composable
+    fun paddingVertical(): Dp = PaletteTheme.componentThemes.selectionControl.togglePaddingVertical
+
+    @Composable
+    fun groupSpacing(): Dp = PaletteTheme.componentThemes.selectionControl.toggleGroupSpacing
+
+    @Composable
+    fun borderWidth(): Dp = PaletteTheme.componentThemes.selectionControl.toggleBorderWidth
+
+    @Composable
+    fun itemIconSpacing(): Dp = PaletteTheme.componentThemes.selectionControl.toggleItemIconSpacing
+
+    @Composable
+    fun disabledAlpha(): Float = PaletteTheme.componentThemes.selectionControl.toggleDisabledAlpha
+
+    @Composable
     fun containerColor(pressed: Boolean): Color =
-        if (pressed) PaletteTheme.colors.primary.copy(alpha = 0.1f) else Color.Transparent
+        if (pressed) {
+            PaletteTheme.componentThemes.selectionControl.togglePressedContainerColor
+        } else {
+            PaletteTheme.componentThemes.selectionControl.toggleDefaultContainerColor
+        }
 
     @Composable
     fun borderColor(pressed: Boolean): Color =
-        if (pressed) PaletteTheme.colors.primary else PaletteTheme.colors.border
+        if (pressed) {
+            PaletteTheme.componentThemes.selectionControl.togglePressedBorderColor
+        } else {
+            PaletteTheme.componentThemes.selectionControl.toggleDefaultBorderColor
+        }
 
     @Composable
     fun contentColor(pressed: Boolean): Color =
-        if (pressed) PaletteTheme.colors.primary else PaletteTheme.colors.onSurface
+        if (pressed) {
+            PaletteTheme.componentThemes.selectionControl.togglePressedContentColor
+        } else {
+            PaletteTheme.componentThemes.selectionControl.toggleDefaultContentColor
+        }
 }

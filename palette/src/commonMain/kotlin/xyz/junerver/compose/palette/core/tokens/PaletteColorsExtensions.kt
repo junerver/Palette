@@ -3,16 +3,16 @@ package xyz.junerver.compose.palette.core.tokens
 import androidx.compose.ui.graphics.Color
 
 val PaletteColors.focusBorder: Color
-    get() = primary.copy(alpha = 0.6f)
+    get() = borderFocus
 
 val PaletteColors.hoverBorder: Color
-    get() = primary.copy(alpha = 0.3f)
+    get() = borderHover
 
 val PaletteColors.disabledBorder: Color
-    get() = border.copy(alpha = 0.5f)
+    get() = borderDisabled
 
 val PaletteColors.disabledBackground: Color
-    get() = surface.copy(alpha = 0.05f)
+    get() = bgDisabled
 
 val PaletteColors.errorBorder: Color
     get() = error
@@ -24,7 +24,7 @@ val PaletteColors.successBorder: Color
     get() = success
 
 val PaletteColors.focusShadow: Color
-    get() = primary.copy(alpha = 0.2f)
+    get() = shadowFocus
 
 val PaletteColors.errorShadow: Color
-    get() = error.copy(alpha = 0.2f)
+    get() = shadowError

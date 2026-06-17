@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -33,7 +34,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Popup
 import kotlinx.coroutines.delay
 import xyz.junerver.compose.hooks.useCreation
@@ -47,11 +47,12 @@ fun PNotification(
     title: String,
     content: String? = null,
     type: MessageType = MessageType.Info,
-    duration: Long = NotificationDefaults.DefaultDuration,
+    duration: Long = NotificationDefaults.defaultDuration(),
     onClose: () -> Unit,
 ) {
     val (localVisible, setLocalVisible) = useState(visible)
     val latestOnClose = useLatestState(onClose)
+    val animationDuration = NotificationDefaults.animationDuration()
 
     LaunchedEffect(visible, title, content, duration) {
         if (visible && duration > 0) {
@@ -60,8 +61,8 @@ fun PNotification(
         }
     }
 
-    LaunchedEffect(visible) {
-        if (!visible) delay(NotificationDefaults.AnimationDuration.toLong())
+    LaunchedEffect(visible, animationDuration) {
+        if (!visible) delay(animationDuration.toLong())
         setLocalVisible(visible)
     }
 
@@ -73,47 +74,50 @@ fun PNotification(
             enter = slideInHorizontally { it / 2 } + fadeIn(),
             exit = slideOutHorizontally { it / 2 } + fadeOut()
         ) {
-            val shape = RoundedCornerShape(NotificationDefaults.CornerRadius)
+            val shape = RoundedCornerShape(NotificationDefaults.cornerRadius())
             Column(
                 modifier = Modifier
-                    .padding(top = NotificationDefaults.TopPadding)
-                    .padding(end = 16.dp)
+                    .padding(top = NotificationDefaults.topPadding())
+                    .padding(end = NotificationDefaults.endPadding())
                     .widthIn(
-                        min = NotificationDefaults.MinWidth,
-                        max = NotificationDefaults.MaxWidth
+                        min = NotificationDefaults.minWidth(),
+                        max = NotificationDefaults.maxWidth()
                     )
                     .clip(shape)
                     .border(
-                        width = NotificationDefaults.BorderWidth,
-                        color = NotificationDefaults.accentColor(type).copy(alpha = 0.45f),
+                        width = NotificationDefaults.borderWidth(),
+                        color = NotificationDefaults.accentColor(type).copy(alpha = NotificationDefaults.borderAlpha()),
                         shape = shape
                     )
                     .background(NotificationDefaults.containerColor())
                     .padding(
-                        horizontal = NotificationDefaults.HorizontalPadding,
-                        vertical = NotificationDefaults.VerticalPadding
+                        horizontal = NotificationDefaults.horizontalPadding(),
+                        vertical = NotificationDefaults.verticalPadding()
                     ),
-                verticalArrangement = Arrangement.spacedBy(6.dp)
+                verticalArrangement = Arrangement.spacedBy(NotificationDefaults.contentSpacing())
             ) {
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    horizontalArrangement = Arrangement.spacedBy(NotificationDefaults.titleSpacing())
                 ) {
                     Icon(
                         imageVector = notificationIcon(type),
                         contentDescription = null,
-                        tint = NotificationDefaults.accentColor(type)
+                        tint = NotificationDefaults.accentColor(type),
+                        modifier = Modifier.size(NotificationDefaults.iconSize())
                     )
                     Text(
                         text = title,
                         modifier = Modifier.weight(1f),
-                        color = NotificationDefaults.titleColor()
+                        color = NotificationDefaults.titleColor(),
+                        style = NotificationDefaults.titleTextStyle()
                     )
                     IconButton(onClick = onClose) {
                         Icon(
                             imageVector = Icons.Default.Close,
                             contentDescription = null,
-                            tint = NotificationDefaults.contentColor()
+                            tint = NotificationDefaults.contentColor(),
+                            modifier = Modifier.size(NotificationDefaults.closeIconSize())
                         )
                     }
                 }
@@ -121,6 +125,7 @@ fun PNotification(
                     Text(
                         text = content,
                         color = NotificationDefaults.contentColor(),
+                        style = NotificationDefaults.contentTextStyle(),
                         modifier = Modifier.fillMaxWidth()
                     )
                 }

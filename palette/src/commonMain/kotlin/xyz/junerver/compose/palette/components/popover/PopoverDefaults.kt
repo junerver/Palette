@@ -13,8 +13,23 @@ object PopoverDefaults {
     val Padding: Dp = 12.dp
 
     @Composable
-    fun containerColor(): Color = PaletteTheme.colors.surface
+    fun cornerRadius(): Dp = PaletteTheme.componentThemes.floatingLayer.popoverCornerRadius
 
     @Composable
-    fun borderColor(): Color = PaletteTheme.colors.border
+    fun borderWidth(): Dp = PaletteTheme.componentThemes.floatingLayer.popoverBorderWidth
+
+    @Composable
+    fun elevation(): Dp = PaletteTheme.componentThemes.floatingLayer.popoverElevation
+
+    @Composable
+    fun padding(): Dp = PaletteTheme.componentThemes.floatingLayer.popoverPadding
+
+    @Composable
+    fun offset(): Dp = PaletteTheme.componentThemes.floatingLayer.popoverOffset
+
+    @Composable
+    fun containerColor(): Color = PaletteTheme.componentThemes.floatingLayer.popoverContainerColor
+
+    @Composable
+    fun borderColor(): Color = PaletteTheme.componentThemes.floatingLayer.popoverBorderColor
 }

@@ -6,8 +6,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.unit.dp
-import xyz.junerver.compose.palette.core.theme.PaletteTheme
 
 data class DescriptionItem(
     val label: String,
@@ -27,25 +25,25 @@ fun PDescriptions(
         items.chunked(column).forEach { rowItems ->
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(16.dp)
+                horizontalArrangement = Arrangement.spacedBy(DescriptionsDefaults.rowSpacing())
             ) {
                 rowItems.forEach { item ->
                     Row(
                         modifier = Modifier
                             .weight(1f)
-                            .height(DescriptionsDefaults.RowHeight)
-                            .padding(DescriptionsDefaults.Padding)
+                            .height(DescriptionsDefaults.rowHeight())
+                            .padding(DescriptionsDefaults.padding())
                     ) {
                         Text(
                             text = item.label,
                             color = labelColor,
-                            style = PaletteTheme.typography.body,
-                            modifier = Modifier.width(DescriptionsDefaults.LabelWidth)
+                            style = DescriptionsDefaults.textStyle(),
+                            modifier = Modifier.width(DescriptionsDefaults.labelWidth())
                         )
                         Text(
                             text = item.content,
                             color = contentColor,
-                            style = PaletteTheme.typography.body,
+                            style = DescriptionsDefaults.textStyle(),
                             modifier = Modifier.weight(1f)
                         )
                     }
@@ -53,7 +51,10 @@ fun PDescriptions(
             }
             
             if (bordered) {
-                HorizontalDivider()
+                HorizontalDivider(
+                    thickness = DescriptionsDefaults.dividerHeight(),
+                    color = DescriptionsDefaults.dividerColor()
+                )
             }
         }
     }

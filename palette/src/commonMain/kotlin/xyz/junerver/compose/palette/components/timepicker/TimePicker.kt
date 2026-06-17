@@ -38,7 +38,7 @@ fun PTimePicker(
             Icon(
                 imageVector = Icons.Default.Schedule,
                 contentDescription = null,
-                tint = TimePickerDefaults.placeholderColor()
+                tint = TimePickerDefaults.iconColor()
             )
         }
     )

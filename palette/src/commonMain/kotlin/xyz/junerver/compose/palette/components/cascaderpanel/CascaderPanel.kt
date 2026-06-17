@@ -26,11 +26,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.TextUnit
 import xyz.junerver.compose.hooks.useState
 import xyz.junerver.compose.palette.components.cascader.CascaderOption
 import xyz.junerver.compose.palette.components.text.PText
-import xyz.junerver.compose.palette.core.theme.PaletteTheme
 
 @Immutable
 internal data class PanelColumnData(
@@ -60,7 +60,19 @@ fun PCascaderPanel(
     val containerColor = CascaderPanelDefaults.containerColor()
     val itemTextColor = CascaderPanelDefaults.itemTextColor()
     val selectedItemColor = CascaderPanelDefaults.selectedItemColor()
+    val selectedItemContainerColor = CascaderPanelDefaults.selectedItemContainerColor()
     val hoverColor = CascaderPanelDefaults.hoverColor()
+    val disabledItemTextColor = CascaderPanelDefaults.disabledItemTextColor()
+    val dividerColor = CascaderPanelDefaults.dividerColor()
+    val dividerWidth = CascaderPanelDefaults.dividerWidth()
+    val iconColor = CascaderPanelDefaults.iconColor()
+    val trailingIconAlpha = CascaderPanelDefaults.trailingIconAlpha()
+    val columnWidth = CascaderPanelDefaults.columnWidth()
+    val columnHeight = CascaderPanelDefaults.columnHeight()
+    val itemHeight = CascaderPanelDefaults.itemHeight()
+    val itemPaddingHorizontal = CascaderPanelDefaults.itemPaddingHorizontal()
+    val fontSize = CascaderPanelDefaults.fontSize()
+    val arrowSize = CascaderPanelDefaults.arrowSize()
 
     val columns = remember(options, activePath) {
         buildPanelColumns(options, activePath)
@@ -74,16 +86,26 @@ fun PCascaderPanel(
             if (index > 0) {
                 Box(
                     modifier = Modifier
-                        .width(1.dp)
+                        .width(dividerWidth)
                         .fillMaxHeight()
-                        .background(PaletteTheme.colors.border)
+                        .background(dividerColor)
                 )
             }
             PanelColumn(
                 items = column,
                 itemTextColor = itemTextColor,
                 selectedItemColor = selectedItemColor,
+                selectedItemContainerColor = selectedItemContainerColor,
                 hoverColor = hoverColor,
+                disabledItemTextColor = disabledItemTextColor,
+                iconColor = iconColor,
+                trailingIconAlpha = trailingIconAlpha,
+                columnWidth = columnWidth,
+                columnHeight = columnHeight,
+                itemHeight = itemHeight,
+                itemPaddingHorizontal = itemPaddingHorizontal,
+                fontSize = fontSize,
+                arrowSize = arrowSize,
                 hoveredItem = hoveredItem,
                 onHoverItem = { hoveredItemState.value = it },
                 onItemClick = { option ->
@@ -102,15 +124,25 @@ private fun PanelColumn(
     items: PanelColumnData,
     itemTextColor: Color,
     selectedItemColor: Color,
+    selectedItemContainerColor: Color,
     hoverColor: Color,
+    disabledItemTextColor: Color,
+    iconColor: Color,
+    trailingIconAlpha: Float,
+    columnWidth: Dp,
+    columnHeight: Dp,
+    itemHeight: Dp,
+    itemPaddingHorizontal: Dp,
+    fontSize: TextUnit,
+    arrowSize: Dp,
     hoveredItem: String?,
     onHoverItem: (String?) -> Unit,
     onItemClick: (CascaderOption) -> Unit,
 ) {
     LazyColumn(
         modifier = Modifier
-            .width(CascaderPanelDefaults.ColumnWidth)
-            .height(CascaderPanelDefaults.ColumnHeight)
+            .width(columnWidth)
+            .height(columnHeight)
     ) {
         items(
             items = items.options,
@@ -122,12 +154,12 @@ private fun PanelColumn(
             val interactionSource = remember { MutableInteractionSource() }
 
             val backgroundColor = when {
-                isSelected -> selectedItemColor.copy(alpha = 0.08f)
-                isHovered -> hoverColor.copy(alpha = 0.5f)
+                isSelected -> selectedItemContainerColor
+                isHovered -> hoverColor
                 else -> Color.Transparent
             }
             val textColor = when {
-                option.disabled -> itemTextColor.copy(alpha = 0.5f)
+                option.disabled -> disabledItemTextColor
                 isSelected -> selectedItemColor
                 else -> itemTextColor
             }
@@ -135,18 +167,18 @@ private fun PanelColumn(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(CascaderPanelDefaults.ItemHeight)
+                    .height(itemHeight)
                     .hoverable(interactionSource, enabled = !option.disabled)
                     .background(backgroundColor)
                     .clickable(enabled = !option.disabled) { onItemClick(option) }
-                    .padding(horizontal = CascaderPanelDefaults.ItemPaddingHorizontal),
+                    .padding(horizontal = itemPaddingHorizontal),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 PText(
                     text = option.label,
                     modifier = Modifier.weight(1f),
                     color = textColor,
-                    fontSize = CascaderPanelDefaults.FontSize,
+                    fontSize = fontSize,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
@@ -155,11 +187,11 @@ private fun PanelColumn(
                         imageVector = Icons.Default.ChevronRight,
                         contentDescription = null,
                         tint = if (option.disabled) {
-                            itemTextColor.copy(alpha = 0.5f)
+                            disabledItemTextColor
                         } else {
-                            itemTextColor.copy(alpha = 0.72f)
+                            iconColor.copy(alpha = trailingIconAlpha)
                         },
-                        modifier = Modifier.size(CascaderPanelDefaults.ArrowSize)
+                        modifier = Modifier.size(arrowSize)
                     )
                 }
             }

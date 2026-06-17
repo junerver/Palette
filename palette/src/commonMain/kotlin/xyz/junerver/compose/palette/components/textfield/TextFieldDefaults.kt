@@ -31,9 +31,33 @@ object TextFieldDefaults {
     val CornerSize: Dp = FormTokens.CornerRadiusMedium
     val FontSize: TextUnit = 17.sp
 
-    fun height(size: ComponentSize): Dp = size.height
+    @Composable
+    fun sizeTokens(size: ComponentSize): PaletteControlSizeTokens = when (size) {
+        ComponentSize.Small -> PaletteTheme.componentThemes.textField.small
+        ComponentSize.Medium -> PaletteTheme.componentThemes.textField.medium
+        ComponentSize.Large -> PaletteTheme.componentThemes.textField.large
+    }
 
-    fun fontSize(size: ComponentSize): TextUnit = size.fontSize
+    @Composable
+    fun height(size: ComponentSize): Dp = sizeTokens(size).height
+
+    @Composable
+    fun fontSize(size: ComponentSize): TextUnit = sizeTokens(size).fontSize
+
+    @Composable
+    fun borderWidth(): Dp = PaletteTheme.componentThemes.textField.borderWidth
+
+    @Composable
+    fun focusBorderWidth(): Dp = PaletteTheme.componentThemes.textField.focusBorderWidth
+
+    @Composable
+    fun cornerSize(): Dp = PaletteTheme.componentThemes.textField.cornerRadius
+
+    @Composable
+    fun shadowElevation(): Dp = PaletteTheme.componentThemes.textField.shadowElevation
+
+    @Composable
+    fun motionDuration(): Int = PaletteTheme.componentThemes.textField.motionDuration
 
     @Composable
     fun borderColor(
@@ -42,14 +66,14 @@ object TextFieldDefaults {
         isHovered: Boolean = false,
         enabled: Boolean = true
     ): Color = when {
-        !enabled -> PaletteTheme.colors.disabledBorder
+        !enabled -> PaletteTheme.componentThemes.textField.disabledBorderColor
         isFocused -> when (status) {
-            ComponentStatus.Default -> PaletteTheme.colors.focusBorder
-            ComponentStatus.Success -> PaletteTheme.colors.successBorder
-            ComponentStatus.Warning -> PaletteTheme.colors.warningBorder
-            ComponentStatus.Error -> PaletteTheme.colors.errorBorder
+            ComponentStatus.Default -> PaletteTheme.componentThemes.textField.focusBorderColor
+            ComponentStatus.Success -> PaletteTheme.componentThemes.textField.successBorderColor
+            ComponentStatus.Warning -> PaletteTheme.componentThemes.textField.warningBorderColor
+            ComponentStatus.Error -> PaletteTheme.componentThemes.textField.errorBorderColor
         }
-        isHovered -> PaletteTheme.colors.hoverBorder
+        isHovered -> PaletteTheme.componentThemes.textField.hoverBorderColor
         else -> status.borderColor()
     }
 
@@ -58,22 +82,27 @@ object TextFieldDefaults {
         status: ComponentStatus = ComponentStatus.Default,
         isFocused: Boolean = false
     ): Color = if (isFocused) {
-        status.shadowColor()
+        when (status) {
+            ComponentStatus.Default -> PaletteTheme.componentThemes.textField.focusShadowColor
+            ComponentStatus.Success -> PaletteTheme.componentThemes.textField.successShadowColor
+            ComponentStatus.Warning -> PaletteTheme.componentThemes.textField.warningShadowColor
+            ComponentStatus.Error -> PaletteTheme.componentThemes.textField.errorShadowColor
+        }
     } else {
         Color.Transparent
     }
 
     @Composable
     fun backgroundColor(enabled: Boolean = true): Color = 
-        if (enabled) PaletteTheme.colors.surface 
-        else PaletteTheme.colors.disabledBackground
+        if (enabled) PaletteTheme.componentThemes.textField.backgroundColor
+        else PaletteTheme.componentThemes.textField.disabledBackgroundColor
 
     @Composable
     fun colors(
-        textColor: Color = PaletteTheme.colors.onSurface,
-        hintColor: Color = PaletteTheme.colors.hint,
-        borderColor: Color = PaletteTheme.colors.border,
-        backgroundColor: Color = PaletteTheme.colors.surface,
+        textColor: Color = PaletteTheme.componentThemes.textField.textColor,
+        hintColor: Color = PaletteTheme.componentThemes.textField.placeholderColor,
+        borderColor: Color = PaletteTheme.componentThemes.textField.borderColor,
+        backgroundColor: Color = PaletteTheme.componentThemes.textField.backgroundColor,
     ): BorderTextFieldColors = BorderTextFieldColors(
         textColor = textColor,
         hintColor = hintColor,

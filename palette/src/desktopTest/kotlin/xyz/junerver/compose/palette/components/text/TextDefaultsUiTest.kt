@@ -23,17 +23,18 @@ class TextDefaultsUiTest {
         val onSurface = Color(0xFF112233)
         val hint = Color(0xFF445566)
         val typography = PaletteTypography(body = TextStyle(fontSize = 15.sp))
+        val colors = PaletteColors(onSurface = onSurface, hint = hint)
 
         rule.setContent {
             PaletteTheme(
-                colors = PaletteColors(onSurface = onSurface, hint = hint),
+                colors = colors,
                 typography = typography,
                 strings = PaletteStrings.enUS(),
                 darkTheme = true,
             ) {
-                Text("primary=${TextDefaults.color() == onSurface}")
-                Text("secondary=${TextDefaults.secondaryColor() == onSurface.copy(alpha = 0.6f)}")
-                Text("disabled=${TextDefaults.disabledColor() == hint}")
+                Text("primary=${TextDefaults.color() == colors.textPrimary}")
+                Text("secondary=${TextDefaults.secondaryColor() == colors.textSecondary}")
+                Text("disabled=${TextDefaults.disabledColor() == colors.textDisabled}")
                 Text("style=${TextDefaults.style() == typography.body}")
             }
         }
@@ -44,4 +45,3 @@ class TextDefaultsUiTest {
         rule.onNodeWithText("style=true").assertTextEquals("style=true")
     }
 }
-

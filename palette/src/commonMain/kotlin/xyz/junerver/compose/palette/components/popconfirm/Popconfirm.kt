@@ -4,11 +4,10 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.width
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.dp
 import xyz.junerver.compose.hooks.useState
 import xyz.junerver.compose.palette.components.alert.AlertType
 import xyz.junerver.compose.palette.components.button.ButtonSize
@@ -35,24 +34,27 @@ fun PPopconfirm(
         modifier = modifier,
         visible = visible,
         onVisibleChange = { setVisible(it) },
+        containerColor = PopconfirmDefaults.containerColor(),
+        cornerRadius = PopconfirmDefaults.cornerRadius(),
+        elevation = PopconfirmDefaults.elevation(),
+        contentPadding = PopconfirmDefaults.padding(),
         trigger = { trigger() },
         content = {
-            Column {
+            Column(modifier = Modifier.widthIn(max = PopconfirmDefaults.maxWidth())) {
                 PText(
                     text = title,
                     color = PopconfirmDefaults.titleColor(),
-                    fontSize = PopconfirmDefaults.TitleFontSize,
-                    fontWeight = FontWeight.Bold
+                    style = PopconfirmDefaults.titleTextStyle()
                 )
                 if (description != null) {
-                    Spacer(modifier = Modifier.height(4.dp))
+                    Spacer(modifier = Modifier.height(PopconfirmDefaults.descriptionSpacing()))
                     PText(
                         text = description,
                         color = PopconfirmDefaults.descriptionColor(),
-                        fontSize = PopconfirmDefaults.DescriptionFontSize
+                        style = PopconfirmDefaults.descriptionTextStyle()
                     )
                 }
-                Spacer(modifier = Modifier.height(PopconfirmDefaults.ButtonSpacing))
+                Spacer(modifier = Modifier.height(PopconfirmDefaults.buttonSpacing()))
                 Row {
                     PButton(
                         text = cancelText,
@@ -63,7 +65,7 @@ fun PPopconfirm(
                             onCancel?.invoke()
                         }
                     )
-                    Spacer(modifier = Modifier.width(PopconfirmDefaults.ButtonSpacing))
+                    Spacer(modifier = Modifier.width(PopconfirmDefaults.buttonSpacing()))
                     PButton(
                         text = okText,
                         type = okType.toButtonType(),

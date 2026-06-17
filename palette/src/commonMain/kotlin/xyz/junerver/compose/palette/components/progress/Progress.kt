@@ -1,6 +1,7 @@
 package xyz.junerver.compose.palette.components.progress
 
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
@@ -40,36 +41,36 @@ fun PProgress(
     formatter: ((percent: Float) -> String)? = { "${it.toInt()}%" }
 ) {
     val localPercent = percent.coerceIn(0f, 100f)
+    val progressFraction by animateFloatAsState(
+        targetValue = localPercent / 100,
+        animationSpec = tween(ProgressDefaults.animationDurationMillis()),
+        label = "ProgressAnimation"
+    )
 
     Row(
-        modifier = modifier.height(ProgressDefaults.LinearContainerHeight),
+        modifier = modifier.height(ProgressDefaults.linearContainerHeight()),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Box(
             modifier = Modifier
                 .weight(1f)
-                .height(ProgressDefaults.LinearHeight)
+                .height(ProgressDefaults.linearHeight())
                 .background(trackColor)
         ) {
             Box(
                 modifier = Modifier
-                    .fillMaxWidth(
-                        animateFloatAsState(
-                            targetValue = localPercent / 100,
-                            label = "ProgressAnimation"
-                        ).value
-                    )
+                    .fillMaxWidth(progressFraction)
                     .fillMaxHeight()
                     .background(progressColor)
             )
         }
         formatter?.also {
-            Spacer(modifier = Modifier.width(ProgressDefaults.LabelSpacing))
+            Spacer(modifier = Modifier.width(ProgressDefaults.labelSpacing()))
             Text(
                 text = it(localPercent),
-                modifier = Modifier.widthIn(ProgressDefaults.LabelWidth),
+                modifier = Modifier.widthIn(ProgressDefaults.labelWidth()),
                 color = textColor,
-                fontSize = ProgressDefaults.TextSize,
+                style = ProgressDefaults.textStyle(),
                 textAlign = TextAlign.End
             )
         }
@@ -80,9 +81,9 @@ fun PProgress(
 fun PCircleProgress(
     percent: Float,
     modifier: Modifier = Modifier,
-    size: Dp = ProgressDefaults.CircleSize,
-    strokeWidth: Dp = ProgressDefaults.CircleStrokeWidth,
-    fontSize: TextUnit = ProgressDefaults.TextSize,
+    size: Dp = ProgressDefaults.circleSize(),
+    strokeWidth: Dp = ProgressDefaults.circleStrokeWidth(),
+    fontSize: TextUnit = ProgressDefaults.textSize(),
     progressColor: Color = ProgressDefaults.progressColor(),
     trackColor: Color = ProgressDefaults.trackColor(),
     textColor: Color = ProgressDefaults.circleTextColor(),
@@ -91,13 +92,14 @@ fun PCircleProgress(
     val localPercent = percent.coerceIn(0f, 100f)
     val animatedAngle by animateFloatAsState(
         targetValue = 360 * (localPercent / 100),
+        animationSpec = tween(ProgressDefaults.animationDurationMillis()),
         label = "CircleProgressAnimation"
     )
     val textMeasurer = rememberTextMeasurer()
 
     Canvas(
         modifier = modifier
-            .padding(vertical = Dp(20f))
+            .padding(vertical = ProgressDefaults.circleVerticalPadding())
             .size(size)
     ) {
         val radius = this.size.width / 2

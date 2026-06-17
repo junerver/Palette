@@ -18,8 +18,8 @@ fun PBarcode(
     value: String,
     modifier: Modifier = Modifier,
     type: PaletteBarcodeType = BarcodeDefaults.Type,
-    width: Dp = BarcodeDefaults.Width,
-    height: Dp = BarcodeDefaults.Height,
+    width: Dp = BarcodeDefaults.width(),
+    height: Dp = BarcodeDefaults.height(),
     color: Color = Color.Unspecified,
     backgroundColor: Color = Color.Unspecified,
 ) {

@@ -11,6 +11,16 @@ class PaletteShapes(
     val medium: Shape = RoundedCornerShape(8.dp),
     val large: Shape = RoundedCornerShape(12.dp),
 ) {
+    fun copy(
+        small: Shape = this.small,
+        medium: Shape = this.medium,
+        large: Shape = this.large,
+    ): PaletteShapes = PaletteShapes(
+        small = small,
+        medium = medium,
+        large = large,
+    )
+
     companion object {
         fun default() = PaletteShapes()
     }

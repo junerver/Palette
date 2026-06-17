@@ -2,6 +2,7 @@ package xyz.junerver.compose.palette.components.collapse
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import xyz.junerver.compose.palette.core.theme.PaletteTheme
@@ -12,11 +13,26 @@ object CollapseDefaults {
     val AnimationDuration: Int = 300
 
     @Composable
-    fun titleColor(): Color = PaletteTheme.colors.onSurface
+    fun titleHeight(): Dp = PaletteTheme.componentThemes.navigationMenu.collapseTitleHeight
 
     @Composable
-    fun contentColor(): Color = PaletteTheme.colors.onSurface
+    fun titleHorizontalPadding(): Dp = PaletteTheme.componentThemes.navigationMenu.collapseTitleHorizontalPadding
 
     @Composable
-    fun iconColor(): Color = PaletteTheme.colors.hint
+    fun contentPadding(): Dp = PaletteTheme.componentThemes.navigationMenu.collapseContentPadding
+
+    @Composable
+    fun titleTextStyle(): TextStyle = PaletteTheme.componentThemes.navigationMenu.collapseTitleTextStyle
+
+    @Composable
+    fun animationDurationMillis(): Int = PaletteTheme.componentThemes.navigationMenu.collapseAnimationDurationMillis
+
+    @Composable
+    fun titleColor(): Color = PaletteTheme.componentThemes.navigationMenu.collapseTitleColor
+
+    @Composable
+    fun contentColor(): Color = PaletteTheme.componentThemes.navigationMenu.collapseContentColor
+
+    @Composable
+    fun iconColor(): Color = PaletteTheme.componentThemes.navigationMenu.collapseIconColor
 }

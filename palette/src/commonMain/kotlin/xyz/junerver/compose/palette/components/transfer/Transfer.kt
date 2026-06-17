@@ -30,12 +30,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
-import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.unit.dp
 import xyz.junerver.compose.hooks.useState
 import xyz.junerver.compose.palette.components.checkbox.ColoredCheckBox
 import xyz.junerver.compose.palette.components.text.PText
-import xyz.junerver.compose.palette.core.theme.PaletteTheme
 
 data class TransferItem(
     val key: String,
@@ -64,11 +61,11 @@ fun PTransfer(
         dataSource.filter { it.key in targetKeys && (searchQuery.isEmpty() || it.title.contains(searchQuery, ignoreCase = true)) }
     }
 
-    val shape = RoundedCornerShape(TransferDefaults.CornerRadius)
+    val shape = RoundedCornerShape(TransferDefaults.cornerRadius())
 
     Row(
-        modifier = modifier.height(TransferDefaults.Height),
-        horizontalArrangement = Arrangement.spacedBy(TransferDefaults.ButtonSpacing),
+        modifier = modifier.height(TransferDefaults.height()),
+        horizontalArrangement = Arrangement.spacedBy(TransferDefaults.buttonSpacing()),
     ) {
         TransferPanel(
             title = titles.first,
@@ -79,7 +76,7 @@ fun PTransfer(
             searchQuery = searchQuery,
             onSearchQueryChange = setSearchQuery,
             shape = shape,
-            modifier = Modifier.width(TransferDefaults.Width).fillMaxHeight(),
+            modifier = Modifier.width(TransferDefaults.width()).fillMaxHeight(),
         )
 
         Column(
@@ -92,8 +89,8 @@ fun PTransfer(
 
             Box(
                 modifier = Modifier
-                    .size(TransferDefaults.ButtonWidth, 32.dp)
-                    .clip(RoundedCornerShape(TransferDefaults.CornerRadius))
+                    .size(TransferDefaults.buttonWidth(), TransferDefaults.buttonHeight())
+                    .clip(RoundedCornerShape(TransferDefaults.cornerRadius()))
                     .background(if (canMoveRight) TransferDefaults.buttonColor() else TransferDefaults.disabledButtonColor())
                     .clickable(enabled = canMoveRight) {
                         onTargetKeysChange(targetKeys + sourceSelectedKeys.toList())
@@ -104,17 +101,17 @@ fun PTransfer(
                 Icon(
                     imageVector = Icons.Default.ChevronRight,
                     contentDescription = null,
-                    tint = PaletteTheme.colors.onPrimary,
-                    modifier = Modifier.size(TransferDefaults.IconSize),
+                    tint = TransferDefaults.buttonContentColor(),
+                    modifier = Modifier.size(TransferDefaults.iconSize()),
                 )
             }
 
-            Spacer(modifier = Modifier.height(TransferDefaults.ButtonSpacing))
+            Spacer(modifier = Modifier.height(TransferDefaults.buttonSpacing()))
 
             Box(
                 modifier = Modifier
-                    .size(TransferDefaults.ButtonWidth, 32.dp)
-                    .clip(RoundedCornerShape(TransferDefaults.CornerRadius))
+                    .size(TransferDefaults.buttonWidth(), TransferDefaults.buttonHeight())
+                    .clip(RoundedCornerShape(TransferDefaults.cornerRadius()))
                     .background(if (canMoveLeft) TransferDefaults.buttonColor() else TransferDefaults.disabledButtonColor())
                     .clickable(enabled = canMoveLeft) {
                         onTargetKeysChange(targetKeys - targetSelectedKeys.toSet())
@@ -125,8 +122,8 @@ fun PTransfer(
                 Icon(
                     imageVector = Icons.Default.ChevronLeft,
                     contentDescription = null,
-                    tint = PaletteTheme.colors.onPrimary,
-                    modifier = Modifier.size(TransferDefaults.IconSize),
+                    tint = TransferDefaults.buttonContentColor(),
+                    modifier = Modifier.size(TransferDefaults.iconSize()),
                 )
             }
         }
@@ -140,7 +137,7 @@ fun PTransfer(
             searchQuery = searchQuery,
             onSearchQueryChange = setSearchQuery,
             shape = shape,
-            modifier = Modifier.width(TransferDefaults.Width).fillMaxHeight(),
+            modifier = Modifier.width(TransferDefaults.width()).fillMaxHeight(),
         )
     }
 }
@@ -161,7 +158,7 @@ private fun TransferPanel(
         modifier = modifier
             .clip(shape)
             .background(TransferDefaults.containerColor())
-            .padding(1.dp)
+            .padding(TransferDefaults.panelBorderWidth())
             .background(TransferDefaults.containerColor(), shape),
     ) {
         TransferHeader(
@@ -211,21 +208,21 @@ private fun TransferHeader(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .height(TransferDefaults.HeaderHeight)
+            .height(TransferDefaults.headerHeight())
             .background(TransferDefaults.headerColor())
-            .padding(horizontal = 12.dp),
+            .padding(horizontal = TransferDefaults.headerPaddingHorizontal()),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween,
     ) {
         PText(
             text = title,
             color = TransferDefaults.headerTextColor(),
-            fontSize = TransferDefaults.FontSize,
+            style = TransferDefaults.textStyle(),
         )
         PText(
             text = "$selectedCount/$totalCount",
             color = TransferDefaults.headerTextColor(),
-            fontSize = TransferDefaults.FontSize,
+            style = TransferDefaults.textStyle(),
         )
     }
 }
@@ -238,22 +235,22 @@ private fun TransferSearchField(
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 8.dp, vertical = 4.dp)
-            .height(TransferDefaults.SearchHeight)
-            .clip(RoundedCornerShape(4.dp))
-            .background(PaletteTheme.colors.border.copy(alpha = 0.3f))
-            .padding(horizontal = 8.dp),
+            .padding(
+                horizontal = TransferDefaults.searchPaddingHorizontal(),
+                vertical = TransferDefaults.searchPaddingVertical()
+            )
+            .height(TransferDefaults.searchHeight())
+            .clip(RoundedCornerShape(TransferDefaults.searchCornerRadius()))
+            .background(TransferDefaults.searchContainerColor())
+            .padding(horizontal = TransferDefaults.searchPaddingHorizontal()),
         contentAlignment = Alignment.CenterStart,
     ) {
         BasicTextField(
             value = query,
             onValueChange = onQueryChange,
             singleLine = true,
-            textStyle = TextStyle(
-                fontSize = TransferDefaults.SearchFontSize,
-                color = PaletteTheme.colors.onSurface,
-            ),
-            cursorBrush = SolidColor(PaletteTheme.colors.primary),
+            textStyle = TransferDefaults.searchTextStyle().copy(color = TransferDefaults.searchTextColor()),
+            cursorBrush = SolidColor(TransferDefaults.searchCursorColor()),
             modifier = Modifier.fillMaxWidth(),
             decorationBox = { innerTextField ->
                 Box {
@@ -261,8 +258,8 @@ private fun TransferSearchField(
                     if (query.isEmpty()) {
                         PText(
                             text = "搜索",
-                            fontSize = TransferDefaults.SearchFontSize,
-                            color = PaletteTheme.colors.hint,
+                            style = TransferDefaults.searchTextStyle(),
+                            color = TransferDefaults.searchPlaceholderColor(),
                         )
                     }
                 }
@@ -282,7 +279,7 @@ private fun SelectAllRow(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .height(TransferDefaults.ItemHeight)
+            .height(TransferDefaults.itemHeight())
             .clickable {
                 if (allSelected) {
                     selectedKeys.clear()
@@ -291,7 +288,7 @@ private fun SelectAllRow(
                     selectedKeys.addAll(selectableItems.map { it.key })
                 }
             }
-            .padding(horizontal = 4.dp),
+            .padding(horizontal = TransferDefaults.rowPaddingHorizontal()),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         ColoredCheckBox(
@@ -308,8 +305,8 @@ private fun SelectAllRow(
         )
         PText(
             text = "全选",
-            fontSize = TransferDefaults.FontSize,
             color = TransferDefaults.itemTextColor(),
+            style = TransferDefaults.textStyle(),
         )
     }
 }
@@ -323,10 +320,10 @@ private fun TransferItemRow(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .height(TransferDefaults.ItemHeight)
+            .height(TransferDefaults.itemHeight())
             .background(if (checked) TransferDefaults.selectedItemColor() else Color.Transparent)
             .clickable(enabled = !item.disabled) { onCheckedChange(!checked) }
-            .padding(horizontal = 4.dp),
+            .padding(horizontal = TransferDefaults.rowPaddingHorizontal()),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         ColoredCheckBox(
@@ -337,8 +334,8 @@ private fun TransferItemRow(
         )
         PText(
             text = item.title,
-            fontSize = TransferDefaults.FontSize,
-            color = if (item.disabled) PaletteTheme.colors.hint else TransferDefaults.itemTextColor(),
+            color = if (item.disabled) TransferDefaults.disabledItemTextColor() else TransferDefaults.itemTextColor(),
+            style = TransferDefaults.textStyle(),
         )
     }
 }

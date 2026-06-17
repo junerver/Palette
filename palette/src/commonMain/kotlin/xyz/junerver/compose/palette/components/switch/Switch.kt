@@ -25,29 +25,33 @@ fun PSwitch(
     uncheckedTrackColor: Color = SwitchDefaults.uncheckedTrackColor(),
     thumbColor: Color = SwitchDefaults.thumbColor()
 ) {
+    val thumbOffset = SwitchDefaults.thumbOffset()
     val offsetX by animateDpAsState(
-        targetValue = if (checked) SwitchDefaults.CheckedThumbOffset else SwitchDefaults.ThumbOffset,
-        animationSpec = tween(durationMillis = SwitchDefaults.AnimationDuration),
+        targetValue = if (checked) SwitchDefaults.checkedThumbOffset() else thumbOffset,
+        animationSpec = tween(durationMillis = SwitchDefaults.animationDuration()),
         label = "SwitchAnimation"
     )
+    val trackColor = when {
+        disabled -> SwitchDefaults.disabledTrackColor()
+        checked -> checkedTrackColor
+        else -> uncheckedTrackColor
+    }
 
     Box(
         modifier
-            .size(SwitchDefaults.Width, SwitchDefaults.Height)
-            .clip(RoundedCornerShape(SwitchDefaults.BorderRadius))
-            .background(
-                if (checked) checkedTrackColor else uncheckedTrackColor
-            )
-            .alpha(if (disabled) SwitchDefaults.DisabledAlpha else 1f)
+            .size(SwitchDefaults.width(), SwitchDefaults.height())
+            .clip(RoundedCornerShape(SwitchDefaults.borderRadius()))
+            .background(trackColor)
+            .alpha(if (disabled) SwitchDefaults.disabledAlpha() else 1f)
             .clickableWithoutRipple(!disabled) {
                 onChange?.invoke(!checked)
             }
     ) {
         Box(
             Modifier
-                .offset(offsetX, SwitchDefaults.ThumbOffset)
-                .size(SwitchDefaults.ThumbSize)
-                .clip(RoundedCornerShape(SwitchDefaults.ThumbBorderRadius))
+                .offset(offsetX, thumbOffset)
+                .size(SwitchDefaults.thumbSize())
+                .clip(RoundedCornerShape(SwitchDefaults.thumbBorderRadius()))
                 .background(thumbColor)
         )
     }

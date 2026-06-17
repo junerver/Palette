@@ -32,6 +32,7 @@ fun PRate(
     onChange: ((Float) -> Unit)? = null
 ) {
     var starWidth by remember { mutableIntStateOf(0) }
+    val starSize = RateDefaults.starSize()
 
     Row(
         modifier = modifier
@@ -53,7 +54,7 @@ fun PRate(
                 activeColor = activeColor,
                 inactiveColor = inactiveColor,
                 modifier = Modifier
-                    .size(RateDefaults.StarSize)
+                    .size(starSize)
                     .onSizeChanged {
                         starWidth = it.width
                     }

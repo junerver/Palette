@@ -55,16 +55,16 @@ fun PInfiniteScroll(
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(InfiniteScrollDefaults.LoadingPadding),
+                        .padding(InfiniteScrollDefaults.loadingPadding()),
                     contentAlignment = Alignment.Center,
                 ) {
                     loadingContent?.invoke() ?: run {
                         PLoading()
                         PText(
                             text = "加载中...",
-                            fontSize = InfiniteScrollDefaults.FontSize,
                             color = InfiniteScrollDefaults.textColor(),
-                            modifier = Modifier.padding(top = InfiniteScrollDefaults.LoadingPadding),
+                            style = InfiniteScrollDefaults.textStyle(),
+                            modifier = Modifier.padding(top = InfiniteScrollDefaults.loadingPadding()),
                         )
                     }
                 }
@@ -75,13 +75,13 @@ fun PInfiniteScroll(
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(InfiniteScrollDefaults.LoadingPadding),
+                        .padding(InfiniteScrollDefaults.loadingPadding()),
                     contentAlignment = Alignment.Center,
                 ) {
                     noMoreContent?.invoke() ?: PText(
                         text = "没有更多了",
-                        fontSize = InfiniteScrollDefaults.FontSize,
                         color = InfiniteScrollDefaults.textColor(),
+                        style = InfiniteScrollDefaults.textStyle(),
                     )
                 }
             }

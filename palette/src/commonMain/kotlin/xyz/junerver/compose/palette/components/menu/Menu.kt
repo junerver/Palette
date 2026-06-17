@@ -11,7 +11,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.unit.dp
 
 @Composable
 fun PMenu(
@@ -25,8 +24,10 @@ fun PMenu(
     Column(modifier = modifier) {
         items.forEach { item ->
             val isSelected = item.key == resolvedSelected
+            val itemCornerRadius = MenuDefaults.itemCornerRadius()
             Text(
                 text = item.label,
+                style = MenuDefaults.itemTextStyle(),
                 color = when {
                     item.disabled -> MenuDefaults.disabledTextColor()
                     isSelected -> MenuDefaults.selectedTextColor()
@@ -34,16 +35,16 @@ fun PMenu(
                 },
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(vertical = 2.dp)
-                    .clip(RoundedCornerShape(MenuDefaults.ItemCornerRadius))
+                    .padding(vertical = MenuDefaults.itemOuterSpacing())
+                    .clip(RoundedCornerShape(itemCornerRadius))
                     .background(
                         if (isSelected) MenuDefaults.selectedContainerColor()
                         else Color.Transparent
                     )
                     .clickable(enabled = !item.disabled) { onSelect(item.key) }
                     .padding(
-                        horizontal = MenuDefaults.ItemPaddingHorizontal,
-                        vertical = MenuDefaults.ItemPaddingVertical
+                        horizontal = MenuDefaults.itemPaddingHorizontal(),
+                        vertical = MenuDefaults.itemPaddingVertical()
                     )
             )
         }

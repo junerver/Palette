@@ -32,11 +32,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.unit.dp
 import xyz.junerver.compose.hooks.useState
 import xyz.junerver.compose.palette.core.spec.ComponentSize
 import xyz.junerver.compose.palette.core.spec.ComponentStatus
-import xyz.junerver.compose.palette.core.theme.PaletteTheme
 
 private fun isValidNumberInput(text: String): Boolean {
     if (text.isEmpty()) return true
@@ -104,11 +102,11 @@ fun PInputNumber(
 
     val minusAnimColor by animateColorAsState(
         targetValue = if (minusDisabled) InputNumberDefaults.disabledButtonColor() else InputNumberDefaults.buttonColor(),
-        animationSpec = tween(InputNumberDefaults.AnimationDuration)
+        animationSpec = tween(InputNumberDefaults.animationDurationMillis())
     )
     val plusAnimColor by animateColorAsState(
         targetValue = if (plusDisabled) InputNumberDefaults.disabledButtonColor() else InputNumberDefaults.buttonColor(),
-        animationSpec = tween(InputNumberDefaults.AnimationDuration)
+        animationSpec = tween(InputNumberDefaults.animationDurationMillis())
     )
     val minusIconColor = if (minusDisabled) InputNumberDefaults.disabledButtonIconColor() else InputNumberDefaults.buttonIconColor()
     val plusIconColor = if (plusDisabled) InputNumberDefaults.disabledButtonIconColor() else InputNumberDefaults.buttonIconColor()
@@ -117,16 +115,16 @@ fun PInputNumber(
 
     Row(
         modifier = modifier
-            .defaultMinSize(minWidth = InputNumberDefaults.Width)
+            .defaultMinSize(minWidth = InputNumberDefaults.width())
             .height(size.height)
             .clip(shape)
-            .border(1.dp, borderColor, shape)
-            .background(PaletteTheme.colors.surface),
+            .border(InputNumberDefaults.borderWidth(), borderColor, shape)
+            .background(InputNumberDefaults.containerColor()),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         InputNumberStepButton(
             modifier = Modifier
-                .width(InputNumberDefaults.ButtonWidth)
+                .width(InputNumberDefaults.buttonWidth())
                 .fillMaxHeight(),
             disabled = minusDisabled,
             color = minusAnimColor,
@@ -136,7 +134,7 @@ fun PInputNumber(
 
         Box(
             modifier = Modifier
-                .width(1.dp)
+                .width(InputNumberDefaults.dividerWidth())
                 .fillMaxHeight()
                 .background(borderColor)
         )
@@ -152,8 +150,8 @@ fun PInputNumber(
                 Text(
                     text = placeholder,
                     fontSize = size.fontSize,
-                    color = PaletteTheme.colors.hint,
-                    style = PaletteTheme.typography.body,
+                    color = InputNumberDefaults.placeholderColor(),
+                    style = InputNumberDefaults.textStyle(),
                 )
             }
             BasicTextField(
@@ -173,11 +171,11 @@ fun PInputNumber(
                 },
                 enabled = !disabled,
                 singleLine = true,
-                textStyle = PaletteTheme.typography.body.copy(
+                textStyle = InputNumberDefaults.textStyle().copy(
                     fontSize = size.fontSize,
-                    color = if (disabled) PaletteTheme.colors.onSurface.copy(alpha = 0.5f) else PaletteTheme.colors.onSurface,
+                    color = if (disabled) InputNumberDefaults.disabledTextColor() else InputNumberDefaults.textColor(),
                 ),
-                cursorBrush = SolidColor(PaletteTheme.colors.primary),
+                cursorBrush = SolidColor(InputNumberDefaults.cursorColor()),
                 modifier = Modifier.fillMaxWidth(),
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
             )
@@ -185,14 +183,14 @@ fun PInputNumber(
 
         Box(
             modifier = Modifier
-                .width(1.dp)
+                .width(InputNumberDefaults.dividerWidth())
                 .fillMaxHeight()
                 .background(borderColor)
         )
 
         InputNumberStepButton(
             modifier = Modifier
-                .width(InputNumberDefaults.ButtonWidth)
+                .width(InputNumberDefaults.buttonWidth())
                 .fillMaxHeight(),
             disabled = plusDisabled,
             color = plusAnimColor,

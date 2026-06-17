@@ -51,7 +51,23 @@ object TagDefaults {
     )
 
     // 尺寸系统
-    fun sizeTokens(size: TagSize): TagSizeTokens = when (size) {
+    @Composable
+    fun sizeTokens(size: TagSize): TagSizeTokens {
+        val tokens = when (size) {
+            TagSize.Small -> PaletteTheme.componentThemes.tag.small
+            TagSize.Medium -> PaletteTheme.componentThemes.tag.medium
+            TagSize.Large -> PaletteTheme.componentThemes.tag.large
+        }
+        return TagSizeTokens(
+            height = tokens.height,
+            horizontalPadding = tokens.horizontalPadding,
+            cornerRadius = tokens.cornerRadius,
+            closeButtonSize = tokens.closeButtonSize,
+            fontSize = tokens.fontSize,
+        )
+    }
+
+    fun legacySizeTokens(size: TagSize): TagSizeTokens = when (size) {
         TagSize.Small -> TagSizeTokens(
             height = 24.dp,
             horizontalPadding = 8.dp,
@@ -75,47 +91,56 @@ object TagDefaults {
         )
     }
 
+    @Composable
+    fun borderWidth(): Dp = PaletteTheme.componentThemes.tag.borderWidth
+
+    @Composable
+    fun itemSpacing(): Dp = PaletteTheme.componentThemes.tag.itemSpacing
+
+    @Composable
+    fun closeIconScale(): Float = PaletteTheme.componentThemes.tag.closeIconScale
+
     // 向后兼容的颜色方案
     @Composable
     fun defaultColors(): TagColors = TagColors(
-        containerColor = PaletteTheme.colors.primary.copy(alpha = 0.12f),
-        contentColor = PaletteTheme.colors.primary,
-        borderColor = Color.Transparent
+        containerColor = PaletteTheme.componentThemes.tag.defaultContainerColor,
+        contentColor = PaletteTheme.componentThemes.tag.defaultContentColor,
+        borderColor = PaletteTheme.componentThemes.tag.defaultBorderColor
     )
 
     @Composable
     fun outlinedColors(): TagColors = TagColors(
-        containerColor = Color.Transparent,
-        contentColor = PaletteTheme.colors.onSurface,
-        borderColor = PaletteTheme.colors.border
+        containerColor = PaletteTheme.componentThemes.tag.outlinedContainerColor,
+        contentColor = PaletteTheme.componentThemes.tag.outlinedContentColor,
+        borderColor = PaletteTheme.componentThemes.tag.outlinedBorderColor
     )
 
     // 新增：语义化颜色方案
     @Composable
     fun successColors(): TagColors = TagColors(
-        containerColor = PaletteTheme.colors.success.copy(alpha = 0.12f),
-        contentColor = PaletteTheme.colors.success,
+        containerColor = PaletteTheme.componentThemes.tag.successContainerColor,
+        contentColor = PaletteTheme.componentThemes.tag.successContentColor,
         borderColor = Color.Transparent
     )
 
     @Composable
     fun warningColors(): TagColors = TagColors(
-        containerColor = PaletteTheme.colors.warning.copy(alpha = 0.12f),
-        contentColor = PaletteTheme.colors.warning,
+        containerColor = PaletteTheme.componentThemes.tag.warningContainerColor,
+        contentColor = PaletteTheme.componentThemes.tag.warningContentColor,
         borderColor = Color.Transparent
     )
 
     @Composable
     fun errorColors(): TagColors = TagColors(
-        containerColor = PaletteTheme.colors.error.copy(alpha = 0.12f),
-        contentColor = PaletteTheme.colors.error,
+        containerColor = PaletteTheme.componentThemes.tag.errorContainerColor,
+        contentColor = PaletteTheme.componentThemes.tag.errorContentColor,
         borderColor = Color.Transparent
     )
 
     @Composable
     fun infoColors(): TagColors = TagColors(
-        containerColor = PaletteTheme.colors.primary.copy(alpha = 0.12f),
-        contentColor = PaletteTheme.colors.primary,
+        containerColor = PaletteTheme.componentThemes.tag.infoContainerColor,
+        contentColor = PaletteTheme.componentThemes.tag.infoContentColor,
         borderColor = Color.Transparent
     )
 
@@ -125,7 +150,7 @@ object TagDefaults {
         val color = pastelColors[abs(seed.hashCode()) % pastelColors.size]
         return TagColors(
             containerColor = color,
-            contentColor = Color(0xFF424242), // 深灰色文本确保可读性
+            contentColor = PaletteTheme.componentThemes.tag.pastelContentColor,
             borderColor = Color.Transparent
         )
     }
@@ -133,7 +158,7 @@ object TagDefaults {
     // 新增：自定义颜色快捷方式
     @Composable
     fun colors(color: Color): TagColors = TagColors(
-        containerColor = color.copy(alpha = 0.12f),
+        containerColor = color.copy(alpha = PaletteTheme.opacity.selected),
         contentColor = color,
         borderColor = Color.Transparent
     )

@@ -2,6 +2,7 @@ package xyz.junerver.compose.palette.components.searchbar
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.sp
@@ -10,10 +11,6 @@ import kotlin.time.Duration.Companion.milliseconds
 import xyz.junerver.compose.palette.core.spec.ComponentSize
 import xyz.junerver.compose.palette.core.theme.PaletteTheme
 import xyz.junerver.compose.palette.core.tokens.FormTokens
-import xyz.junerver.compose.palette.core.tokens.disabledBackground
-import xyz.junerver.compose.palette.core.tokens.disabledBorder
-import xyz.junerver.compose.palette.core.tokens.focusBorder
-import xyz.junerver.compose.palette.core.tokens.hoverBorder
 
 object SearchBarDefaults {
     val Height: Dp = FormTokens.HeightLarge
@@ -34,8 +31,42 @@ object SearchBarDefaults {
     val CancelFontSize: TextUnit = 16.sp
 
     @Composable
+    fun height(): Dp = PaletteTheme.componentThemes.input.searchBarHeight
+
+    @Composable
+    fun cornerRadius(): Dp = PaletteTheme.componentThemes.input.searchBarCornerRadius
+
+    @Composable
+    fun borderWidth(): Dp = PaletteTheme.componentThemes.input.searchBarBorderWidth
+
+    @Composable
+    fun iconSize(): Dp = PaletteTheme.componentThemes.input.searchBarIconSize
+
+    @Composable
+    fun clearButtonSize(): Dp = PaletteTheme.componentThemes.input.searchBarClearButtonSize
+
+    @Composable
+    fun clearIconSize(): Dp = PaletteTheme.componentThemes.input.searchBarClearIconSize
+
+    @Composable
+    fun contentPadding(): Dp = PaletteTheme.componentThemes.input.searchBarContentPadding
+
+    @Composable
+    fun iconTextSpacing(): Dp = PaletteTheme.componentThemes.input.searchBarIconTextSpacing
+
+    @Composable
+    fun textStyle(): TextStyle = PaletteTheme.componentThemes.input.searchBarTextStyle
+
+    @Composable
+    fun debounceWait(): Duration = PaletteTheme.componentThemes.input.searchBarDebounceWaitMillis.milliseconds
+
+    @Composable
+    fun animationDurationMillis(): Int = PaletteTheme.componentThemes.input.searchBarAnimationDurationMillis
+
+    @Composable
     fun backgroundColor(enabled: Boolean = true): Color =
-        if (enabled) PaletteTheme.colors.surface else PaletteTheme.colors.disabledBackground
+        if (enabled) PaletteTheme.componentThemes.input.searchBarBackgroundColor
+        else PaletteTheme.componentThemes.input.searchBarDisabledBackgroundColor
 
     @Composable
     fun borderColor(
@@ -43,31 +74,36 @@ object SearchBarDefaults {
         isHovered: Boolean = false,
         enabled: Boolean = true,
     ): Color = when {
-        !enabled -> PaletteTheme.colors.disabledBorder
-        isFocused -> PaletteTheme.colors.focusBorder
-        isHovered -> PaletteTheme.colors.hoverBorder
-        else -> PaletteTheme.colors.border
+        !enabled -> PaletteTheme.componentThemes.input.searchBarDisabledBorderColor
+        isFocused -> PaletteTheme.componentThemes.input.searchBarFocusBorderColor
+        isHovered -> PaletteTheme.componentThemes.input.searchBarHoverBorderColor
+        else -> PaletteTheme.componentThemes.input.searchBarBorderColor
     }
 
     @Composable
     fun placeholderColor(enabled: Boolean = true): Color =
-        PaletteTheme.colors.hint.copy(alpha = if (enabled) 1f else 0.55f)
+        if (enabled) PaletteTheme.componentThemes.input.searchBarPlaceholderColor
+        else PaletteTheme.componentThemes.input.searchBarDisabledPlaceholderColor
 
     @Composable
     fun textColor(enabled: Boolean = true): Color =
-        PaletteTheme.colors.onSurface.copy(alpha = if (enabled) 1f else 0.55f)
+        if (enabled) PaletteTheme.componentThemes.input.searchBarTextColor
+        else PaletteTheme.componentThemes.input.searchBarDisabledTextColor
 
     @Composable
     fun iconColor(enabled: Boolean = true): Color =
-        PaletteTheme.colors.hint.copy(alpha = if (enabled) 1f else 0.55f)
+        if (enabled) PaletteTheme.componentThemes.input.searchBarIconColor
+        else PaletteTheme.componentThemes.input.searchBarDisabledIconColor
 
     @Composable
-    fun clearIconColor(enabled: Boolean = true): Color = iconColor(enabled)
+    fun clearIconColor(enabled: Boolean = true): Color =
+        if (enabled) PaletteTheme.componentThemes.input.searchBarClearIconColor
+        else PaletteTheme.componentThemes.input.searchBarDisabledClearIconColor
 
     @Composable
-    fun cursorColor(): Color = PaletteTheme.colors.primary
+    fun cursorColor(): Color = PaletteTheme.componentThemes.input.searchBarCursorColor
 
     @Deprecated("The search bar now uses a trailing clear icon instead of a cancel text action.")
     @Composable
-    fun cancelColor(): Color = PaletteTheme.colors.primary
+    fun cancelColor(): Color = PaletteTheme.componentThemes.input.searchBarCancelColor
 }

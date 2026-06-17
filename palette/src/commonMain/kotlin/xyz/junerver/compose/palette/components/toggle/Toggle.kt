@@ -15,7 +15,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.unit.dp
 import xyz.junerver.compose.palette.components.text.PText
 import xyz.junerver.compose.palette.core.spec.ComponentSize
 import xyz.junerver.compose.palette.core.util.clickableWithoutRipple
@@ -30,17 +29,17 @@ fun PToggle(
     size: ComponentSize = ComponentSize.Medium,
     content: @Composable () -> Unit,
 ) {
-    val shape = RoundedCornerShape(ToggleDefaults.CornerRadius)
+    val shape = RoundedCornerShape(ToggleDefaults.cornerRadius())
     val containerColor = ToggleDefaults.containerColor(pressed)
     val borderColor = ToggleDefaults.borderColor(pressed)
 
     Box(
         modifier = modifier
             .defaultMinSize(minHeight = size.height)
-            .alpha(if (disabled) ToggleDefaults.DisabledAlpha else 1f)
+            .alpha(if (disabled) ToggleDefaults.disabledAlpha() else 1f)
             .then(
                 if (variant == ToggleVariant.Outline) {
-                    Modifier.border(1.dp, borderColor, shape)
+                    Modifier.border(ToggleDefaults.borderWidth(), borderColor, shape)
                 } else {
                     Modifier
                 }
@@ -49,8 +48,8 @@ fun PToggle(
             .background(containerColor, shape)
             .clickableWithoutRipple(enabled = !disabled) { onPressedChange(!pressed) }
             .padding(
-                horizontal = ToggleDefaults.PaddingHorizontal,
-                vertical = ToggleDefaults.PaddingVertical
+                horizontal = ToggleDefaults.paddingHorizontal(),
+                vertical = ToggleDefaults.paddingVertical()
             ),
         contentAlignment = Alignment.Center
     ) {
@@ -103,7 +102,7 @@ private class PToggleGroupScopeImpl(
         ) {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(4.dp)
+                horizontalArrangement = Arrangement.spacedBy(ToggleDefaults.itemIconSpacing())
             ) {
                 icon?.invoke()
                 PText(
@@ -145,7 +144,7 @@ fun PToggleGroup(
 
     Row(
         modifier = modifier,
-        horizontalArrangement = Arrangement.spacedBy(ToggleDefaults.GroupSpacing),
+        horizontalArrangement = Arrangement.spacedBy(ToggleDefaults.groupSpacing()),
     ) {
         scope.content()
     }

@@ -26,21 +26,21 @@ fun PCard(
     },
     content: @Composable ColumnScope.() -> Unit
 ) {
-    val shape = RoundedCornerShape(CardDefaults.CornerRadius)
+    val shape = RoundedCornerShape(CardDefaults.cornerRadius())
     
     Surface(
         modifier = modifier,
         shape = shape,
         color = colors.containerColor,
         contentColor = colors.contentColor,
-        tonalElevation = if (variant == CardVariant.Elevated) CardDefaults.Elevation else 0.dp,
+        tonalElevation = if (variant == CardVariant.Elevated) CardDefaults.elevation() else 0.dp,
         border = if (variant == CardVariant.Outlined) {
-            BorderStroke(CardDefaults.BorderWidth, colors.contentColor.copy(alpha = 0.12f))
+            BorderStroke(CardDefaults.borderWidth(), CardDefaults.outlinedBorderColor())
         } else null,
         onClick = onClick ?: {}
     ) {
         Column(
-            modifier = Modifier.padding(CardDefaults.ContentPadding),
+            modifier = Modifier.padding(CardDefaults.contentPadding()),
             content = content
         )
     }

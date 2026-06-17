@@ -20,19 +20,21 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import xyz.junerver.compose.hooks.useState
 import xyz.junerver.compose.palette.core.spec.ComponentSize
-import xyz.junerver.compose.palette.core.theme.PaletteTheme
 
 @Composable
 fun PBadge(
     modifier: Modifier = Modifier,
     content: String? = null,
-    size: Dp = BadgeDefaults.Size,
+    size: Dp = BadgeDefaults.defaultSize(),
     componentSize: ComponentSize? = null,
     color: Color = BadgeDefaults.color(),
     alignment: Alignment = Alignment.TopEnd,
     holder: (@Composable () -> Unit)? = null,
 ) {
-    val resolvedSize = componentSize?.let { BadgeDefaults.size(it) } ?: size
+    val resolvedSize = componentSize?.let { BadgeDefaults.componentSize(it) } ?: size
+    val contentPaddingHorizontal = BadgeDefaults.contentPaddingHorizontal()
+    val contentColor = BadgeDefaults.contentColor()
+    val textStyle = BadgeDefaults.textStyle()
 
     Box(modifier = modifier) {
         val density = LocalDensity.current
@@ -41,8 +43,8 @@ fun PBadge(
         val offsetX = when (alignment) {
             Alignment.TopEnd, Alignment.BottomEnd -> localWidth / 2
             Alignment.TopCenter, Alignment.BottomCenter, Alignment.Center -> 0.dp
-            Alignment.CenterStart -> -(localWidth + 8.dp)
-            Alignment.CenterEnd -> localWidth + 8.dp
+            Alignment.CenterStart -> -(localWidth + contentPaddingHorizontal)
+            Alignment.CenterEnd -> localWidth + contentPaddingHorizontal
             else -> -localWidth / 2
         }
 
@@ -67,13 +69,13 @@ fun PBadge(
                     }
                 }
                 .offset(x = offsetX, y = offsetY)
-                .clip(if (localWidth > resolvedSize) RoundedCornerShape(999.dp) else CircleShape)
+                .clip(if (localWidth > resolvedSize) RoundedCornerShape(resolvedSize / 2) else CircleShape)
                 .background(color)
-                .padding(horizontal = if (localWidth > resolvedSize && content != null) 6.dp else 0.dp),
+                .padding(horizontal = if (localWidth > resolvedSize && content != null) contentPaddingHorizontal else 0.dp),
             contentAlignment = Alignment.Center
         ) {
             content?.let {
-                Text(text = it, color = PaletteTheme.colors.onError, style = PaletteTheme.typography.label)
+                Text(text = it, color = contentColor, style = textStyle)
             }
         }
     }

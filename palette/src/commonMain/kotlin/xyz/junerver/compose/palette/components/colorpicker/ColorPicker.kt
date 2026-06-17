@@ -36,13 +36,9 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.input.pointer.pointerInput
-import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.IntOffset
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import xyz.junerver.compose.palette.components.text.PText
-import xyz.junerver.compose.palette.core.theme.PaletteTheme
 import kotlin.math.roundToInt
 
 @Composable
@@ -74,13 +70,17 @@ fun PColorPicker(
         onColorChange(hsvToColor(hue, saturation, value, alpha))
     }
 
-    val shape = RoundedCornerShape(ColorPickerDefaults.CornerRadius)
+    val shape = RoundedCornerShape(ColorPickerDefaults.cornerRadius())
+    val thumbFillColor = ColorPickerDefaults.thumbFillColor()
+    val thumbBorderColor = ColorPickerDefaults.thumbBorderColor()
+    val thumbSize = ColorPickerDefaults.thumbSize()
+    val thumbBorderWidth = ColorPickerDefaults.inputBorderWidth()
 
-    Column(modifier = modifier, verticalArrangement = Arrangement.spacedBy(ColorPickerDefaults.BarSpacing)) {
+    Column(modifier = modifier, verticalArrangement = Arrangement.spacedBy(ColorPickerDefaults.barSpacing())) {
         Canvas(
             modifier = Modifier
-                .width(ColorPickerDefaults.PanelWidth)
-                .height(ColorPickerDefaults.PanelHeight)
+                .width(ColorPickerDefaults.panelWidth())
+                .height(ColorPickerDefaults.panelHeight())
                 .clip(shape)
                 .pointerInput(Unit) {
                     detectTapGestures { offset ->
@@ -105,14 +105,14 @@ fun PColorPicker(
 
             val thumbX = saturation * size.width
             val thumbY = (1f - value) * size.height
-            drawCircle(Color.White, ColorPickerDefaults.ThumbSize.toPx() / 2, Offset(thumbX, thumbY))
-            drawCircle(Color.Black, ColorPickerDefaults.ThumbSize.toPx() / 2 + 1.dp.toPx(), Offset(thumbX, thumbY))
+            drawCircle(thumbFillColor, thumbSize.toPx() / 2, Offset(thumbX, thumbY))
+            drawCircle(thumbBorderColor, thumbSize.toPx() / 2 + thumbBorderWidth.toPx(), Offset(thumbX, thumbY))
         }
 
         Canvas(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(ColorPickerDefaults.HueBarHeight)
+                .height(ColorPickerDefaults.hueBarHeight())
                 .clip(shape)
                 .pointerInput(Unit) {
                     detectTapGestures { offset ->
@@ -132,14 +132,14 @@ fun PColorPicker(
             drawRect(Brush.horizontalGradient(hueColors))
 
             val thumbX = (hue.coerceIn(0f, 360f) / 360f) * size.width
-            drawCircle(Color.White, ColorPickerDefaults.ThumbSize.toPx() / 2, Offset(thumbX, size.height / 2))
+            drawCircle(thumbFillColor, thumbSize.toPx() / 2, Offset(thumbX, size.height / 2))
         }
 
         if (showAlpha) {
             Canvas(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(ColorPickerDefaults.AlphaBarHeight)
+                    .height(ColorPickerDefaults.alphaBarHeight())
                     .clip(shape)
                     .pointerInput(Unit) {
                         detectTapGestures { offset ->
@@ -158,20 +158,24 @@ fun PColorPicker(
                 drawRect(Brush.horizontalGradient(listOf(Color.Transparent, hsvToColor(hue, saturation, value, 1f))))
 
                 val thumbX = alpha * size.width
-                drawCircle(Color.White, ColorPickerDefaults.ThumbSize.toPx() / 2, Offset(thumbX, size.height / 2))
+                drawCircle(thumbFillColor, thumbSize.toPx() / 2, Offset(thumbX, size.height / 2))
             }
         }
 
         Row(
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            horizontalArrangement = Arrangement.spacedBy(ColorPickerDefaults.presetColorSpacing()),
         ) {
             Box(
                 modifier = Modifier
-                    .size(ColorPickerDefaults.PreviewSize)
-                    .clip(RoundedCornerShape(4.dp))
+                    .size(ColorPickerDefaults.previewSize())
+                    .clip(RoundedCornerShape(ColorPickerDefaults.inputCornerRadius()))
                     .background(hsvToColor(hue, saturation, value, alpha))
-                    .border(1.dp, PaletteTheme.colors.border, RoundedCornerShape(4.dp))
+                    .border(
+                        ColorPickerDefaults.inputBorderWidth(),
+                        ColorPickerDefaults.inputBorderColor(),
+                        RoundedCornerShape(ColorPickerDefaults.inputCornerRadius())
+                    )
             )
 
             if (showHex) {
@@ -189,35 +193,47 @@ fun PColorPicker(
                         }
                     },
                     singleLine = true,
-                    textStyle = TextStyle(
-                        fontSize = 12.sp,
-                        color = PaletteTheme.colors.onSurface,
-                    ),
+                    textStyle = ColorPickerDefaults.inputTextStyle().copy(color = ColorPickerDefaults.inputTextColor()),
                     keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
-                    cursorBrush = SolidColor(PaletteTheme.colors.primary),
+                    cursorBrush = SolidColor(ColorPickerDefaults.inputCursorColor()),
                     modifier = Modifier
-                        .width(ColorPickerDefaults.HexInputWidth)
-                        .height(28.dp)
-                        .clip(RoundedCornerShape(4.dp))
-                        .border(1.dp, PaletteTheme.colors.border, RoundedCornerShape(4.dp))
-                        .padding(horizontal = 6.dp, vertical = 4.dp),
+                        .width(ColorPickerDefaults.hexInputWidth())
+                        .height(ColorPickerDefaults.hexInputHeight())
+                        .clip(RoundedCornerShape(ColorPickerDefaults.inputCornerRadius()))
+                        .border(
+                            ColorPickerDefaults.inputBorderWidth(),
+                            ColorPickerDefaults.inputBorderColor(),
+                            RoundedCornerShape(ColorPickerDefaults.inputCornerRadius())
+                        )
+                        .padding(
+                            horizontal = ColorPickerDefaults.inputPaddingHorizontal(),
+                            vertical = ColorPickerDefaults.inputPaddingVertical()
+                        ),
                 )
             }
         }
 
         if (presetColors != null) {
             Row(
-                horizontalArrangement = Arrangement.spacedBy(ColorPickerDefaults.PresetColorSpacing),
+                horizontalArrangement = Arrangement.spacedBy(ColorPickerDefaults.presetColorSpacing()),
             ) {
                 presetColors.forEach { preset ->
                     Box(
                         modifier = Modifier
-                            .size(ColorPickerDefaults.PresetColorSize)
+                            .size(ColorPickerDefaults.presetColorSize())
                             .clip(CircleShape)
                             .background(preset)
                             .border(
-                                width = if (preset == color) 2.dp else 1.dp,
-                                color = if (preset == color) PaletteTheme.colors.primary else PaletteTheme.colors.border,
+                                width = if (preset == color) {
+                                    ColorPickerDefaults.inputBorderWidth() * 2
+                                } else {
+                                    ColorPickerDefaults.inputBorderWidth()
+                                },
+                                color = if (preset == color) {
+                                    ColorPickerDefaults.selectedBorderColor()
+                                } else {
+                                    ColorPickerDefaults.inputBorderColor()
+                                },
                                 shape = CircleShape,
                             )
                             .let { mod ->

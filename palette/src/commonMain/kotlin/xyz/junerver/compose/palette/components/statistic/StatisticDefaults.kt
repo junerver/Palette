@@ -2,6 +2,7 @@ package xyz.junerver.compose.palette.components.statistic
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import xyz.junerver.compose.palette.core.theme.PaletteTheme
@@ -11,14 +12,32 @@ object StatisticDefaults {
     val Spacing: Dp = 8.dp
 
     @Composable
-    fun valueColor(): Color = PaletteTheme.colors.onSurface
+    fun trendIconSize(): Dp = PaletteTheme.componentThemes.feedbackDisplay.statisticTrendIconSize
 
     @Composable
-    fun titleColor(): Color = PaletteTheme.colors.onSurface.copy(alpha = 0.6f)
+    fun spacing(): Dp = PaletteTheme.componentThemes.feedbackDisplay.statisticSpacing
 
     @Composable
-    fun trendUpColor(): Color = Color(0xFF52C41A)
+    fun rowItemSpacing(): Dp = PaletteTheme.componentThemes.feedbackDisplay.statisticRowItemSpacing
 
     @Composable
-    fun trendDownColor(): Color = Color(0xFFFF4D4F)
+    fun valueTextStyle(): TextStyle = PaletteTheme.componentThemes.feedbackDisplay.statisticValueTextStyle
+
+    @Composable
+    fun titleTextStyle(): TextStyle = PaletteTheme.componentThemes.feedbackDisplay.statisticTitleTextStyle
+
+    @Composable
+    fun trendTextStyle(): TextStyle = PaletteTheme.componentThemes.feedbackDisplay.statisticTrendTextStyle
+
+    @Composable
+    fun valueColor(): Color = PaletteTheme.componentThemes.feedbackDisplay.statisticValueColor
+
+    @Composable
+    fun titleColor(): Color = PaletteTheme.componentThemes.feedbackDisplay.statisticTitleColor
+
+    @Composable
+    fun trendUpColor(): Color = PaletteTheme.componentThemes.feedbackDisplay.statisticTrendUpColor
+
+    @Composable
+    fun trendDownColor(): Color = PaletteTheme.componentThemes.feedbackDisplay.statisticTrendDownColor
 }

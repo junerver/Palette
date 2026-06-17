@@ -12,24 +12,23 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.composed
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
-import xyz.junerver.compose.palette.core.theme.PaletteTheme
 
 fun Modifier.shimmerLoading(isActive: Boolean = true): Modifier = composed {
     if (!isActive) return@composed this
 
-    val baseColor = PaletteTheme.colors.onSurface
     val shimmerColors = listOf(
-        baseColor.copy(alpha = 0.12f),
-        baseColor.copy(alpha = 0.04f),
-        baseColor.copy(alpha = 0.12f)
+        SkeletonDefaults.shimmerStartColor(),
+        SkeletonDefaults.shimmerCenterColor(),
+        SkeletonDefaults.shimmerEndColor()
     )
+    val animationDurationMillis = SkeletonDefaults.shimmerAnimationDurationMillis()
 
     val transition = rememberInfiniteTransition(label = "shimmer")
     val translateAnim by transition.animateFloat(
         initialValue = 0f,
         targetValue = 1000f,
         animationSpec = infiniteRepeatable(
-            animation = tween(1000, easing = LinearEasing),
+            animation = tween(animationDurationMillis, easing = LinearEasing),
             repeatMode = RepeatMode.Restart
         ),
         label = "shimmer"

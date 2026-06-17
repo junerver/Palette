@@ -6,7 +6,6 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import xyz.junerver.compose.palette.core.theme.PaletteTheme
 import xyz.junerver.compose.palette.core.tokens.FormTokens
-import xyz.junerver.compose.palette.core.tokens.disabledBorder
 
 object SwitchDefaults {
     val Width: Dp = 50.dp
@@ -20,14 +19,41 @@ object SwitchDefaults {
     val AnimationDuration: Int = FormTokens.DurationNormal
 
     @Composable
-    fun checkedTrackColor(): Color = PaletteTheme.colors.primary
+    fun checkedTrackColor(): Color = PaletteTheme.componentThemes.switch.checkedTrackColor
 
     @Composable
-    fun uncheckedTrackColor(): Color = PaletteTheme.colors.border
+    fun uncheckedTrackColor(): Color = PaletteTheme.componentThemes.switch.uncheckedTrackColor
 
     @Composable
-    fun thumbColor(): Color = PaletteTheme.colors.surface
+    fun thumbColor(): Color = PaletteTheme.componentThemes.switch.thumbColor
     
     @Composable
-    fun disabledTrackColor(): Color = PaletteTheme.colors.disabledBorder
+    fun disabledTrackColor(): Color = PaletteTheme.componentThemes.switch.disabledTrackColor
+
+    @Composable
+    fun width(): Dp = PaletteTheme.componentThemes.switch.width
+
+    @Composable
+    fun height(): Dp = PaletteTheme.componentThemes.switch.height
+
+    @Composable
+    fun thumbSize(): Dp = PaletteTheme.componentThemes.switch.thumbSize
+
+    @Composable
+    fun thumbOffset(): Dp = PaletteTheme.componentThemes.switch.thumbOffset
+
+    @Composable
+    fun checkedThumbOffset(): Dp = PaletteTheme.componentThemes.switch.checkedThumbOffset
+
+    @Composable
+    fun borderRadius(): Dp = PaletteTheme.componentThemes.switch.borderRadius
+
+    @Composable
+    fun thumbBorderRadius(): Dp = PaletteTheme.componentThemes.switch.thumbBorderRadius
+
+    @Composable
+    fun disabledAlpha(): Float = PaletteTheme.componentThemes.switch.disabledAlpha
+
+    @Composable
+    fun animationDuration(): Int = PaletteTheme.componentThemes.switch.motionDuration
 }

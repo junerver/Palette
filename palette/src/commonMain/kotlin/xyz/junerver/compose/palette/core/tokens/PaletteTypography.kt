@@ -22,6 +22,16 @@ class PaletteTypography(
         fontWeight = FontWeight.Medium,
     ),
 ) {
+    fun copy(
+        title: TextStyle = this.title,
+        body: TextStyle = this.body,
+        label: TextStyle = this.label,
+    ): PaletteTypography = PaletteTypography(
+        title = title,
+        body = body,
+        label = label,
+    )
+
     companion object {
         fun default() = PaletteTypography()
     }

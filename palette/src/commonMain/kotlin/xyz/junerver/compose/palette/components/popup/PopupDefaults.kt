@@ -2,6 +2,7 @@ package xyz.junerver.compose.palette.components.popup
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
@@ -17,14 +18,42 @@ object PopupDefaults {
     val TitleHeight: Dp = 50.dp
     val TitleFontSize: TextUnit = 17.sp
     val AnimationDuration: Int = 150
+    // Drag distance is interaction behavior rather than a visual style token.
     val DragDismissThreshold: Float = 0.5f
 
     @Composable
-    fun containerColor(): Color = PaletteTheme.colors.surface
+    fun cornerRadius(): Dp = PaletteTheme.componentThemes.popup.cornerRadius
 
     @Composable
-    fun titleColor(): Color = PaletteTheme.colors.onSurface
+    fun contentPadding(): Dp = PaletteTheme.componentThemes.popup.contentPadding
 
     @Composable
-    fun draggableLineColor(): Color = PaletteTheme.colors.border
+    fun draggableLineLength(): Dp = PaletteTheme.componentThemes.popup.draggableLineLength
+
+    @Composable
+    fun draggableLineThickness(): Dp = PaletteTheme.componentThemes.popup.draggableLineThickness
+
+    @Composable
+    fun draggableLineOffset(): Dp = PaletteTheme.componentThemes.popup.draggableLineOffset
+
+    @Composable
+    fun titleHeight(): Dp = PaletteTheme.componentThemes.popup.titleHeight
+
+    @Composable
+    fun titleTextStyle(): TextStyle = PaletteTheme.componentThemes.popup.titleTextStyle
+
+    @Composable
+    fun titleFontSize(): TextUnit = PaletteTheme.componentThemes.popup.titleTextStyle.fontSize
+
+    @Composable
+    fun animationDurationMillis(): Int = PaletteTheme.componentThemes.popup.animationDurationMillis
+
+    @Composable
+    fun containerColor(): Color = PaletteTheme.componentThemes.popup.containerColor
+
+    @Composable
+    fun titleColor(): Color = PaletteTheme.componentThemes.popup.titleColor
+
+    @Composable
+    fun draggableLineColor(): Color = PaletteTheme.componentThemes.popup.draggableLineColor
 }

@@ -24,12 +24,7 @@ import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.semantics.Role
-import androidx.compose.ui.unit.dp
 import xyz.junerver.compose.palette.core.spec.ComponentSize
-import xyz.junerver.compose.palette.core.theme.PaletteTheme
-import xyz.junerver.compose.palette.core.tokens.FormTokens
-import xyz.junerver.compose.palette.core.tokens.focusBorder
-import xyz.junerver.compose.palette.core.tokens.hoverBorder
 
 @Composable
 fun ColoredCheckBox(
@@ -43,12 +38,11 @@ fun ColoredCheckBox(
     val interactionSource = remember { MutableInteractionSource() }
     val isFocused by interactionSource.collectIsFocusedAsState()
     val isHovered by interactionSource.collectIsHoveredAsState()
-
-    val checkboxSize = when (size) {
-        ComponentSize.Small -> 14.dp
-        ComponentSize.Medium -> 16.dp
-        ComponentSize.Large -> 20.dp
-    }
+    val sizeTokens = CheckboxDefaults.sizeTokens(size)
+    val checkboxSize = sizeTokens.size
+    val motionDuration = CheckboxDefaults.motionDuration()
+    val hoverBackgroundAlpha = CheckboxDefaults.hoverBackgroundAlpha()
+    val disabledBorderAlpha = CheckboxDefaults.disabledBorderAlpha()
 
     val borderColor by animateColorAsState(
         targetValue = when {
@@ -58,24 +52,24 @@ fun ColoredCheckBox(
             isHovered -> colors.hoverColor
             else -> colors.uncheckedColor
         },
-        animationSpec = tween(FormTokens.DurationNormal)
+        animationSpec = tween(motionDuration)
     )
 
     val fillColor by animateColorAsState(
         targetValue = if (checked && enabled) colors.checkedColor else Color.Transparent,
-        animationSpec = tween(FormTokens.DurationNormal)
+        animationSpec = tween(motionDuration)
     )
 
     val checkmarkAlpha by animateColorAsState(
         targetValue = if (checked) colors.checkmarkColor else Color.Transparent,
-        animationSpec = tween(FormTokens.DurationNormal)
+        animationSpec = tween(motionDuration)
     )
 
-    val focusRingAlpha = if (isFocused) 0.3f else 0f
+    val focusRingAlpha = if (isFocused) CheckboxDefaults.focusRingAlpha() else 0f
 
     Box(
         modifier = modifier
-            .size(checkboxSize + 8.dp)
+            .size(checkboxSize + CheckboxDefaults.touchPadding(size))
             .toggleable(
                 value = checked,
                 enabled = enabled,
@@ -88,23 +82,24 @@ fun ColoredCheckBox(
     ) {
         Canvas(modifier = Modifier.size(checkboxSize)) {
             val canvasSize = checkboxSize.toPx()
-            val strokeWidth = 2.dp.toPx()
-            val cornerRadius = 2.dp.toPx()
+            val strokeWidth = sizeTokens.strokeWidth.toPx()
+            val cornerRadius = sizeTokens.cornerRadius.toPx()
+            val focusRingOffset = sizeTokens.focusRingOffset.toPx()
 
             // Focus ring
             if (isFocused) {
                 drawRoundRect(
                     color = borderColor.copy(alpha = focusRingAlpha),
-                    topLeft = Offset(-2.dp.toPx(), -2.dp.toPx()),
-                    size = Size(canvasSize + 4.dp.toPx(), canvasSize + 4.dp.toPx()),
-                    cornerRadius = CornerRadius(cornerRadius + 2.dp.toPx())
+                    topLeft = Offset(-focusRingOffset, -focusRingOffset),
+                    size = Size(canvasSize + focusRingOffset * 2, canvasSize + focusRingOffset * 2),
+                    cornerRadius = CornerRadius(cornerRadius + focusRingOffset)
                 )
             }
 
             // Hover background
             if (isHovered && !checked) {
                 drawRoundRect(
-                    color = borderColor.copy(alpha = 0.1f),
+                    color = borderColor.copy(alpha = hoverBackgroundAlpha),
                     size = Size(canvasSize, canvasSize),
                     cornerRadius = CornerRadius(cornerRadius)
                 )
@@ -119,7 +114,7 @@ fun ColoredCheckBox(
 
             // Checkbox border
             drawRoundRect(
-                color = borderColor.copy(alpha = if (enabled) 1f else 0.5f),
+                color = borderColor.copy(alpha = if (enabled) 1f else disabledBorderAlpha),
                 size = Size(canvasSize, canvasSize),
                 cornerRadius = CornerRadius(cornerRadius),
                 style = Stroke(width = strokeWidth)
@@ -127,13 +122,13 @@ fun ColoredCheckBox(
 
             // Checkmark
             if (checked) {
-                drawCheckmark(checkmarkAlpha, canvasSize)
+                drawCheckmark(checkmarkAlpha, canvasSize, strokeWidth)
             }
         }
     }
 }
 
-private fun DrawScope.drawCheckmark(color: Color, canvasSize: Float) {
+private fun DrawScope.drawCheckmark(color: Color, canvasSize: Float, strokeWidth: Float) {
     val checkPath = Path().apply {
         val checkWidth = canvasSize * 0.7f
         val checkHeight = canvasSize * 0.5f
@@ -148,6 +143,6 @@ private fun DrawScope.drawCheckmark(color: Color, canvasSize: Float) {
     drawPath(
         path = checkPath,
         color = color,
-        style = Stroke(width = 2.dp.toPx(), cap = StrokeCap.Round)
+        style = Stroke(width = strokeWidth, cap = StrokeCap.Round)
     )
 }

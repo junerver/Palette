@@ -19,17 +19,65 @@ object CascaderPanelDefaults {
 
     @Composable
     @ReadOnlyComposable
-    fun containerColor(): Color = PaletteTheme.colors.surface
+    fun columnWidth(): Dp = PaletteTheme.componentThemes.select.cascaderColumnWidth
 
     @Composable
     @ReadOnlyComposable
-    fun itemTextColor(): Color = PaletteTheme.colors.onSurface
+    fun columnHeight(): Dp = PaletteTheme.componentThemes.select.cascaderPanelColumnHeight
 
     @Composable
     @ReadOnlyComposable
-    fun selectedItemColor(): Color = PaletteTheme.colors.primary
+    fun itemHeight(): Dp = PaletteTheme.componentThemes.select.optionHeight
 
     @Composable
     @ReadOnlyComposable
-    fun hoverColor(): Color = PaletteTheme.colors.border
+    fun itemPaddingHorizontal(): Dp = PaletteTheme.componentThemes.select.optionPaddingHorizontal
+
+    @Composable
+    @ReadOnlyComposable
+    fun fontSize(): TextUnit = PaletteTheme.componentThemes.select.optionTextStyle.fontSize
+
+    @Composable
+    @ReadOnlyComposable
+    fun arrowSize(): Dp = PaletteTheme.componentThemes.select.arrowSize
+
+    @Composable
+    @ReadOnlyComposable
+    fun dividerWidth(): Dp = PaletteTheme.componentThemes.select.borderWidth
+
+    @Composable
+    @ReadOnlyComposable
+    fun containerColor(): Color = PaletteTheme.componentThemes.select.dropdownContainerColor
+
+    @Composable
+    @ReadOnlyComposable
+    fun itemTextColor(): Color = PaletteTheme.componentThemes.select.optionTextColor
+
+    @Composable
+    @ReadOnlyComposable
+    fun selectedItemColor(): Color = PaletteTheme.componentThemes.select.selectedOptionTextColor
+
+    @Composable
+    @ReadOnlyComposable
+    fun selectedItemContainerColor(): Color = PaletteTheme.componentThemes.select.selectedOptionContainerColor
+
+    @Composable
+    @ReadOnlyComposable
+    fun hoverColor(): Color = PaletteTheme.componentThemes.select.hoverOptionContainerColor
+
+    @Composable
+    @ReadOnlyComposable
+    fun disabledItemTextColor(): Color = PaletteTheme.componentThemes.select.disabledOptionTextColor
+
+    @Composable
+    @ReadOnlyComposable
+    fun dividerColor(): Color = PaletteTheme.componentThemes.select.dividerColor
+
+    @Composable
+    @ReadOnlyComposable
+    fun iconColor(): Color = PaletteTheme.componentThemes.select.iconColor
+
+    @Composable
+    @ReadOnlyComposable
+    fun trailingIconAlpha(): Float = PaletteTheme.componentThemes.select.trailingIconAlpha
 }

@@ -24,6 +24,7 @@ data class CascaderColors(
     val dropdownContainerColor: Color,
     val itemTextColor: Color,
     val selectedItemTextColor: Color,
+    val selectedItemContainerColor: Color,
     val disabledItemTextColor: Color,
     val hoverColor: Color,
     val borderColor: Color,
@@ -43,18 +44,51 @@ object CascaderDefaults {
 
     @Composable
     @ReadOnlyComposable
+    fun borderWidth(): Dp = PaletteTheme.componentThemes.select.borderWidth
+
+    @Composable
+    @ReadOnlyComposable
+    fun columnWidth(): Dp = PaletteTheme.componentThemes.select.cascaderColumnWidth
+
+    @Composable
+    @ReadOnlyComposable
+    fun columnMaxHeight(): Dp = PaletteTheme.componentThemes.select.cascaderColumnMaxHeight
+
+    @Composable
+    @ReadOnlyComposable
+    fun itemHeight(): Dp = PaletteTheme.componentThemes.select.optionHeight
+
+    @Composable
+    @ReadOnlyComposable
+    fun itemPaddingHorizontal(): Dp = PaletteTheme.componentThemes.select.optionPaddingHorizontal
+
+    @Composable
+    @ReadOnlyComposable
+    fun fontSize(): TextUnit = PaletteTheme.componentThemes.select.optionTextStyle.fontSize
+
+    @Composable
+    @ReadOnlyComposable
+    fun arrowSize(): Dp = PaletteTheme.componentThemes.select.arrowSize
+
+    @Composable
+    @ReadOnlyComposable
+    fun trailingIconAlpha(): Float = PaletteTheme.componentThemes.select.trailingIconAlpha
+
+    @Composable
+    @ReadOnlyComposable
     fun colors(
-        textColor: Color = PaletteTheme.colors.onSurface,
-        placeholderColor: Color = PaletteTheme.colors.hint,
-        disabledTextColor: Color = PaletteTheme.colors.onSurface.copy(alpha = 0.5f),
-        containerColor: Color = PaletteTheme.colors.surface,
-        dropdownContainerColor: Color = PaletteTheme.colors.surface,
-        itemTextColor: Color = PaletteTheme.colors.onSurface,
-        selectedItemTextColor: Color = PaletteTheme.colors.primary,
-        disabledItemTextColor: Color = PaletteTheme.colors.hint,
-        hoverColor: Color = PaletteTheme.colors.border.copy(alpha = 0.5f),
-        borderColor: Color = PaletteTheme.colors.border,
-        disabledBorderColor: Color = PaletteTheme.colors.border.copy(alpha = 0.5f),
+        textColor: Color = PaletteTheme.componentThemes.select.textColor,
+        placeholderColor: Color = PaletteTheme.componentThemes.select.placeholderColor,
+        disabledTextColor: Color = PaletteTheme.componentThemes.select.disabledTextColor,
+        containerColor: Color = PaletteTheme.componentThemes.select.containerColor,
+        dropdownContainerColor: Color = PaletteTheme.componentThemes.select.dropdownContainerColor,
+        itemTextColor: Color = PaletteTheme.componentThemes.select.optionTextColor,
+        selectedItemTextColor: Color = PaletteTheme.componentThemes.select.selectedOptionTextColor,
+        selectedItemContainerColor: Color = PaletteTheme.componentThemes.select.selectedOptionContainerColor,
+        disabledItemTextColor: Color = PaletteTheme.componentThemes.select.disabledOptionTextColor,
+        hoverColor: Color = PaletteTheme.componentThemes.select.hoverOptionContainerColor,
+        borderColor: Color = PaletteTheme.componentThemes.select.borderColor,
+        disabledBorderColor: Color = PaletteTheme.componentThemes.select.disabledBorderColor,
     ): CascaderColors = CascaderColors(
         textColor = textColor,
         placeholderColor = placeholderColor,
@@ -63,6 +97,7 @@ object CascaderDefaults {
         dropdownContainerColor = dropdownContainerColor,
         itemTextColor = itemTextColor,
         selectedItemTextColor = selectedItemTextColor,
+        selectedItemContainerColor = selectedItemContainerColor,
         disabledItemTextColor = disabledItemTextColor,
         hoverColor = hoverColor,
         borderColor = borderColor,

@@ -2,6 +2,7 @@ package xyz.junerver.compose.palette.components.descriptions
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import xyz.junerver.compose.palette.core.theme.PaletteTheme
@@ -12,8 +13,29 @@ object DescriptionsDefaults {
     val Padding: Dp = 12.dp
 
     @Composable
-    fun labelColor(): Color = PaletteTheme.colors.onSurface.copy(alpha = 0.6f)
+    fun rowHeight(): Dp = PaletteTheme.componentThemes.dataDisplay.descriptionsRowHeight
 
     @Composable
-    fun contentColor(): Color = PaletteTheme.colors.onSurface
+    fun labelWidth(): Dp = PaletteTheme.componentThemes.dataDisplay.descriptionsLabelWidth
+
+    @Composable
+    fun padding(): Dp = PaletteTheme.componentThemes.dataDisplay.descriptionsPadding
+
+    @Composable
+    fun rowSpacing(): Dp = PaletteTheme.componentThemes.dataDisplay.descriptionsRowSpacing
+
+    @Composable
+    fun dividerHeight(): Dp = PaletteTheme.componentThemes.dataDisplay.descriptionsDividerHeight
+
+    @Composable
+    fun dividerColor(): Color = PaletteTheme.componentThemes.dataDisplay.descriptionsDividerColor
+
+    @Composable
+    fun textStyle(): TextStyle = PaletteTheme.componentThemes.dataDisplay.descriptionsTextStyle
+
+    @Composable
+    fun labelColor(): Color = PaletteTheme.componentThemes.dataDisplay.descriptionsLabelColor
+
+    @Composable
+    fun contentColor(): Color = PaletteTheme.componentThemes.dataDisplay.descriptionsContentColor
 }

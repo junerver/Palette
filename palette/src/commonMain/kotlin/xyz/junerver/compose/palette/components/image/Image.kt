@@ -9,7 +9,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.window.Popup
@@ -26,7 +25,7 @@ fun PImage(
     contentScale: ContentScale = ContentScale.Fit
 ) {
     val (showPreview, setShowPreview) = useState(false)
-    val shape = ImageDefaults.Shape
+    val shape = ImageDefaults.shape()
     val containerColor = ImageDefaults.containerColor()
 
     Box(
@@ -62,7 +61,7 @@ fun PImage(
             Box(
                 modifier = Modifier
                     .fillMaxSize()
-                    .background(Color.Black.copy(alpha = 0.9f))
+                    .background(ImageDefaults.previewOverlayColor())
                     .clickable { setShowPreview(false) },
                 contentAlignment = Alignment.Center
             ) {
