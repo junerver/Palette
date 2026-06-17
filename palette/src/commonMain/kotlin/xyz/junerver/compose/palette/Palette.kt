@@ -9,6 +9,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.Dp
 import xyz.junerver.compose.palette.components.avatar.AvatarDefaults as AvatarDefaultsImpl
+import xyz.junerver.compose.palette.components.avatar.AvatarShape as AvatarShapeImpl
 import xyz.junerver.compose.palette.components.avatar.AvatarSize as AvatarSizeImpl
 import xyz.junerver.compose.palette.components.badge.BadgeDefaults as BadgeDefaultsImpl
 import xyz.junerver.compose.palette.components.button.ButtonDefaults as ButtonDefaultsImpl
@@ -429,6 +430,7 @@ typealias TagSizeTokens = TagSizeTokensImpl
 
 // Components - Avatar
 val AvatarDefaults = AvatarDefaultsImpl
+typealias AvatarShape = AvatarShapeImpl
 typealias AvatarSize = AvatarSizeImpl
 
 // Components - Collapse

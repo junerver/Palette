@@ -20,10 +20,13 @@ import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.painter.ColorPainter
 import androidx.compose.ui.unit.dp
 import xyz.junerver.compose.palette.Language
 import xyz.junerver.compose.palette.LocalLanguage
 import xyz.junerver.compose.palette.components.CodeBlock
+import xyz.junerver.compose.palette.components.avatar.AvatarDefaults
+import xyz.junerver.compose.palette.components.avatar.AvatarShape
 import xyz.junerver.compose.palette.components.avatar.AvatarSize
 import xyz.junerver.compose.palette.components.avatar.PAvatar
 import xyz.junerver.compose.palette.components.text.PText
@@ -65,6 +68,19 @@ fun AvatarDemo() {
 
         Spacer(modifier = Modifier.height(24.dp))
 
+        DemoSection(title = text.shapeSectionTitle) {
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(16.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                PAvatar(text = "C", shape = AvatarDefaults.shape(AvatarShape.Circle))
+                PAvatar(text = "S", shape = AvatarDefaults.shape(AvatarShape.Square))
+                PAvatar(text = "R", shape = AvatarDefaults.shape(AvatarShape.RoundedRectangle))
+            }
+        }
+
+        Spacer(modifier = Modifier.height(24.dp))
+
         DemoSection(title = text.colorSectionTitle) {
             Row(
                 horizontalArrangement = Arrangement.spacedBy(16.dp),
@@ -74,6 +90,27 @@ fun AvatarDemo() {
                 PAvatar(text = "S", backgroundColor = Color(0xFF52C41A))
                 PAvatar(text = "E", backgroundColor = Color(0xFFFAAD14))
                 PAvatar(text = "R", backgroundColor = Color(0xFFF5222D))
+            }
+        }
+
+        Spacer(modifier = Modifier.height(24.dp))
+
+        DemoSection(title = text.imageSectionTitle) {
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(16.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                PAvatar(
+                    size = AvatarSize.Large,
+                    painter = ColorPainter(Color(0xFF5B8DEF)),
+                    contentDescription = "Avatar image",
+                )
+                PAvatar(
+                    size = AvatarSize.Large,
+                    painter = ColorPainter(Color(0xFF14B8A6)),
+                    contentDescription = "Rounded avatar image",
+                    shape = AvatarDefaults.shape(AvatarShape.RoundedRectangle),
+                )
             }
         }
 
@@ -139,9 +176,11 @@ private fun avatarDemoText(): AvatarDemoText =
         Language.ZH_CN ->
             AvatarDemoText(
                 title = "PAvatar",
-                subtitle = "用来代表用户或事物，支持图片、图标或字符展示",
+                subtitle = "用来代表用户或事物，支持 Painter 图片、图标或字符展示",
                 sizeSectionTitle = "不同尺寸",
+                shapeSectionTitle = "不同形状",
                 colorSectionTitle = "不同背景色",
+                imageSectionTitle = "图片内容",
                 customSectionTitle = "自定义内容",
                 codeTitle = "代码示例",
                 codeBlock =
@@ -149,7 +188,13 @@ private fun avatarDemoText(): AvatarDemoText =
                     PAvatar(
                         size = AvatarSize.Large,
                         text = "User",
+                        shape = AvatarDefaults.shape(AvatarShape.RoundedRectangle),
                         backgroundColor = Color(0xFF1890FF)
+                    )
+
+                    PAvatar(
+                        painter = avatarPainter,
+                        contentDescription = "User avatar"
                     )
 
                     PAvatar(
@@ -164,9 +209,11 @@ private fun avatarDemoText(): AvatarDemoText =
         Language.EN_US ->
             AvatarDemoText(
                 title = "PAvatar",
-                subtitle = "Represents users or entities with image, icon, or text.",
+                subtitle = "Represents users or entities with Painter images, icons, or text.",
                 sizeSectionTitle = "Sizes",
+                shapeSectionTitle = "Shapes",
                 colorSectionTitle = "Background Colors",
+                imageSectionTitle = "Image Content",
                 customSectionTitle = "Custom Content",
                 codeTitle = "Code Example",
                 codeBlock =
@@ -174,7 +221,13 @@ private fun avatarDemoText(): AvatarDemoText =
                     PAvatar(
                         size = AvatarSize.Large,
                         text = "User",
+                        shape = AvatarDefaults.shape(AvatarShape.RoundedRectangle),
                         backgroundColor = Color(0xFF1890FF)
+                    )
+
+                    PAvatar(
+                        painter = avatarPainter,
+                        contentDescription = "User avatar"
                     )
 
                     PAvatar(
@@ -191,7 +244,9 @@ private data class AvatarDemoText(
     val title: String,
     val subtitle: String,
     val sizeSectionTitle: String,
+    val shapeSectionTitle: String,
     val colorSectionTitle: String,
+    val imageSectionTitle: String,
     val customSectionTitle: String,
     val codeTitle: String,
     val codeBlock: String,
