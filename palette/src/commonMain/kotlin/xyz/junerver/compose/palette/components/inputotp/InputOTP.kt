@@ -1,11 +1,13 @@
 package xyz.junerver.compose.palette.components.inputotp
 
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.focusable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
@@ -17,9 +19,7 @@ import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
@@ -36,10 +36,9 @@ import androidx.compose.ui.input.key.onPreviewKeyEvent
 import androidx.compose.ui.input.key.type
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.unit.dp
+import xyz.junerver.compose.hooks.useState
 import xyz.junerver.compose.palette.components.text.PText
 import xyz.junerver.compose.palette.core.spec.ComponentSize
-import xyz.junerver.compose.palette.core.theme.PaletteTheme
 
 @Composable
 fun PInputOTP(
@@ -53,17 +52,29 @@ fun PInputOTP(
     size: ComponentSize = ComponentSize.Medium,
 ) {
     val focusRequester = remember { FocusRequester() }
-    var isFocused by remember { mutableStateOf(false) }
+    val (isFocused, setIsFocused) = useState(false)
+    val activeCellIndex = currentInputOtpIndex(valueLength = value.length, length = length)
 
-    LaunchedEffect(Unit) {
+    LaunchedEffect(disabled) {
         if (!disabled) {
             focusRequester.requestFocus()
+        } else {
+            setIsFocused(false)
         }
     }
 
     val disabledAlpha by animateFloatAsState(
         targetValue = if (disabled) InputOTPDefaults.DisabledAlpha else 1f,
         animationSpec = tween(100)
+    )
+    val cursorTransition = rememberInfiniteTransition(label = "InputOTPCursorTransition")
+    val cursorAlpha by cursorTransition.animateFloat(
+        initialValue = 1f,
+        targetValue = 0f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(InputOTPDefaults.CursorBlinkDurationMillis),
+        ),
+        label = "InputOTPCursorAlpha",
     )
 
     val shape = RoundedCornerShape(InputOTPDefaults.CellCornerRadius)
@@ -76,7 +87,7 @@ fun PInputOTP(
             for (i in 0 until length) {
                 val char = value.getOrNull(i)?.toString() ?: ""
                 val displayChar = if (masked && char.isNotEmpty()) InputOTPDefaults.MaskChar else char
-                val cellFocused = isFocused && i == value.length.coerceAtMost(length - 1)
+                val cellFocused = isFocused && i == activeCellIndex
 
                 val borderColor = InputOTPDefaults.cellBorderColor(isFocused = cellFocused)
 
@@ -106,7 +117,8 @@ fun PInputOTP(
                     } else if (cellFocused) {
                         Box(
                             modifier = Modifier
-                                .size(2.dp, InputOTPDefaults.FontSize.value.dp)
+                                .size(InputOTPDefaults.CursorWidth, InputOTPDefaults.CursorHeight)
+                                .alpha(cursorAlpha)
                                 .background(InputOTPDefaults.cursorColor())
                         )
                     }
@@ -121,8 +133,7 @@ fun PInputOTP(
         BasicTextField(
             value = value,
             onValueChange = { newValue ->
-                val filtered = newValue.filter { it.isDigit() }
-                onValueChange(filtered.take(length))
+                onValueChange(filterInputOtpValue(newValue, length))
             },
             enabled = !disabled,
             singleLine = true,
@@ -132,7 +143,7 @@ fun PInputOTP(
                 .matchParentSize()
                 .alpha(0f)
                 .focusRequester(focusRequester)
-                .onFocusChanged { isFocused = it.isFocused }
+                .onFocusChanged { setIsFocused(it.hasFocus) }
                 .onPreviewKeyEvent { event ->
                     if (event.type == KeyEventType.KeyDown && event.key == Key.Backspace) {
                         if (value.isNotEmpty()) {
@@ -142,8 +153,20 @@ fun PInputOTP(
                     } else {
                         false
                     }
-                }
-                .focusable()
+                },
         )
     }
 }
+
+internal fun currentInputOtpIndex(
+    valueLength: Int,
+    length: Int,
+): Int? {
+    if (length <= 0) return null
+    return valueLength.coerceIn(0, length - 1)
+}
+
+internal fun filterInputOtpValue(
+    value: String,
+    length: Int,
+): String = value.filter { it.isDigit() }.take(length.coerceAtLeast(0))

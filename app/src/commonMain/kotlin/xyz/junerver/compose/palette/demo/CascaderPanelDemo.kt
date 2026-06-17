@@ -4,18 +4,16 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.ReadOnlyComposable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import xyz.junerver.compose.hooks.useState
 import xyz.junerver.compose.palette.Language
 import xyz.junerver.compose.palette.LocalLanguage
 import xyz.junerver.compose.palette.components.CodeBlock
@@ -23,56 +21,117 @@ import xyz.junerver.compose.palette.components.cascader.CascaderOption
 import xyz.junerver.compose.palette.components.cascaderpanel.PCascaderPanel
 import xyz.junerver.compose.palette.components.text.PText
 
+private val panelRegionOptions = listOf(
+    CascaderOption(
+        value = "zhejiang",
+        label = "浙江省",
+        children = listOf(
+            CascaderOption(
+                value = "hangzhou",
+                label = "杭州市",
+                children = listOf(
+                    CascaderOption(
+                        value = "xihu",
+                        label = "西湖区",
+                        children = listOf(
+                            CascaderOption(value = "longxiangqiao", label = "龙翔桥"),
+                            CascaderOption(value = "wenyiwestroad", label = "文一西路"),
+                        ),
+                    ),
+                    CascaderOption(
+                        value = "binjiang",
+                        label = "滨江区",
+                        children = listOf(
+                            CascaderOption(value = "xingguang", label = "星光大道"),
+                            CascaderOption(value = "changhe", label = "长河"),
+                        ),
+                    ),
+                    CascaderOption(value = "gongshu", label = "拱墅区"),
+                ),
+            ),
+            CascaderOption(
+                value = "ningbo",
+                label = "宁波市",
+                children = listOf(
+                    CascaderOption(value = "haishu", label = "海曙区"),
+                    CascaderOption(value = "jiangbei", label = "江北区"),
+                    CascaderOption(value = "yinzhou", label = "鄞州区"),
+                ),
+            ),
+            CascaderOption(
+                value = "wenzhou",
+                label = "温州市",
+                children = listOf(
+                    CascaderOption(value = "lucheng", label = "鹿城区"),
+                    CascaderOption(value = "ouhai", label = "瓯海区"),
+                ),
+            ),
+        ),
+    ),
+    CascaderOption(
+        value = "jiangsu",
+        label = "江苏省",
+        children = listOf(
+            CascaderOption(
+                value = "nanjing",
+                label = "南京市",
+                children = listOf(
+                    CascaderOption(value = "xuanwu", label = "玄武区"),
+                    CascaderOption(value = "gulou", label = "鼓楼区"),
+                    CascaderOption(value = "jianye", label = "建邺区"),
+                ),
+            ),
+            CascaderOption(
+                value = "suzhou",
+                label = "苏州市",
+                children = listOf(
+                    CascaderOption(
+                        value = "gusu",
+                        label = "姑苏区",
+                        children = listOf(
+                            CascaderOption(value = "guanqian", label = "观前街"),
+                            CascaderOption(value = "pingjiang", label = "平江路"),
+                        ),
+                    ),
+                    CascaderOption(value = "wuzhong", label = "吴中区"),
+                    CascaderOption(value = "kunshan", label = "昆山市"),
+                ),
+            ),
+        ),
+    ),
+    CascaderOption(
+        value = "guangdong",
+        label = "广东省",
+        children = listOf(
+            CascaderOption(
+                value = "guangzhou",
+                label = "广州市",
+                children = listOf(
+                    CascaderOption(value = "tianhe", label = "天河区"),
+                    CascaderOption(value = "yuexiu", label = "越秀区"),
+                    CascaderOption(value = "haizhu", label = "海珠区"),
+                ),
+            ),
+            CascaderOption(
+                value = "shenzhen",
+                label = "深圳市",
+                children = listOf(
+                    CascaderOption(value = "nanshan", label = "南山区"),
+                    CascaderOption(value = "futian", label = "福田区"),
+                    CascaderOption(value = "luohu", label = "罗湖区"),
+                ),
+            ),
+        ),
+    ),
+)
+
+private val defaultPanelValue = listOf("zhejiang", "hangzhou", "xihu", "longxiangqiao")
+
 @Composable
 fun CascaderPanelDemo() {
     val text = cascaderPanelDemoText()
-
-    val mockOptions = listOf(
-        CascaderOption(
-            value = "zhejiang",
-            label = "浙江",
-            children = listOf(
-                CascaderOption(
-                    value = "hangzhou",
-                    label = "杭州",
-                    children = listOf(
-                        CascaderOption(value = "xihu", label = "西湖区"),
-                        CascaderOption(value = "binjiang", label = "滨江区"),
-                    ),
-                ),
-                CascaderOption(
-                    value = "ningbo",
-                    label = "宁波",
-                    children = listOf(
-                        CascaderOption(value = "haishu", label = "海曙区"),
-                        CascaderOption(value = "jiangbei", label = "江北区"),
-                    ),
-                ),
-            ),
-        ),
-        CascaderOption(
-            value = "jiangsu",
-            label = "江苏",
-            children = listOf(
-                CascaderOption(
-                    value = "nanjing",
-                    label = "南京",
-                    children = listOf(
-                        CascaderOption(value = "xuanwu", label = "玄武区"),
-                        CascaderOption(value = "gulou", label = "鼓楼区"),
-                    ),
-                ),
-                CascaderOption(
-                    value = "suzhou",
-                    label = "苏州",
-                    children = listOf(
-                        CascaderOption(value = "gusu", label = "姑苏区"),
-                        CascaderOption(value = "wuzhong", label = "吴中区"),
-                    ),
-                ),
-            ),
-        ),
-    )
+    val (selected, setSelected) = useState<List<String>>(defaultPanelValue)
+    val selectedLabels = selectedLabelPath(panelRegionOptions, selected)
 
     Column(
         modifier =
@@ -94,15 +153,15 @@ fun CascaderPanelDemo() {
         Spacer(modifier = Modifier.height(32.dp))
 
         DemoSection(title = text.basicSectionTitle) {
-            var selected by remember { mutableStateOf(emptyList<String>()) }
             Column {
                 PCascaderPanel(
-                    options = mockOptions,
+                    options = panelRegionOptions,
                     value = selected,
-                    onValueChange = { selected = it },
+                    onValueChange = setSelected,
+                    modifier = Modifier.horizontalScroll(rememberScrollState()),
                 )
                 PText(
-                    text = "${text.selectedPrefix}${selected.joinToString(" / ")}",
+                    text = "${text.selectedPrefix}${selectedLabels.joinToString(" / ")}",
                     style = MaterialTheme.typography.bodySmall,
                     modifier = Modifier.padding(top = 8.dp),
                 )
@@ -140,23 +199,47 @@ private fun cascaderPanelDemoText(): CascaderPanelDemoText =
                     val options = listOf(
                         CascaderOption(
                             value = "zhejiang",
-                            label = "浙江",
+                            label = "浙江省",
                             children = listOf(
                                 CascaderOption(
                                     value = "hangzhou",
-                                    label = "杭州",
+                                    label = "杭州市",
                                     children = listOf(
-                                        CascaderOption(value = "xihu", label = "西湖区")
+                                        CascaderOption(
+                                            value = "xihu",
+                                            label = "西湖区",
+                                            children = listOf(
+                                                CascaderOption(value = "longxiangqiao", label = "龙翔桥"),
+                                                CascaderOption(value = "wenyiwestroad", label = "文一西路")
+                                            )
+                                        ),
+                                        CascaderOption(
+                                            value = "binjiang",
+                                            label = "滨江区",
+                                            children = listOf(
+                                                CascaderOption(value = "xingguang", label = "星光大道"),
+                                                CascaderOption(value = "changhe", label = "长河")
+                                            )
+                                        )
+                                    )
+                                ),
+                                CascaderOption(
+                                    value = "ningbo",
+                                    label = "宁波市",
+                                    children = listOf(
+                                        CascaderOption(value = "haishu", label = "海曙区"),
+                                        CascaderOption(value = "jiangbei", label = "江北区")
                                     )
                                 )
                             )
                         )
                     )
-                    var selected by remember { mutableStateOf(emptyList<String>()) }
+                    val (selected, setSelected) =
+                        useState<List<String>>(listOf("zhejiang", "hangzhou", "xihu", "longxiangqiao"))
                     PCascaderPanel(
                         options = options,
                         value = selected,
-                        onValueChange = { selected = it }
+                        onValueChange = setSelected
                     )
                     """.trimIndent(),
             )
@@ -179,21 +262,59 @@ private fun cascaderPanelDemoText(): CascaderPanelDemoText =
                                     value = "hangzhou",
                                     label = "Hangzhou",
                                     children = listOf(
-                                        CascaderOption(value = "xihu", label = "Xihu")
+                                        CascaderOption(
+                                            value = "xihu",
+                                            label = "Xihu",
+                                            children = listOf(
+                                                CascaderOption(value = "longxiangqiao", label = "Longxiangqiao"),
+                                                CascaderOption(value = "wenyiwestroad", label = "Wenyi West Road")
+                                            )
+                                        ),
+                                        CascaderOption(
+                                            value = "binjiang",
+                                            label = "Binjiang",
+                                            children = listOf(
+                                                CascaderOption(value = "xingguang", label = "Xingguang Avenue"),
+                                                CascaderOption(value = "changhe", label = "Changhe")
+                                            )
+                                        )
+                                    )
+                                ),
+                                CascaderOption(
+                                    value = "ningbo",
+                                    label = "Ningbo",
+                                    children = listOf(
+                                        CascaderOption(value = "haishu", label = "Haishu"),
+                                        CascaderOption(value = "jiangbei", label = "Jiangbei")
                                     )
                                 )
                             )
                         )
                     )
-                    var selected by remember { mutableStateOf(emptyList<String>()) }
+                    val (selected, setSelected) =
+                        useState<List<String>>(listOf("zhejiang", "hangzhou", "xihu", "longxiangqiao"))
                     PCascaderPanel(
                         options = options,
                         value = selected,
-                        onValueChange = { selected = it }
+                        onValueChange = setSelected
                     )
                     """.trimIndent(),
             )
     }
+
+private fun selectedLabelPath(
+    options: List<CascaderOption>,
+    value: List<String>,
+): List<String> {
+    var current = options
+    val labels = mutableListOf<String>()
+    for (selectedValue in value) {
+        val option = current.firstOrNull { it.value == selectedValue } ?: break
+        labels += option.label
+        current = option.children
+    }
+    return labels
+}
 
 private data class CascaderPanelDemoText(
     val title: String,

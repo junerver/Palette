@@ -98,6 +98,12 @@ fun Xxx(
   - `PaletteTheme.typography` - 字体
   - `PaletteTheme.isDark` - 深色模式状态
 - 使用 `PaletteDefaults` 访问全局默认值
+- 新增组件或重构组件时，必须先明确该组件的“主要可调整样式面”（类似主流组件库暴露的主要颜色、字号、圆角、间距、尺寸、边框、阴影、动效、透明度等），不要把所有内部实现细节都暴露为 API。
+- 组件默认样式必须优先接入顶层主题 token，使项目方可以在 `PaletteTheme` / `PaletteMaterialTheme` 顶层统一调整。局部参数只能作为实例级覆盖，不能成为唯一的定制入口。
+- 若现有 `PaletteColors`、`PaletteSpacing`、`PaletteShapes`、`PaletteTypography`、`FormTokens` 或组件级 token 无法表达新增组件的主要样式，需同步新增或维护相应顶层 token，并在评审中说明 token 命名、语义和适用组件范围。
+- `XxxDefaults` 中的默认颜色、字号、圆角、间距、边框、阴影、动效时长、禁用透明度等主要样式，不应直接硬编码为 `Color(...)` / `dp` / `sp` 常量后长期作为最终方案；应从 `PaletteTheme`、`PaletteDefaults` 或组件级顶层 token 派生。确属算法常量、协议常量、图形编码常量或不可主题化实现细节时，需要用简短注释说明原因。
+- 推荐覆盖优先级：组件显式参数 > `XxxDefaults` 参数化默认值 > 组件级顶层 token > 全局语义 token > 受控兜底值。
+- 新增或调整 token 时，需要同步更新统一导出、示例用法、主题相关测试，并确保深色模式、禁用态、悬停/聚焦/选中/错误等主要状态可由顶层主题稳定控制。
 
 ### 状态管理
 

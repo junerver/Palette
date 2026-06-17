@@ -32,4 +32,7 @@ object MentionsDefaults {
 
     @Composable
     fun mentionTagColor(): Color = PaletteTheme.colors.primary.copy(alpha = 0.1f)
+
+    @Composable
+    fun highlightColor(): Color = PaletteTheme.colors.primary.copy(alpha = 0.16f)
 }

@@ -16,6 +16,9 @@ object InputOTPDefaults {
     val CellSpacing: Dp = 8.dp
     val CellBorderWidth: Dp = 1.dp
     val FontSize: TextUnit = 20.sp
+    val CursorWidth: Dp = 2.dp
+    val CursorHeight: Dp = 24.dp
+    const val CursorBlinkDurationMillis: Int = 1000
     val MaskChar: String = "•"
     val SeparatorWidth: Dp = 16.dp
     val DisabledAlpha: Float = 0.5f

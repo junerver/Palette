@@ -13,12 +13,21 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.input.OffsetMapping
+import androidx.compose.ui.text.input.TextFieldValue
+import androidx.compose.ui.text.input.TransformedText
+import androidx.compose.ui.text.input.VisualTransformation
+import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.IntRect
 import androidx.compose.ui.unit.IntSize
@@ -41,7 +50,12 @@ fun PMentions(
     disabled: Boolean = false,
     prefix: String = "@",
     onSelect: ((MentionsOption) -> Unit)? = null,
+    onSearch: ((String) -> Unit)? = null,
+    loading: Boolean = false,
+    highlight: Boolean = false,
+    highlightColor: Color = MentionsDefaults.highlightColor(),
 ) {
+    val (editorValue, setEditorValue) = useState(TextFieldValue(value, selection = TextRange(value.length)))
     val (mentionQuery, setMentionQuery) = useState("")
     val (mentionTriggerIndex, setMentionTriggerIndex) = useState(-1)
     val (showDropdown, setShowDropdown) = useState(false)
@@ -49,6 +63,19 @@ fun PMentions(
 
     val density = LocalDensity.current
     val dropdownWidth = with(density) { anchorWidth.toDp() }
+
+    LaunchedEffect(value) {
+        if (value != editorValue.text) {
+            val cursor = editorValue.selection.end.coerceIn(0, value.length)
+            setEditorValue(
+                editorValue.copy(
+                    text = value,
+                    selection = TextRange(cursor),
+                    composition = null,
+                )
+            )
+        }
+    }
 
     val filteredOptions = remember(options, mentionQuery, prefix) {
         if (mentionQuery.length < prefix.length) {
@@ -62,45 +89,73 @@ fun PMentions(
         }
     }
 
-    fun detectMentionTrigger(text: String) {
-        val lastAtIndex = text.lastIndexOf(prefix)
-        if (lastAtIndex == -1) {
-            setShowDropdown(false)
-            setMentionTriggerIndex(-1)
-            setMentionQuery("")
-            return
-        }
-        val textAfterAt = text.substring(lastAtIndex)
-        val hasSpace = textAfterAt.drop(prefix.length).indexOf(' ')
-        if (hasSpace != -1) {
-            setShowDropdown(false)
-            setMentionTriggerIndex(-1)
-            setMentionQuery("")
-            return
-        }
-        setMentionTriggerIndex(lastAtIndex)
-        setMentionQuery(textAfterAt)
-        setShowDropdown(filteredOptions.isNotEmpty())
+    fun clearMentionTrigger() {
+        setShowDropdown(false)
+        setMentionTriggerIndex(-1)
+        setMentionQuery("")
     }
+
+    fun detectMentionTrigger(text: String, cursorPosition: Int) {
+        if (prefix.isEmpty()) {
+            clearMentionTrigger()
+            return
+        }
+        val cursor = cursorPosition.coerceIn(0, text.length)
+        val beforeCursor = text.substring(0, cursor)
+        val triggerIndex = beforeCursor.lastIndexOf(prefix)
+        if (triggerIndex == -1) {
+            clearMentionTrigger()
+            return
+        }
+        val queryWithPrefix = beforeCursor.substring(triggerIndex)
+        val query = queryWithPrefix.removePrefix(prefix)
+        if (query.any { it.isWhitespace() }) {
+            clearMentionTrigger()
+            return
+        }
+        setMentionTriggerIndex(triggerIndex)
+        setMentionQuery(queryWithPrefix)
+        setShowDropdown(true)
+        onSearch?.invoke(query)
+    }
+
+    fun commitEditorValue(newValue: TextFieldValue) {
+        val normalizedValue = replaceEditedMentionWithWholeDeletion(
+            oldValue = editorValue,
+            requestedValue = newValue,
+            prefix = prefix,
+        ) ?: newValue
+        setEditorValue(normalizedValue)
+        onValueChange(normalizedValue.text)
+        if (!disabled) {
+            detectMentionTrigger(normalizedValue.text, normalizedValue.selection.end)
+        }
+    }
+
+    val visualTransformation = remember(prefix, highlight, highlightColor) {
+        MentionsHighlightTransformation(
+            prefix = prefix,
+            enabled = highlight,
+            highlightColor = highlightColor,
+        )
+    }
+
+    val shouldShowDropdown = showDropdown && !disabled && (loading || filteredOptions.isNotEmpty())
 
     Box(
         modifier = modifier.onSizeChanged { setAnchorWidth(it.width) }
     ) {
         TextArea(
-            value = value,
-            onValueChange = { newValue ->
-                onValueChange(newValue)
-                if (!disabled) {
-                    detectMentionTrigger(newValue)
-                }
-            },
+            value = editorValue,
+            onValueChange = { newValue -> commitEditorValue(newValue) },
             modifier = Modifier.fillMaxWidth(),
             enabled = !disabled,
             placeholder = placeholder,
             minLines = MentionsDefaults.MinLines,
+            visualTransformation = visualTransformation,
         )
 
-        if (showDropdown && filteredOptions.isNotEmpty() && !disabled) {
+        if (shouldShowDropdown) {
             Popup(
                 onDismissRequest = { setShowDropdown(false) },
                 popupPositionProvider = object : PopupPositionProvider {
@@ -131,6 +186,25 @@ fun PMentions(
                         .clip(RoundedCornerShape(MentionsDefaults.CornerRadius))
                         .background(PaletteTheme.colors.surface)
                 ) {
+                    if (loading) {
+                        item {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(
+                                        horizontal = MentionsDefaults.OptionPaddingHorizontal,
+                                        vertical = MentionsDefaults.OptionHeight / 4,
+                                    )
+                            ) {
+                                PText(
+                                    text = "Loading...",
+                                    fontSize = MentionsDefaults.FontSize,
+                                    color = PaletteTheme.colors.hint,
+                                    style = PaletteTheme.typography.body,
+                                )
+                            }
+                        }
+                    }
                     items(
                         items = filteredOptions,
                         key = { it.value }
@@ -140,14 +214,15 @@ fun PMentions(
                             onClick = {
                                 if (!option.disabled) {
                                     onSelect?.invoke(option)
-                                    val beforeMention =
-                                        value.substring(0, mentionTriggerIndex)
-                                    val afterMention = value.substring(
-                                        mentionTriggerIndex + mentionQuery.length
+                                    val newEditorValue = replaceMentionQueryWithOption(
+                                        editorValue = editorValue,
+                                        mentionTriggerIndex = mentionTriggerIndex,
+                                        mentionQuery = mentionQuery,
+                                        prefix = prefix,
+                                        option = option,
                                     )
-                                    val newValue =
-                                        "$beforeMention${prefix}${option.label} $afterMention"
-                                    onValueChange(newValue)
+                                    setEditorValue(newEditorValue)
+                                    onValueChange(newEditorValue.text)
                                     setShowDropdown(false)
                                     setMentionTriggerIndex(-1)
                                     setMentionQuery("")
@@ -158,6 +233,122 @@ fun PMentions(
                 }
             }
         }
+    }
+}
+
+internal fun replaceMentionQueryWithOption(
+    editorValue: TextFieldValue,
+    mentionTriggerIndex: Int,
+    mentionQuery: String,
+    prefix: String,
+    option: MentionsOption,
+): TextFieldValue {
+    val safeTriggerIndex = mentionTriggerIndex.coerceIn(0, editorValue.text.length)
+    val replaceEnd = (safeTriggerIndex + mentionQuery.length).coerceIn(safeTriggerIndex, editorValue.text.length)
+    val beforeMention = editorValue.text.substring(0, safeTriggerIndex)
+    val afterMention = editorValue.text.substring(replaceEnd)
+    val insertedText = "$prefix${option.label} "
+    val newText = "$beforeMention$insertedText$afterMention"
+    val cursor = beforeMention.length + insertedText.length
+    return TextFieldValue(
+        text = newText,
+        selection = TextRange(cursor),
+    )
+}
+
+internal data class MentionRange(
+    val start: Int,
+    val end: Int,
+)
+
+internal fun findMentionRanges(
+    text: String,
+    prefix: String,
+): List<MentionRange> {
+    if (prefix.isEmpty()) return emptyList()
+    val ranges = mutableListOf<MentionRange>()
+    var searchIndex = 0
+    while (searchIndex < text.length) {
+        val start = text.indexOf(prefix, startIndex = searchIndex)
+        if (start == -1) break
+        val labelStart = start + prefix.length
+        if (labelStart >= text.length || text[labelStart].isWhitespace()) {
+            searchIndex = labelStart
+            continue
+        }
+        var end = labelStart
+        while (end < text.length && !text[end].isWhitespace()) {
+            end += 1
+        }
+        ranges += MentionRange(start, end)
+        searchIndex = end
+    }
+    return ranges
+}
+
+internal fun replaceEditedMentionWithWholeDeletion(
+    oldValue: TextFieldValue,
+    requestedValue: TextFieldValue,
+    prefix: String,
+): TextFieldValue? {
+    val oldText = oldValue.text
+    val newText = requestedValue.text
+    val selection = oldValue.selection
+    if (!selection.collapsed || oldText.length - newText.length != 1) return null
+
+    val cursor = selection.start
+    val isBackwardDelete =
+        cursor > 0 && newText == oldText.removeRange(cursor - 1, cursor)
+    val isForwardDelete =
+        cursor < oldText.length && newText == oldText.removeRange(cursor, cursor + 1)
+    if (!isBackwardDelete && !isForwardDelete) return null
+
+    val range = findMentionRanges(oldText, prefix).firstOrNull { mentionRange ->
+        when {
+            isBackwardDelete -> {
+                val deletesTrailingSpace =
+                    cursor == mentionRange.end + 1 &&
+                        oldText.getOrNull(mentionRange.end)?.isWhitespace() == true
+                cursor in (mentionRange.start + 1)..mentionRange.end || deletesTrailingSpace
+            }
+            else -> cursor in mentionRange.start until mentionRange.end
+        }
+    } ?: return null
+
+    val removeEnd =
+        if (
+            isBackwardDelete &&
+            cursor == range.end + 1 &&
+            oldText.getOrNull(range.end)?.isWhitespace() == true
+        ) {
+            range.end + 1
+        } else {
+            range.end
+        }
+    val updatedText = oldText.removeRange(range.start, removeEnd)
+    return TextFieldValue(
+        text = updatedText,
+        selection = TextRange(range.start),
+    )
+}
+
+internal class MentionsHighlightTransformation(
+    private val prefix: String,
+    private val enabled: Boolean,
+    private val highlightColor: Color,
+) : VisualTransformation {
+    override fun filter(text: AnnotatedString): TransformedText {
+        if (!enabled) return TransformedText(text, OffsetMapping.Identity)
+
+        val builder = AnnotatedString.Builder(text)
+        findMentionRanges(text.text, prefix).forEach { range ->
+            builder.addStyle(
+                style = SpanStyle(background = highlightColor),
+                start = range.start,
+                end = range.end,
+            )
+        }
+        return TransformedText(builder.toAnnotatedString(), OffsetMapping.Identity)
     }
 }
 

@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.Dp
 import xyz.junerver.compose.palette.components.avatar.AvatarDefaults as AvatarDefaultsImpl
 import xyz.junerver.compose.palette.components.avatar.AvatarSize as AvatarSizeImpl
@@ -157,6 +158,7 @@ import xyz.junerver.compose.palette.components.cascader.PCascader as PCascaderIm
 import xyz.junerver.compose.palette.components.cascaderpanel.CascaderPanelDefaults as CascaderPanelDefaultsImpl
 import xyz.junerver.compose.palette.components.cascaderpanel.PCascaderPanel as PCascaderPanelImpl
 import xyz.junerver.compose.palette.components.treeselect.PTreeSelect as PTreeSelectImpl
+import xyz.junerver.compose.palette.components.treeselect.TreeSelectColors as TreeSelectColorsImpl
 import xyz.junerver.compose.palette.components.treeselect.TreeSelectDefaults as TreeSelectDefaultsImpl
 import xyz.junerver.compose.palette.components.treeselect.TreeSelectNode as TreeSelectNodeImpl
 import xyz.junerver.compose.palette.components.alert.AlertDefaults as AlertDefaultsImpl
@@ -549,7 +551,30 @@ typealias ActionSheetState = ActionSheetStateImpl
 val rememberActionSheetState = ::rememberActionSheetStateImpl
 
 // Components - Autocomplete
-val PAutocomplete = ::PAutocompleteImpl
+@Composable
+fun PAutocomplete(
+    value: String,
+    onValueChange: (String) -> Unit,
+    options: List<AutocompleteOptionImpl>,
+    modifier: Modifier = Modifier,
+    placeholder: String = "",
+    disabled: Boolean = false,
+    size: ComponentSizeImpl = ComponentSizeImpl.Medium,
+    status: ComponentStatusImpl = ComponentStatusImpl.Default,
+    onSelect: ((AutocompleteOptionImpl) -> Unit)? = null,
+    filterOption: ((String, AutocompleteOptionImpl) -> Boolean)? = null,
+) = PAutocompleteImpl(
+    value = value,
+    onValueChange = onValueChange,
+    options = options,
+    modifier = modifier,
+    placeholder = placeholder,
+    disabled = disabled,
+    size = size,
+    status = status,
+    onSelect = onSelect,
+    filterOption = filterOption,
+)
 val AutocompleteDefaults = AutocompleteDefaultsImpl
 typealias AutocompleteOption = AutocompleteOptionImpl
 
@@ -575,8 +600,32 @@ val PCascaderPanel = ::PCascaderPanelImpl
 val CascaderPanelDefaults = CascaderPanelDefaultsImpl
 
 // Components - TreeSelect
-val PTreeSelect = ::PTreeSelectImpl
+@Composable
+fun PTreeSelect(
+    value: String?,
+    onValueChange: (String?) -> Unit,
+    nodes: List<TreeSelectNodeImpl>,
+    modifier: Modifier = Modifier,
+    placeholder: String = "请选择",
+    disabled: Boolean = false,
+    size: ComponentSizeImpl = ComponentSizeImpl.Medium,
+    showSearch: Boolean = false,
+    searchPlaceholder: String = "",
+    colors: TreeSelectColorsImpl = TreeSelectDefaultsImpl.colors(),
+) = PTreeSelectImpl(
+    value = value,
+    onValueChange = onValueChange,
+    nodes = nodes,
+    modifier = modifier,
+    placeholder = placeholder,
+    disabled = disabled,
+    size = size,
+    showSearch = showSearch,
+    searchPlaceholder = searchPlaceholder,
+    colors = colors,
+)
 val TreeSelectDefaults = TreeSelectDefaultsImpl
+typealias TreeSelectColors = TreeSelectColorsImpl
 typealias TreeSelectNode = TreeSelectNodeImpl
 
 // Components - Popconfirm
@@ -641,7 +690,34 @@ typealias ToggleVariant = ToggleVariantImpl
 typealias ToggleItem = ToggleItemImpl
 
 // Components - Mentions
-val PMentions = ::PMentionsImpl
+@Composable
+fun PMentions(
+    value: String,
+    onValueChange: (String) -> Unit,
+    options: List<MentionsOptionImpl>,
+    modifier: Modifier = Modifier,
+    placeholder: String = "",
+    disabled: Boolean = false,
+    prefix: String = "@",
+    onSelect: ((MentionsOptionImpl) -> Unit)? = null,
+    onSearch: ((String) -> Unit)? = null,
+    loading: Boolean = false,
+    highlight: Boolean = false,
+    highlightColor: Color = MentionsDefaultsImpl.highlightColor(),
+) = PMentionsImpl(
+    value = value,
+    onValueChange = onValueChange,
+    options = options,
+    modifier = modifier,
+    placeholder = placeholder,
+    disabled = disabled,
+    prefix = prefix,
+    onSelect = onSelect,
+    onSearch = onSearch,
+    loading = loading,
+    highlight = highlight,
+    highlightColor = highlightColor,
+)
 val MentionsDefaults = MentionsDefaultsImpl
 typealias MentionsOption = MentionsOptionImpl
 

@@ -21,6 +21,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -58,6 +59,16 @@ fun PColorPicker(
     var saturation by remember { mutableFloatStateOf(hsv[1]) }
     var value by remember { mutableFloatStateOf(hsv[2]) }
     var alpha by remember { mutableFloatStateOf(color.alpha) }
+    var hexInput by remember { mutableStateOf(colorToHex(color)) }
+
+    LaunchedEffect(color) {
+        val newHsv = colorToHsv(color)
+        hue = newHsv[0]
+        saturation = newHsv[1]
+        value = newHsv[2]
+        alpha = color.alpha.coerceIn(0f, 1f)
+        hexInput = colorToHex(color)
+    }
 
     fun updateColor() {
         onColorChange(hsvToColor(hue, saturation, value, alpha))
@@ -87,7 +98,8 @@ fun PColorPicker(
                     }
                 }
         ) {
-            drawRect(Color.hsv(hue, 1f, 1f))
+            val safeHue = hue.coerceIn(0f, 360f)
+            drawRect(Color.hsv(safeHue, 1f, 1f))
             drawRect(Brush.horizontalGradient(listOf(Color.White, Color.Transparent)))
             drawRect(Brush.verticalGradient(listOf(Color.Transparent, Color.Black)))
 
@@ -104,14 +116,14 @@ fun PColorPicker(
                 .clip(shape)
                 .pointerInput(Unit) {
                     detectTapGestures { offset ->
-                        hue = (offset.x / size.width) * 360f
+                        hue = hueFromPosition(offset.x, size.width.toFloat())
                         updateColor()
                     }
                 }
                 .pointerInput(Unit) {
                     detectDragGestures { change, _ ->
                         change.consume()
-                        hue = (change.position.x / size.width) * 360f
+                        hue = hueFromPosition(change.position.x, size.width.toFloat())
                         updateColor()
                     }
                 }
@@ -119,7 +131,7 @@ fun PColorPicker(
             val hueColors = (0..360 step 30).map { Color.hsv(it.toFloat(), 1f, 1f) }
             drawRect(Brush.horizontalGradient(hueColors))
 
-            val thumbX = (hue / 360f) * size.width
+            val thumbX = (hue.coerceIn(0f, 360f) / 360f) * size.width
             drawCircle(Color.White, ColorPickerDefaults.ThumbSize.toPx() / 2, Offset(thumbX, size.height / 2))
         }
 
@@ -163,11 +175,6 @@ fun PColorPicker(
             )
 
             if (showHex) {
-                val hexColor = remember(hue, saturation, value, alpha) {
-                    colorToHex(hsvToColor(hue, saturation, value, alpha))
-                }
-                var hexInput by remember { mutableStateOf(hexColor) }
-
                 BasicTextField(
                     value = hexInput,
                     onValueChange = { new ->
@@ -251,21 +258,33 @@ private fun colorToHsv(color: Color): FloatArray {
     return floatArrayOf(hue, saturation, max)
 }
 
-private fun hsvToColor(hue: Float, saturation: Float, value: Float, alpha: Float = 1f): Color {
-    val c = value * saturation
-    val x = c * (1 - kotlin.math.abs((hue / 60f) % 2 - 1))
-    val m = value - c
+internal fun hueFromPosition(
+    positionX: Float,
+    width: Float,
+): Float {
+    if (width <= 0f) return 0f
+    return ((positionX / width) * 360f).coerceIn(0f, 360f)
+}
+
+internal fun hsvToColor(hue: Float, saturation: Float, value: Float, alpha: Float = 1f): Color {
+    val safeHue = hue.coerceIn(0f, 360f)
+    val safeSaturation = saturation.coerceIn(0f, 1f)
+    val safeValue = value.coerceIn(0f, 1f)
+    val safeAlpha = alpha.coerceIn(0f, 1f)
+    val c = safeValue * safeSaturation
+    val x = c * (1 - kotlin.math.abs((safeHue / 60f) % 2 - 1))
+    val m = safeValue - c
 
     val (r, g, b) = when {
-        hue < 60f -> Triple(c, x, 0f)
-        hue < 120f -> Triple(x, c, 0f)
-        hue < 180f -> Triple(0f, c, x)
-        hue < 240f -> Triple(0f, x, c)
-        hue < 300f -> Triple(x, 0f, c)
+        safeHue < 60f -> Triple(c, x, 0f)
+        safeHue < 120f -> Triple(x, c, 0f)
+        safeHue < 180f -> Triple(0f, c, x)
+        safeHue < 240f -> Triple(0f, x, c)
+        safeHue < 300f -> Triple(x, 0f, c)
         else -> Triple(c, 0f, x)
     }
 
-    return Color((r + m).coerceIn(0f, 1f), (g + m).coerceIn(0f, 1f), (b + m).coerceIn(0f, 1f), alpha)
+    return Color((r + m).coerceIn(0f, 1f), (g + m).coerceIn(0f, 1f), (b + m).coerceIn(0f, 1f), safeAlpha)
 }
 
 private fun colorToHex(color: Color): String {

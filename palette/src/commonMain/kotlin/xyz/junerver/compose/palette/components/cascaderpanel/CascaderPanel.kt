@@ -19,6 +19,8 @@ import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -44,16 +46,24 @@ fun PCascaderPanel(
     onValueChange: (List<String>) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val hoveredItemState = androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf<String?>(null) }
+    val (activePath, setActivePath) = useState(value)
+    // Nullable transient hover state is kept with Compose state because useState requires a non-null initial value.
+    val hoveredItemState = remember { mutableStateOf<String?>(null) }
     val hoveredItem = hoveredItemState.value
+
+    LaunchedEffect(value) {
+        if (value != activePath) {
+            setActivePath(value)
+        }
+    }
 
     val containerColor = CascaderPanelDefaults.containerColor()
     val itemTextColor = CascaderPanelDefaults.itemTextColor()
     val selectedItemColor = CascaderPanelDefaults.selectedItemColor()
     val hoverColor = CascaderPanelDefaults.hoverColor()
 
-    val columns = remember(options, value) {
-        buildPanelColumns(options, value)
+    val columns = remember(options, activePath) {
+        buildPanelColumns(options, activePath)
     }
 
     Row(
@@ -79,6 +89,7 @@ fun PCascaderPanel(
                 onItemClick = { option ->
                     if (option.disabled) return@PanelColumn
                     val newValue = column.pathValues + option.value
+                    setActivePath(newValue)
                     onValueChange(newValue)
                 }
             )

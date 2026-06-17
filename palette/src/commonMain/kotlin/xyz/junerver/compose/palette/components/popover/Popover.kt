@@ -2,7 +2,8 @@ package xyz.junerver.compose.palette.components.popover
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.awaitFirstDown
+import androidx.compose.foundation.gestures.waitForUpOrCancellation
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -10,6 +11,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.pointer.PointerEventPass
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.semantics.onClick
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.window.Popup
 import xyz.junerver.compose.hooks.useState
 
@@ -33,7 +38,10 @@ fun PPopover(
         onVisibleChange?.invoke(next)
     }
 
-    Box(modifier = modifier.clickable { setShown(!shown) }) {
+    Box(
+        modifier = modifier
+            .popoverTriggerClick(shown = shown, onToggle = { setShown(!shown) })
+    ) {
         trigger()
 
         if (shown) {
@@ -56,3 +64,27 @@ fun PPopover(
         }
     }
 }
+
+private fun Modifier.popoverTriggerClick(
+    shown: Boolean,
+    onToggle: () -> Unit,
+): Modifier =
+    pointerInput(shown) {
+        awaitPointerEventScope {
+            while (true) {
+                awaitFirstDown(
+                    requireUnconsumed = false,
+                    pass = PointerEventPass.Initial,
+                )
+                val up = waitForUpOrCancellation(pass = PointerEventPass.Initial)
+                if (up != null) {
+                    onToggle()
+                }
+            }
+        }
+    }.semantics {
+        onClick {
+            onToggle()
+            true
+        }
+    }
