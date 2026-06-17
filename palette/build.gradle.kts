@@ -62,6 +62,8 @@ kotlin {
                 implementation(libs.kotlinx.datetime)
                 implementation(libs.kotlinx.collections.immutable)
                 implementation(libs.jb.compose.material.icons.extended)
+                implementation(libs.qrose)
+                implementation(libs.qrose.oned)
                 api(libs.hooks)
             }
         }
@@ -101,6 +103,7 @@ kotlin {
             dependencies {
                 implementation(libs.jb.compose.uitest.junit4)
                 implementation(compose.desktop.currentOs)
+                implementation(libs.zxing.core)
             }
         }
         val iosTest by getting

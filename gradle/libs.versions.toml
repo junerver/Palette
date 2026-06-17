@@ -27,6 +27,8 @@ uiautomator = "2.3.0"
 kotlinxBenchmark = "0.4.15"
 kover = "0.9.2"
 mavenPublish = "0.33.0"
+qrose = "1.0.1"
+zxing = "3.5.3"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -64,12 +66,15 @@ kotlinx-datetime = { group = "org.jetbrains.kotlinx", name = "kotlinx-datetime",
 kotlinx-collections-immutable = { group = "org.jetbrains.kotlinx", name = "kotlinx-collections-immutable", version.ref = "kotlinx-collections-immutable" }
 
 hooks = { module = "xyz.junerver.compose:hooks2", version.ref = "hooks" }
+qrose = { module = "io.github.alexzhirkevich:qrose", version.ref = "qrose" }
+qrose-oned = { module = "io.github.alexzhirkevich:qrose-oned", version.ref = "qrose" }
 androidx-datastore-preferences-core = { group = "androidx.datastore", name = "datastore-preferences-core", version.ref = "datastore" }
 androidx-datastore-preferences = { group = "androidx.datastore", name = "datastore-preferences", version.ref = "datastore" }
 androidx-benchmark-macro-junit4 = { group = "androidx.benchmark", name = "benchmark-macro-junit4", version.ref = "benchmark" }
 androidx-benchmark-junit4 = { group = "androidx.benchmark", name = "benchmark-junit4", version.ref = "benchmark" }
 androidx-test-uiautomator = { group = "androidx.test.uiautomator", name = "uiautomator", version.ref = "uiautomator" }
 kotlinx-benchmark-runtime = { group = "org.jetbrains.kotlinx", name = "kotlinx-benchmark-runtime", version.ref = "kotlinxBenchmark" }
+zxing-core = { group = "com.google.zxing", name = "core", version.ref = "zxing" }
 
 [plugins]
 androidApplication = { id = "com.android.application", version.ref = "agp" }

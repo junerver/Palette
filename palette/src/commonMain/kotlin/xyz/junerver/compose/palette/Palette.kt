@@ -180,6 +180,9 @@ import xyz.junerver.compose.palette.components.segmented.SegmentedDefaults as Se
 import xyz.junerver.compose.palette.components.segmented.SegmentedOption as SegmentedOptionImpl
 import xyz.junerver.compose.palette.components.colorpicker.ColorPickerDefaults as ColorPickerDefaultsImpl
 import xyz.junerver.compose.palette.components.colorpicker.PColorPicker as PColorPickerImpl
+import xyz.junerver.compose.palette.components.barcode.BarcodeDefaults as BarcodeDefaultsImpl
+import xyz.junerver.compose.palette.components.barcode.PBarcode as PBarcodeImpl
+import xyz.junerver.compose.palette.components.barcode.PaletteBarcodeType as PaletteBarcodeTypeImpl
 import xyz.junerver.compose.palette.components.qrcode.PQRCode as PQRCodeImpl
 import xyz.junerver.compose.palette.components.qrcode.QRCodeDefaults as QRCodeDefaultsImpl
 import xyz.junerver.compose.palette.components.watermark.PWatermark as PWatermarkImpl
@@ -607,6 +610,11 @@ val GridDefaults = GridDefaultsImpl
 // Components - QRCode
 val PQRCode = ::PQRCodeImpl
 val QRCodeDefaults = QRCodeDefaultsImpl
+
+// Components - Barcode
+val PBarcode = ::PBarcodeImpl
+val BarcodeDefaults = BarcodeDefaultsImpl
+typealias PaletteBarcodeType = PaletteBarcodeTypeImpl
 
 // Components - ColorPicker
 val PColorPicker = ::PColorPickerImpl

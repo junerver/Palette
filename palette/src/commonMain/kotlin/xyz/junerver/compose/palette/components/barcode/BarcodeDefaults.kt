@@ -1,15 +1,14 @@
-package xyz.junerver.compose.palette.components.qrcode
+package xyz.junerver.compose.palette.components.barcode
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 
-object QRCodeDefaults {
-    val Size: Dp = 120.dp
-    val QuietZone: Int = 4
-    val ErrorCorrectionLevel: Int = 1
-    internal const val IntrinsicModuleScale: Float = 10f
+object BarcodeDefaults {
+    val Width: Dp = 180.dp
+    val Height: Dp = 80.dp
+    val Type: PaletteBarcodeType = PaletteBarcodeType.Code128
 
     @Composable
     fun color(): Color = Color.Black

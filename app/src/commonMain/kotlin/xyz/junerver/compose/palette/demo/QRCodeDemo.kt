@@ -19,6 +19,8 @@ import androidx.compose.ui.unit.dp
 import xyz.junerver.compose.palette.Language
 import xyz.junerver.compose.palette.LocalLanguage
 import xyz.junerver.compose.palette.components.CodeBlock
+import xyz.junerver.compose.palette.components.barcode.PBarcode
+import xyz.junerver.compose.palette.components.barcode.PaletteBarcodeType
 import xyz.junerver.compose.palette.components.qrcode.PQRCode
 import xyz.junerver.compose.palette.components.text.PText
 
@@ -152,6 +154,40 @@ fun QRCodeDemo() {
             }
         }
 
+        Spacer(modifier = Modifier.height(24.dp))
+
+        DemoSection(title = text.barcodeSectionTitle) {
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(24.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    PBarcode(
+                        value = "PALETTE-2026",
+                        type = PaletteBarcodeType.Code128,
+                    )
+                    Spacer(modifier = Modifier.height(4.dp))
+                    PText(
+                        text = text.code128Text,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    PBarcode(
+                        value = "978020137962",
+                        type = PaletteBarcodeType.EAN13,
+                    )
+                    Spacer(modifier = Modifier.height(4.dp))
+                    PText(
+                        text = text.ean13Text,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+            }
+        }
+
         Spacer(modifier = Modifier.height(32.dp))
 
         PText(
@@ -178,9 +214,12 @@ private fun qrCodeDemoText(): QRCodeDemoText =
                 basicSectionTitle = "基础用法",
                 sizeSectionTitle = "不同尺寸",
                 colorSectionTitle = "自定义颜色",
+                barcodeSectionTitle = "一维码",
                 blueText = "蓝色",
                 greenText = "绿色",
                 redText = "红色背景",
+                code128Text = "Code 128",
+                ean13Text = "EAN-13",
                 codeTitle = "代码示例",
                 codeBlock =
                     """
@@ -189,6 +228,11 @@ private fun qrCodeDemoText(): QRCodeDemoText =
                         size = 120.dp,
                         color = Color.Black,
                         backgroundColor = Color.White,
+                    )
+                    
+                    PBarcode(
+                        value = "PALETTE-2026",
+                        type = PaletteBarcodeType.Code128,
                     )
                     """.trimIndent(),
             )
@@ -200,9 +244,12 @@ private fun qrCodeDemoText(): QRCodeDemoText =
                 basicSectionTitle = "Basic Usage",
                 sizeSectionTitle = "Different Sizes",
                 colorSectionTitle = "Custom Colors",
+                barcodeSectionTitle = "Barcodes",
                 blueText = "Blue",
                 greenText = "Green",
                 redText = "Red Background",
+                code128Text = "Code 128",
+                ean13Text = "EAN-13",
                 codeTitle = "Code Example",
                 codeBlock =
                     """
@@ -211,6 +258,11 @@ private fun qrCodeDemoText(): QRCodeDemoText =
                         size = 120.dp,
                         color = Color.Black,
                         backgroundColor = Color.White,
+                    )
+                    
+                    PBarcode(
+                        value = "PALETTE-2026",
+                        type = PaletteBarcodeType.Code128,
                     )
                     """.trimIndent(),
             )
@@ -222,9 +274,12 @@ private data class QRCodeDemoText(
     val basicSectionTitle: String,
     val sizeSectionTitle: String,
     val colorSectionTitle: String,
+    val barcodeSectionTitle: String,
     val blueText: String,
     val greenText: String,
     val redText: String,
+    val code128Text: String,
+    val ean13Text: String,
     val codeTitle: String,
     val codeBlock: String,
 )
