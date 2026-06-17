@@ -23,16 +23,12 @@ import xyz.junerver.compose.palette.core.spec.ComponentSize
 @Composable
 fun InputNumberDemo() {
     val text = inputNumberDemoText()
-    val basicValueState = androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf<Double?>(0.0) }
-    val basicValue = basicValueState.value
-    val limitedValueState = androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf<Double?>(5.0) }
-    val limitedValue = limitedValueState.value
-    val stepValueState = androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf<Double?>(0.0) }
-    val stepValue = stepValueState.value
-    val smallValueState = androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf<Double?>(0.0) }
-    val smallValue = smallValueState.value
-    val largeValueState = androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf<Double?>(0.0) }
-    val largeValue = largeValueState.value
+    val (basicState, setBasicState) = useState(InputNumberDemoState(0.0))
+    val (limitedState, setLimitedState) = useState(InputNumberDemoState(5.0))
+    val (stepState, setStepState) = useState(InputNumberDemoState(0.0))
+    val (smallState, setSmallState) = useState(InputNumberDemoState(0.0))
+    val (mediumState, setMediumState) = useState(InputNumberDemoState(0.0))
+    val (largeState, setLargeState) = useState(InputNumberDemoState(0.0))
 
     Column(
         modifier =
@@ -55,8 +51,8 @@ fun InputNumberDemo() {
 
         DemoSection(title = text.basicSectionTitle) {
             PInputNumber(
-                value = basicValue,
-                onValueChange = { basicValueState.value = it },
+                value = basicState.value,
+                onValueChange = { setBasicState(InputNumberDemoState(it)) },
             )
         }
 
@@ -64,8 +60,8 @@ fun InputNumberDemo() {
 
         DemoSection(title = text.minMaxSectionTitle) {
             PInputNumber(
-                value = limitedValue,
-                onValueChange = { limitedValueState.value = it },
+                value = limitedState.value,
+                onValueChange = { setLimitedState(InputNumberDemoState(it)) },
                 min = 0.0,
                 max = 10.0,
             )
@@ -75,8 +71,8 @@ fun InputNumberDemo() {
 
         DemoSection(title = text.stepSectionTitle) {
             PInputNumber(
-                value = stepValue,
-                onValueChange = { stepValueState.value = it },
+                value = stepState.value,
+                onValueChange = { setStepState(InputNumberDemoState(it)) },
                 step = 0.5,
                 precision = 1,
             )
@@ -86,7 +82,7 @@ fun InputNumberDemo() {
 
         DemoSection(title = text.disabledSectionTitle) {
             PInputNumber(
-                value = basicValue,
+                value = basicState.value,
                 onValueChange = {},
                 disabled = true,
             )
@@ -97,20 +93,20 @@ fun InputNumberDemo() {
         DemoSection(title = text.sizeSectionTitle) {
             Column {
                 PInputNumber(
-                    value = smallValue,
-                    onValueChange = { smallValueState.value = it },
+                    value = smallState.value,
+                    onValueChange = { setSmallState(InputNumberDemoState(it)) },
                     size = ComponentSize.Small,
                 )
                 Spacer(modifier = Modifier.height(12.dp))
                 PInputNumber(
-                    value = basicValue,
-                    onValueChange = {},
+                    value = mediumState.value,
+                    onValueChange = { setMediumState(InputNumberDemoState(it)) },
                     size = ComponentSize.Medium,
                 )
                 Spacer(modifier = Modifier.height(12.dp))
                 PInputNumber(
-                    value = largeValue,
-                    onValueChange = { largeValueState.value = it },
+                    value = largeState.value,
+                    onValueChange = { setLargeState(InputNumberDemoState(it)) },
                     size = ComponentSize.Large,
                 )
             }
@@ -130,6 +126,10 @@ fun InputNumberDemo() {
         )
     }
 }
+
+private data class InputNumberDemoState(
+    val value: Double?,
+)
 
 @Composable
 @ReadOnlyComposable

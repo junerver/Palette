@@ -17,6 +17,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import xyz.junerver.compose.hooks.useState
 import xyz.junerver.compose.palette.core.theme.PaletteTheme
 
 data class CollapseItemData(
@@ -80,12 +81,17 @@ fun PCollapse(
     items: List<CollapseItemData>,
     modifier: Modifier = Modifier,
     accordion: Boolean = false,
-    expandedKeys: Set<String> = emptySet(),
+    expandedKeys: Set<String>? = null,
+    defaultExpandedKeys: Set<String> = emptySet(),
     onExpandChange: (Set<String>) -> Unit = {}
 ) {
+    val (uncontrolledExpandedKeys, setUncontrolledExpandedKeys) = useState(defaultExpandedKeys)
+    val activeExpandedKeys = expandedKeys ?: uncontrolledExpandedKeys
+    val displayExpandedKeys = activeExpandedKeys.normalizeExpandedKeys(accordion)
+
     Column(modifier = modifier) {
         items.forEach { item ->
-            val isExpanded = item.key in expandedKeys
+            val isExpanded = item.key in displayExpandedKeys
             
             PCollapseItem(
                 title = item.title,
@@ -95,10 +101,13 @@ fun PCollapse(
                         if (shouldExpand) setOf(item.key) else emptySet()
                     } else {
                         if (shouldExpand) {
-                            expandedKeys + item.key
+                            displayExpandedKeys + item.key
                         } else {
-                            expandedKeys - item.key
+                            displayExpandedKeys - item.key
                         }
+                    }.normalizeExpandedKeys(accordion)
+                    if (expandedKeys == null) {
+                        setUncontrolledExpandedKeys(newKeys)
                     }
                     onExpandChange(newKeys)
                 },
@@ -107,3 +116,6 @@ fun PCollapse(
         }
     }
 }
+
+private fun Set<String>.normalizeExpandedKeys(accordion: Boolean): Set<String> =
+    if (accordion) take(1).toSet() else this

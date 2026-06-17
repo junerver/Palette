@@ -1,16 +1,20 @@
 package xyz.junerver.compose.palette
 
 import androidx.compose.animation.*
+import androidx.compose.foundation.border
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.DarkMode
 import androidx.compose.material.icons.filled.LightMode
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -19,6 +23,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.unit.dp
 import xyz.junerver.compose.palette.core.theme.PaletteMaterialTheme
 import xyz.junerver.compose.palette.core.tokens.PaletteColors
@@ -200,7 +205,7 @@ private fun HeaderSection(
     language: Language,
     onLanguageChange: (Language) -> Unit,
 ) {
-    Column(modifier = Modifier.padding(24.dp)) {
+    Column(modifier = Modifier.padding(horizontal = 24.dp, vertical = 20.dp)) {
         Text(
             text = "Palette",
             style = MaterialTheme.typography.headlineMedium,
@@ -212,16 +217,11 @@ private fun HeaderSection(
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
 
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(14.dp))
 
-        ThemeModeSelector(
+        CompactPreferencePanel(
             themeMode = themeMode,
             onThemeModeChange = onThemeModeChange,
-        )
-
-        Spacer(modifier = Modifier.height(12.dp))
-
-        LanguageSelector(
             language = language,
             onLanguageChange = onLanguageChange,
         )
@@ -229,7 +229,9 @@ private fun HeaderSection(
 }
 
 @Composable
-private fun LanguageSelector(
+private fun CompactPreferencePanel(
+    themeMode: ThemeMode,
+    onThemeModeChange: (ThemeMode) -> Unit,
     language: Language,
     onLanguageChange: (Language) -> Unit,
 ) {
@@ -237,91 +239,12 @@ private fun LanguageSelector(
         modifier =
             Modifier
                 .fillMaxWidth()
-                .clip(RoundedCornerShape(12.dp))
+                .clip(RoundedCornerShape(10.dp))
                 .background(MaterialTheme.colorScheme.surfaceVariant)
-                .padding(12.dp),
+                .padding(10.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
-        Text(
-            text = "语言",
-            style = MaterialTheme.typography.labelMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
-
-        Spacer(modifier = Modifier.height(8.dp))
-
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-        ) {
-            TextChip(
-                label = "中文",
-                selected = language == Language.ZH_CN,
-                onClick = { onLanguageChange(Language.ZH_CN) },
-                modifier = Modifier.weight(1f),
-            )
-            TextChip(
-                label = "English",
-                selected = language == Language.EN_US,
-                onClick = { onLanguageChange(Language.EN_US) },
-                modifier = Modifier.weight(1f),
-            )
-        }
-    }
-}
-
-@Composable
-private fun TextChip(
-    label: String,
-    selected: Boolean,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    val backgroundColor = if (selected) Primary else MaterialTheme.colorScheme.surface
-    val contentColor = if (selected) Color.White else MaterialTheme.colorScheme.onSurface
-
-    Row(
-        modifier =
-            modifier
-                .clip(RoundedCornerShape(8.dp))
-                .background(backgroundColor)
-                .clickable(onClick = onClick)
-                .padding(horizontal = 8.dp, vertical = 6.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.Center,
-    ) {
-        Text(
-            text = label,
-            style = MaterialTheme.typography.labelSmall,
-            color = contentColor,
-        )
-    }
-}
-
-@Composable
-private fun ThemeModeSelector(
-    themeMode: ThemeMode,
-    onThemeModeChange: (ThemeMode) -> Unit,
-) {
-    Column(
-        modifier =
-            Modifier
-                .fillMaxWidth()
-                .clip(RoundedCornerShape(12.dp))
-                .background(MaterialTheme.colorScheme.surfaceVariant)
-                .padding(12.dp),
-    ) {
-        Text(
-            text = "主题模式",
-            style = MaterialTheme.typography.labelMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
-
-        Spacer(modifier = Modifier.height(8.dp))
-
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-        ) {
+        CompactPreferenceRow(label = "主题") {
             ThemeModeChip(
                 label = "浅色",
                 icon = Icons.Default.LightMode,
@@ -344,6 +267,75 @@ private fun ThemeModeSelector(
                 modifier = Modifier.weight(1f),
             )
         }
+
+        CompactPreferenceRow(label = "语言") {
+            TextChip(
+                label = "中文",
+                selected = language == Language.ZH_CN,
+                onClick = { onLanguageChange(Language.ZH_CN) },
+                modifier = Modifier.weight(1f),
+            )
+            TextChip(
+                label = "English",
+                selected = language == Language.EN_US,
+                onClick = { onLanguageChange(Language.EN_US) },
+                modifier = Modifier.weight(1f),
+            )
+        }
+    }
+}
+
+@Composable
+private fun CompactPreferenceRow(
+    label: String,
+    content: @Composable RowScope.() -> Unit,
+) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Text(
+            text = label,
+            style = MaterialTheme.typography.labelSmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.width(34.dp),
+        )
+
+        Row(
+            modifier = Modifier.weight(1f),
+            horizontalArrangement = Arrangement.spacedBy(6.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            content = content,
+        )
+    }
+}
+
+@Composable
+private fun TextChip(
+    label: String,
+    selected: Boolean,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val backgroundColor = if (selected) Primary else MaterialTheme.colorScheme.surface
+    val contentColor = if (selected) Color.White else MaterialTheme.colorScheme.onSurface
+
+    Row(
+        modifier =
+            modifier
+                .height(28.dp)
+                .clip(RoundedCornerShape(7.dp))
+                .background(backgroundColor)
+                .clickable(onClick = onClick)
+                .padding(horizontal = 8.dp, vertical = 5.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.Center,
+    ) {
+        Text(
+            text = label,
+            style = MaterialTheme.typography.labelSmall,
+            color = contentColor,
+        )
     }
 }
 
@@ -361,10 +353,11 @@ private fun ThemeModeChip(
     Row(
         modifier =
             modifier
-                .clip(RoundedCornerShape(8.dp))
+                .height(28.dp)
+                .clip(RoundedCornerShape(7.dp))
                 .background(backgroundColor)
                 .clickable(onClick = onClick)
-                .padding(horizontal = 8.dp, vertical = 6.dp),
+                .padding(horizontal = 5.dp, vertical = 5.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.Center,
     ) {
@@ -372,9 +365,9 @@ private fun ThemeModeChip(
             imageVector = icon,
             contentDescription = null,
             tint = contentColor,
-            modifier = Modifier.size(16.dp),
+            modifier = Modifier.size(14.dp),
         )
-        Spacer(modifier = Modifier.width(4.dp))
+        Spacer(modifier = Modifier.width(3.dp))
         Text(
             text = label,
             style = MaterialTheme.typography.labelSmall,
@@ -389,31 +382,139 @@ private fun NavItems(
     onRouteSelected: (String) -> Unit,
 ) {
     val scrollState = rememberScrollState()
+    var searchQuery by rememberSaveable { mutableStateOf("") }
+    val filteredItems = remember(searchQuery) {
+        val query = searchQuery.trim()
+        if (query.isEmpty()) {
+            NavItem.all
+        } else {
+            NavItem.all.filter { it.matchesSearch(query) }
+        }
+    }
 
     Column(
         modifier =
             Modifier
                 .fillMaxHeight()
-                .verticalScroll(scrollState)
                 .padding(horizontal = 12.dp),
     ) {
+        ComponentSearchField(
+            value = searchQuery,
+            onValueChange = { searchQuery = it },
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .padding(top = 2.dp, bottom = 8.dp),
+        )
+
         Text(
-            text = "组件",
+            text = if (searchQuery.isBlank()) "组件" else "组件 ${filteredItems.size}/${NavItem.all.size}",
             style = MaterialTheme.typography.labelSmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
         )
 
-        NavItem.all.forEach { item ->
-            NavItemRow(
-                item = item,
-                selected = item.route == selectedRoute,
-                onClick = { onRouteSelected(item.route) },
+        Column(
+            modifier =
+                Modifier
+                    .weight(1f)
+                    .verticalScroll(scrollState),
+        ) {
+            if (filteredItems.isEmpty()) {
+                Text(
+                    text = "未找到组件",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 10.dp),
+                )
+            } else {
+                filteredItems.forEach { item ->
+                    NavItemRow(
+                        item = item,
+                        selected = item.route == selectedRoute,
+                        onClick = { onRouteSelected(item.route) },
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+        }
+    }
+}
+
+@Composable
+private fun ComponentSearchField(
+    value: String,
+    onValueChange: (String) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val shape = RoundedCornerShape(10.dp)
+    val contentColor = MaterialTheme.colorScheme.onSurface
+    val hintColor = MaterialTheme.colorScheme.onSurfaceVariant
+
+    Row(
+        modifier =
+            modifier
+                .height(36.dp)
+                .clip(shape)
+                .background(MaterialTheme.colorScheme.surface)
+                .border(1.dp, MaterialTheme.colorScheme.outlineVariant, shape)
+                .padding(start = 10.dp, end = 6.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Icon(
+            imageVector = Icons.Default.Search,
+            contentDescription = null,
+            tint = hintColor,
+            modifier = Modifier.size(18.dp),
+        )
+
+        Spacer(modifier = Modifier.width(8.dp))
+
+        Box(
+            modifier = Modifier.weight(1f),
+            contentAlignment = Alignment.CenterStart,
+        ) {
+            if (value.isEmpty()) {
+                Text(
+                    text = "搜索组件",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = hintColor,
+                )
+            }
+
+            BasicTextField(
+                value = value,
+                onValueChange = onValueChange,
+                singleLine = true,
+                textStyle = MaterialTheme.typography.bodySmall.copy(color = contentColor),
+                cursorBrush = SolidColor(Primary),
+                modifier = Modifier.fillMaxWidth(),
             )
         }
 
-        Spacer(modifier = Modifier.height(16.dp))
+        if (value.isNotEmpty()) {
+            IconButton(
+                onClick = { onValueChange("") },
+                modifier = Modifier.size(26.dp),
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Close,
+                    contentDescription = "清空搜索",
+                    tint = hintColor,
+                    modifier = Modifier.size(16.dp),
+                )
+            }
+        }
     }
+}
+
+private fun NavItem.matchesSearch(query: String): Boolean {
+    val normalizedQuery = query.lowercase()
+    return label.lowercase().contains(normalizedQuery) ||
+        route.lowercase().contains(normalizedQuery) ||
+        category.label.lowercase().contains(normalizedQuery) ||
+        category.name.lowercase().contains(normalizedQuery)
 }
 
 @Composable

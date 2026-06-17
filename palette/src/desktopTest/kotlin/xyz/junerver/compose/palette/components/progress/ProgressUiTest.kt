@@ -1,14 +1,19 @@
 package xyz.junerver.compose.palette.components.progress
 
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.width
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertTextEquals
+import androidx.compose.ui.test.assertWidthIsEqualTo
 import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.unit.dp
 import org.junit.Rule
 import xyz.junerver.compose.palette.core.theme.PaletteMaterialTheme
 import kotlin.test.Test
@@ -111,5 +116,28 @@ class ProgressUiTest {
         }
 
         rule.onNodeWithTag("circleProgressNullFormatter").assertExists()
+    }
+
+    @Test
+    fun dashboardProgress_shouldKeepRequestedWidthInConstrainedRow() {
+        rule.setContent {
+            PaletteMaterialTheme {
+                Row(
+                    modifier = Modifier.width(240.dp),
+                    horizontalArrangement = Arrangement.spacedBy(24.dp),
+                ) {
+                    repeat(4) { index ->
+                        PDashboardProgress(
+                            percent = (index + 1) * 25f,
+                            modifier = Modifier.testTag("dashboardProgress$index"),
+                        )
+                    }
+                }
+            }
+        }
+
+        rule
+            .onNodeWithTag("dashboardProgress3")
+            .assertWidthIsEqualTo(DashboardProgressDefaults.Size)
     }
 }

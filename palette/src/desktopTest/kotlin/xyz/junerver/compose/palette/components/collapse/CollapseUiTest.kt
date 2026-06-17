@@ -65,4 +65,96 @@ class CollapseUiTest {
         rule.onNodeWithText("Security settings").assertTextEquals("Security settings")
         rule.onAllNodesWithText("Profile details").assertCountEquals(0)
     }
+
+    @Test
+    fun collapse_shouldToggleWithInternalStateWhenExpandedKeysOmitted() {
+        rule.setContent {
+            PaletteMaterialTheme {
+                PCollapse(items = items)
+            }
+        }
+
+        rule.onAllNodesWithText("Profile details").assertCountEquals(0)
+
+        rule.onNodeWithText("Profile").performClick()
+        rule.onNodeWithText("Profile details").assertTextEquals("Profile details")
+
+        rule.onNodeWithText("Profile").performClick()
+        rule.onAllNodesWithText("Profile details").assertCountEquals(0)
+    }
+
+    @Test
+    fun collapse_shouldUseDefaultExpandedKeysInUncontrolledMode() {
+        rule.setContent {
+            PaletteMaterialTheme {
+                PCollapse(
+                    items = items,
+                    defaultExpandedKeys = setOf("security"),
+                )
+            }
+        }
+
+        rule.onNodeWithText("Security settings").assertTextEquals("Security settings")
+        rule.onAllNodesWithText("Profile details").assertCountEquals(0)
+    }
+
+    @Test
+    fun collapse_shouldFollowExternallyControlledExpandedKeys() {
+        var expandedKeys by mutableStateOf(emptySet<String>())
+
+        rule.setContent {
+            PaletteMaterialTheme {
+                PCollapse(
+                    items = items,
+                    expandedKeys = expandedKeys,
+                    onExpandChange = { expandedKeys = it },
+                )
+            }
+        }
+
+        rule.onAllNodesWithText("Security settings").assertCountEquals(0)
+
+        rule.runOnIdle {
+            expandedKeys = setOf("security")
+        }
+
+        rule.onNodeWithText("Security settings").assertTextEquals("Security settings")
+        rule.onAllNodesWithText("Profile details").assertCountEquals(0)
+    }
+
+    @Test
+    fun collapse_shouldRenderExternallyUpdatedContentAndAddedItems() {
+        var expandedKeys by mutableStateOf(setOf("dynamic"))
+        var dynamicItems by mutableStateOf(
+            listOf(
+                CollapseItemData(key = "dynamic", title = "Dynamic") { Text("Content v1") },
+            ),
+        )
+
+        rule.setContent {
+            PaletteMaterialTheme {
+                PCollapse(
+                    items = dynamicItems,
+                    expandedKeys = expandedKeys,
+                    onExpandChange = { expandedKeys = it },
+                )
+            }
+        }
+
+        rule.onNodeWithText("Content v1").assertTextEquals("Content v1")
+
+        rule.runOnIdle {
+            dynamicItems =
+                listOf(
+                    CollapseItemData(key = "dynamic", title = "Dynamic") { Text("Content v2") },
+                    CollapseItemData(key = "added", title = "Added") { Text("Added content") },
+                )
+            expandedKeys = setOf("dynamic", "added")
+        }
+
+        rule.onNodeWithText("Content v2").assertTextEquals("Content v2")
+        rule.onNodeWithText("Added").assertTextEquals("Added")
+        rule.onNodeWithText("Added content").assertTextEquals("Added content")
+        rule.onAllNodesWithText("Content v1").assertCountEquals(0)
+    }
 }

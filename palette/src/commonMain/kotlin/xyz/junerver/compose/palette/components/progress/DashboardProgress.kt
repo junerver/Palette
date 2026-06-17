@@ -3,7 +3,8 @@ package xyz.junerver.compose.palette.components.progress
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.requiredSize
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -33,8 +34,11 @@ fun PDashboardProgress(
         label = "DashboardProgressAnimation"
     )
 
-    Box(modifier = modifier, contentAlignment = Alignment.Center) {
-        Canvas(modifier = Modifier.size(size)) {
+    Box(
+        modifier = modifier.requiredSize(size),
+        contentAlignment = Alignment.Center
+    ) {
+        Canvas(modifier = Modifier.fillMaxSize()) {
             drawArc(
                 color = trackColor,
                 startAngle = DashboardProgressDefaults.StartAngle,
