@@ -8,6 +8,10 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
+import androidx.compose.material.icons.filled.Check
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.ReadOnlyComposable
@@ -21,6 +25,7 @@ import androidx.compose.ui.unit.dp
 import xyz.junerver.compose.palette.Language
 import xyz.junerver.compose.palette.LocalLanguage
 import xyz.junerver.compose.palette.components.CodeBlock
+import xyz.junerver.compose.palette.components.button.ButtonColors
 import xyz.junerver.compose.palette.components.button.ButtonSize
 import xyz.junerver.compose.palette.components.button.ButtonType
 import xyz.junerver.compose.palette.components.button.PButton
@@ -57,6 +62,7 @@ fun ButtonDemo() {
                 PButton(text = text.primaryButtonText, type = ButtonType.PRIMARY) {}
                 PButton(text = text.dangerButtonText, type = ButtonType.DANGER) {}
                 PButton(text = text.plainButtonText, type = ButtonType.PLAIN) {}
+                PButton(text = text.outlinedButtonText, type = ButtonType.OUTLINED) {}
             }
         }
 
@@ -70,6 +76,36 @@ fun ButtonDemo() {
                 PButton(text = text.largeButtonText, size = ButtonSize.LARGE) {}
                 PButton(text = text.mediumButtonText, size = ButtonSize.MEDIUM) {}
                 PButton(text = text.smallButtonText, size = ButtonSize.SMALL) {}
+            }
+        }
+
+        Spacer(modifier = Modifier.height(24.dp))
+
+        DemoSection(title = text.iconSectionTitle) {
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(12.dp),
+            ) {
+                PButton(
+                    text = text.primaryButtonText,
+                    leadingIcon = {
+                        Icon(Icons.Default.Check, contentDescription = null)
+                    },
+                ) {}
+                PButton(
+                    text = text.nextButtonText,
+                    type = ButtonType.OUTLINED,
+                    trailingIcon = {
+                        Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, contentDescription = null)
+                    },
+                ) {}
+                PButton(
+                    text = text.customButtonText,
+                    colors = ButtonColors(
+                        containerColor = MaterialTheme.colorScheme.tertiaryContainer,
+                        contentColor = MaterialTheme.colorScheme.onTertiaryContainer,
+                    ),
+                ) {}
             }
         }
 
@@ -132,10 +168,14 @@ private fun buttonDemoText(): ButtonDemoText =
                 primaryButtonText = "Primary Button",
                 dangerButtonText = "Danger Button",
                 plainButtonText = "Plain Button",
+                outlinedButtonText = "Outlined Button",
                 sizeSectionTitle = "按钮尺寸",
                 largeButtonText = "Large Button",
                 mediumButtonText = "Medium Button",
                 smallButtonText = "Small Button",
+                iconSectionTitle = "图标与自定义颜色",
+                nextButtonText = "Next",
+                customButtonText = "Custom Button",
                 disabledSectionTitle = "禁用状态",
                 disabledButtonText = "Disabled Button",
                 loadingSectionTitle = "加载状态",
@@ -149,6 +189,9 @@ private fun buttonDemoText(): ButtonDemoText =
                         text = "Primary Button",
                         type = ButtonType.PRIMARY,
                         size = ButtonSize.LARGE,
+                        leadingIcon = {
+                            Icon(Icons.Default.Check, contentDescription = null)
+                        },
                         onClick = { /* 处理点击 */ }
                     )
                     """.trimIndent(),
@@ -162,10 +205,14 @@ private fun buttonDemoText(): ButtonDemoText =
                 primaryButtonText = "Primary Button",
                 dangerButtonText = "Danger Button",
                 plainButtonText = "Plain Button",
+                outlinedButtonText = "Outlined Button",
                 sizeSectionTitle = "Button Sizes",
                 largeButtonText = "Large Button",
                 mediumButtonText = "Medium Button",
                 smallButtonText = "Small Button",
+                iconSectionTitle = "Icons and Custom Colors",
+                nextButtonText = "Next",
+                customButtonText = "Custom Button",
                 disabledSectionTitle = "Disabled State",
                 disabledButtonText = "Disabled Button",
                 loadingSectionTitle = "Loading State",
@@ -179,6 +226,9 @@ private fun buttonDemoText(): ButtonDemoText =
                         text = "Primary Button",
                         type = ButtonType.PRIMARY,
                         size = ButtonSize.LARGE,
+                        leadingIcon = {
+                            Icon(Icons.Default.Check, contentDescription = null)
+                        },
                         onClick = { /* Handle click */ }
                     )
                     """.trimIndent(),
@@ -192,10 +242,14 @@ private data class ButtonDemoText(
     val primaryButtonText: String,
     val dangerButtonText: String,
     val plainButtonText: String,
+    val outlinedButtonText: String,
     val sizeSectionTitle: String,
     val largeButtonText: String,
     val mediumButtonText: String,
     val smallButtonText: String,
+    val iconSectionTitle: String,
+    val nextButtonText: String,
+    val customButtonText: String,
     val disabledSectionTitle: String,
     val disabledButtonText: String,
     val loadingSectionTitle: String,

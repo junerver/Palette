@@ -12,6 +12,7 @@ import xyz.junerver.compose.palette.components.avatar.AvatarDefaults as AvatarDe
 import xyz.junerver.compose.palette.components.avatar.AvatarShape as AvatarShapeImpl
 import xyz.junerver.compose.palette.components.avatar.AvatarSize as AvatarSizeImpl
 import xyz.junerver.compose.palette.components.badge.BadgeDefaults as BadgeDefaultsImpl
+import xyz.junerver.compose.palette.components.button.ButtonColors as ButtonColorsImpl
 import xyz.junerver.compose.palette.components.button.ButtonDefaults as ButtonDefaultsImpl
 import xyz.junerver.compose.palette.components.button.ButtonSize as ButtonSizeImpl
 import xyz.junerver.compose.palette.components.button.ButtonType as ButtonTypeImpl
@@ -479,6 +480,7 @@ val PDashboardProgress = ::PDashboardProgressImpl
 val DashboardProgressDefaults = DashboardProgressDefaultsImpl
 
 // Components - Button
+typealias ButtonColors = ButtonColorsImpl
 typealias ButtonType = ButtonTypeImpl
 typealias ButtonSize = ButtonSizeImpl
 val ButtonDefaults = ButtonDefaultsImpl

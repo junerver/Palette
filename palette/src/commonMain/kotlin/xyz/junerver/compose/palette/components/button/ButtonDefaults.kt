@@ -13,7 +13,8 @@ import xyz.junerver.compose.palette.core.tokens.PaletteButtonSizeTokens
 enum class ButtonType {
     PRIMARY,
     DANGER,
-    PLAIN
+    PLAIN,
+    OUTLINED
 }
 
 enum class ButtonSize(
@@ -79,4 +80,13 @@ object ButtonDefaults {
 
     @Composable
     fun plainContentColor(): Color = PaletteTheme.componentThemes.button.plainContentColor
+
+    @Composable
+    fun outlinedContainerColor(): Color = PaletteTheme.componentThemes.button.outlinedContainerColor
+
+    @Composable
+    fun outlinedContentColor(): Color = PaletteTheme.componentThemes.button.outlinedContentColor
+
+    @Composable
+    fun outlinedBorderColor(): Color = PaletteTheme.componentThemes.button.outlinedBorderColor
 }
