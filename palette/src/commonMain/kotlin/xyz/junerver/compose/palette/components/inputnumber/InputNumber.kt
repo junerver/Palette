@@ -32,6 +32,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.text.input.KeyboardType
+import kotlin.math.ceil
+import kotlin.math.floor
+import kotlin.math.pow
+import kotlin.math.roundToLong
 import xyz.junerver.compose.hooks.useState
 import xyz.junerver.compose.palette.core.spec.ComponentSize
 import xyz.junerver.compose.palette.core.spec.ComponentStatus
@@ -46,9 +50,30 @@ private fun formatValue(value: Double, precision: Int): String {
     return if (precision == 0) {
         value.toLong().toString()
     } else {
-        value.toBigDecimal().setScale(precision, java.math.RoundingMode.HALF_UP).toPlainString()
+        value.toFixedPlainString(precision)
     }
 }
+
+private fun Double.toFixedPlainString(precision: Int): String {
+    val safePrecision = precision.coerceAtLeast(0)
+    val factor = 10.0.pow(safePrecision)
+    val scaled = roundHalfUp(this * factor)
+    if (safePrecision == 0) return scaled.toString()
+
+    val negative = scaled < 0
+    val absScaled = if (negative) -scaled else scaled
+    val digits = absScaled.toString().padStart(safePrecision + 1, '0')
+    val whole = digits.dropLast(safePrecision)
+    val fraction = digits.takeLast(safePrecision)
+    return "${if (negative) "-" else ""}$whole.$fraction"
+}
+
+private fun roundHalfUp(value: Double): Long =
+    if (value >= 0.0) {
+        floor(value + 0.5).toLong()
+    } else {
+        ceil(value - 0.5).toLong()
+    }
 
 internal fun nextInputNumberValue(
     value: Double?,
@@ -67,8 +92,8 @@ internal fun nextInputNumberValue(
     val raw = current + step * direction
     val clamped = raw.coerceIn(min, max)
     val safePrecision = precision.coerceAtLeast(0)
-    val factor = Math.pow(10.0, safePrecision.toDouble())
-    return Math.round(clamped * factor) / factor
+    val factor = 10.0.pow(safePrecision)
+    return (clamped * factor).roundToLong() / factor
 }
 
 @Composable

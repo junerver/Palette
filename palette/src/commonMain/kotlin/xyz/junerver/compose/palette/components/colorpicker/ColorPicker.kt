@@ -305,7 +305,7 @@ internal fun hsvToColor(hue: Float, saturation: Float, value: Float, alpha: Floa
 
 private fun colorToHex(color: Color): String {
     val argb = color.toArgb()
-    return "#%08X".format(argb).uppercase()
+    return "#${argb.toUInt().toString(16).padStart(8, '0').uppercase()}"
 }
 
 private fun parseHexColor(hex: String): Color? {
