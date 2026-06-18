@@ -6,14 +6,13 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
@@ -28,6 +27,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import xyz.junerver.compose.hooks.useCreation
+import xyz.junerver.compose.palette.components.text.PText
 
 @Composable
 fun PDialog(
@@ -40,6 +40,57 @@ fun PDialog(
     onCancel: (() -> Unit)? = null,
     onDismiss: () -> Unit
 ) {
+    PDialog(
+        title = {
+            PText(
+                text = title,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(
+                        top = DialogDefaults.titlePaddingTop(),
+                        bottom = if (content != null) DialogDefaults.titlePaddingBottom() else 0.dp,
+                        start = DialogDefaults.horizontalPadding(),
+                        end = DialogDefaults.horizontalPadding()
+                    ),
+                color = DialogDefaults.titleColor(),
+                style = DialogDefaults.titleTextStyle(),
+                textAlign = TextAlign.Center
+            )
+        },
+        content = content?.let {
+            {
+                PText(
+                    text = it,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = DialogDefaults.horizontalPadding()),
+                    color = DialogDefaults.contentColor(),
+                    style = DialogDefaults.contentTextStyle(),
+                    textAlign = TextAlign.Center
+                )
+            }
+        },
+        actions = {
+            DefaultDialogActions(
+                okText = okText,
+                cancelText = cancelText,
+                okColor = okColor,
+                onOk = onOk,
+                onCancel = onCancel
+            )
+        },
+        onDismiss = onDismiss
+    )
+}
+
+@Composable
+fun PDialog(
+    modifier: Modifier = Modifier,
+    title: (@Composable () -> Unit)? = null,
+    content: (@Composable () -> Unit)? = null,
+    actions: @Composable RowScope.() -> Unit,
+    onDismiss: () -> Unit
+) {
     Dialog(
         onDismissRequest = onDismiss,
         properties = DialogProperties(
@@ -47,7 +98,7 @@ fun PDialog(
         )
     ) {
         Box(
-            modifier = Modifier
+            modifier = modifier
                 .clip(RoundedCornerShape(DialogDefaults.borderRadius()))
                 .fillMaxWidth(DialogDefaults.widthFraction())
                 .background(DialogDefaults.containerColor())
@@ -56,73 +107,66 @@ fun PDialog(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Center
             ) {
-                Text(
-                    text = title,
+                title?.invoke()
+                content?.invoke()
+                Spacer(modifier = Modifier.height(DialogDefaults.contentPaddingBottom()))
+                Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(
-                            top = DialogDefaults.titlePaddingTop(),
-                            bottom = if (content != null) DialogDefaults.titlePaddingBottom() else 0.dp,
-                            start = DialogDefaults.horizontalPadding(),
-                            end = DialogDefaults.horizontalPadding()
-                        ),
-                    color = DialogDefaults.titleColor(),
-                    style = DialogDefaults.titleTextStyle(),
-                    textAlign = TextAlign.Center
+                        .height(DialogDefaults.dividerWidth())
+                        .background(DialogDefaults.dividerColor())
                 )
-                if (content != null) {
-                    Text(
-                        text = content,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = DialogDefaults.horizontalPadding()),
-                        color = DialogDefaults.contentColor(),
-                        style = DialogDefaults.contentTextStyle(),
-                        textAlign = TextAlign.Center
-                    )
-                }
-                Spacer(modifier = Modifier.height(DialogDefaults.contentPaddingBottom()))
-                HorizontalDivider(color = DialogDefaults.dividerColor())
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
-                    if (onCancel != null) {
-                        Box(
-                            modifier = Modifier
-                                .weight(1f)
-                                .height(DialogDefaults.buttonHeight())
-                                .clickable(onClick = onCancel),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Text(
-                                text = cancelText,
-                                color = DialogDefaults.cancelColor(),
-                                style = DialogDefaults.buttonTextStyle()
-                            )
-                        }
-                        Box(
-                            modifier = Modifier
-                                .size(DialogDefaults.dividerWidth(), DialogDefaults.buttonHeight())
-                                .background(DialogDefaults.dividerColor())
-                        )
-                    }
-                    Box(
-                        modifier = Modifier
-                            .weight(1f)
-                            .height(DialogDefaults.buttonHeight())
-                            .clickable(onClick = onOk),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(
-                            text = okText,
-                            color = okColor,
-                            style = DialogDefaults.buttonTextStyle()
-                        )
-                    }
+                    actions()
                 }
             }
         }
+    }
+}
+
+@Composable
+private fun RowScope.DefaultDialogActions(
+    okText: String,
+    cancelText: String,
+    okColor: Color,
+    onOk: () -> Unit,
+    onCancel: (() -> Unit)?
+) {
+    if (onCancel != null) {
+        Box(
+            modifier = Modifier
+                .weight(1f)
+                .height(DialogDefaults.buttonHeight())
+                .clickable(onClick = onCancel),
+            contentAlignment = Alignment.Center
+        ) {
+            PText(
+                text = cancelText,
+                color = DialogDefaults.cancelColor(),
+                style = DialogDefaults.buttonTextStyle()
+            )
+        }
+        Box(
+            modifier = Modifier
+                .size(DialogDefaults.dividerWidth(), DialogDefaults.buttonHeight())
+                .background(DialogDefaults.dividerColor())
+        )
+    }
+    Box(
+        modifier = Modifier
+            .weight(1f)
+            .height(DialogDefaults.buttonHeight())
+            .clickable(onClick = onOk),
+        contentAlignment = Alignment.Center
+    ) {
+        PText(
+            text = okText,
+            color = okColor,
+            style = DialogDefaults.buttonTextStyle()
+        )
     }
 }
 

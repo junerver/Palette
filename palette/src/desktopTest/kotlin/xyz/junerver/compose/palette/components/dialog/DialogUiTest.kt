@@ -8,6 +8,7 @@ import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import org.junit.Rule
 import xyz.junerver.compose.palette.components.button.PButton
+import xyz.junerver.compose.palette.components.text.PText
 import xyz.junerver.compose.palette.core.theme.PaletteMaterialTheme
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -58,6 +59,36 @@ class DialogUiTest {
         rule.onNodeWithText("Keep Editing").performClick()
 
         assertEquals(1, cancelClicks)
+    }
+
+    @Test
+    fun dialog_shouldRenderComposableSlotsAndInvokeCustomAction() {
+        var actionClicks = 0
+
+        rule.setContent {
+            PaletteMaterialTheme {
+                PDialog(
+                    title = {
+                        PText("Slot Title")
+                    },
+                    content = {
+                        PText("Slot Content")
+                    },
+                    actions = {
+                        PButton(text = "Slot Action") {
+                            actionClicks++
+                        }
+                    },
+                    onDismiss = {},
+                )
+            }
+        }
+
+        rule.onNodeWithText("Slot Title").assertTextEquals("Slot Title")
+        rule.onNodeWithText("Slot Content").assertTextEquals("Slot Content")
+        rule.onNodeWithText("Slot Action").performClick()
+
+        assertEquals(1, actionClicks)
     }
 
     @Test
