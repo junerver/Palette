@@ -92,6 +92,26 @@ class DialogUiTest {
     }
 
     @Test
+    fun dialog_shouldRenderComposableSlotsWithoutActions() {
+        rule.setContent {
+            PaletteMaterialTheme {
+                PDialog(
+                    title = {
+                        PText("Picker Title")
+                    },
+                    content = {
+                        PText("Picker Content")
+                    },
+                    onDismiss = {},
+                )
+            }
+        }
+
+        rule.onNodeWithText("Picker Title").assertTextEquals("Picker Title")
+        rule.onNodeWithText("Picker Content").assertTextEquals("Picker Content")
+    }
+
+    @Test
     fun dialogState_shouldShowDialogAfterTriggerButtonClick() {
         rule.setContent {
             PaletteMaterialTheme {

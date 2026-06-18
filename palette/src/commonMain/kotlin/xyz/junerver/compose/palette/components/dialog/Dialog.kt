@@ -88,7 +88,7 @@ fun PDialog(
     modifier: Modifier = Modifier,
     title: (@Composable () -> Unit)? = null,
     content: (@Composable () -> Unit)? = null,
-    actions: @Composable RowScope.() -> Unit,
+    actions: (@Composable RowScope.() -> Unit)? = null,
     onDismiss: () -> Unit
 ) {
     Dialog(
@@ -110,17 +110,19 @@ fun PDialog(
                 title?.invoke()
                 content?.invoke()
                 Spacer(modifier = Modifier.height(DialogDefaults.contentPaddingBottom()))
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(DialogDefaults.dividerWidth())
-                        .background(DialogDefaults.dividerColor())
-                )
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    actions()
+                if (actions != null) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(DialogDefaults.dividerWidth())
+                            .background(DialogDefaults.dividerColor())
+                    )
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        actions()
+                    }
                 }
             }
         }
