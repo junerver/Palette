@@ -12,6 +12,10 @@ import xyz.junerver.compose.palette.components.avatar.AvatarDefaults as AvatarDe
 import xyz.junerver.compose.palette.components.avatar.AvatarShape as AvatarShapeImpl
 import xyz.junerver.compose.palette.components.avatar.AvatarSize as AvatarSizeImpl
 import xyz.junerver.compose.palette.components.badge.BadgeDefaults as BadgeDefaultsImpl
+import xyz.junerver.compose.palette.components.bottomnavigation.BottomNavigationColors as BottomNavigationColorsImpl
+import xyz.junerver.compose.palette.components.bottomnavigation.BottomNavigationDefaults as BottomNavigationDefaultsImpl
+import xyz.junerver.compose.palette.components.bottomnavigation.BottomNavigationItem as BottomNavigationItemImpl
+import xyz.junerver.compose.palette.components.bottomnavigation.PBottomNavigation as PBottomNavigationImpl
 import xyz.junerver.compose.palette.components.button.ButtonColors as ButtonColorsImpl
 import xyz.junerver.compose.palette.components.button.ButtonDefaults as ButtonDefaultsImpl
 import xyz.junerver.compose.palette.components.button.ButtonSize as ButtonSizeImpl
@@ -453,6 +457,10 @@ typealias BreadcrumbItem = BreadcrumbItemImpl
 val PSteps = ::PStepsImpl
 val StepsDefaults = StepsDefaultsImpl
 typealias StepItem = StepItemImpl
+val PBottomNavigation = ::PBottomNavigationImpl
+val BottomNavigationDefaults = BottomNavigationDefaultsImpl
+typealias BottomNavigationColors = BottomNavigationColorsImpl
+typealias BottomNavigationItem = BottomNavigationItemImpl
 
 // Components - Data Entry
 val PDatePicker = ::PDatePickerImpl
