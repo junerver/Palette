@@ -26,10 +26,10 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.unit.dp
 import xyz.junerver.compose.palette.core.theme.PaletteMaterialTheme
+import xyz.junerver.compose.palette.core.tokens.PaletteComponentThemes
 import xyz.junerver.compose.palette.core.tokens.PaletteColors
 import xyz.junerver.compose.palette.demo.*
 import xyz.junerver.compose.palette.theme.*
-import xyz.junerver.compose.palette.ui.theme.Primary
 
 @Composable
 fun App() {
@@ -37,6 +37,31 @@ fun App() {
     val systemDark = isSystemInDarkTheme()
     val darkTheme = isDarkTheme(themeMode, systemDark)
     var language by rememberSaveable { mutableStateOf(Language.ZH_CN) }
+    var tokenConfig by remember { mutableStateOf(DemoThemeTokenConfig()) }
+    val baseColors = remember(darkTheme) {
+        if (darkTheme) PaletteColors.dark() else PaletteColors.light()
+    }
+    val colors = remember(baseColors, tokenConfig) { tokenConfig.resolveColors(baseColors) }
+    val spacing = remember(tokenConfig) { tokenConfig.resolveSpacing() }
+    val shapes = remember(tokenConfig) { tokenConfig.resolveShapes() }
+    val typography = remember(tokenConfig) { tokenConfig.resolveTypography() }
+    val opacity = remember(tokenConfig) { tokenConfig.resolveOpacity() }
+    val motion = remember(tokenConfig) { tokenConfig.resolveMotion() }
+    val elevation = remember(tokenConfig) { tokenConfig.resolveElevation() }
+    val control = remember(tokenConfig) { tokenConfig.resolveControl() }
+    val componentThemes =
+        remember(colors, spacing, typography, opacity, motion, elevation, control, darkTheme) {
+            PaletteComponentThemes.default(
+                colors = colors,
+                spacing = spacing,
+                typography = typography,
+                opacity = opacity,
+                motion = motion,
+                elevation = elevation,
+                control = control,
+                darkTheme = darkTheme,
+            )
+        }
 
     CompositionLocalProvider(
         LocalThemeMode provides themeMode,
@@ -44,7 +69,15 @@ fun App() {
         LocalLanguage provides language,
     ) {
         PaletteMaterialTheme(
-            colors = if (darkTheme) PaletteColors.dark() else PaletteColors.light(),
+            colors = colors,
+            spacing = spacing,
+            shapes = shapes,
+            typography = typography,
+            opacity = opacity,
+            motion = motion,
+            elevation = elevation,
+            control = control,
+            componentThemes = componentThemes,
             strings = language.toPaletteStrings(),
             darkTheme = darkTheme,
         ) {
@@ -53,6 +86,8 @@ fun App() {
                 onThemeModeChange = { ThemeManager.setThemeMode(it) },
                 language = language,
                 onLanguageChange = { language = it },
+                tokenConfig = tokenConfig,
+                onTokenConfigChange = { tokenConfig = it },
             )
         }
     }
@@ -64,6 +99,8 @@ private fun AppContent(
     onThemeModeChange: (ThemeMode) -> Unit,
     language: Language,
     onLanguageChange: (Language) -> Unit,
+    tokenConfig: DemoThemeTokenConfig,
+    onTokenConfigChange: (DemoThemeTokenConfig) -> Unit,
 ) {
     var selectedRoute by rememberSaveable { mutableStateOf("button") }
 
@@ -75,6 +112,8 @@ private fun AppContent(
             onThemeModeChange = onThemeModeChange,
             language = language,
             onLanguageChange = onLanguageChange,
+            tokenConfig = tokenConfig,
+            onTokenConfigChange = onTokenConfigChange,
         )
 
         Box(modifier = Modifier.fillMaxSize()) {
@@ -173,6 +212,8 @@ private fun SideNav(
     onThemeModeChange: (ThemeMode) -> Unit,
     language: Language,
     onLanguageChange: (Language) -> Unit,
+    tokenConfig: DemoThemeTokenConfig,
+    onTokenConfigChange: (DemoThemeTokenConfig) -> Unit,
 ) {
     Surface(
         modifier =
@@ -188,6 +229,8 @@ private fun SideNav(
                 onThemeModeChange = onThemeModeChange,
                 language = language,
                 onLanguageChange = onLanguageChange,
+                tokenConfig = tokenConfig,
+                onTokenConfigChange = onTokenConfigChange,
             )
 
             NavItems(
@@ -204,12 +247,14 @@ private fun HeaderSection(
     onThemeModeChange: (ThemeMode) -> Unit,
     language: Language,
     onLanguageChange: (Language) -> Unit,
+    tokenConfig: DemoThemeTokenConfig,
+    onTokenConfigChange: (DemoThemeTokenConfig) -> Unit,
 ) {
     Column(modifier = Modifier.padding(horizontal = 24.dp, vertical = 20.dp)) {
         Text(
             text = "Palette",
             style = MaterialTheme.typography.headlineMedium,
-            color = Primary,
+            color = MaterialTheme.colorScheme.primary,
         )
         Text(
             text = "Compose Multiplatform 组件库",
@@ -224,6 +269,8 @@ private fun HeaderSection(
             onThemeModeChange = onThemeModeChange,
             language = language,
             onLanguageChange = onLanguageChange,
+            tokenConfig = tokenConfig,
+            onTokenConfigChange = onTokenConfigChange,
         )
     }
 }
@@ -234,7 +281,11 @@ private fun CompactPreferencePanel(
     onThemeModeChange: (ThemeMode) -> Unit,
     language: Language,
     onLanguageChange: (Language) -> Unit,
+    tokenConfig: DemoThemeTokenConfig,
+    onTokenConfigChange: (DemoThemeTokenConfig) -> Unit,
 ) {
+    var showTokenDialog by rememberSaveable { mutableStateOf(false) }
+
     Column(
         modifier =
             Modifier
@@ -282,6 +333,29 @@ private fun CompactPreferencePanel(
                 modifier = Modifier.weight(1f),
             )
         }
+
+        CompactPreferenceRow(label = "样式") {
+            TextChip(
+                label = "全局 Token",
+                selected = tokenConfig.hasAnyCustomValue(),
+                onClick = { showTokenDialog = true },
+                modifier = Modifier.weight(1f),
+            )
+            TextChip(
+                label = if (tokenConfig.customCount == 0) "未自定义" else "${tokenConfig.customCount} 项",
+                selected = tokenConfig.hasAnyCustomValue(),
+                onClick = { showTokenDialog = true },
+                modifier = Modifier.weight(1f),
+            )
+        }
+    }
+
+    if (showTokenDialog) {
+        GlobalTokenDialog(
+            config = tokenConfig,
+            onConfigChange = onTokenConfigChange,
+            onDismiss = { showTokenDialog = false },
+        )
     }
 }
 
@@ -317,7 +391,7 @@ private fun TextChip(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val backgroundColor = if (selected) Primary else MaterialTheme.colorScheme.surface
+    val backgroundColor = if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surface
     val contentColor = if (selected) Color.White else MaterialTheme.colorScheme.onSurface
 
     Row(
@@ -347,7 +421,7 @@ private fun ThemeModeChip(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val backgroundColor = if (selected) Primary else MaterialTheme.colorScheme.surface
+    val backgroundColor = if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surface
     val contentColor = if (selected) Color.White else MaterialTheme.colorScheme.onSurface
 
     Row(
@@ -488,7 +562,7 @@ private fun ComponentSearchField(
                 onValueChange = onValueChange,
                 singleLine = true,
                 textStyle = MaterialTheme.typography.bodySmall.copy(color = contentColor),
-                cursorBrush = SolidColor(Primary),
+                cursorBrush = SolidColor(MaterialTheme.colorScheme.primary),
                 modifier = Modifier.fillMaxWidth(),
             )
         }
@@ -528,7 +602,7 @@ private fun NavItemRow(
             Modifier
                 .fillMaxWidth()
                 .clip(RoundedCornerShape(12.dp))
-                .background(if (selected) Primary else Color.Transparent)
+                .background(if (selected) MaterialTheme.colorScheme.primary else Color.Transparent)
                 .clickable(onClick = onClick)
                 .padding(12.dp),
         verticalAlignment = Alignment.CenterVertically,

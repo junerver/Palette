@@ -18,9 +18,8 @@ import xyz.junerver.compose.palette.Language
 import xyz.junerver.compose.palette.LocalLanguage
 import xyz.junerver.compose.palette.components.CodeBlock
 import xyz.junerver.compose.palette.components.text.PText
+import xyz.junerver.compose.palette.core.theme.PaletteTheme
 import xyz.junerver.compose.palette.foundation.border.BorderContainer
-import xyz.junerver.compose.palette.ui.theme.Primary
-import xyz.junerver.compose.palette.ui.theme.Success
 
 @Composable
 fun BorderBoxDemo() {
@@ -59,17 +58,17 @@ fun BorderBoxDemo() {
         DemoSection(title = text.colorSectionTitle) {
             Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
                 BorderContainer(
-                    borderColor = Primary,
+                    borderColor = PaletteTheme.colors.primary,
                     borderWidth = 1.dp,
                 ) {
-                    Text(text.blueBorderText, color = Primary)
+                    Text(text.blueBorderText, color = PaletteTheme.colors.primary)
                 }
 
                 BorderContainer(
-                    borderColor = Success,
+                    borderColor = PaletteTheme.colors.success,
                     borderWidth = 1.dp,
                 ) {
-                    Text(text.greenBorderText, color = Success)
+                    Text(text.greenBorderText, color = PaletteTheme.colors.success)
                 }
             }
         }

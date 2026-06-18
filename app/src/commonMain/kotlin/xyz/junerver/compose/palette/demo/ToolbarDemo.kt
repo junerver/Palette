@@ -18,8 +18,7 @@ import xyz.junerver.compose.palette.components.CodeBlock
 import xyz.junerver.compose.palette.components.text.PText
 import xyz.junerver.compose.palette.components.toolbar.Toolbar
 import xyz.junerver.compose.palette.components.toolbar.ToolbarDefaults
-import xyz.junerver.compose.palette.ui.theme.Primary
-import xyz.junerver.compose.palette.ui.theme.Success
+import xyz.junerver.compose.palette.core.theme.PaletteTheme
 
 @Composable
 fun ToolbarDemo() {
@@ -57,13 +56,13 @@ fun ToolbarDemo() {
             Column {
                 Toolbar(
                     title = text.primaryToneTitle,
-                    colors = ToolbarDefaults.colors(backgroundColor = Primary),
+                    colors = ToolbarDefaults.colors(backgroundColor = PaletteTheme.colors.primary),
                     onNavigationClick = { },
                 )
                 Spacer(modifier = Modifier.height(16.dp))
                 Toolbar(
                     title = text.successToneTitle,
-                    colors = ToolbarDefaults.colors(backgroundColor = Success),
+                    colors = ToolbarDefaults.colors(backgroundColor = PaletteTheme.colors.success),
                     onNavigationClick = { },
                 )
             }

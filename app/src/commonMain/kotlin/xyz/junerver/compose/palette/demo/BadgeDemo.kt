@@ -30,9 +30,7 @@ import xyz.junerver.compose.palette.LocalLanguage
 import xyz.junerver.compose.palette.components.CodeBlock
 import xyz.junerver.compose.palette.components.badge.PBadge
 import xyz.junerver.compose.palette.components.text.PText
-import xyz.junerver.compose.palette.ui.theme.Error
-import xyz.junerver.compose.palette.ui.theme.Primary
-import xyz.junerver.compose.palette.ui.theme.Success
+import xyz.junerver.compose.palette.core.theme.PaletteTheme
 
 @Composable
 fun BadgeDemo() {
@@ -108,7 +106,7 @@ fun BadgeDemo() {
             ) {
                 PBadge(
                     content = "3",
-                    color = Error,
+                    color = PaletteTheme.colors.error,
                     holder = {
                         Box(
                             modifier =
@@ -122,7 +120,7 @@ fun BadgeDemo() {
 
                 PBadge(
                     content = text.newBadge,
-                    color = Primary,
+                    color = PaletteTheme.colors.primary,
                     holder = {
                         Box(
                             modifier =
@@ -136,7 +134,7 @@ fun BadgeDemo() {
 
                 PBadge(
                     content = "OK",
-                    color = Success,
+                    color = PaletteTheme.colors.success,
                     holder = {
                         Box(
                             modifier =
