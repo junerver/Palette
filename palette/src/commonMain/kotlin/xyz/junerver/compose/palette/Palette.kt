@@ -84,6 +84,9 @@ import xyz.junerver.compose.palette.components.screen.LocalPlatformActivity as L
 import xyz.junerver.compose.palette.components.screen.PlatformActivity as PlatformActivityImpl
 import xyz.junerver.compose.palette.components.screen.ScreenColors as ScreenColorsImpl
 import xyz.junerver.compose.palette.components.screen.ScreenDefaults as ScreenDefaultsImpl
+import xyz.junerver.compose.palette.components.scaffold.PScaffold as PScaffoldImpl
+import xyz.junerver.compose.palette.components.scaffold.ScaffoldColors as ScaffoldColorsImpl
+import xyz.junerver.compose.palette.components.scaffold.ScaffoldDefaults as ScaffoldDefaultsImpl
 import xyz.junerver.compose.palette.components.select.PSelect as PSelectImpl
 import xyz.junerver.compose.palette.components.select.SelectColors as SelectColorsImpl
 import xyz.junerver.compose.palette.components.select.SelectDefaults as SelectDefaultsImpl
@@ -386,6 +389,9 @@ val LocalPlatformActivity = LocalPlatformActivityImpl
 typealias PlatformActivity = PlatformActivityImpl
 typealias ScreenColors = ScreenColorsImpl
 typealias ScreenDefaults = ScreenDefaultsImpl
+val PScaffold = ::PScaffoldImpl
+val ScaffoldDefaults = ScaffoldDefaultsImpl
+typealias ScaffoldColors = ScaffoldColorsImpl
 
 // Components - Select
 @Composable
