@@ -7,6 +7,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Surface
 import androidx.compose.material3.contentColorFor
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
@@ -25,6 +26,7 @@ fun PContainer(
     border: BorderStroke? = null,
     enabled: Boolean = true,
     onClick: (() -> Unit)? = null,
+    contentAlignment: Alignment = Alignment.TopStart,
     content: @Composable BoxScope.() -> Unit,
 ) {
     if (onClick == null) {
@@ -37,7 +39,10 @@ fun PContainer(
             shadowElevation = shadowElevation,
             border = border,
         ) {
-            Box(content = content)
+            Box(
+                contentAlignment = contentAlignment,
+                content = content
+            )
         }
     } else {
         Surface(
@@ -51,7 +56,10 @@ fun PContainer(
             shadowElevation = shadowElevation,
             border = border,
         ) {
-            Box(content = content)
+            Box(
+                contentAlignment = contentAlignment,
+                content = content
+            )
         }
     }
 }
