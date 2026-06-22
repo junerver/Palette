@@ -255,6 +255,19 @@ object MermaidParser {
             )
         }
 
+        val openLabeled = Regex("""^(.+?)\s+(--|==|-\.)(.+?)(---|==>|\.->|\.-)\s+(.+)$""").matchEntire(line)
+        if (openLabeled != null) {
+            val startMarker = openLabeled.groupValues[2]
+            val endMarker = openLabeled.groupValues[4]
+            return ParsedEdge(
+                from = parseNode(openLabeled.groupValues[1]),
+                label = openLabeled.groupValues[3].trim().ifEmpty { null },
+                to = parseNode(openLabeled.groupValues[5]),
+                style = startMarker.toLabeledEdgeStyle(),
+                arrow = endMarker.toEdgeArrow(),
+            )
+        }
+
         val plain = Regex("""^(.+?)\s*(<-->|---|-->|==>|-\.->)\s*(.+)$""").matchEntire(line) ?: return null
         val marker = plain.groupValues[2]
         return ParsedEdge(
@@ -380,9 +393,16 @@ object MermaidParser {
             else -> MermaidEdgeStyle.Solid
         }
 
+    private fun String.toLabeledEdgeStyle(): MermaidEdgeStyle =
+        when (this) {
+            "==" -> MermaidEdgeStyle.Thick
+            "-." -> MermaidEdgeStyle.Dotted
+            else -> MermaidEdgeStyle.Solid
+        }
+
     private fun String.toEdgeArrow(): MermaidEdgeArrow =
         when (this) {
-            "---" -> MermaidEdgeArrow.None
+            "---", ".-" -> MermaidEdgeArrow.None
             "<-->" -> MermaidEdgeArrow.Bidirectional
             else -> MermaidEdgeArrow.Forward
         }

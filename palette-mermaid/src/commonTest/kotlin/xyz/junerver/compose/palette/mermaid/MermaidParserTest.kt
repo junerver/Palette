@@ -164,6 +164,48 @@ class MermaidParserTest {
     }
 
     @Test
+    fun parsesFlowchartOpenAndThickLabeledEdges() {
+        val diagram =
+            MermaidParser.parse(
+                """
+                flowchart LR
+                    A[Client] -- sync --- B[Cache]
+                    B -. stale .- C[Store]
+                    C == fast ==> D[Viewer]
+                """.trimIndent(),
+            )
+
+        assertEquals(3, diagram.edges.size)
+        assertTrue(
+            diagram.edges.any {
+                it.from == "A" &&
+                    it.to == "B" &&
+                    it.label == "sync" &&
+                    it.style == MermaidEdgeStyle.Solid &&
+                    it.arrow == MermaidEdgeArrow.None
+            },
+        )
+        assertTrue(
+            diagram.edges.any {
+                it.from == "B" &&
+                    it.to == "C" &&
+                    it.label == "stale" &&
+                    it.style == MermaidEdgeStyle.Dotted &&
+                    it.arrow == MermaidEdgeArrow.None
+            },
+        )
+        assertTrue(
+            diagram.edges.any {
+                it.from == "C" &&
+                    it.to == "D" &&
+                    it.label == "fast" &&
+                    it.style == MermaidEdgeStyle.Thick &&
+                    it.arrow == MermaidEdgeArrow.Forward
+            },
+        )
+    }
+
+    @Test
     fun parsesStandaloneFlowchartNodeDeclarations() {
         val diagram =
             MermaidParser.parse(
