@@ -155,6 +155,27 @@ class MarkdownParserTest {
     }
 
     @Test
+    fun renderModelHighlightsYamlFencedCodeBlocks() {
+        val model =
+            MarkdownRenderer.toRenderModel(
+                MarkdownParser.parse(
+                    """
+                    ```yaml
+                    name: Palette
+                    enabled: true
+                    ```
+                    """.trimIndent(),
+                ),
+            )
+
+        val code = assertIs<MarkdownRenderBlock.Code>(model.blocks.single())
+        assertEquals("yaml", code.language)
+        val tokens = code.highlighted.tokens.flatten()
+        assertTrue(tokens.any { it.text == "name" && it.type == CodeTokenType.Keyword })
+        assertTrue(tokens.any { it.text == "true" && it.type == CodeTokenType.Keyword })
+    }
+
+    @Test
     fun parsesCodeFenceInfoForTitleLineNumbersAndHighlightedLines() {
         val model =
             MarkdownRenderer.toRenderModel(

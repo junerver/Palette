@@ -41,6 +41,7 @@ object PaletteCodeHighlighter {
                 "py", "python" -> PythonLexer.highlight(lines)
                 "html", "xml", "svg" -> HtmlLexer().highlight(lines)
                 "bash", "sh", "shell", "zsh" -> ShellLexer.highlight(lines)
+                "yaml", "yml" -> YamlLexer.highlight(lines)
                 else -> lines.map { line -> listOf(CodeToken(CodeTokenType.Plain, line)) }
             }
         return HighlightedCode(language = normalizedLanguage.ifEmpty { "plain" }, tokens = tokens)
@@ -835,6 +836,87 @@ private object ShellLexer {
     private val ShellPunctuation = setOf('(', ')', '{', '}', '[', ']', ';', ':')
 }
 
+private object YamlLexer {
+    fun highlight(lines: List<String>): List<List<CodeToken>> = lines.map(::highlightLine)
+
+    private fun highlightLine(line: String): List<CodeToken> {
+        val tokens = mutableListOf<CodeToken>()
+        var index = 0
+
+        while (index < line.length) {
+            val current = line[index]
+            when {
+                current.isWhitespace() -> {
+                    val end = line.nextWhile(index, Char::isWhitespace)
+                    tokens += CodeToken(CodeTokenType.Plain, line.substring(index, end))
+                    index = end
+                }
+
+                current == '#' -> {
+                    tokens += CodeToken(CodeTokenType.Comment, line.substring(index))
+                    index = line.length
+                }
+
+                current == '"' || current == '\'' -> {
+                    val end = scanQuotedString(line, index, current)
+                    tokens += CodeToken(CodeTokenType.StringLiteral, line.substring(index, end))
+                    index = end
+                }
+
+                (current == '&' || current == '*') && line.getOrNull(index + 1)?.isYamlWordStart() == true -> {
+                    val end = line.nextYamlWordEnd(index + 1)
+                    tokens += CodeToken(CodeTokenType.Annotation, line.substring(index, end))
+                    index = end
+                }
+
+                current == '-' && line.getOrNull(index + 1)?.isWhitespace() == true -> {
+                    tokens += CodeToken(CodeTokenType.Operator, "-")
+                    index += 1
+                }
+
+                current.isDigit() || (current == '-' && line.getOrNull(index + 1)?.isDigit() == true) -> {
+                    val end = line.nextYamlNumberEnd(index)
+                    tokens += CodeToken(CodeTokenType.NumberLiteral, line.substring(index, end))
+                    index = end
+                }
+
+                current.isYamlWordStart() -> {
+                    val end = line.nextYamlWordEnd(index)
+                    val text = line.substring(index, end)
+                    val type =
+                        when {
+                            line.nextNonWhitespace(end) == ':' -> CodeTokenType.Keyword
+                            text in YamlKeywords -> CodeTokenType.Keyword
+                            else -> CodeTokenType.Plain
+                        }
+                    tokens += CodeToken(type, text)
+                    index = end
+                }
+
+                current == ':' -> {
+                    tokens += CodeToken(CodeTokenType.Operator, ":")
+                    index += 1
+                }
+
+                current in YamlPunctuation -> {
+                    tokens += CodeToken(CodeTokenType.Punctuation, current.toString())
+                    index += 1
+                }
+
+                else -> {
+                    tokens += CodeToken(CodeTokenType.Plain, current.toString())
+                    index += 1
+                }
+            }
+        }
+
+        return tokens
+    }
+
+    private val YamlKeywords = setOf("true", "false", "null", "yes", "no", "on", "off")
+    private val YamlPunctuation = setOf('[', ']', '{', '}', ',')
+}
+
 private fun String.nextWhile(
     start: Int,
     predicate: (Char) -> Boolean,
@@ -876,6 +958,12 @@ private fun String.nextShellVariableEnd(start: Int): Int =
         else -> nextWhile(start + 1) { it.isLetterOrDigit() || it == '_' }.coerceAtLeast(start + 1)
     }
 
+private fun String.nextYamlWordEnd(start: Int): Int =
+    nextWhile(start) { it.isLetterOrDigit() || it in setOf('_', '-', '.', '/') }
+
+private fun String.nextYamlNumberEnd(start: Int): Int =
+    nextWhile(start) { it.isDigit() || it == '-' || it == '+' || it == '.' || it == '_' }
+
 private fun String.nextNonWhitespace(start: Int): Char? {
     var index = start
     while (index < length) {
@@ -897,6 +985,8 @@ private fun Char.isHtmlIdentifierStart(): Boolean = isLetter() || this == '_' ||
 private fun Char.isShellWordStart(): Boolean = isLetterOrDigit() || this in setOf('_', '.', '/', '~')
 
 private fun Char.isShellWordPart(): Boolean = isShellWordStart() || this in setOf('-', '+')
+
+private fun Char.isYamlWordStart(): Boolean = isLetter() || this == '_' || this == '.'
 
 private fun String.isHexColorToken(): Boolean {
     val value = drop(1)

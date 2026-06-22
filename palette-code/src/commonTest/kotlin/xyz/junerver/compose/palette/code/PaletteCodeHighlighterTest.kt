@@ -200,4 +200,33 @@ class PaletteCodeHighlighterTest {
         assertTrue(tokens.any { it.text == "--info" && it.type == CodeTokenType.Operator })
         assertTrue(tokens.any { it.text == "# run desktop tests" && it.type == CodeTokenType.Comment })
     }
+
+    @Test
+    fun highlightsYamlKeysScalarsListsAnchorsAndComments() {
+        val highlighted =
+            PaletteCodeHighlighter.highlight(
+                code =
+                    """
+                    name: Palette
+                    enabled: true
+                    retries: 3
+                    defaults: &defaults
+                      theme: "light"
+                    items:
+                      - *defaults # shared config
+                    """.trimIndent(),
+                language = "yaml",
+            )
+
+        val tokens = highlighted.tokens.flatten()
+        assertEquals("yaml", highlighted.language)
+        assertTrue(tokens.any { it.text == "name" && it.type == CodeTokenType.Keyword })
+        assertTrue(tokens.any { it.text == "true" && it.type == CodeTokenType.Keyword })
+        assertTrue(tokens.any { it.text == "3" && it.type == CodeTokenType.NumberLiteral })
+        assertTrue(tokens.any { it.text == "&defaults" && it.type == CodeTokenType.Annotation })
+        assertTrue(tokens.any { it.text == "\"light\"" && it.type == CodeTokenType.StringLiteral })
+        assertTrue(tokens.any { it.text == "-" && it.type == CodeTokenType.Operator })
+        assertTrue(tokens.any { it.text == "*defaults" && it.type == CodeTokenType.Annotation })
+        assertTrue(tokens.any { it.text == "# shared config" && it.type == CodeTokenType.Comment })
+    }
 }
