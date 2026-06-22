@@ -240,60 +240,63 @@ private fun List<List<MarkdownInlineNode>>.normalizedCellCount(columnCount: Int)
 private fun List<MarkdownInlineNode>.toAnnotatedString(): AnnotatedString {
     val colors = PaletteTheme.colors
     return buildAnnotatedString {
-        forEach { node ->
-            when (node) {
-                is MarkdownInlineText -> append(node.text)
-                is MarkdownInlineStrong -> {
-                    pushStyle(SpanStyle(fontWeight = FontWeight.SemiBold))
-                    append(node.text)
-                    pop()
-                }
+        fun appendNodes(nodes: List<MarkdownInlineNode>) {
+            nodes.forEach { node ->
+                when (node) {
+                    is MarkdownInlineText -> append(node.text)
+                    is MarkdownInlineStrong -> {
+                        pushStyle(SpanStyle(fontWeight = FontWeight.SemiBold))
+                        appendNodes(node.children)
+                        pop()
+                    }
 
-                is MarkdownInlineEmphasis -> {
-                    pushStyle(SpanStyle(fontStyle = androidx.compose.ui.text.font.FontStyle.Italic))
-                    append(node.text)
-                    pop()
-                }
+                    is MarkdownInlineEmphasis -> {
+                        pushStyle(SpanStyle(fontStyle = androidx.compose.ui.text.font.FontStyle.Italic))
+                        appendNodes(node.children)
+                        pop()
+                    }
 
-                is MarkdownInlineStrikethrough -> {
-                    pushStyle(SpanStyle(textDecoration = TextDecoration.LineThrough))
-                    append(node.text)
-                    pop()
-                }
+                    is MarkdownInlineStrikethrough -> {
+                        pushStyle(SpanStyle(textDecoration = TextDecoration.LineThrough))
+                        appendNodes(node.children)
+                        pop()
+                    }
 
-                is MarkdownInlineCode -> {
-                    pushStyle(
-                        SpanStyle(
-                            color = colors.primary,
-                            background = colors.bgSelected,
-                        ),
-                    )
-                    append(node.text)
-                    pop()
-                }
+                    is MarkdownInlineCode -> {
+                        pushStyle(
+                            SpanStyle(
+                                color = colors.primary,
+                                background = colors.bgSelected,
+                            ),
+                        )
+                        append(node.text)
+                        pop()
+                    }
 
-                is MarkdownInlineLink -> {
-                    pushStyle(
-                        SpanStyle(
-                            color = colors.primary,
-                            textDecoration = TextDecoration.Underline,
-                        ),
-                    )
-                    append(node.label)
-                    pop()
-                }
+                    is MarkdownInlineLink -> {
+                        pushStyle(
+                            SpanStyle(
+                                color = colors.primary,
+                                textDecoration = TextDecoration.Underline,
+                            ),
+                        )
+                        appendNodes(node.children)
+                        pop()
+                    }
 
-                is MarkdownInlineImage -> {
-                    pushStyle(
-                        SpanStyle(
-                            color = colors.info,
-                            background = colors.bgSelected,
-                        ),
-                    )
-                    append("[image: ${node.alt.ifEmpty { node.destination }}]")
-                    pop()
+                    is MarkdownInlineImage -> {
+                        pushStyle(
+                            SpanStyle(
+                                color = colors.info,
+                                background = colors.bgSelected,
+                            ),
+                        )
+                        append("[image: ${node.alt.ifEmpty { node.destination }}]")
+                        pop()
+                    }
                 }
             }
         }
+        appendNodes(this@toAnnotatedString)
     }
 }

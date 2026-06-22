@@ -287,6 +287,41 @@ class MarkdownParserTest {
     }
 
     @Test
+    fun parsesNestedInlineNodesInsideEmphasisAndLinks() {
+        val inline =
+            MarkdownInlineParser.parse(
+                "Use **Palette `tokens`** with [**docs** and `code`](https://example.com).",
+            )
+
+        assertEquals(
+            listOf(
+                MarkdownInlineText("Use "),
+                MarkdownInlineStrong(
+                    text = "Palette `tokens`",
+                    children =
+                        listOf(
+                            MarkdownInlineText("Palette "),
+                            MarkdownInlineCode("tokens"),
+                        ),
+                ),
+                MarkdownInlineText(" with "),
+                MarkdownInlineLink(
+                    label = "**docs** and `code`",
+                    destination = "https://example.com",
+                    children =
+                        listOf(
+                            MarkdownInlineStrong("docs"),
+                            MarkdownInlineText(" and "),
+                            MarkdownInlineCode("code"),
+                        ),
+                ),
+                MarkdownInlineText("."),
+            ),
+            inline,
+        )
+    }
+
+    @Test
     fun parsesUnderscoreStrongAndEmphasis() {
         val inline = MarkdownInlineParser.parse("Use __Palette__ with _Compose_.")
 

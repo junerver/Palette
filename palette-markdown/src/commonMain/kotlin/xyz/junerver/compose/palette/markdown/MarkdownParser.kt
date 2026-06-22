@@ -82,14 +82,17 @@ data class MarkdownInlineText(
 
 data class MarkdownInlineStrong(
     override val text: String,
+    val children: List<MarkdownInlineNode> = listOf(MarkdownInlineText(text)),
 ) : MarkdownInlineNode
 
 data class MarkdownInlineEmphasis(
     override val text: String,
+    val children: List<MarkdownInlineNode> = listOf(MarkdownInlineText(text)),
 ) : MarkdownInlineNode
 
 data class MarkdownInlineStrikethrough(
     override val text: String,
+    val children: List<MarkdownInlineNode> = listOf(MarkdownInlineText(text)),
 ) : MarkdownInlineNode
 
 data class MarkdownInlineCode(
@@ -100,6 +103,7 @@ data class MarkdownInlineLink(
     val label: String,
     val destination: String,
     val title: String? = null,
+    val children: List<MarkdownInlineNode> = listOf(MarkdownInlineText(label)),
 ) : MarkdownInlineNode {
     override val text: String
         get() = label
@@ -227,8 +231,13 @@ object MarkdownInlineParser {
                 source.startsWith("~~", index) -> {
                     val end = source.indexOf("~~", startIndex = index + 2)
                     if (end != -1) {
+                        val text = source.substring(index + 2, end)
                         flushPlain()
-                        nodes += MarkdownInlineStrikethrough(source.substring(index + 2, end))
+                        nodes +=
+                            MarkdownInlineStrikethrough(
+                                text = text,
+                                children = parseResolvedReferences(text, references),
+                            )
                         index = end + 2
                     } else {
                         plain.append(source[index])
@@ -245,8 +254,13 @@ object MarkdownInlineParser {
                         length = 2,
                     )
                     if (end != -1) {
+                        val text = source.substring(index + 2, end)
                         flushPlain()
-                        nodes += MarkdownInlineStrong(source.substring(index + 2, end))
+                        nodes +=
+                            MarkdownInlineStrong(
+                                text = text,
+                                children = parseResolvedReferences(text, references),
+                            )
                         index = end + 2
                     } else {
                         plain.append(source[index])
@@ -263,8 +277,13 @@ object MarkdownInlineParser {
                         length = 1,
                     )
                     if (end != -1) {
+                        val text = source.substring(index + 1, end)
                         flushPlain()
-                        nodes += MarkdownInlineEmphasis(source.substring(index + 1, end))
+                        nodes +=
+                            MarkdownInlineEmphasis(
+                                text = text,
+                                children = parseResolvedReferences(text, references),
+                            )
                         index = end + 1
                     } else {
                         plain.append(source[index])
@@ -325,12 +344,14 @@ object MarkdownInlineParser {
                                 null
                             }
                         if (target != null) {
+                            val label = source.substring(index + 1, labelEnd)
                             flushPlain()
                             nodes +=
                                 MarkdownInlineLink(
-                                    label = source.substring(index + 1, labelEnd),
+                                    label = label,
                                     destination = target.destination,
                                     title = target.title,
+                                    children = parseResolvedReferences(label, references),
                                 )
                             index = destinationEnd + 1
                         } else {
@@ -354,6 +375,7 @@ object MarkdownInlineParser {
                                     label = label,
                                     destination = target.destination,
                                     title = target.title,
+                                    children = parseResolvedReferences(label, references),
                                 )
                             index = referenceEnd + 1
                         } else {
@@ -370,6 +392,7 @@ object MarkdownInlineParser {
                                     label = label,
                                     destination = target.destination,
                                     title = target.title,
+                                    children = parseResolvedReferences(label, references),
                                 )
                             index = labelEnd + 1
                         } else {
