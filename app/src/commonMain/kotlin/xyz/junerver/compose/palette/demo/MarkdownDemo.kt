@@ -118,6 +118,11 @@ private fun markdownDemoText(): MarkdownDemoText =
                     }
                     ```
 
+                    缩进代码块会作为普通代码块渲染：
+
+                        val mode = "indented"
+                            println(mode)
+
                     ```json
                     {
                       "component": "PMarkdownViewer",
@@ -278,6 +283,11 @@ private fun markdownDemoText(): MarkdownDemoText =
                         PMarkdownViewer(markdown = content)
                     }
                     ```
+
+                    Indented code blocks render as plain code:
+
+                        val mode = "indented"
+                            println(mode)
 
                     ```json
                     {

@@ -532,6 +532,23 @@ object MarkdownParser {
             val fence = trimmed.toFenceStart()
             when {
                 trimmed.isEmpty() -> index += 1
+                line.isIndentedCodeLine() -> {
+                    val content = mutableListOf<String>()
+                    while (index < lines.size && (lines[index].isIndentedCodeLine() || lines[index].trim().isEmpty())) {
+                        content +=
+                            if (lines[index].trim().isEmpty()) {
+                                ""
+                            } else {
+                                lines[index].withoutCodeIndent()
+                            }
+                        index += 1
+                    }
+                    while (content.lastOrNull()?.isEmpty() == true) {
+                        content.removeAt(content.lastIndex)
+                    }
+                    blocks += MarkdownCodeBlock(language = "plain", content = content.joinToString("\n"))
+                }
+
                 trimmed.toReferenceDefinition() != null -> index += 1
                 fence != null -> {
                     val fenceInfo = CodeFenceInfo.parse(fence.info)
@@ -684,6 +701,7 @@ object MarkdownParser {
             val trimmed = lines[index].trim()
             if (
                 trimmed.isEmpty() ||
+                lines[index].isIndentedCodeLine() ||
                 trimmed.toFenceStart() != null ||
                 trimmed.startsWith(">") ||
                 HeadingRegex.matchEntire(trimmed) != null ||
@@ -707,7 +725,12 @@ object MarkdownParser {
         while (index < lines.size) {
             val trimmed = lines[index].trim()
             val fence = trimmed.toFenceStart()
-            if (fence != null) {
+            if (lines[index].isIndentedCodeLine()) {
+                index += 1
+                while (index < lines.size && (lines[index].isIndentedCodeLine() || lines[index].trim().isEmpty())) {
+                    index += 1
+                }
+            } else if (fence != null) {
                 index += 1
                 while (index < lines.size && !lines[index].trim().isFenceEnd(fence)) {
                     index += 1
@@ -751,6 +774,16 @@ object MarkdownParser {
     private fun String.isListItem(): Boolean = OrderedListRegex.matches(this) || UnorderedListRegex.matches(this)
 
     private fun String.isTaskListItem(): Boolean = TaskListRegex.matches(this)
+
+    private fun String.isIndentedCodeLine(): Boolean =
+        startsWith("    ") || startsWith("\t")
+
+    private fun String.withoutCodeIndent(): String =
+        when {
+            startsWith("\t") -> drop(1)
+            startsWith("    ") -> drop(4)
+            else -> this
+        }
 
     private fun String.removeListMarker(): String =
         replace(Regex("""^(\d+[.)]|[-*+])\s+"""), "").trim()

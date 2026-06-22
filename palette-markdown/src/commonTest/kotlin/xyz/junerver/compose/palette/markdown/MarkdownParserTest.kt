@@ -93,6 +93,29 @@ class MarkdownParserTest {
     }
 
     @Test
+    fun parsesIndentedCodeBlocksAsPlainCode() {
+        val document =
+            MarkdownParser.parse(
+                """
+                Before
+
+                    val answer = 42
+                        println(answer)
+                ${'\t'}return answer
+
+                After
+                """.trimIndent(),
+            )
+
+        assertEquals(3, document.blocks.size)
+        assertEquals(MarkdownParagraph("Before"), document.blocks[0])
+        val code = assertIs<MarkdownCodeBlock>(document.blocks[1])
+        assertEquals("plain", code.language)
+        assertEquals("val answer = 42\n    println(answer)\nreturn answer", code.content)
+        assertEquals(MarkdownParagraph("After"), document.blocks[2])
+    }
+
+    @Test
     fun renderModelParsesMermaidStandaloneNodes() {
         val model =
             MarkdownRenderer.toRenderModel(
