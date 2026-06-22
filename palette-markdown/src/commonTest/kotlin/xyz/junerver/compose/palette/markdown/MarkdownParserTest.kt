@@ -218,6 +218,29 @@ class MarkdownParserTest {
     }
 
     @Test
+    fun renderModelHighlightsDiffFencedCodeBlocks() {
+        val model =
+            MarkdownRenderer.toRenderModel(
+                MarkdownParser.parse(
+                    """
+                    ```diff
+                    @@ -1,2 +1,2 @@
+                    -OldButton()
+                    +NewButton()
+                    ```
+                    """.trimIndent(),
+                ),
+            )
+
+        val code = assertIs<MarkdownRenderBlock.Code>(model.blocks.single())
+        assertEquals("diff", code.language)
+        val tokens = code.highlighted.tokens.flatten()
+        assertTrue(tokens.any { it.text == "@@ -1,2 +1,2 @@" && it.type == CodeTokenType.Annotation })
+        assertTrue(tokens.any { it.text == "-OldButton()" && it.type == CodeTokenType.Deleted })
+        assertTrue(tokens.any { it.text == "+NewButton()" && it.type == CodeTokenType.Inserted })
+    }
+
+    @Test
     fun parsesCodeFenceInfoForTitleLineNumbersAndHighlightedLines() {
         val model =
             MarkdownRenderer.toRenderModel(

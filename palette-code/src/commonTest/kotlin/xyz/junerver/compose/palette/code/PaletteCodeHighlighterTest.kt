@@ -263,6 +263,34 @@ class PaletteCodeHighlighterTest {
     }
 
     @Test
+    fun highlightsDiffHeadersHunksInsertedAndDeletedLines() {
+        val highlighted =
+            PaletteCodeHighlighter.highlight(
+                code =
+                    """
+                    diff --git a/Button.kt b/Button.kt
+                    index 123..456 100644
+                    --- a/Button.kt
+                    +++ b/Button.kt
+                    @@ -1,3 +1,4 @@
+                     fun Button() {
+                    -    OldButton()
+                    +    NewButton()
+                     }
+                    """.trimIndent(),
+                language = "diff",
+            )
+
+        val tokens = highlighted.tokens.flatten()
+        assertEquals("diff", highlighted.language)
+        assertTrue(tokens.any { it.text == "diff --git a/Button.kt b/Button.kt" && it.type == CodeTokenType.Keyword })
+        assertTrue(tokens.any { it.text == "@@ -1,3 +1,4 @@" && it.type == CodeTokenType.Annotation })
+        assertTrue(tokens.any { it.text == "-    OldButton()" && it.type == CodeTokenType.Deleted })
+        assertTrue(tokens.any { it.text == "+    NewButton()" && it.type == CodeTokenType.Inserted })
+        assertTrue(tokens.any { it.text == " fun Button() {" && it.type == CodeTokenType.Plain })
+    }
+
+    @Test
     fun highlightsSqlKeywordsTypesStringsNumbersFunctionsAndComments() {
         val highlighted =
             PaletteCodeHighlighter.highlight(

@@ -38,6 +38,8 @@ data class CodeBlockColors(
             CodeTokenType.Annotation -> annotationColor
             CodeTokenType.Operator -> operatorColor
             CodeTokenType.Punctuation -> punctuationColor
+            CodeTokenType.Inserted -> stringColor
+            CodeTokenType.Deleted -> commentColor
         }
 }
 

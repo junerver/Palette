@@ -21,6 +21,8 @@ enum class CodeTokenType {
     Annotation,
     Operator,
     Punctuation,
+    Inserted,
+    Deleted,
 }
 
 object PaletteCodeHighlighter {
@@ -43,6 +45,7 @@ object PaletteCodeHighlighter {
                 "bash", "sh", "shell", "zsh" -> ShellLexer.highlight(lines)
                 "yaml", "yml" -> YamlLexer.highlight(lines)
                 "toml" -> TomlLexer.highlight(lines)
+                "diff", "patch" -> DiffLexer.highlight(lines)
                 "sql", "mysql", "postgresql", "postgres" -> SqlLexer().highlight(lines)
                 else -> lines.map { line -> listOf(CodeToken(CodeTokenType.Plain, line)) }
             }
@@ -996,6 +999,24 @@ private object TomlLexer {
 
     private val TomlKeywords = setOf("true", "false")
     private val TomlPunctuation = setOf('[', ']', '{', '}', ',', '.')
+}
+
+private object DiffLexer {
+    fun highlight(lines: List<String>): List<List<CodeToken>> =
+        lines.map { line ->
+            val type =
+                when {
+                    line.startsWith("@@") -> CodeTokenType.Annotation
+                    line.startsWith("diff ") ||
+                        line.startsWith("index ") ||
+                        line.startsWith("--- ") ||
+                        line.startsWith("+++ ") -> CodeTokenType.Keyword
+                    line.startsWith("+") -> CodeTokenType.Inserted
+                    line.startsWith("-") -> CodeTokenType.Deleted
+                    else -> CodeTokenType.Plain
+                }
+            listOf(CodeToken(type, line))
+        }
 }
 
 private class SqlLexer {
