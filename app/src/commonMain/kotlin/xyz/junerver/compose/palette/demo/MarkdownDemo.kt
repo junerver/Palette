@@ -90,6 +90,9 @@ private fun markdownDemoText(): MarkdownDemoText =
 
                     行内语法支持 ~~删除线~~、_强调_、__加粗__、自动链接 <https://example.com> 和转义 \*literal\*。
 
+                    Setext 标题
+                    -----------
+
                     3. 保留有序列表的起始编号
                     4. 继续使用原始 Markdown 编号显示
 
@@ -222,6 +225,9 @@ private fun markdownDemoText(): MarkdownDemoText =
                     > Block quotes keep inline emphasis, links, and `inline code` styles.
 
                     Inline syntax supports ~~strikethrough~~, _emphasis_, __strong__, autolinks <https://example.com>, and escaped \*literal\* text.
+
+                    Setext Heading
+                    --------------
 
                     3. Preserve ordered list start numbers
                     4. Continue rendering from the Markdown marker

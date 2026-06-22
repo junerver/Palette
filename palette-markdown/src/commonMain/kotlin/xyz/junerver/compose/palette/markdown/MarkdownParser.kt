@@ -391,6 +391,15 @@ object MarkdownParser {
                     blocks += MarkdownTableBlock(headers = headers, rows = rows, alignments = alignments)
                 }
 
+                trimmed.canStartSetextHeading(lines.getOrNull(index + 1)?.trim()) -> {
+                    blocks +=
+                        MarkdownHeading(
+                            level = lines[index + 1].trim().toSetextHeadingLevel(),
+                            text = trimmed,
+                        )
+                    index += 2
+                }
+
                 trimmed.matches(ThematicBreakRegex) -> {
                     blocks += MarkdownThematicBreak
                     index += 1
@@ -467,9 +476,21 @@ object MarkdownParser {
 
     private val HeadingRegex = Regex("""^(#{1,6})\s+(.+)$""")
     private val ThematicBreakRegex = Regex("""^(-{3,}|\*{3,}|_{3,})$""")
+    private val SetextHeadingUnderlineRegex = Regex("""^(=+|-+)$""")
     private val TaskListRegex = Regex("""^([-*+])\s+\[([ xX])]\s+(.+)$""")
     private val OrderedListRegex = Regex("""^(\d+)[.)]\s+.+$""")
     private val UnorderedListRegex = Regex("""^[-*+]\s+.+$""")
+
+    private fun String.canStartSetextHeading(nextLine: String?): Boolean =
+        isNotEmpty() &&
+            nextLine?.matches(SetextHeadingUnderlineRegex) == true &&
+            HeadingRegex.matchEntire(this) == null &&
+            !matches(ThematicBreakRegex) &&
+            !isTaskListItem() &&
+            !isListItem()
+
+    private fun String.toSetextHeadingLevel(): Int =
+        if (startsWith("=")) 1 else 2
 
     private fun String.isListItem(): Boolean = OrderedListRegex.matches(this) || UnorderedListRegex.matches(this)
 

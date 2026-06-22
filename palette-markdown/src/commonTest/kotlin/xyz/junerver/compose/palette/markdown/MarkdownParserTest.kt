@@ -361,6 +361,56 @@ class MarkdownParserTest {
     }
 
     @Test
+    fun parsesSetextHeadings() {
+        val document =
+            MarkdownParser.parse(
+                """
+                Palette Markdown
+                ================
+
+                Viewer **Preview**
+                ------------------
+                """.trimIndent(),
+            )
+
+        assertEquals(2, document.blocks.size)
+        assertEquals(MarkdownHeading(level = 1, text = "Palette Markdown"), document.blocks[0])
+        val second = assertIs<MarkdownHeading>(document.blocks[1])
+        assertEquals(2, second.level)
+        assertEquals("Viewer **Preview**", second.text)
+        assertEquals(
+            listOf(
+                MarkdownInlineText("Viewer "),
+                MarkdownInlineStrong("Preview"),
+            ),
+            second.inlines,
+        )
+    }
+
+    @Test
+    fun keepsStandaloneDashLineAsThematicBreak() {
+        val document =
+            MarkdownParser.parse(
+                """
+                Before
+
+                ---
+
+                After
+                """.trimIndent(),
+            )
+
+        assertEquals(
+            listOf(
+                MarkdownParagraph("Before"),
+                MarkdownThematicBreak,
+                MarkdownParagraph("After"),
+            ),
+            document.blocks,
+        )
+    }
+
+    @Test
     fun preservesOrderedListStartNumber() {
         val document =
             MarkdownParser.parse(
