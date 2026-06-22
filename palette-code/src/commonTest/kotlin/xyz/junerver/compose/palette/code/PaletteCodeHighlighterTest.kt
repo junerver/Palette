@@ -67,4 +67,60 @@ class PaletteCodeHighlighterTest {
         assertTrue(tokens.any { it.text == "2" && it.type == CodeTokenType.NumberLiteral })
         assertTrue(tokens.any { it.text == "`Hello, ${'$'}{name}`" && it.type == CodeTokenType.StringLiteral })
     }
+
+    @Test
+    fun highlightsJsonStringsNumbersBooleansNullAndPunctuation() {
+        val highlighted =
+            PaletteCodeHighlighter.highlight(
+                code =
+                    """
+                    {
+                      "name": "Palette",
+                      "enabled": true,
+                      "count": 3,
+                      "next": null
+                    }
+                    """.trimIndent(),
+                language = "json",
+            )
+
+        val tokens = highlighted.tokens.flatten()
+        assertEquals("json", highlighted.language)
+        assertTrue(tokens.any { it.text == "\"name\"" && it.type == CodeTokenType.StringLiteral })
+        assertTrue(tokens.any { it.text == "\"Palette\"" && it.type == CodeTokenType.StringLiteral })
+        assertTrue(tokens.any { it.text == "true" && it.type == CodeTokenType.Keyword })
+        assertTrue(tokens.any { it.text == "3" && it.type == CodeTokenType.NumberLiteral })
+        assertTrue(tokens.any { it.text == "null" && it.type == CodeTokenType.Keyword })
+        assertTrue(tokens.any { it.text == "{" && it.type == CodeTokenType.Punctuation })
+        assertTrue(tokens.any { it.text == ":" && it.type == CodeTokenType.Operator })
+    }
+
+    @Test
+    fun highlightsCssSelectorsPropertiesValuesAndComments() {
+        val highlighted =
+            PaletteCodeHighlighter.highlight(
+                code =
+                    """
+                    @media screen {
+                      .card {
+                        color: #fff;
+                        margin: 8px;
+                        content: "ready";
+                        /* visible comment */
+                      }
+                    }
+                    """.trimIndent(),
+                language = "css",
+            )
+
+        val tokens = highlighted.tokens.flatten()
+        assertEquals("css", highlighted.language)
+        assertTrue(tokens.any { it.text == "@media" && it.type == CodeTokenType.Annotation })
+        assertTrue(tokens.any { it.text == ".card" && it.type == CodeTokenType.Type })
+        assertTrue(tokens.any { it.text == "color" && it.type == CodeTokenType.Keyword })
+        assertTrue(tokens.any { it.text == "#fff" && it.type == CodeTokenType.NumberLiteral })
+        assertTrue(tokens.any { it.text == "8px" && it.type == CodeTokenType.NumberLiteral })
+        assertTrue(tokens.any { it.text == "\"ready\"" && it.type == CodeTokenType.StringLiteral })
+        assertTrue(tokens.any { it.text == "/* visible comment */" && it.type == CodeTokenType.Comment })
+    }
 }
