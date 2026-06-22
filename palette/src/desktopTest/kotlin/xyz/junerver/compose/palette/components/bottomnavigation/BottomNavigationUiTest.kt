@@ -4,6 +4,7 @@ import androidx.compose.ui.test.assertTextEquals
 import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.unit.dp
 import org.junit.Rule
 import xyz.junerver.compose.palette.components.text.PText
 import xyz.junerver.compose.palette.core.theme.PaletteMaterialTheme
@@ -66,6 +67,27 @@ class BottomNavigationUiTest {
         rule.onNodeWithText("Disabled").performClick()
 
         assertEquals("home", selected)
+    }
+
+    @Test
+    fun bottomNavigation_shouldAcceptCustomLayoutTokens() {
+        rule.setContent {
+            PaletteMaterialTheme {
+                PBottomNavigation(
+                    items = navigationItems(),
+                    selectedKey = "home",
+                    onItemClick = {},
+                    height = 64.dp,
+                    itemCornerRadius = 12.dp,
+                    itemHorizontalPadding = 4.dp,
+                    itemVerticalPadding = 4.dp,
+                    itemContentVerticalPadding = 2.dp,
+                    iconLabelSpacing = 0.dp,
+                )
+            }
+        }
+
+        rule.onNodeWithText("Home").assertTextEquals("H", "Home")
     }
 
     private fun navigationItems(): List<BottomNavigationItem> = listOf(

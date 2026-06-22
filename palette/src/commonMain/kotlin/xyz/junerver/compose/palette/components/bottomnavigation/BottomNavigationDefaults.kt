@@ -23,6 +23,7 @@ object BottomNavigationDefaults {
     val ItemCornerRadius: Dp = 16.dp
     val ItemHorizontalPadding: Dp = 8.dp
     val ItemVerticalPadding: Dp = 8.dp
+    val ItemContentVerticalPadding: Dp = 8.dp
     val IconLabelSpacing: Dp = 2.dp
 
     @Composable
@@ -36,6 +37,9 @@ object BottomNavigationDefaults {
 
     @Composable
     fun itemVerticalPadding(): Dp = ItemVerticalPadding
+
+    @Composable
+    fun itemContentVerticalPadding(): Dp = ItemContentVerticalPadding
 
     @Composable
     fun iconLabelSpacing(): Dp = IconLabelSpacing

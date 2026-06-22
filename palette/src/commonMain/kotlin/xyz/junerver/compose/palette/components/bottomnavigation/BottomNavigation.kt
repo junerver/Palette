@@ -17,6 +17,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.unit.Dp
 import androidx.compose.material3.LocalContentColor
 import xyz.junerver.compose.palette.components.text.PText
 
@@ -27,17 +28,23 @@ fun PBottomNavigation(
     onItemClick: (String) -> Unit,
     modifier: Modifier = Modifier,
     colors: BottomNavigationColors = BottomNavigationDefaults.colors(),
+    height: Dp = BottomNavigationDefaults.height(),
+    itemCornerRadius: Dp = BottomNavigationDefaults.itemCornerRadius(),
+    itemHorizontalPadding: Dp = BottomNavigationDefaults.itemHorizontalPadding(),
+    itemVerticalPadding: Dp = BottomNavigationDefaults.itemVerticalPadding(),
+    itemContentVerticalPadding: Dp = BottomNavigationDefaults.itemContentVerticalPadding(),
+    iconLabelSpacing: Dp = BottomNavigationDefaults.iconLabelSpacing(),
 ) {
     val resolvedSelected = resolveBottomNavigationSelection(items, selectedKey)
 
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .height(BottomNavigationDefaults.height())
+            .height(height)
             .background(colors.containerColor)
             .padding(
-                horizontal = BottomNavigationDefaults.itemHorizontalPadding(),
-                vertical = BottomNavigationDefaults.itemVerticalPadding(),
+                horizontal = itemHorizontalPadding,
+                vertical = itemVerticalPadding,
             ),
         horizontalArrangement = Arrangement.SpaceEvenly,
         verticalAlignment = Alignment.CenterVertically,
@@ -48,6 +55,9 @@ fun PBottomNavigation(
                 item = item,
                 selected = selected,
                 colors = colors,
+                itemCornerRadius = itemCornerRadius,
+                itemContentVerticalPadding = itemContentVerticalPadding,
+                iconLabelSpacing = iconLabelSpacing,
                 onClick = {
                     if (!selected) {
                         onItemClick(item.key)
@@ -63,6 +73,9 @@ private fun RowScope.BottomNavigationItemContent(
     item: BottomNavigationItem,
     selected: Boolean,
     colors: BottomNavigationColors,
+    itemCornerRadius: Dp,
+    itemContentVerticalPadding: Dp,
+    iconLabelSpacing: Dp,
     onClick: () -> Unit,
 ) {
     val contentColor = when {
@@ -75,16 +88,16 @@ private fun RowScope.BottomNavigationItemContent(
     Box(
         modifier = Modifier
             .weight(1f)
-            .clip(RoundedCornerShape(BottomNavigationDefaults.itemCornerRadius()))
+            .clip(RoundedCornerShape(itemCornerRadius))
             .background(indicatorColor)
             .clickable(enabled = !item.disabled, onClick = onClick)
-            .padding(vertical = BottomNavigationDefaults.itemVerticalPadding()),
+            .padding(vertical = itemContentVerticalPadding),
         contentAlignment = Alignment.Center,
     ) {
         CompositionLocalProvider(LocalContentColor provides contentColor) {
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(BottomNavigationDefaults.iconLabelSpacing()),
+                verticalArrangement = Arrangement.spacedBy(iconLabelSpacing),
             ) {
                 item.icon()
                 PText(
