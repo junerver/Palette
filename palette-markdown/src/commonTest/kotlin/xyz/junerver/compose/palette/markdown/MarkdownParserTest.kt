@@ -67,6 +67,27 @@ class MarkdownParserTest {
     }
 
     @Test
+    fun renderModelHighlightsHtmlFencedCodeBlocks() {
+        val model =
+            MarkdownRenderer.toRenderModel(
+                MarkdownParser.parse(
+                    """
+                    ```html
+                    <section class="card">Palette</section>
+                    ```
+                    """.trimIndent(),
+                ),
+            )
+
+        val code = assertIs<MarkdownRenderBlock.Code>(model.blocks.single())
+        assertEquals("html", code.language)
+        val tokens = code.highlighted.tokens.flatten()
+        assertTrue(tokens.any { it.text == "section" && it.type == CodeTokenType.Type })
+        assertTrue(tokens.any { it.text == "class" && it.type == CodeTokenType.Annotation })
+        assertTrue(tokens.any { it.text == "\"card\"" && it.type == CodeTokenType.StringLiteral })
+    }
+
+    @Test
     fun parsesCodeFenceInfoForTitleLineNumbersAndHighlightedLines() {
         val model =
             MarkdownRenderer.toRenderModel(

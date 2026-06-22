@@ -39,6 +39,7 @@ object PaletteCodeHighlighter {
                 "json" -> JsonLexer.highlight(lines)
                 "css", "scss", "sass", "less" -> CssLexer().highlight(lines)
                 "py", "python" -> PythonLexer.highlight(lines)
+                "html", "xml", "svg" -> HtmlLexer().highlight(lines)
                 else -> lines.map { line -> listOf(CodeToken(CodeTokenType.Plain, line)) }
             }
         return HighlightedCode(language = normalizedLanguage.ifEmpty { "plain" }, tokens = tokens)
@@ -595,6 +596,135 @@ private class CssLexer {
     }
 }
 
+private class HtmlLexer {
+    private var inComment = false
+
+    fun highlight(lines: List<String>): List<List<CodeToken>> = lines.map(::highlightLine)
+
+    private fun highlightLine(line: String): List<CodeToken> {
+        val tokens = mutableListOf<CodeToken>()
+        var index = 0
+
+        while (index < line.length) {
+            if (inComment) {
+                val end = line.indexOf("-->", startIndex = index)
+                if (end == -1) {
+                    tokens += CodeToken(CodeTokenType.Comment, line.substring(index))
+                    return tokens
+                }
+                tokens += CodeToken(CodeTokenType.Comment, line.substring(index, end + 3))
+                inComment = false
+                index = end + 3
+                continue
+            }
+
+            when {
+                line.startsWith("<!--", index) -> {
+                    val end = line.indexOf("-->", startIndex = index + 4)
+                    if (end == -1) {
+                        tokens += CodeToken(CodeTokenType.Comment, line.substring(index))
+                        inComment = true
+                        index = line.length
+                    } else {
+                        tokens += CodeToken(CodeTokenType.Comment, line.substring(index, end + 3))
+                        index = end + 3
+                    }
+                }
+
+                line.startsWith("<!", index) -> {
+                    val end = line.nextHtmlIdentifierEnd(index + 2)
+                    tokens += CodeToken(CodeTokenType.Keyword, line.substring(index, end))
+                    index = highlightTagContent(line = line, index = end, tokens = tokens)
+                }
+
+                line.startsWith("</", index) -> {
+                    tokens += CodeToken(CodeTokenType.Punctuation, "</")
+                    val nameEnd = line.nextHtmlIdentifierEnd(index + 2)
+                    if (nameEnd > index + 2) {
+                        tokens += CodeToken(CodeTokenType.Type, line.substring(index + 2, nameEnd))
+                    }
+                    index = highlightTagContent(line = line, index = nameEnd, tokens = tokens)
+                }
+
+                line[index] == '<' -> {
+                    tokens += CodeToken(CodeTokenType.Punctuation, "<")
+                    val nameEnd = line.nextHtmlIdentifierEnd(index + 1)
+                    if (nameEnd > index + 1) {
+                        tokens += CodeToken(CodeTokenType.Type, line.substring(index + 1, nameEnd))
+                    }
+                    index = highlightTagContent(line = line, index = nameEnd, tokens = tokens)
+                }
+
+                else -> {
+                    val end = line.indexOf('<', startIndex = index).let { if (it == -1) line.length else it }
+                    tokens += CodeToken(CodeTokenType.Plain, line.substring(index, end))
+                    index = end
+                }
+            }
+        }
+
+        return tokens
+    }
+
+    private fun highlightTagContent(
+        line: String,
+        index: Int,
+        tokens: MutableList<CodeToken>,
+    ): Int {
+        var currentIndex = index
+        while (currentIndex < line.length) {
+            val current = line[currentIndex]
+            when {
+                current.isWhitespace() -> {
+                    val end = line.nextWhile(currentIndex, Char::isWhitespace)
+                    tokens += CodeToken(CodeTokenType.Plain, line.substring(currentIndex, end))
+                    currentIndex = end
+                }
+
+                line.startsWith("/>", currentIndex) -> {
+                    tokens += CodeToken(CodeTokenType.Punctuation, "/>")
+                    return currentIndex + 2
+                }
+
+                current == '>' -> {
+                    tokens += CodeToken(CodeTokenType.Punctuation, ">")
+                    return currentIndex + 1
+                }
+
+                current == '"' || current == '\'' -> {
+                    val end = scanQuotedString(line, currentIndex, current)
+                    tokens += CodeToken(CodeTokenType.StringLiteral, line.substring(currentIndex, end))
+                    currentIndex = end
+                }
+
+                current == '=' -> {
+                    tokens += CodeToken(CodeTokenType.Operator, "=")
+                    currentIndex += 1
+                }
+
+                current.isHtmlIdentifierStart() -> {
+                    val end = line.nextHtmlIdentifierEnd(currentIndex)
+                    val text = line.substring(currentIndex, end)
+                    val type =
+                        if (line.nextNonWhitespace(end) == '=') {
+                            CodeTokenType.Annotation
+                        } else {
+                            CodeTokenType.Type
+                        }
+                    tokens += CodeToken(type, text)
+                    currentIndex = end
+                }
+
+                else -> {
+                    tokens += CodeToken(CodeTokenType.Plain, current.toString())
+                    currentIndex += 1
+                }
+            }
+        }
+        return currentIndex
+    }
+}
+
 private fun String.nextWhile(
     start: Int,
     predicate: (Char) -> Boolean,
@@ -620,6 +750,9 @@ private fun String.nextCssIdentifierEnd(start: Int): Int =
 private fun String.nextCssNumberEnd(start: Int): Int =
     nextWhile(start) { it.isLetterOrDigit() || it == '.' || it == '%' }
 
+private fun String.nextHtmlIdentifierEnd(start: Int): Int =
+    nextWhile(start) { it.isLetterOrDigit() || it == '_' || it == '-' || it == ':' }
+
 private fun String.nextNonWhitespace(start: Int): Char? {
     var index = start
     while (index < length) {
@@ -635,6 +768,8 @@ private fun Char.isIdentifierStart(): Boolean = isLetter() || this == '_'
 private fun Char.isPythonStringPrefixStart(): Boolean = this in setOf('f', 'F', 'r', 'R', 'b', 'B', 'u', 'U')
 
 private fun Char.isCssIdentifierStart(): Boolean = isLetter() || this == '_' || this == '-'
+
+private fun Char.isHtmlIdentifierStart(): Boolean = isLetter() || this == '_' || this == ':'
 
 private fun String.isHexColorToken(): Boolean {
     val value = drop(1)

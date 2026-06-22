@@ -124,6 +124,12 @@ private fun markdownDemoText(): MarkdownDemoText =
                     }
                     ```
 
+                    ```html
+                    <section class="markdown-viewer">
+                      <h1>Palette</h1>
+                    </section>
+                    ```
+
                     ```python title="preview.py" showLineNumbers {2}
                     def render(name: str) -> str:
                         return f"Hello, {name}"
@@ -220,6 +226,12 @@ private fun markdownDemoText(): MarkdownDemoText =
                       color: #fff;
                       margin: 8px;
                     }
+                    ```
+
+                    ```html
+                    <section class="markdown-viewer">
+                      <h1>Palette</h1>
+                    </section>
                     ```
 
                     ```python title="preview.py" showLineNumbers {2}

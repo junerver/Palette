@@ -148,4 +148,31 @@ class PaletteCodeHighlighterTest {
         assertTrue(tokens.any { it.text == "f\"Hello, {name}\"" && it.type == CodeTokenType.StringLiteral })
         assertTrue(tokens.any { it.text == "# visible comment" && it.type == CodeTokenType.Comment })
     }
+
+    @Test
+    fun highlightsHtmlTagsAttributesStringsCommentsAndPunctuation() {
+        val highlighted =
+            PaletteCodeHighlighter.highlight(
+                code =
+                    """
+                    <!doctype html>
+                    <!-- visible comment -->
+                    <section class="card" data-count='3'>
+                      <h1>Hello</h1>
+                    </section>
+                    """.trimIndent(),
+                language = "html",
+            )
+
+        val tokens = highlighted.tokens.flatten()
+        assertEquals("html", highlighted.language)
+        assertTrue(tokens.any { it.text == "<!doctype" && it.type == CodeTokenType.Keyword })
+        assertTrue(tokens.any { it.text == "<!-- visible comment -->" && it.type == CodeTokenType.Comment })
+        assertTrue(tokens.any { it.text == "section" && it.type == CodeTokenType.Type })
+        assertTrue(tokens.any { it.text == "class" && it.type == CodeTokenType.Annotation })
+        assertTrue(tokens.any { it.text == "\"card\"" && it.type == CodeTokenType.StringLiteral })
+        assertTrue(tokens.any { it.text == "data-count" && it.type == CodeTokenType.Annotation })
+        assertTrue(tokens.any { it.text == "'3'" && it.type == CodeTokenType.StringLiteral })
+        assertTrue(tokens.any { it.text == "</" && it.type == CodeTokenType.Punctuation })
+    }
 }
