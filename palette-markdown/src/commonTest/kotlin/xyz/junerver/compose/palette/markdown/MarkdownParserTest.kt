@@ -197,6 +197,27 @@ class MarkdownParserTest {
     }
 
     @Test
+    fun renderModelHighlightsSqlFencedCodeBlocks() {
+        val model =
+            MarkdownRenderer.toRenderModel(
+                MarkdownParser.parse(
+                    """
+                    ```sql
+                    SELECT COUNT(*) FROM users WHERE active = TRUE;
+                    ```
+                    """.trimIndent(),
+                ),
+            )
+
+        val code = assertIs<MarkdownRenderBlock.Code>(model.blocks.single())
+        assertEquals("sql", code.language)
+        val tokens = code.highlighted.tokens.flatten()
+        assertTrue(tokens.any { it.text == "SELECT" && it.type == CodeTokenType.Keyword })
+        assertTrue(tokens.any { it.text == "COUNT" && it.type == CodeTokenType.Function })
+        assertTrue(tokens.any { it.text == "TRUE" && it.type == CodeTokenType.Keyword })
+    }
+
+    @Test
     fun parsesCodeFenceInfoForTitleLineNumbersAndHighlightedLines() {
         val model =
             MarkdownRenderer.toRenderModel(

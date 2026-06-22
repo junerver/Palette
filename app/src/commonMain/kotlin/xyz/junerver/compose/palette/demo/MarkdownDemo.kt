@@ -83,7 +83,7 @@ private fun markdownDemoText(): MarkdownDemoText =
 
                     Markdown 渲染器会把 fenced code 分派到对应基础能力：
 
-                    - `kotlin` / `yaml` 等代码块使用 Palette 代码高亮逻辑
+                    - `kotlin` / `yaml` / `sql` 等代码块使用 Palette 代码高亮逻辑
                     - `mermaid` 代码块使用 Mermaid flowchart 解析与布局逻辑
 
                     > 引用块会保留强调、链接和 `inline code` 等行内样式。
@@ -125,6 +125,13 @@ private fun markdownDemoText(): MarkdownDemoText =
                       theme: "light"
                     items:
                       - *defaults # shared config
+                    ```
+
+                    ```sql
+                    SELECT id, COUNT(*) AS total
+                    FROM components
+                    WHERE enabled = TRUE AND kind = 'markdown'
+                    ORDER BY created_at DESC;
                     ```
 
                     ```css
@@ -209,7 +216,7 @@ private fun markdownDemoText(): MarkdownDemoText =
 
                     The Markdown renderer dispatches fenced blocks to foundation logic:
 
-                    - `kotlin` / `yaml` code blocks use Palette code highlighting
+                    - `kotlin` / `yaml` / `sql` code blocks use Palette code highlighting
                     - `mermaid` code blocks use Mermaid flowchart parsing and layout
 
                     > Block quotes keep inline emphasis, links, and `inline code` styles.
@@ -251,6 +258,13 @@ private fun markdownDemoText(): MarkdownDemoText =
                       theme: "light"
                     items:
                       - *defaults # shared config
+                    ```
+
+                    ```sql
+                    SELECT id, COUNT(*) AS total
+                    FROM components
+                    WHERE enabled = TRUE AND kind = 'markdown'
+                    ORDER BY created_at DESC;
                     ```
 
                     ```css

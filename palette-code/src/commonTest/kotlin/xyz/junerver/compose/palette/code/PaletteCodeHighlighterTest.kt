@@ -229,4 +229,38 @@ class PaletteCodeHighlighterTest {
         assertTrue(tokens.any { it.text == "*defaults" && it.type == CodeTokenType.Annotation })
         assertTrue(tokens.any { it.text == "# shared config" && it.type == CodeTokenType.Comment })
     }
+
+    @Test
+    fun highlightsSqlKeywordsTypesStringsNumbersFunctionsAndComments() {
+        val highlighted =
+            PaletteCodeHighlighter.highlight(
+                code =
+                    """
+                    -- visible comment
+                    SELECT id, COUNT(*) AS total
+                    FROM users
+                    WHERE active = TRUE AND name = 'Palette'
+                    ORDER BY created_at DESC;
+                    /* block comment */
+                    CREATE TABLE projects (
+                      id INTEGER PRIMARY KEY,
+                      name TEXT NOT NULL
+                    );
+                    """.trimIndent(),
+                language = "sql",
+            )
+
+        val tokens = highlighted.tokens.flatten()
+        assertEquals("sql", highlighted.language)
+        assertTrue(tokens.any { it.text == "-- visible comment" && it.type == CodeTokenType.Comment })
+        assertTrue(tokens.any { it.text == "SELECT" && it.type == CodeTokenType.Keyword })
+        assertTrue(tokens.any { it.text == "COUNT" && it.type == CodeTokenType.Function })
+        assertTrue(tokens.any { it.text == "TRUE" && it.type == CodeTokenType.Keyword })
+        assertTrue(tokens.any { it.text == "'Palette'" && it.type == CodeTokenType.StringLiteral })
+        assertTrue(tokens.any { it.text == "/* block comment */" && it.type == CodeTokenType.Comment })
+        assertTrue(tokens.any { it.text == "CREATE" && it.type == CodeTokenType.Keyword })
+        assertTrue(tokens.any { it.text == "INTEGER" && it.type == CodeTokenType.Type })
+        assertTrue(tokens.any { it.text == "TEXT" && it.type == CodeTokenType.Type })
+        assertTrue(tokens.any { it.text == ";" && it.type == CodeTokenType.Punctuation })
+    }
 }

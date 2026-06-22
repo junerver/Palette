@@ -42,6 +42,7 @@ object PaletteCodeHighlighter {
                 "html", "xml", "svg" -> HtmlLexer().highlight(lines)
                 "bash", "sh", "shell", "zsh" -> ShellLexer.highlight(lines)
                 "yaml", "yml" -> YamlLexer.highlight(lines)
+                "sql", "mysql", "postgresql", "postgres" -> SqlLexer().highlight(lines)
                 else -> lines.map { line -> listOf(CodeToken(CodeTokenType.Plain, line)) }
             }
         return HighlightedCode(language = normalizedLanguage.ifEmpty { "plain" }, tokens = tokens)
@@ -917,6 +918,169 @@ private object YamlLexer {
     private val YamlPunctuation = setOf('[', ']', '{', '}', ',')
 }
 
+private class SqlLexer {
+    private var inBlockComment = false
+
+    fun highlight(lines: List<String>): List<List<CodeToken>> = lines.map(::highlightLine)
+
+    private fun highlightLine(line: String): List<CodeToken> {
+        val tokens = mutableListOf<CodeToken>()
+        var index = 0
+
+        while (index < line.length) {
+            if (inBlockComment) {
+                val end = line.indexOf("*/", startIndex = index)
+                if (end == -1) {
+                    tokens += CodeToken(CodeTokenType.Comment, line.substring(index))
+                    return tokens
+                }
+                tokens += CodeToken(CodeTokenType.Comment, line.substring(index, end + 2))
+                inBlockComment = false
+                index = end + 2
+                continue
+            }
+
+            val current = line[index]
+            when {
+                current.isWhitespace() -> {
+                    val end = line.nextWhile(index, Char::isWhitespace)
+                    tokens += CodeToken(CodeTokenType.Plain, line.substring(index, end))
+                    index = end
+                }
+
+                line.startsWith("--", index) -> {
+                    tokens += CodeToken(CodeTokenType.Comment, line.substring(index))
+                    index = line.length
+                }
+
+                line.startsWith("/*", index) -> {
+                    val end = line.indexOf("*/", startIndex = index + 2)
+                    if (end == -1) {
+                        tokens += CodeToken(CodeTokenType.Comment, line.substring(index))
+                        inBlockComment = true
+                        index = line.length
+                    } else {
+                        tokens += CodeToken(CodeTokenType.Comment, line.substring(index, end + 2))
+                        index = end + 2
+                    }
+                }
+
+                current == '\'' || current == '"' -> {
+                    val end = scanQuotedString(line, index, current)
+                    tokens += CodeToken(CodeTokenType.StringLiteral, line.substring(index, end))
+                    index = end
+                }
+
+                current.isDigit() -> {
+                    val end = line.nextSqlNumberEnd(index)
+                    tokens += CodeToken(CodeTokenType.NumberLiteral, line.substring(index, end))
+                    index = end
+                }
+
+                current.isSqlIdentifierStart() -> {
+                    val end = line.nextSqlIdentifierEnd(index)
+                    val text = line.substring(index, end)
+                    val normalized = text.uppercase()
+                    val type =
+                        when {
+                            normalized in SqlTypes -> CodeTokenType.Type
+                            line.nextNonWhitespace(end) == '(' -> CodeTokenType.Function
+                            normalized in SqlKeywords -> CodeTokenType.Keyword
+                            else -> CodeTokenType.Plain
+                        }
+                    tokens += CodeToken(type, text)
+                    index = end
+                }
+
+                current in SqlOperators -> {
+                    tokens += CodeToken(CodeTokenType.Operator, current.toString())
+                    index += 1
+                }
+
+                current in SqlPunctuation -> {
+                    tokens += CodeToken(CodeTokenType.Punctuation, current.toString())
+                    index += 1
+                }
+
+                else -> {
+                    tokens += CodeToken(CodeTokenType.Plain, current.toString())
+                    index += 1
+                }
+            }
+        }
+
+        return tokens
+    }
+
+    private companion object {
+        val SqlKeywords =
+            setOf(
+                "ADD",
+                "ALTER",
+                "AND",
+                "AS",
+                "ASC",
+                "BETWEEN",
+                "BY",
+                "CASE",
+                "CREATE",
+                "DELETE",
+                "DESC",
+                "DISTINCT",
+                "DROP",
+                "ELSE",
+                "FALSE",
+                "FROM",
+                "GROUP",
+                "HAVING",
+                "IN",
+                "INSERT",
+                "INTO",
+                "IS",
+                "JOIN",
+                "LIMIT",
+                "NOT",
+                "NULL",
+                "ON",
+                "OR",
+                "ORDER",
+                "PRIMARY",
+                "SELECT",
+                "SET",
+                "TABLE",
+                "THEN",
+                "TRUE",
+                "UNION",
+                "UPDATE",
+                "VALUES",
+                "WHEN",
+                "WHERE",
+            )
+        val SqlTypes =
+            setOf(
+                "BIGINT",
+                "BOOLEAN",
+                "CHAR",
+                "DATE",
+                "DECIMAL",
+                "DOUBLE",
+                "FLOAT",
+                "INTEGER",
+                "INT",
+                "JSON",
+                "NUMERIC",
+                "REAL",
+                "TEXT",
+                "TIME",
+                "TIMESTAMP",
+                "UUID",
+                "VARCHAR",
+            )
+        val SqlOperators = setOf('+', '-', '*', '/', '%', '=', '!', '<', '>', '|')
+        val SqlPunctuation = setOf('(', ')', ',', '.', ';')
+    }
+}
+
 private fun String.nextWhile(
     start: Int,
     predicate: (Char) -> Boolean,
@@ -964,6 +1128,12 @@ private fun String.nextYamlWordEnd(start: Int): Int =
 private fun String.nextYamlNumberEnd(start: Int): Int =
     nextWhile(start) { it.isDigit() || it == '-' || it == '+' || it == '.' || it == '_' }
 
+private fun String.nextSqlIdentifierEnd(start: Int): Int =
+    nextWhile(start) { it.isLetterOrDigit() || it == '_' || it == '$' }
+
+private fun String.nextSqlNumberEnd(start: Int): Int =
+    nextWhile(start) { it.isDigit() || it == '.' }
+
 private fun String.nextNonWhitespace(start: Int): Char? {
     var index = start
     while (index < length) {
@@ -987,6 +1157,8 @@ private fun Char.isShellWordStart(): Boolean = isLetterOrDigit() || this in setO
 private fun Char.isShellWordPart(): Boolean = isShellWordStart() || this in setOf('-', '+')
 
 private fun Char.isYamlWordStart(): Boolean = isLetter() || this == '_' || this == '.'
+
+private fun Char.isSqlIdentifierStart(): Boolean = isLetter() || this == '_'
 
 private fun String.isHexColorToken(): Boolean {
     val value = drop(1)
