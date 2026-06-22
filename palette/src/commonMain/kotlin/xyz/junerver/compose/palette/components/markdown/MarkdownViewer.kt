@@ -23,6 +23,7 @@ import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import xyz.junerver.compose.palette.components.code.PCodeBlock
@@ -40,6 +41,7 @@ import xyz.junerver.compose.palette.markdown.MarkdownParser
 import xyz.junerver.compose.palette.markdown.MarkdownRenderBlock
 import xyz.junerver.compose.palette.markdown.MarkdownRenderModel
 import xyz.junerver.compose.palette.markdown.MarkdownRenderer
+import xyz.junerver.compose.palette.markdown.MarkdownTableAlignment
 
 @Composable
 fun PMarkdownViewer(
@@ -162,11 +164,13 @@ fun PMarkdownViewer(
                     ) {
                         MarkdownTableRow(
                             cells = block.headerInlines,
+                            alignments = block.alignments,
                             isHeader = true,
                         )
                         block.rowInlines.forEach { row ->
                             MarkdownTableRow(
                                 cells = row.normalizedCellCount(block.headers.size),
+                                alignments = block.alignments,
                                 isHeader = false,
                             )
                         }
@@ -192,14 +196,16 @@ fun PMarkdownViewer(
 @Composable
 private fun MarkdownTableRow(
     cells: List<List<MarkdownInlineNode>>,
+    alignments: List<MarkdownTableAlignment>,
     isHeader: Boolean,
 ) {
     val colors = PaletteTheme.colors
     Row(modifier = Modifier.fillMaxWidth()) {
-        cells.forEach { cell ->
+        cells.forEachIndexed { index, cell ->
             Text(
                 text = cell.toAnnotatedString(),
                 color = colors.textPrimary,
+                textAlign = alignments.getOrElse(index) { MarkdownTableAlignment.Start }.toTextAlign(),
                 style =
                     if (isHeader) {
                         PaletteTheme.typography.body.copy(fontWeight = FontWeight.SemiBold)
@@ -216,6 +222,13 @@ private fun MarkdownTableRow(
         }
     }
 }
+
+private fun MarkdownTableAlignment.toTextAlign(): TextAlign =
+    when (this) {
+        MarkdownTableAlignment.Start -> TextAlign.Start
+        MarkdownTableAlignment.Center -> TextAlign.Center
+        MarkdownTableAlignment.End -> TextAlign.End
+    }
 
 private fun List<List<MarkdownInlineNode>>.normalizedCellCount(columnCount: Int): List<List<MarkdownInlineNode>> {
     if (size == columnCount) return this

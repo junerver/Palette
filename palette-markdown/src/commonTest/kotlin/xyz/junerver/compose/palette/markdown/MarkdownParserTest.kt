@@ -230,4 +230,28 @@ class MarkdownParserTest {
         assertEquals(listOf("Name", "Value"), table.headers)
         assertEquals(listOf(listOf("alpha", "1")), table.rows)
     }
+
+    @Test
+    fun parsesTableColumnAlignments() {
+        val model =
+            MarkdownRenderer.toRenderModel(
+                MarkdownParser.parse(
+                    """
+                    | Name | Count | Status |
+                    | :--- | ---: | :---: |
+                    | API | 3 | Ready |
+                    """.trimIndent(),
+                ),
+            )
+
+        val table = assertIs<MarkdownRenderBlock.Table>(model.blocks.single())
+        assertEquals(
+            listOf(
+                MarkdownTableAlignment.Start,
+                MarkdownTableAlignment.End,
+                MarkdownTableAlignment.Center,
+            ),
+            table.alignments,
+        )
+    }
 }

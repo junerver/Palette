@@ -46,9 +46,16 @@ data class MarkdownBlockQuote(
 data class MarkdownTableBlock(
     val headers: List<String>,
     val rows: List<List<String>>,
+    val alignments: List<MarkdownTableAlignment> = List(headers.size) { MarkdownTableAlignment.Start },
     val headerInlines: List<List<MarkdownInlineNode>> = headers.map(MarkdownInlineParser::parse),
     val rowInlines: List<List<List<MarkdownInlineNode>>> = rows.map { row -> row.map(MarkdownInlineParser::parse) },
 ) : MarkdownBlock
+
+enum class MarkdownTableAlignment {
+    Start,
+    Center,
+    End,
+}
 
 data class MarkdownCodeBlock(
     val language: String,
@@ -330,13 +337,14 @@ object MarkdownParser {
 
                 trimmed.isTableHeader(lines.getOrNull(index + 1)?.trim()) -> {
                     val headers = trimmed.tableCells()
+                    val alignments = lines.getOrNull(index + 1).orEmpty().trim().tableAlignments(headers.size)
                     index += 2
                     val rows = mutableListOf<List<String>>()
                     while (index < lines.size && lines[index].trim().isTableRow()) {
                         rows += lines[index].trim().tableCells()
                         index += 1
                     }
-                    blocks += MarkdownTableBlock(headers = headers, rows = rows)
+                    blocks += MarkdownTableBlock(headers = headers, rows = rows, alignments = alignments)
                 }
 
                 trimmed.matches(ThematicBreakRegex) -> {
@@ -437,6 +445,29 @@ object MarkdownParser {
             .map { it.trim() }
             .filter { it.isNotEmpty() }
 
+    private fun String.tableAlignments(columnCount: Int): List<MarkdownTableAlignment> {
+        val parsed =
+            trim()
+                .trim('|')
+                .split("|")
+                .map { it.trim() }
+                .filter { it.isNotEmpty() }
+                .map { delimiter ->
+                    when {
+                        delimiter.startsWith(":") && delimiter.endsWith(":") -> MarkdownTableAlignment.Center
+                        delimiter.endsWith(":") -> MarkdownTableAlignment.End
+                        else -> MarkdownTableAlignment.Start
+                    }
+                }
+        return parsed.normalizedAlignments(columnCount)
+    }
+
+    private fun List<MarkdownTableAlignment>.normalizedAlignments(columnCount: Int): List<MarkdownTableAlignment> {
+        if (size == columnCount) return this
+        if (size > columnCount) return take(columnCount)
+        return this + List(columnCount - size) { MarkdownTableAlignment.Start }
+    }
+
     private val TableDelimiterRegex = Regex("""^\|?\s*:?-{3,}:?\s*(\|\s*:?-{3,}:?\s*)+\|?$""")
 
     private data class CodeFenceInfo(
@@ -514,6 +545,7 @@ sealed interface MarkdownRenderBlock {
     data class Table(
         val headers: List<String>,
         val rows: List<List<String>>,
+        val alignments: List<MarkdownTableAlignment>,
         val headerInlines: List<List<MarkdownInlineNode>>,
         val rowInlines: List<List<List<MarkdownInlineNode>>>,
     ) : MarkdownRenderBlock
@@ -549,6 +581,7 @@ object MarkdownRenderer {
                             MarkdownRenderBlock.Table(
                                 headers = block.headers,
                                 rows = block.rows,
+                                alignments = block.alignments,
                                 headerInlines = block.headerInlines,
                                 rowInlines = block.rowInlines,
                             )

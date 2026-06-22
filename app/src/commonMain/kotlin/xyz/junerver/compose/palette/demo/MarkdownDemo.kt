@@ -95,7 +95,7 @@ private fun markdownDemoText(): MarkdownDemoText =
                     - [ ] 接入远程图片加载
 
                     | 能力 | 状态 | 入口 |
-                    | --- | --- | --- |
+                    | :--- | :---: | ---: |
                     | Kotlin 高亮 | ready | `PCodeBlock` |
                     | Mermaid | ready | `PMermaidDiagram` |
                     | 图片 | placeholder | ![Palette icon](https://example.com/palette.png) |
@@ -147,7 +147,7 @@ private fun markdownDemoText(): MarkdownDemoText =
                     - [x] task list
 
                     | Syntax | Result |
-                    | --- | --- |
+                    | :--- | ---: |
                     | `**bold**` | strong text |
                     | `![alt](url)` | image placeholder |
 
@@ -185,7 +185,7 @@ private fun markdownDemoText(): MarkdownDemoText =
                     - [ ] Load remote images
 
                     | Capability | Status | Entry |
-                    | --- | --- | --- |
+                    | :--- | :---: | ---: |
                     | Kotlin highlighting | ready | `PCodeBlock` |
                     | Mermaid | ready | `PMermaidDiagram` |
                     | Images | placeholder | ![Palette icon](https://example.com/palette.png) |
@@ -237,7 +237,7 @@ private fun markdownDemoText(): MarkdownDemoText =
                     - [x] task list
 
                     | Syntax | Result |
-                    | --- | --- |
+                    | :--- | ---: |
                     | `**bold**` | strong text |
                     | `![alt](url)` | image placeholder |
 
