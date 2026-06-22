@@ -189,6 +189,8 @@ private fun markdownDemoText(): MarkdownDemoText =
                         Markdown --> Mermaid[Mermaid]
                         Code --> Viewer[Viewer]
                         Mermaid --> Viewer
+                        Code --- Mermaid
+                        Viewer <--> Preview[Preview]
                         Legend[Standalone node]
                     ```
 
@@ -348,6 +350,8 @@ private fun markdownDemoText(): MarkdownDemoText =
                         Markdown --> Mermaid[Mermaid]
                         Code --> Viewer[Viewer]
                         Mermaid --> Viewer
+                        Code --- Mermaid
+                        Viewer <--> Preview[Preview]
                         Legend[Standalone node]
                     ```
 

@@ -136,6 +136,34 @@ class MermaidParserTest {
     }
 
     @Test
+    fun parsesFlowchartOpenAndBidirectionalArrows() {
+        val diagram =
+            MermaidParser.parse(
+                """
+                flowchart LR
+                    A[Client] --- B[Cache]
+                    B <--> C[Server]
+                """.trimIndent(),
+            )
+
+        assertEquals(2, diagram.edges.size)
+        assertTrue(
+            diagram.edges.any {
+                it.from == "A" &&
+                    it.to == "B" &&
+                    it.arrow == MermaidEdgeArrow.None
+            },
+        )
+        assertTrue(
+            diagram.edges.any {
+                it.from == "B" &&
+                    it.to == "C" &&
+                    it.arrow == MermaidEdgeArrow.Bidirectional
+            },
+        )
+    }
+
+    @Test
     fun parsesStandaloneFlowchartNodeDeclarations() {
         val diagram =
             MermaidParser.parse(

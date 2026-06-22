@@ -25,6 +25,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import xyz.junerver.compose.palette.core.theme.PaletteTheme
 import xyz.junerver.compose.palette.mermaid.MermaidDiagramType
+import xyz.junerver.compose.palette.mermaid.MermaidEdgeArrow
 import xyz.junerver.compose.palette.mermaid.MermaidEdgeStyle
 import xyz.junerver.compose.palette.mermaid.MermaidLayout
 import xyz.junerver.compose.palette.mermaid.MermaidLayoutEngine
@@ -174,16 +175,30 @@ private fun FlowchartMermaidDiagram(
                             null
                         },
                 )
-                drawMermaidArrowHead(
-                    color = colors.edgeColor,
-                    arrowHead =
-                        calculateMermaidArrowHead(
-                            start = start,
-                            end = end,
-                            size = 10.dp.toPx(),
-                        ),
-                    strokeWidth = if (edge.style == MermaidEdgeStyle.Thick) 3.dp.toPx() else 2.dp.toPx(),
-                )
+                if (edge.arrow != MermaidEdgeArrow.None) {
+                    drawMermaidArrowHead(
+                        color = colors.edgeColor,
+                        arrowHead =
+                            calculateMermaidArrowHead(
+                                start = start,
+                                end = end,
+                                size = 10.dp.toPx(),
+                            ),
+                        strokeWidth = if (edge.style == MermaidEdgeStyle.Thick) 3.dp.toPx() else 2.dp.toPx(),
+                    )
+                }
+                if (edge.arrow == MermaidEdgeArrow.Bidirectional) {
+                    drawMermaidArrowHead(
+                        color = colors.edgeColor,
+                        arrowHead =
+                            calculateMermaidArrowHead(
+                                start = end,
+                                end = start,
+                                size = 10.dp.toPx(),
+                            ),
+                        strokeWidth = if (edge.style == MermaidEdgeStyle.Thick) 3.dp.toPx() else 2.dp.toPx(),
+                    )
+                }
             }
         }
 
@@ -309,16 +324,30 @@ private fun SequenceMermaidDiagram(
                     cap = StrokeCap.Round,
                     pathEffect = pathEffect,
                 )
-                drawMermaidArrowHead(
-                    color = colors.edgeColor,
-                    arrowHead =
-                        calculateMermaidArrowHead(
-                            start = start,
-                            end = end,
-                            size = 10.dp.toPx(),
-                        ),
-                    strokeWidth = if (edge.style == MermaidEdgeStyle.Thick) 3.dp.toPx() else 2.dp.toPx(),
-                )
+                if (edge.arrow != MermaidEdgeArrow.None) {
+                    drawMermaidArrowHead(
+                        color = colors.edgeColor,
+                        arrowHead =
+                            calculateMermaidArrowHead(
+                                start = start,
+                                end = end,
+                                size = 10.dp.toPx(),
+                            ),
+                        strokeWidth = if (edge.style == MermaidEdgeStyle.Thick) 3.dp.toPx() else 2.dp.toPx(),
+                    )
+                }
+                if (edge.arrow == MermaidEdgeArrow.Bidirectional) {
+                    drawMermaidArrowHead(
+                        color = colors.edgeColor,
+                        arrowHead =
+                            calculateMermaidArrowHead(
+                                start = end,
+                                end = start,
+                                size = 10.dp.toPx(),
+                            ),
+                        strokeWidth = if (edge.style == MermaidEdgeStyle.Thick) 3.dp.toPx() else 2.dp.toPx(),
+                    )
+                }
             }
         }
 

@@ -20,6 +20,7 @@ data class MermaidEdge(
     val to: String,
     val label: String? = null,
     val style: MermaidEdgeStyle = MermaidEdgeStyle.Solid,
+    val arrow: MermaidEdgeArrow = MermaidEdgeArrow.Forward,
     val sequenceIndex: Int = 0,
 )
 
@@ -40,6 +41,12 @@ enum class MermaidEdgeStyle {
     Solid,
     Dotted,
     Thick,
+}
+
+enum class MermaidEdgeArrow {
+    Forward,
+    None,
+    Bidirectional,
 }
 
 enum class MermaidNotePosition {
@@ -118,6 +125,7 @@ object MermaidParser {
                             to = sequenceMessage.to.id,
                             label = sequenceMessage.label,
                             style = sequenceMessage.style,
+                            arrow = sequenceMessage.arrow,
                             sequenceIndex = sequenceIndex,
                         )
                     sequenceIndex += 1
@@ -154,6 +162,7 @@ object MermaidParser {
                             to = edge.to.id,
                             label = edge.label,
                             style = edge.style,
+                            arrow = edge.arrow,
                         )
                     return@forEachIndexed
                 }
@@ -212,13 +221,15 @@ object MermaidParser {
     }
 
     private fun parseEdge(line: String): ParsedEdge? {
-        val pipeLabeled = Regex("""^(.+?)\s*(-->|==>|-\.->)\|(.+?)\|\s*(.+)$""").matchEntire(line)
+        val pipeLabeled = Regex("""^(.+?)\s*(-->|==>|-\.->|<-->)\|(.+?)\|\s*(.+)$""").matchEntire(line)
         if (pipeLabeled != null) {
+            val marker = pipeLabeled.groupValues[2]
             return ParsedEdge(
                 from = parseNode(pipeLabeled.groupValues[1]),
                 to = parseNode(pipeLabeled.groupValues[4]),
                 label = pipeLabeled.groupValues[3].trim().ifEmpty { null },
-                style = pipeLabeled.groupValues[2].toEdgeStyle(),
+                style = marker.toEdgeStyle(),
+                arrow = marker.toEdgeArrow(),
             )
         }
 
@@ -229,6 +240,7 @@ object MermaidParser {
                 label = dottedLabeled.groupValues[2].trim().ifEmpty { null },
                 to = parseNode(dottedLabeled.groupValues[3]),
                 style = MermaidEdgeStyle.Dotted,
+                arrow = MermaidEdgeArrow.Forward,
             )
         }
 
@@ -239,15 +251,18 @@ object MermaidParser {
                 label = labeled.groupValues[2].trim().ifEmpty { null },
                 to = parseNode(labeled.groupValues[3]),
                 style = MermaidEdgeStyle.Solid,
+                arrow = MermaidEdgeArrow.Forward,
             )
         }
 
-        val plain = Regex("""^(.+?)\s*(-->|==>|-\.->)\s*(.+)$""").matchEntire(line) ?: return null
+        val plain = Regex("""^(.+?)\s*(<-->|---|-->|==>|-\.->)\s*(.+)$""").matchEntire(line) ?: return null
+        val marker = plain.groupValues[2]
         return ParsedEdge(
             from = parseNode(plain.groupValues[1]),
             label = null,
             to = parseNode(plain.groupValues[3]),
-            style = plain.groupValues[2].toEdgeStyle(),
+            style = marker.toEdgeStyle(),
+            arrow = marker.toEdgeArrow(),
         )
     }
 
@@ -301,6 +316,7 @@ object MermaidParser {
             to = MermaidNode(match.groupValues[3], match.groupValues[3], MermaidNodeShape.Rectangle),
             label = match.groupValues[4].trim().ifEmpty { null },
             style = if (match.groupValues[2].startsWith("--")) MermaidEdgeStyle.Dotted else MermaidEdgeStyle.Solid,
+            arrow = MermaidEdgeArrow.Forward,
         )
     }
 
@@ -337,6 +353,7 @@ object MermaidParser {
         val to: MermaidNode,
         val label: String?,
         val style: MermaidEdgeStyle,
+        val arrow: MermaidEdgeArrow,
     )
 
     private data class MermaidSubgraphBuilder(
@@ -361,6 +378,13 @@ object MermaidParser {
             "==>" -> MermaidEdgeStyle.Thick
             "-.->" -> MermaidEdgeStyle.Dotted
             else -> MermaidEdgeStyle.Solid
+        }
+
+    private fun String.toEdgeArrow(): MermaidEdgeArrow =
+        when (this) {
+            "---" -> MermaidEdgeArrow.None
+            "<-->" -> MermaidEdgeArrow.Bidirectional
+            else -> MermaidEdgeArrow.Forward
         }
 
     private val StandaloneNodeRegex =
