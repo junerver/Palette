@@ -177,8 +177,14 @@ object MarkdownInlineParser {
                     }
                 }
 
-                source.startsWith("**", index) -> {
-                    val end = source.indexOf("**", startIndex = index + 2)
+                source.isInlineDelimiterRun(index, '*', length = 2) ||
+                    source.isInlineDelimiterRun(index, '_', length = 2) -> {
+                    val delimiter = source[index]
+                    val end = source.findInlineDelimiterRun(
+                        startIndex = index + 2,
+                        delimiter = delimiter,
+                        length = 2,
+                    )
                     if (end != -1) {
                         flushPlain()
                         nodes += MarkdownInlineStrong(source.substring(index + 2, end))
@@ -189,8 +195,14 @@ object MarkdownInlineParser {
                     }
                 }
 
-                source[index] == '*' -> {
-                    val end = source.indexOf('*', startIndex = index + 1)
+                source.isInlineDelimiterRun(index, '*', length = 1) ||
+                    source.isInlineDelimiterRun(index, '_', length = 1) -> {
+                    val delimiter = source[index]
+                    val end = source.findInlineDelimiterRun(
+                        startIndex = index + 1,
+                        delimiter = delimiter,
+                        length = 1,
+                    )
                     if (end != -1) {
                         flushPlain()
                         nodes += MarkdownInlineEmphasis(source.substring(index + 1, end))
@@ -274,6 +286,36 @@ object MarkdownInlineParser {
     private val AutolinkUrlRegex = Regex("""https?://[^\s<>]+""")
     private val AutolinkEmailRegex = Regex("""[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}""")
     private val EscapableMarkdownChars = setOf('\\', '`', '*', '_', '{', '}', '[', ']', '(', ')', '#', '+', '-', '.', '!', '|', '~')
+
+    private fun String.isInlineDelimiterRun(
+        index: Int,
+        delimiter: Char,
+        length: Int,
+    ): Boolean =
+        index + length <= this.length &&
+            substring(index, index + length).all { it == delimiter } &&
+            getOrNull(index - 1) != delimiter &&
+            getOrNull(index + length) != delimiter &&
+            (
+                delimiter != '_' ||
+                    getOrNull(index - 1)?.isLetterOrDigit() != true ||
+                    getOrNull(index + length)?.isLetterOrDigit() != true
+            )
+
+    private fun String.findInlineDelimiterRun(
+        startIndex: Int,
+        delimiter: Char,
+        length: Int,
+    ): Int {
+        var candidate = startIndex
+        while (candidate < this.length) {
+            val index = indexOf(delimiter, startIndex = candidate)
+            if (index == -1) return -1
+            if (isInlineDelimiterRun(index, delimiter, length)) return index
+            candidate = index + 1
+        }
+        return -1
+    }
 }
 
 object MarkdownParser {

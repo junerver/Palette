@@ -201,6 +201,56 @@ class MarkdownParserTest {
     }
 
     @Test
+    fun parsesUnderscoreStrongAndEmphasis() {
+        val inline = MarkdownInlineParser.parse("Use __Palette__ with _Compose_.")
+
+        assertEquals(
+            listOf(
+                MarkdownInlineText("Use "),
+                MarkdownInlineStrong("Palette"),
+                MarkdownInlineText(" with "),
+                MarkdownInlineEmphasis("Compose"),
+                MarkdownInlineText("."),
+            ),
+            inline,
+        )
+    }
+
+    @Test
+    fun keepsIntrawordUnderscoresAsPlainText() {
+        val inline = MarkdownInlineParser.parse("Use snake_case_value as an identifier.")
+
+        assertEquals(
+            listOf(MarkdownInlineText("Use snake_case_value as an identifier.")),
+            inline,
+        )
+    }
+
+    @Test
+    fun keepsIntrawordDoubleUnderscoresAsPlainText() {
+        val inline = MarkdownInlineParser.parse("Use snake__case__value as an identifier.")
+
+        assertEquals(
+            listOf(MarkdownInlineText("Use snake__case__value as an identifier.")),
+            inline,
+        )
+    }
+
+    @Test
+    fun keepsIntrawordUnderscoresInsideEmphasis() {
+        val inline = MarkdownInlineParser.parse("Use _snake_case_ value.")
+
+        assertEquals(
+            listOf(
+                MarkdownInlineText("Use "),
+                MarkdownInlineEmphasis("snake_case"),
+                MarkdownInlineText(" value."),
+            ),
+            inline,
+        )
+    }
+
+    @Test
     fun parsesEscapesStrikethroughAndAutolinks() {
         val inline =
             MarkdownInlineParser.parse(
