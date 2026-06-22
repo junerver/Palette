@@ -114,6 +114,13 @@ data class MarkdownInlineImage(
 
 object MarkdownInlineParser {
     fun parse(source: String): List<MarkdownInlineNode> {
+        return parse(source, emptyMap())
+    }
+
+    fun parse(
+        source: String,
+        references: Map<String, String>,
+    ): List<MarkdownInlineNode> {
         val nodes = mutableListOf<MarkdownInlineNode>()
         val plain = StringBuilder()
         var index = 0
@@ -155,6 +162,28 @@ object MarkdownInlineParser {
                                     destination = source.substring(destinationStart + 1, destinationEnd),
                                 )
                             index = destinationEnd + 1
+                        } else {
+                            plain.append(source[index])
+                            index += 1
+                        }
+                    } else if (
+                        altEnd != -1 &&
+                        destinationStart < source.length &&
+                        source[destinationStart] == '['
+                    ) {
+                        val referenceEnd = source.indexOf(']', startIndex = destinationStart + 1)
+                        val alt = source.substring(index + 2, altEnd)
+                        val referenceLabel =
+                            if (referenceEnd != -1) source.substring(destinationStart + 1, referenceEnd).ifEmpty { alt } else ""
+                        val destination = references[referenceLabel.normalizedReferenceLabel()]
+                        if (destination != null) {
+                            flushPlain()
+                            nodes +=
+                                MarkdownInlineImage(
+                                    alt = alt,
+                                    destination = destination,
+                                )
+                            index = referenceEnd + 1
                         } else {
                             plain.append(source[index])
                             index += 1
@@ -271,6 +300,43 @@ object MarkdownInlineParser {
                             plain.append(source[index])
                             index += 1
                         }
+                    } else if (
+                        labelEnd != -1 &&
+                        destinationStart < source.length &&
+                        source[destinationStart] == '['
+                    ) {
+                        val referenceEnd = source.indexOf(']', startIndex = destinationStart + 1)
+                        val label = source.substring(index + 1, labelEnd)
+                        val referenceLabel =
+                            if (referenceEnd != -1) source.substring(destinationStart + 1, referenceEnd).ifEmpty { label } else ""
+                        val destination = references[referenceLabel.normalizedReferenceLabel()]
+                        if (destination != null) {
+                            flushPlain()
+                            nodes +=
+                                MarkdownInlineLink(
+                                    label = label,
+                                    destination = destination,
+                                )
+                            index = referenceEnd + 1
+                        } else {
+                            plain.append(source[index])
+                            index += 1
+                        }
+                    } else if (labelEnd != -1) {
+                        val label = source.substring(index + 1, labelEnd)
+                        val destination = references[label.normalizedReferenceLabel()]
+                        if (destination != null) {
+                            flushPlain()
+                            nodes +=
+                                MarkdownInlineLink(
+                                    label = label,
+                                    destination = destination,
+                                )
+                            index = labelEnd + 1
+                        } else {
+                            plain.append(source[index])
+                            index += 1
+                        }
                     } else {
                         plain.append(source[index])
                         index += 1
@@ -316,6 +382,11 @@ object MarkdownInlineParser {
     private fun Char.isBareAutolinkBoundary(): Boolean =
         isWhitespace() || this in setOf('(', '[', '{', '<')
 
+    private fun String.normalizedReferenceLabel(): String =
+        trim()
+            .replace(WhitespaceRegex, " ")
+            .lowercase()
+
     private fun String.isInlineDelimiterRun(
         index: Int,
         delimiter: Char,
@@ -345,11 +416,14 @@ object MarkdownInlineParser {
         }
         return -1
     }
+
+    private val WhitespaceRegex = Regex("""\s+""")
 }
 
 object MarkdownParser {
     fun parse(source: String): MarkdownDocument {
         val lines = source.lines()
+        val references = collectReferenceDefinitions(lines)
         val blocks = mutableListOf<MarkdownBlock>()
         var index = 0
 
@@ -359,6 +433,7 @@ object MarkdownParser {
             val fence = trimmed.toFenceStart()
             when {
                 trimmed.isEmpty() -> index += 1
+                trimmed.toReferenceDefinition() != null -> index += 1
                 fence != null -> {
                     val fenceInfo = CodeFenceInfo.parse(fence.info)
                     val content = mutableListOf<String>()
@@ -389,7 +464,8 @@ object MarkdownParser {
                         quote += lines[index].trim().removePrefix(">").trim()
                         index += 1
                     }
-                    blocks += MarkdownBlockQuote(quote.joinToString(" ").trim())
+                    val text = quote.joinToString(" ").trim()
+                    blocks += MarkdownBlockQuote(text = text, inlines = MarkdownInlineParser.parse(text, references))
                 }
 
                 trimmed.isTaskListItem() -> {
@@ -397,10 +473,12 @@ object MarkdownParser {
                     while (index < lines.size && lines[index].trim().isTaskListItem()) {
                         val match = TaskListRegex.matchEntire(lines[index].trim())
                         if (match != null) {
+                            val text = match.groupValues[3].trim()
                             items +=
                                 MarkdownTaskItem(
-                                    text = match.groupValues[3].trim(),
+                                    text = text,
                                     checked = match.groupValues[2].equals("x", ignoreCase = true),
+                                    inlines = MarkdownInlineParser.parse(text, references),
                                 )
                         }
                         index += 1
@@ -417,14 +495,23 @@ object MarkdownParser {
                         rows += lines[index].trim().tableCells()
                         index += 1
                     }
-                    blocks += MarkdownTableBlock(headers = headers, rows = rows, alignments = alignments)
+                    blocks +=
+                        MarkdownTableBlock(
+                            headers = headers,
+                            rows = rows,
+                            alignments = alignments,
+                            headerInlines = headers.map { MarkdownInlineParser.parse(it, references) },
+                            rowInlines = rows.map { row -> row.map { MarkdownInlineParser.parse(it, references) } },
+                        )
                 }
 
                 trimmed.canStartSetextHeading(lines.getOrNull(index + 1)?.trim()) -> {
+                    val text = trimmed
                     blocks +=
                         MarkdownHeading(
                             level = lines[index + 1].trim().toSetextHeadingLevel(),
-                            text = trimmed,
+                            text = text,
+                            inlines = MarkdownInlineParser.parse(text, references),
                         )
                     index += 2
                 }
@@ -437,15 +524,21 @@ object MarkdownParser {
                 trimmed.startsWith("#") -> {
                     val match = HeadingRegex.matchEntire(trimmed)
                     if (match != null) {
+                        val text = match.groupValues[2].trim().removeAtxClosingHashes()
                         blocks +=
                             MarkdownHeading(
                                 level = match.groupValues[1].length.coerceIn(1, 6),
-                                text = match.groupValues[2].trim().removeAtxClosingHashes(),
+                                text = text,
+                                inlines = MarkdownInlineParser.parse(text, references),
                             )
                         index += 1
                     } else {
                         val paragraph = readParagraph(lines, index)
-                        blocks += MarkdownParagraph(paragraph.text)
+                        blocks +=
+                            MarkdownParagraph(
+                                text = paragraph.text,
+                                inlines = MarkdownInlineParser.parse(paragraph.text, references),
+                            )
                         index = paragraph.nextIndex
                     }
                 }
@@ -458,12 +551,22 @@ object MarkdownParser {
                         items += lines[index].trim().removeListMarker()
                         index += 1
                     }
-                    blocks += MarkdownListBlock(items = items, ordered = ordered, startNumber = startNumber)
+                    blocks +=
+                        MarkdownListBlock(
+                            items = items,
+                            ordered = ordered,
+                            itemInlines = items.map { MarkdownInlineParser.parse(it, references) },
+                            startNumber = startNumber,
+                        )
                 }
 
                 else -> {
                     val paragraph = readParagraph(lines, index)
-                    blocks += MarkdownParagraph(paragraph.text)
+                    blocks +=
+                        MarkdownParagraph(
+                            text = paragraph.text,
+                            inlines = MarkdownInlineParser.parse(paragraph.text, references),
+                        )
                     index = paragraph.nextIndex
                 }
             }
@@ -488,7 +591,8 @@ object MarkdownParser {
                 trimmed.matches(ThematicBreakRegex) ||
                 trimmed.isTaskListItem() ||
                 trimmed.isTableHeader(lines.getOrNull(index + 1)?.trim()) ||
-                trimmed.isListItem()
+                trimmed.isListItem() ||
+                trimmed.toReferenceDefinition() != null
             ) {
                 break
             }
@@ -496,6 +600,26 @@ object MarkdownParser {
             index += 1
         }
         return ParagraphRead(text = parts.joinToString(" ").trim(), nextIndex = index)
+    }
+
+    private fun collectReferenceDefinitions(lines: List<String>): Map<String, String> {
+        val definitions = mutableMapOf<String, String>()
+        var index = 0
+        while (index < lines.size) {
+            val trimmed = lines[index].trim()
+            val fence = trimmed.toFenceStart()
+            if (fence != null) {
+                index += 1
+                while (index < lines.size && !lines[index].trim().isFenceEnd(fence)) {
+                    index += 1
+                }
+                if (index < lines.size) index += 1
+            } else {
+                trimmed.toReferenceDefinition()?.let { definitions[it.label] = it.destination }
+                index += 1
+            }
+        }
+        return definitions
     }
 
     private data class ParagraphRead(
@@ -509,6 +633,7 @@ object MarkdownParser {
     private val TaskListRegex = Regex("""^([-*+])\s+\[([ xX])]\s+(.+)$""")
     private val OrderedListRegex = Regex("""^(\d+)[.)]\s+.+$""")
     private val UnorderedListRegex = Regex("""^[-*+]\s+.+$""")
+    private val ReferenceDefinitionRegex = Regex("""^\[([^\]]+)]:\s*(\S+)(?:\s+.*)?$""")
 
     private fun String.canStartSetextHeading(nextLine: String?): Boolean =
         isNotEmpty() &&
@@ -533,6 +658,21 @@ object MarkdownParser {
 
     private fun String.orderedListStartNumber(): Int =
         OrderedListRegex.matchEntire(this)?.groupValues?.get(1)?.toIntOrNull() ?: 1
+
+    private fun String.toReferenceDefinition(): MarkdownReferenceDefinition? {
+        val match = ReferenceDefinitionRegex.matchEntire(this) ?: return null
+        val label = match.groupValues[1].normalizedReferenceLabel().takeIf { it.isNotEmpty() } ?: return null
+        val destination = match.groupValues[2].trimReferenceDestination().takeIf { it.isNotEmpty() } ?: return null
+        return MarkdownReferenceDefinition(label = label, destination = destination)
+    }
+
+    private fun String.normalizedReferenceLabel(): String =
+        trim()
+            .replace(WhitespaceRegex, " ")
+            .lowercase()
+
+    private fun String.trimReferenceDestination(): String =
+        trim().trim('<', '>')
 
     private fun String.isTableHeader(nextLine: String?): Boolean =
         isTableRow() && nextLine?.matches(TableDelimiterRegex) == true
@@ -571,6 +711,12 @@ object MarkdownParser {
 
     private val TableDelimiterRegex = Regex("""^\|?\s*:?-{3,}:?\s*(\|\s*:?-{3,}:?\s*)+\|?$""")
     private val AtxClosingHashesRegex = Regex("""\s+#+\s*$""")
+    private val WhitespaceRegex = Regex("""\s+""")
+
+    private data class MarkdownReferenceDefinition(
+        val label: String,
+        val destination: String,
+    )
 
     private data class MarkdownFence(
         val marker: Char,

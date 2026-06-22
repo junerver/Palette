@@ -354,6 +354,59 @@ class MarkdownParserTest {
     }
 
     @Test
+    fun parsesReferenceStyleLinksAndImages() {
+        val document =
+            MarkdownParser.parse(
+                """
+                Read [the guide][guide], open [guide], and inspect ![diagram][asset].
+
+                [guide]: https://example.com/guide
+                [asset]: https://example.com/diagram.png "Architecture diagram"
+                """.trimIndent(),
+            )
+
+        val paragraph = assertIs<MarkdownParagraph>(document.blocks.single())
+        assertEquals(
+            listOf(
+                MarkdownInlineText("Read "),
+                MarkdownInlineLink(label = "the guide", destination = "https://example.com/guide"),
+                MarkdownInlineText(", open "),
+                MarkdownInlineLink(label = "guide", destination = "https://example.com/guide"),
+                MarkdownInlineText(", and inspect "),
+                MarkdownInlineImage(alt = "diagram", destination = "https://example.com/diagram.png"),
+                MarkdownInlineText("."),
+            ),
+            paragraph.inlines,
+        )
+    }
+
+    @Test
+    fun ignoresReferenceDefinitionsInsideFencedCodeBlocks() {
+        val document =
+            MarkdownParser.parse(
+                """
+                [docs]: https://example.com/docs
+
+                ```text
+                [docs]: https://example.com/from-code
+                ```
+
+                Read [docs].
+                """.trimIndent(),
+            )
+
+        val paragraph = assertIs<MarkdownParagraph>(document.blocks.last())
+        assertEquals(
+            listOf(
+                MarkdownInlineText("Read "),
+                MarkdownInlineLink(label = "docs", destination = "https://example.com/docs"),
+                MarkdownInlineText("."),
+            ),
+            paragraph.inlines,
+        )
+    }
+
+    @Test
     fun renderModelKeepsInlineNodesForParagraphsHeadingsAndLists() {
         val model =
             MarkdownRenderer.toRenderModel(
