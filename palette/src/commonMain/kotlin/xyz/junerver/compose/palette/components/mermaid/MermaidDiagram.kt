@@ -9,6 +9,8 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.GenericShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -17,6 +19,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.PathEffect
+import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -25,7 +28,25 @@ import xyz.junerver.compose.palette.mermaid.MermaidDiagramType
 import xyz.junerver.compose.palette.mermaid.MermaidEdgeStyle
 import xyz.junerver.compose.palette.mermaid.MermaidLayout
 import xyz.junerver.compose.palette.mermaid.MermaidLayoutEngine
+import xyz.junerver.compose.palette.mermaid.MermaidNodeShape
 import xyz.junerver.compose.palette.mermaid.MermaidParser
+
+internal enum class MermaidNodeContainerKind {
+    Rectangle,
+    Rounded,
+    Stadium,
+    Diamond,
+    Circle,
+}
+
+internal fun MermaidNodeShape.toContainerKind(): MermaidNodeContainerKind =
+    when (this) {
+        MermaidNodeShape.Rectangle -> MermaidNodeContainerKind.Rectangle
+        MermaidNodeShape.Rounded -> MermaidNodeContainerKind.Rounded
+        MermaidNodeShape.Stadium -> MermaidNodeContainerKind.Stadium
+        MermaidNodeShape.Diamond -> MermaidNodeContainerKind.Diamond
+        MermaidNodeShape.Circle -> MermaidNodeContainerKind.Circle
+    }
 
 @Composable
 fun PMermaidDiagram(
@@ -111,13 +132,15 @@ private fun FlowchartMermaidDiagram(
         }
 
         layout.nodes.values.forEach { item ->
+            val nodeShape = item.node.shape.toComposeShape()
             Box(
                 modifier =
                     Modifier
                         .absoluteOffset(x = item.x.dp, y = item.y.dp)
                         .size(width = nodeWidth, height = nodeHeight)
-                        .background(colors.nodeContainerColor, RoundedCornerShape(MermaidDefaults.cornerRadius()))
-                        .border(1.dp, colors.nodeBorderColor, RoundedCornerShape(MermaidDefaults.cornerRadius())),
+                        .background(colors.nodeContainerColor, nodeShape)
+                        .border(1.dp, colors.nodeBorderColor, nodeShape)
+                        .padding(horizontal = if (item.node.shape == MermaidNodeShape.Diamond) 20.dp else 8.dp),
                 contentAlignment = Alignment.Center,
             ) {
                 Text(
@@ -242,13 +265,15 @@ private fun SequenceMermaidDiagram(
         }
 
         layout.nodes.values.forEach { item ->
+            val nodeShape = item.node.shape.toComposeShape()
             Box(
                 modifier =
                     Modifier
                         .absoluteOffset(x = item.x.dp, y = item.y.dp)
                         .size(width = nodeWidth, height = nodeHeight)
-                        .background(colors.nodeContainerColor, RoundedCornerShape(MermaidDefaults.cornerRadius()))
-                        .border(1.dp, colors.nodeBorderColor, RoundedCornerShape(MermaidDefaults.cornerRadius())),
+                        .background(colors.nodeContainerColor, nodeShape)
+                        .border(1.dp, colors.nodeBorderColor, nodeShape)
+                        .padding(horizontal = 8.dp),
                 contentAlignment = Alignment.Center,
             ) {
                 Text(
@@ -270,3 +295,22 @@ private fun SequenceMermaidDiagram(
         }
     }
 }
+
+@Composable
+private fun MermaidNodeShape.toComposeShape(): Shape =
+    when (toContainerKind()) {
+        MermaidNodeContainerKind.Rectangle -> RoundedCornerShape(0.dp)
+        MermaidNodeContainerKind.Rounded -> RoundedCornerShape(MermaidDefaults.cornerRadius())
+        MermaidNodeContainerKind.Stadium -> RoundedCornerShape(percent = 50)
+        MermaidNodeContainerKind.Circle -> CircleShape
+        MermaidNodeContainerKind.Diamond -> DiamondShape
+    }
+
+private val DiamondShape =
+    GenericShape { size, _ ->
+        moveTo(size.width / 2f, 0f)
+        lineTo(size.width, size.height / 2f)
+        lineTo(size.width / 2f, size.height)
+        lineTo(0f, size.height / 2f)
+        close()
+    }
