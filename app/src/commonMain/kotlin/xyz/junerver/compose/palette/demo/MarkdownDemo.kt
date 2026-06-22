@@ -54,6 +54,9 @@ fun MarkdownDemo() {
                 value = editorValue,
                 onValueChange = setEditorValue,
                 placeholder = text.editorPlaceholder,
+                editLabel = text.editLabel,
+                previewLabel = text.previewLabel,
+                splitLabel = text.splitLabel,
                 showPreview = true,
             )
         }
@@ -71,6 +74,9 @@ private fun markdownDemoText(): MarkdownDemoText =
                 viewerTitle = "查看器",
                 editorTitle = "编辑器",
                 editorPlaceholder = "输入 Markdown",
+                editLabel = "编辑",
+                previewLabel = "预览",
+                splitLabel = "分屏",
                 viewerMarkdown =
                     """
                     # Palette Markdown
@@ -158,6 +164,9 @@ private fun markdownDemoText(): MarkdownDemoText =
                 viewerTitle = "Viewer",
                 editorTitle = "Editor",
                 editorPlaceholder = "Enter Markdown",
+                editLabel = "Edit",
+                previewLabel = "Preview",
+                splitLabel = "Split",
                 viewerMarkdown =
                     """
                     # Palette Markdown
@@ -245,6 +254,9 @@ private data class MarkdownDemoText(
     val viewerTitle: String,
     val editorTitle: String,
     val editorPlaceholder: String,
+    val editLabel: String,
+    val previewLabel: String,
+    val splitLabel: String,
     val viewerMarkdown: String,
     val editorMarkdown: String,
 )

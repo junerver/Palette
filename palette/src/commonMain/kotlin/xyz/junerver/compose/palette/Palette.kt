@@ -195,6 +195,7 @@ import xyz.junerver.compose.palette.components.code.CodeBlockColors as CodeBlock
 import xyz.junerver.compose.palette.components.code.CodeBlockDefaults as CodeBlockDefaultsImpl
 import xyz.junerver.compose.palette.components.code.PCodeBlock as PCodeBlockImpl
 import xyz.junerver.compose.palette.components.markdown.MarkdownDefaults as MarkdownDefaultsImpl
+import xyz.junerver.compose.palette.components.markdown.MarkdownEditorMode as MarkdownEditorModeImpl
 import xyz.junerver.compose.palette.components.markdown.PMarkdownEditor as PMarkdownEditorImpl
 import xyz.junerver.compose.palette.components.markdown.PMarkdownViewer as PMarkdownViewerImpl
 import xyz.junerver.compose.palette.components.mermaid.MermaidColors as MermaidColorsImpl
@@ -799,6 +800,7 @@ typealias MermaidColors = MermaidColorsImpl
 val PMarkdownViewer = ::PMarkdownViewerImpl
 val PMarkdownEditor = ::PMarkdownEditorImpl
 val MarkdownDefaults = MarkdownDefaultsImpl
+typealias MarkdownEditorMode = MarkdownEditorModeImpl
 
 // Components - Barcode
 val PBarcode = ::PBarcodeImpl
