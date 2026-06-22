@@ -1,7 +1,6 @@
 package xyz.junerver.compose.palette.components.dialog
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -12,7 +11,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Stable
@@ -142,38 +140,17 @@ private fun RowScope.DefaultDialogActions(
     onCancel: (() -> Unit)?
 ) {
     if (onCancel != null) {
-        Box(
-            modifier = Modifier
-                .weight(1f)
-                .height(DialogDefaults.buttonHeight())
-                .clickable(onClick = onCancel),
-            contentAlignment = Alignment.Center
-        ) {
-            PText(
-                text = cancelText,
-                color = DialogDefaults.cancelColor(),
-                style = DialogDefaults.buttonTextStyle()
-            )
-        }
-        Box(
-            modifier = Modifier
-                .size(DialogDefaults.dividerWidth(), DialogDefaults.buttonHeight())
-                .background(DialogDefaults.dividerColor())
+        PDialogCancelAction(
+            text = cancelText,
+            onClick = onCancel,
         )
+        PDialogActionDivider()
     }
-    Box(
-        modifier = Modifier
-            .weight(1f)
-            .height(DialogDefaults.buttonHeight())
-            .clickable(onClick = onOk),
-        contentAlignment = Alignment.Center
-    ) {
-        PText(
-            text = okText,
-            color = okColor,
-            style = DialogDefaults.buttonTextStyle()
-        )
-    }
+    PDialogConfirmAction(
+        text = okText,
+        color = okColor,
+        onClick = onOk,
+    )
 }
 
 @Stable

@@ -92,6 +92,48 @@ class DialogUiTest {
     }
 
     @Test
+    fun dialogActions_shouldRenderStableActionRowAndInvokeClicks() {
+        var cancelClicks = 0
+        var confirmClicks = 0
+        var disabledClicks = 0
+
+        rule.setContent {
+            PaletteMaterialTheme {
+                PDialog(
+                    title = {
+                        PText("Action Helpers")
+                    },
+                    actions = {
+                        PDialogCancelAction(
+                            text = "Back",
+                            onClick = { cancelClicks++ },
+                        )
+                        PDialogActionDivider()
+                        PDialogConfirmAction(
+                            text = "Apply",
+                            onClick = { confirmClicks++ },
+                        )
+                        PDialogAction(
+                            text = "Disabled",
+                            enabled = false,
+                            onClick = { disabledClicks++ },
+                        )
+                    },
+                    onDismiss = {},
+                )
+            }
+        }
+
+        rule.onNodeWithText("Back").performClick()
+        rule.onNodeWithText("Apply").performClick()
+        rule.onNodeWithText("Disabled").assertTextEquals("Disabled")
+
+        assertEquals(1, cancelClicks)
+        assertEquals(1, confirmClicks)
+        assertEquals(0, disabledClicks)
+    }
+
+    @Test
     fun dialog_shouldRenderComposableSlotsWithoutActions() {
         rule.setContent {
             PaletteMaterialTheme {
