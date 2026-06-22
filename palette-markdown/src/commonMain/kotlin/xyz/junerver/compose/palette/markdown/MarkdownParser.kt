@@ -860,7 +860,7 @@ object MarkdownParser {
     private fun String.isTableHeader(nextLine: String?): Boolean =
         isTableRow() && nextLine?.matches(TableDelimiterRegex) == true
 
-    private fun String.isTableRow(): Boolean = contains("|") && tableCells().isNotEmpty()
+    private fun String.isTableRow(): Boolean = contains("|") && tableCells().any { it.isNotEmpty() }
 
     private fun String.tableCells(): List<String> {
         val source = trim().trimTableBoundaryPipes()
@@ -899,7 +899,7 @@ object MarkdownParser {
             }
         }
         cells += current.toString().trim()
-        return cells.filter { it.isNotEmpty() }
+        return cells
     }
 
     private fun String.tableAlignments(columnCount: Int): List<MarkdownTableAlignment> {

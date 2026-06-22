@@ -820,4 +820,29 @@ class MarkdownParserTest {
             table.rowInlines.single()[2],
         )
     }
+
+    @Test
+    fun preservesEmptyTableCells() {
+        val document =
+            MarkdownParser.parse(
+                """
+                | Name | Notes | Status |
+                | --- | --- | --- |
+                | Parser |  | Ready |
+                | Renderer | Uses `code` |  |
+                """.trimIndent(),
+            )
+
+        val table = assertIs<MarkdownTableBlock>(document.blocks.single())
+        assertEquals(listOf("Name", "Notes", "Status"), table.headers)
+        assertEquals(
+            listOf(
+                listOf("Parser", "", "Ready"),
+                listOf("Renderer", "Uses `code`", ""),
+            ),
+            table.rows,
+        )
+        assertEquals(emptyList(), table.rowInlines.first()[1])
+        assertEquals(emptyList(), table.rowInlines.last()[2])
+    }
 }

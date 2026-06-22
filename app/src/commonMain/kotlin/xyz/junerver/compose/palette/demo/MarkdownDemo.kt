@@ -111,6 +111,7 @@ private fun markdownDemoText(): MarkdownDemoText =
                     | Mermaid | ready | `PMermaidDiagram` |
                     | 图片 | placeholder | ![Palette icon](https://example.com/palette.png) |
                     | 表格竖线 | a\|b | `x|y` |
+                    | 空单元格 |  | 保留列 |
 
                     ```kotlin title="Preview.kt" showLineNumbers {2-4}
                     @Composable
@@ -287,6 +288,7 @@ private fun markdownDemoText(): MarkdownDemoText =
                     | Mermaid | ready | `PMermaidDiagram` |
                     | Images | placeholder | ![Palette icon](https://example.com/palette.png) |
                     | Table pipes | a\|b | `x|y` |
+                    | Empty cells |  | Keep columns |
 
                     ```kotlin title="Preview.kt" showLineNumbers {2-4}
                     @Composable
