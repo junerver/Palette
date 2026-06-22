@@ -335,6 +335,25 @@ class MarkdownParserTest {
     }
 
     @Test
+    fun parsesBareUrlAutolinksAndKeepsTrailingPunctuation() {
+        val inline =
+            MarkdownInlineParser.parse(
+                "Visit https://example.com/docs, then https://example.org.",
+            )
+
+        assertEquals(
+            listOf(
+                MarkdownInlineText("Visit "),
+                MarkdownInlineLink(label = "https://example.com/docs", destination = "https://example.com/docs"),
+                MarkdownInlineText(", then "),
+                MarkdownInlineLink(label = "https://example.org", destination = "https://example.org"),
+                MarkdownInlineText("."),
+            ),
+            inline,
+        )
+    }
+
+    @Test
     fun renderModelKeepsInlineNodesForParagraphsHeadingsAndLists() {
         val model =
             MarkdownRenderer.toRenderModel(

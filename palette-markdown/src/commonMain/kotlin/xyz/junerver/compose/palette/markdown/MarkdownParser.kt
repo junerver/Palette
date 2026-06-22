@@ -238,6 +238,18 @@ object MarkdownInlineParser {
                     }
                 }
 
+                source.startsBareAutolink(index) -> {
+                    val autolink = source.bareAutolinkAt(index)
+                    if (autolink != null) {
+                        flushPlain()
+                        nodes += autolink
+                        index += autolink.destination.length
+                    } else {
+                        plain.append(source[index])
+                        index += 1
+                    }
+                }
+
                 source[index] == '[' -> {
                     val labelEnd = source.indexOf(']', startIndex = index + 1)
                     val destinationStart = labelEnd + 1
@@ -283,9 +295,26 @@ object MarkdownInlineParser {
             else -> null
         }
 
+    private fun String.startsBareAutolink(index: Int): Boolean =
+        (startsWith("http://", index) || startsWith("https://", index)) &&
+            getOrNull(index - 1)?.isBareAutolinkBoundary() != false
+
+    private fun String.bareAutolinkAt(index: Int): MarkdownInlineLink? {
+        val match = BareAutolinkUrlRegex.find(this, index)?.takeIf { it.range.first == index } ?: return null
+        val url = match.value.trimEnd { it in BareAutolinkTrailingPunctuation }
+        return url
+            .takeIf { it.isNotEmpty() }
+            ?.let { MarkdownInlineLink(label = it, destination = it) }
+    }
+
     private val AutolinkUrlRegex = Regex("""https?://[^\s<>]+""")
     private val AutolinkEmailRegex = Regex("""[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}""")
+    private val BareAutolinkUrlRegex = Regex("""https?://[^\s<>()]+""")
+    private val BareAutolinkTrailingPunctuation = setOf('.', ',', ';', ':', '!', '?')
     private val EscapableMarkdownChars = setOf('\\', '`', '*', '_', '{', '}', '[', ']', '(', ')', '#', '+', '-', '.', '!', '|', '~')
+
+    private fun Char.isBareAutolinkBoundary(): Boolean =
+        isWhitespace() || this in setOf('(', '[', '{', '<')
 
     private fun String.isInlineDelimiterRun(
         index: Int,
