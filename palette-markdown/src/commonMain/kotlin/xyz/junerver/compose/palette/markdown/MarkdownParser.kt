@@ -77,6 +77,10 @@ data class MarkdownInlineEmphasis(
     override val text: String,
 ) : MarkdownInlineNode
 
+data class MarkdownInlineStrikethrough(
+    override val text: String,
+) : MarkdownInlineNode
+
 data class MarkdownInlineCode(
     override val text: String,
 ) : MarkdownInlineNode
@@ -112,6 +116,17 @@ object MarkdownInlineParser {
 
         while (index < source.length) {
             when {
+                source[index] == '\\' -> {
+                    val next = source.getOrNull(index + 1)
+                    if (next != null && next in EscapableMarkdownChars) {
+                        plain.append(next)
+                        index += 2
+                    } else {
+                        plain.append(source[index])
+                        index += 1
+                    }
+                }
+
                 source.startsWith("![", index) -> {
                     val altEnd = source.indexOf(']', startIndex = index + 2)
                     val destinationStart = altEnd + 1
@@ -133,6 +148,18 @@ object MarkdownInlineParser {
                             plain.append(source[index])
                             index += 1
                         }
+                    } else {
+                        plain.append(source[index])
+                        index += 1
+                    }
+                }
+
+                source.startsWith("~~", index) -> {
+                    val end = source.indexOf("~~", startIndex = index + 2)
+                    if (end != -1) {
+                        flushPlain()
+                        nodes += MarkdownInlineStrikethrough(source.substring(index + 2, end))
+                        index = end + 2
                     } else {
                         plain.append(source[index])
                         index += 1
@@ -168,6 +195,19 @@ object MarkdownInlineParser {
                     if (end != -1) {
                         flushPlain()
                         nodes += MarkdownInlineCode(source.substring(index + 1, end))
+                        index = end + 1
+                    } else {
+                        plain.append(source[index])
+                        index += 1
+                    }
+                }
+
+                source[index] == '<' -> {
+                    val end = source.indexOf('>', startIndex = index + 1)
+                    val autolink = if (end != -1) source.substring(index + 1, end).toAutolink() else null
+                    if (autolink != null) {
+                        flushPlain()
+                        nodes += autolink
                         index = end + 1
                     } else {
                         plain.append(source[index])
@@ -212,6 +252,17 @@ object MarkdownInlineParser {
         flushPlain()
         return nodes
     }
+
+    private fun String.toAutolink(): MarkdownInlineLink? =
+        when {
+            matches(AutolinkUrlRegex) -> MarkdownInlineLink(label = this, destination = this)
+            matches(AutolinkEmailRegex) -> MarkdownInlineLink(label = this, destination = "mailto:$this")
+            else -> null
+        }
+
+    private val AutolinkUrlRegex = Regex("""https?://[^\s<>]+""")
+    private val AutolinkEmailRegex = Regex("""[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}""")
+    private val EscapableMarkdownChars = setOf('\\', '`', '*', '_', '{', '}', '[', ']', '(', ')', '#', '+', '-', '.', '!', '|', '~')
 }
 
 object MarkdownParser {

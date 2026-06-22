@@ -90,6 +90,27 @@ class MarkdownParserTest {
     }
 
     @Test
+    fun parsesEscapesStrikethroughAndAutolinks() {
+        val inline =
+            MarkdownInlineParser.parse(
+                """Keep \*literal\*, remove ~~old API~~, visit <https://example.com>, mail <team@example.com>.""",
+            )
+
+        assertEquals(
+            listOf(
+                MarkdownInlineText("Keep *literal*, remove "),
+                MarkdownInlineStrikethrough("old API"),
+                MarkdownInlineText(", visit "),
+                MarkdownInlineLink(label = "https://example.com", destination = "https://example.com"),
+                MarkdownInlineText(", mail "),
+                MarkdownInlineLink(label = "team@example.com", destination = "mailto:team@example.com"),
+                MarkdownInlineText("."),
+            ),
+            inline,
+        )
+    }
+
+    @Test
     fun renderModelKeepsInlineNodesForParagraphsHeadingsAndLists() {
         val model =
             MarkdownRenderer.toRenderModel(

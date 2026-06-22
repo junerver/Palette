@@ -82,6 +82,8 @@ private fun markdownDemoText(): MarkdownDemoText =
 
                     > 引用块会保留强调、链接和 `inline code` 等行内样式。
 
+                    行内语法支持 ~~删除线~~、自动链接 <https://example.com> 和转义 \*literal\*。
+
                     - [x] 解析 Markdown 文档
                     - [x] 高亮 Kotlin fenced code
                     - [ ] 接入远程图片加载
@@ -166,6 +168,8 @@ private fun markdownDemoText(): MarkdownDemoText =
                     - `mermaid` code blocks use Mermaid flowchart parsing and layout
 
                     > Block quotes keep inline emphasis, links, and `inline code` styles.
+
+                    Inline syntax supports ~~strikethrough~~, autolinks <https://example.com>, and escaped \*literal\* text.
 
                     - [x] Parse Markdown documents
                     - [x] Highlight Kotlin fenced code

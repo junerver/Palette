@@ -34,6 +34,7 @@ import xyz.junerver.compose.palette.markdown.MarkdownInlineImage
 import xyz.junerver.compose.palette.markdown.MarkdownInlineLink
 import xyz.junerver.compose.palette.markdown.MarkdownInlineNode
 import xyz.junerver.compose.palette.markdown.MarkdownInlineStrong
+import xyz.junerver.compose.palette.markdown.MarkdownInlineStrikethrough
 import xyz.junerver.compose.palette.markdown.MarkdownInlineText
 import xyz.junerver.compose.palette.markdown.MarkdownParser
 import xyz.junerver.compose.palette.markdown.MarkdownRenderBlock
@@ -234,6 +235,12 @@ private fun List<MarkdownInlineNode>.toAnnotatedString(): AnnotatedString {
 
                 is MarkdownInlineEmphasis -> {
                     pushStyle(SpanStyle(fontStyle = androidx.compose.ui.text.font.FontStyle.Italic))
+                    append(node.text)
+                    pop()
+                }
+
+                is MarkdownInlineStrikethrough -> {
+                    pushStyle(SpanStyle(textDecoration = TextDecoration.LineThrough))
                     append(node.text)
                     pop()
                 }
