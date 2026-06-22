@@ -110,6 +110,7 @@ private fun markdownDemoText(): MarkdownDemoText =
                     | 代码高亮 | ready | `PCodeBlock` |
                     | Mermaid | ready | `PMermaidDiagram` |
                     | 图片 | placeholder | ![Palette icon](https://example.com/palette.png) |
+                    | 表格竖线 | a\|b | `x|y` |
 
                     ```kotlin title="Preview.kt" showLineNumbers {2-4}
                     @Composable
@@ -285,6 +286,7 @@ private fun markdownDemoText(): MarkdownDemoText =
                     | Code highlighting | ready | `PCodeBlock` |
                     | Mermaid | ready | `PMermaidDiagram` |
                     | Images | placeholder | ![Palette icon](https://example.com/palette.png) |
+                    | Table pipes | a\|b | `x|y` |
 
                     ```kotlin title="Preview.kt" showLineNumbers {2-4}
                     @Composable

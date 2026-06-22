@@ -847,12 +847,45 @@ object MarkdownParser {
 
     private fun String.isTableRow(): Boolean = contains("|") && tableCells().isNotEmpty()
 
-    private fun String.tableCells(): List<String> =
-        trim()
-            .trim('|')
-            .split("|")
-            .map { it.trim() }
-            .filter { it.isNotEmpty() }
+    private fun String.tableCells(): List<String> {
+        val source = trim().trimTableBoundaryPipes()
+        val cells = mutableListOf<String>()
+        val current = StringBuilder()
+        var index = 0
+        var codeFenceLength = 0
+        while (index < source.length) {
+            when {
+                source[index] == '\\' && source.getOrNull(index + 1) == '|' -> {
+                    current.append('|')
+                    index += 2
+                }
+
+                source[index] == '`' -> {
+                    val length = source.countRepeatedFrom(index, '`')
+                    if (codeFenceLength == 0) {
+                        codeFenceLength = length
+                    } else if (length == codeFenceLength) {
+                        codeFenceLength = 0
+                    }
+                    current.append(source.substring(index, index + length))
+                    index += length
+                }
+
+                source[index] == '|' && codeFenceLength == 0 -> {
+                    cells += current.toString().trim()
+                    current.clear()
+                    index += 1
+                }
+
+                else -> {
+                    current.append(source[index])
+                    index += 1
+                }
+            }
+        }
+        cells += current.toString().trim()
+        return cells.filter { it.isNotEmpty() }
+    }
 
     private fun String.tableAlignments(columnCount: Int): List<MarkdownTableAlignment> {
         val parsed =
@@ -875,6 +908,23 @@ object MarkdownParser {
         if (size == columnCount) return this
         if (size > columnCount) return take(columnCount)
         return this + List(columnCount - size) { MarkdownTableAlignment.Start }
+    }
+
+    private fun String.trimTableBoundaryPipes(): String {
+        var start = 0
+        var end = length
+        if (getOrNull(start) == '|') start += 1
+        if (end > start && getOrNull(end - 1) == '|') end -= 1
+        return substring(start, end)
+    }
+
+    private fun String.countRepeatedFrom(
+        start: Int,
+        char: Char,
+    ): Int {
+        var index = start
+        while (index < length && this[index] == char) index += 1
+        return index - start
     }
 
     private val TableDelimiterRegex = Regex("""^\|?\s*:?-{3,}:?\s*(\|\s*:?-{3,}:?\s*)+\|?$""")

@@ -781,4 +781,24 @@ class MarkdownParserTest {
             table.alignments,
         )
     }
+
+    @Test
+    fun parsesEscapedPipesAndInlineCodePipesInTableCells() {
+        val document =
+            MarkdownParser.parse(
+                """
+                | Name | Expression | Result |
+                | --- | --- | --- |
+                | Pipe | a\|b | `x|y` |
+                """.trimIndent(),
+            )
+
+        val table = assertIs<MarkdownTableBlock>(document.blocks.single())
+        assertEquals(listOf("Name", "Expression", "Result"), table.headers)
+        assertEquals(listOf(listOf("Pipe", "a|b", "`x|y`")), table.rows)
+        assertEquals(
+            listOf(MarkdownInlineCode("x|y")),
+            table.rowInlines.single()[2],
+        )
+    }
 }
