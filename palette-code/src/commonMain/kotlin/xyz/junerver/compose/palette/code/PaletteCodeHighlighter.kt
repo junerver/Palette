@@ -38,6 +38,7 @@ object PaletteCodeHighlighter {
                 "ts", "tsx", "typescript" -> KotlinLikeLexer(TypeScriptKeywords, TypeScriptPrimitiveTypes).highlight(lines)
                 "json" -> JsonLexer.highlight(lines)
                 "css", "scss", "sass", "less" -> CssLexer().highlight(lines)
+                "py", "python" -> PythonLexer.highlight(lines)
                 else -> lines.map { line -> listOf(CodeToken(CodeTokenType.Plain, line)) }
             }
         return HighlightedCode(language = normalizedLanguage.ifEmpty { "plain" }, tokens = tokens)
@@ -168,6 +169,132 @@ object PaletteCodeHighlighter {
 
     private val TypeScriptPrimitiveTypes =
         JavaScriptPrimitiveTypes + setOf("any", "boolean", "never", "number", "string", "unknown", "void")
+
+    private val PythonKeywords =
+        setOf(
+            "False",
+            "None",
+            "True",
+            "and",
+            "as",
+            "assert",
+            "async",
+            "await",
+            "break",
+            "class",
+            "continue",
+            "def",
+            "del",
+            "elif",
+            "else",
+            "except",
+            "finally",
+            "for",
+            "from",
+            "global",
+            "if",
+            "import",
+            "in",
+            "is",
+            "lambda",
+            "nonlocal",
+            "not",
+            "or",
+            "pass",
+            "raise",
+            "return",
+            "try",
+            "while",
+            "with",
+            "yield",
+        )
+
+    private val PythonPrimitiveTypes =
+        setOf("bool", "bytes", "dict", "float", "frozenset", "int", "list", "set", "str", "tuple")
+
+    private object PythonLexer {
+        fun highlight(lines: List<String>): List<List<CodeToken>> = lines.map(::highlightLine)
+
+        private fun highlightLine(line: String): List<CodeToken> {
+            val tokens = mutableListOf<CodeToken>()
+            var index = 0
+
+            while (index < line.length) {
+                val current = line[index]
+                when {
+                    current.isWhitespace() -> {
+                        val end = line.nextWhile(index, Char::isWhitespace)
+                        tokens += CodeToken(CodeTokenType.Plain, line.substring(index, end))
+                        index = end
+                    }
+
+                    current == '#' -> {
+                        tokens += CodeToken(CodeTokenType.Comment, line.substring(index))
+                        index = line.length
+                    }
+
+                    current == '@' -> {
+                        val end = line.nextDottedIdentifierEnd(index + 1)
+                        tokens += CodeToken(CodeTokenType.Annotation, line.substring(index, end))
+                        index = end
+                    }
+
+                    current.isPythonStringPrefixStart() && line.getOrNull(index + 1) in setOf('"', '\'') -> {
+                        val end = scanQuotedString(line, index + 1, line[index + 1])
+                        tokens += CodeToken(CodeTokenType.StringLiteral, line.substring(index, end))
+                        index = end
+                    }
+
+                    current == '"' || current == '\'' -> {
+                        val end = scanQuotedString(line, index, current)
+                        tokens += CodeToken(CodeTokenType.StringLiteral, line.substring(index, end))
+                        index = end
+                    }
+
+                    current.isDigit() -> {
+                        val end = line.nextPythonNumberEnd(index)
+                        tokens += CodeToken(CodeTokenType.NumberLiteral, line.substring(index, end))
+                        index = end
+                    }
+
+                    current.isIdentifierStart() -> {
+                        val end = line.nextIdentifierEnd(index)
+                        val text = line.substring(index, end)
+                        val type =
+                            when {
+                                text in PythonKeywords -> CodeTokenType.Keyword
+                                text in PythonPrimitiveTypes -> CodeTokenType.Type
+                                line.nextNonWhitespace(end) == '(' -> CodeTokenType.Function
+                                text.first().isUpperCase() -> CodeTokenType.Type
+                                else -> CodeTokenType.Plain
+                            }
+                        tokens += CodeToken(type, text)
+                        index = end
+                    }
+
+                    current in PythonOperators -> {
+                        tokens += CodeToken(CodeTokenType.Operator, current.toString())
+                        index += 1
+                    }
+
+                    current in PythonPunctuation -> {
+                        tokens += CodeToken(CodeTokenType.Punctuation, current.toString())
+                        index += 1
+                    }
+
+                    else -> {
+                        tokens += CodeToken(CodeTokenType.Plain, current.toString())
+                        index += 1
+                    }
+                }
+            }
+
+            return tokens
+        }
+
+        private val PythonOperators = setOf('+', '-', '*', '/', '%', '=', '!', '<', '>', '&', '|', '^', '~', ':')
+        private val PythonPunctuation = setOf('(', ')', '[', ']', '{', '}', '.', ',', ';')
+    }
 }
 
 private class KotlinLikeLexer(
@@ -479,8 +606,13 @@ private fun String.nextWhile(
 
 private fun String.nextIdentifierEnd(start: Int): Int = nextWhile(start) { it.isLetterOrDigit() || it == '_' }
 
+private fun String.nextDottedIdentifierEnd(start: Int): Int = nextWhile(start) { it.isLetterOrDigit() || it == '_' || it == '.' }
+
 private fun String.nextJsonNumberEnd(start: Int): Int =
     nextWhile(start) { it.isDigit() || it == '-' || it == '+' || it == '.' || it == 'e' || it == 'E' }
+
+private fun String.nextPythonNumberEnd(start: Int): Int =
+    nextWhile(start) { it.isLetterOrDigit() || it == '_' || it == '.' }
 
 private fun String.nextCssIdentifierEnd(start: Int): Int =
     nextWhile(start) { it.isLetterOrDigit() || it == '_' || it == '-' }
@@ -499,6 +631,8 @@ private fun String.nextNonWhitespace(start: Int): Char? {
 }
 
 private fun Char.isIdentifierStart(): Boolean = isLetter() || this == '_'
+
+private fun Char.isPythonStringPrefixStart(): Boolean = this in setOf('f', 'F', 'r', 'R', 'b', 'B', 'u', 'U')
 
 private fun Char.isCssIdentifierStart(): Boolean = isLetter() || this == '_' || this == '-'
 

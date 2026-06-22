@@ -121,6 +121,11 @@ private fun markdownDemoText(): MarkdownDemoText =
                     }
                     ```
 
+                    ```python title="preview.py" showLineNumbers {2}
+                    def render(name: str) -> str:
+                        return f"Hello, {name}"
+                    ```
+
                     ```mermaid
                     flowchart LR
                         Markdown[Markdown] --> Code[Kotlin code]
@@ -209,6 +214,11 @@ private fun markdownDemoText(): MarkdownDemoText =
                       color: #fff;
                       margin: 8px;
                     }
+                    ```
+
+                    ```python title="preview.py" showLineNumbers {2}
+                    def render(name: str) -> str:
+                        return f"Hello, {name}"
                     ```
 
                     ```mermaid

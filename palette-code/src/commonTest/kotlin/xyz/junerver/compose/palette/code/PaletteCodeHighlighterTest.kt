@@ -123,4 +123,29 @@ class PaletteCodeHighlighterTest {
         assertTrue(tokens.any { it.text == "\"ready\"" && it.type == CodeTokenType.StringLiteral })
         assertTrue(tokens.any { it.text == "/* visible comment */" && it.type == CodeTokenType.Comment })
     }
+
+    @Test
+    fun highlightsPythonDecoratorsKeywordsTypesStringsNumbersAndComments() {
+        val highlighted =
+            PaletteCodeHighlighter.highlight(
+                code =
+                    """
+                    @dataclass
+                    def greet(name: str) -> str:
+                        count = 3
+                        return f"Hello, {name}"  # visible comment
+                    """.trimIndent(),
+                language = "python",
+            )
+
+        val tokens = highlighted.tokens.flatten()
+        assertEquals("python", highlighted.language)
+        assertTrue(tokens.any { it.text == "@dataclass" && it.type == CodeTokenType.Annotation })
+        assertTrue(tokens.any { it.text == "def" && it.type == CodeTokenType.Keyword })
+        assertTrue(tokens.any { it.text == "greet" && it.type == CodeTokenType.Function })
+        assertTrue(tokens.any { it.text == "str" && it.type == CodeTokenType.Type })
+        assertTrue(tokens.any { it.text == "3" && it.type == CodeTokenType.NumberLiteral })
+        assertTrue(tokens.any { it.text == "f\"Hello, {name}\"" && it.type == CodeTokenType.StringLiteral })
+        assertTrue(tokens.any { it.text == "# visible comment" && it.type == CodeTokenType.Comment })
+    }
 }
