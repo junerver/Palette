@@ -88,7 +88,7 @@ private fun markdownDemoText(): MarkdownDemoText =
 
                     > 引用块会保留强调、链接和 `inline code` 等行内样式。
 
-                    行内语法支持 ~~删除线~~、_强调_、__加粗 `code`__、[**嵌套链接**](https://palette.example/docs)、自动链接 <https://example.com>、裸链接 https://palette.example/docs 和转义 \*literal\*。
+                    行内语法支持 ~~删除线~~、_强调_、__加粗 `code`__、[**嵌套链接**](https://palette.example/docs)、自动链接 <https://example.com>、裸链接 https://palette.example/docs/(guide) 和转义 \*literal\*。
                     引用式链接也会解析：[文档][palette-docs]。
 
                     [palette-docs]: https://palette.example/docs "Palette docs"
@@ -264,7 +264,7 @@ private fun markdownDemoText(): MarkdownDemoText =
 
                     > Block quotes keep inline emphasis, links, and `inline code` styles.
 
-                    Inline syntax supports ~~strikethrough~~, _emphasis_, __strong `code`__, [**nested links**](https://palette.example/docs), autolinks <https://example.com>, bare links https://palette.example/docs, and escaped \*literal\* text.
+                    Inline syntax supports ~~strikethrough~~, _emphasis_, __strong `code`__, [**nested links**](https://palette.example/docs), autolinks <https://example.com>, bare links https://palette.example/docs/(guide), and escaped \*literal\* text.
                     Reference-style links are parsed too: [docs][palette-docs].
 
                     [palette-docs]: https://palette.example/docs "Palette docs"

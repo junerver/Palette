@@ -460,6 +460,25 @@ class MarkdownParserTest {
     }
 
     @Test
+    fun parsesBareUrlAutolinksWithBalancedParentheses() {
+        val inline =
+            MarkdownInlineParser.parse(
+                "Open https://example.com/a_(b), then https://example.org/(docs).",
+            )
+
+        assertEquals(
+            listOf(
+                MarkdownInlineText("Open "),
+                MarkdownInlineLink(label = "https://example.com/a_(b)", destination = "https://example.com/a_(b)"),
+                MarkdownInlineText(", then "),
+                MarkdownInlineLink(label = "https://example.org/(docs)", destination = "https://example.org/(docs)"),
+                MarkdownInlineText("."),
+            ),
+            inline,
+        )
+    }
+
+    @Test
     fun parsesInlineLinkAndImageTitles() {
         val inline =
             MarkdownInlineParser.parse(

@@ -486,16 +486,31 @@ object MarkdownInlineParser {
             getOrNull(index - 1)?.isBareAutolinkBoundary() != false
 
     private fun String.bareAutolinkAt(index: Int): MarkdownInlineLink? {
-        val match = BareAutolinkUrlRegex.find(this, index)?.takeIf { it.range.first == index } ?: return null
-        val url = match.value.trimEnd { it in BareAutolinkTrailingPunctuation }
+        val candidate = bareAutolinkCandidateAt(index)
+        val url = candidate.trimBareAutolinkEnd()
         return url
             .takeIf { it.isNotEmpty() }
             ?.let { MarkdownInlineLink(label = it, destination = it) }
     }
 
+    private fun String.bareAutolinkCandidateAt(index: Int): String {
+        var end = index
+        while (end < length && !this[end].isWhitespace() && this[end] != '<') {
+            end += 1
+        }
+        return substring(index, end)
+    }
+
+    private fun String.trimBareAutolinkEnd(): String {
+        var value = trimEnd { it in BareAutolinkTrailingPunctuation }
+        while (value.endsWith(")") && value.count { it == ')' } > value.count { it == '(' }) {
+            value = value.dropLast(1)
+        }
+        return value
+    }
+
     private val AutolinkUrlRegex = Regex("""https?://[^\s<>]+""")
     private val AutolinkEmailRegex = Regex("""[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}""")
-    private val BareAutolinkUrlRegex = Regex("""https?://[^\s<>()]+""")
     private val BareAutolinkTrailingPunctuation = setOf('.', ',', ';', ':', '!', '?')
     private val EscapableMarkdownChars = setOf('\\', '`', '*', '_', '{', '}', '[', ']', '(', ')', '#', '+', '-', '.', '!', '|', '~')
 
