@@ -114,4 +114,76 @@ class MarkdownParserTest {
         assertEquals(listOf(MarkdownInlineEmphasis("first")), list.itemInlines.first())
         assertEquals(listOf(MarkdownInlineStrong("second")), list.itemInlines.last())
     }
+
+    @Test
+    fun parsesBlockquotesTaskListsTablesAndImages() {
+        val document =
+            MarkdownParser.parse(
+                """
+                > **Note:** Markdown supports rich content.
+                > Keep related lines together.
+
+                - [x] Parse markdown
+                - [ ] Render preview
+
+                | Component | Status |
+                | --- | --- |
+                | Viewer | Ready |
+                | Editor | Draft |
+
+                ![Palette logo](https://example.com/palette.png)
+                """.trimIndent(),
+            )
+
+        assertEquals(4, document.blocks.size)
+        val quote = assertIs<MarkdownBlockQuote>(document.blocks[0])
+        assertEquals("**Note:** Markdown supports rich content. Keep related lines together.", quote.text)
+        assertTrue(quote.inlines.any { it is MarkdownInlineStrong && it.text == "Note:" })
+
+        val tasks = assertIs<MarkdownTaskListBlock>(document.blocks[1])
+        assertEquals(
+            listOf(
+                MarkdownTaskItem(text = "Parse markdown", checked = true),
+                MarkdownTaskItem(text = "Render preview", checked = false),
+            ),
+            tasks.items,
+        )
+
+        val table = assertIs<MarkdownTableBlock>(document.blocks[2])
+        assertEquals(listOf("Component", "Status"), table.headers)
+        assertEquals(listOf(listOf("Viewer", "Ready"), listOf("Editor", "Draft")), table.rows)
+
+        val image = assertIs<MarkdownParagraph>(document.blocks[3])
+        assertEquals(
+            listOf(MarkdownInlineImage(alt = "Palette logo", destination = "https://example.com/palette.png")),
+            image.inlines,
+        )
+    }
+
+    @Test
+    fun renderModelKeepsRichBlockData() {
+        val model =
+            MarkdownRenderer.toRenderModel(
+                MarkdownParser.parse(
+                    """
+                    > Quote with `code`
+
+                    - [x] **done**
+
+                    | Name | Value |
+                    | --- | --- |
+                    | alpha | 1 |
+                    """.trimIndent(),
+                ),
+            )
+
+        val quote = assertIs<MarkdownRenderBlock.BlockQuote>(model.blocks[0])
+        assertTrue(quote.inlines.any { it is MarkdownInlineCode && it.text == "code" })
+        val tasks = assertIs<MarkdownRenderBlock.TaskList>(model.blocks[1])
+        assertEquals(true, tasks.items.single().checked)
+        assertEquals(listOf(MarkdownInlineStrong("done")), tasks.items.single().inlines)
+        val table = assertIs<MarkdownRenderBlock.Table>(model.blocks[2])
+        assertEquals(listOf("Name", "Value"), table.headers)
+        assertEquals(listOf(listOf("alpha", "1")), table.rows)
+    }
 }
