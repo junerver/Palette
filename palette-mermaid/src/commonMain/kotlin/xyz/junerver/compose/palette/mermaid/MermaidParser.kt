@@ -89,10 +89,17 @@ object MermaidParser {
                     direction = header
                     return@forEachIndexed
                 }
-                val edge = parseEdge(line) ?: return@forEachIndexed
-                if (edge.from.id !in nodes) nodes[edge.from.id] = edge.from
-                if (edge.to.id !in nodes) nodes[edge.to.id] = edge.to
-                edges += MermaidEdge(from = edge.from.id, to = edge.to.id, label = edge.label, style = edge.style)
+
+                val edge = parseEdge(line)
+                if (edge != null) {
+                    if (edge.from.id !in nodes) nodes[edge.from.id] = edge.from
+                    if (edge.to.id !in nodes) nodes[edge.to.id] = edge.to
+                    edges += MermaidEdge(from = edge.from.id, to = edge.to.id, label = edge.label, style = edge.style)
+                    return@forEachIndexed
+                }
+
+                val standaloneNode = parseStandaloneNode(line) ?: return@forEachIndexed
+                if (standaloneNode.id !in nodes) nodes[standaloneNode.id] = standaloneNode
 
                 if (index == 0) {
                     direction = MermaidDirection.TopDown
@@ -183,6 +190,11 @@ object MermaidParser {
         return MermaidNode(id = id, label = label.trim().ifEmpty { id }, shape = shape)
     }
 
+    private fun parseStandaloneNode(line: String): MermaidNode? {
+        if (!StandaloneNodeRegex.matches(line)) return null
+        return parseNode(line)
+    }
+
     private fun parseSequenceParticipant(line: String): MermaidNode? {
         val match = Regex("""^(participant|actor)\s+([A-Za-z0-9_]+)(?:\s+as\s+(.+))?$""").matchEntire(line) ?: return null
         val id = match.groupValues[2]
@@ -215,6 +227,9 @@ object MermaidParser {
             "-.->" -> MermaidEdgeStyle.Dotted
             else -> MermaidEdgeStyle.Solid
         }
+
+    private val StandaloneNodeRegex =
+        Regex("""^[A-Za-z_][A-Za-z0-9_]*(?:(?:\(\[.+]\))|(?:\(\(.+\)\))|(?:\[.+])|(?:\(.+\))|(?:\{.+}))?$""")
 }
 
 data class MermaidLayout(

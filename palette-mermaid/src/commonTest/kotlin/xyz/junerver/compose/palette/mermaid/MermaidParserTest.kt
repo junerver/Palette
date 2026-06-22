@@ -91,6 +91,28 @@ class MermaidParserTest {
     }
 
     @Test
+    fun parsesStandaloneFlowchartNodeDeclarations() {
+        val diagram =
+            MermaidParser.parse(
+                """
+                flowchart TD
+                    Start([Start])
+                    Parser[Markdown parser]
+                    Empty
+                    Start --> Parser
+                """.trimIndent(),
+            )
+
+        assertEquals(3, diagram.nodes.size)
+        assertEquals("Start", diagram.nodes.getValue("Start").label)
+        assertEquals(MermaidNodeShape.Stadium, diagram.nodes.getValue("Start").shape)
+        assertEquals("Markdown parser", diagram.nodes.getValue("Parser").label)
+        assertEquals(MermaidNodeShape.Rectangle, diagram.nodes.getValue("Parser").shape)
+        assertEquals("Empty", diagram.nodes.getValue("Empty").label)
+        assertEquals(1, diagram.edges.size)
+    }
+
+    @Test
     fun parsesSequenceDiagramParticipantsAndMessages() {
         val diagram =
             MermaidParser.parse(

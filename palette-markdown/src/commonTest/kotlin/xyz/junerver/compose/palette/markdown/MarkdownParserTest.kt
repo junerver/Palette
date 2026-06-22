@@ -67,6 +67,25 @@ class MarkdownParserTest {
     }
 
     @Test
+    fun renderModelParsesMermaidStandaloneNodes() {
+        val model =
+            MarkdownRenderer.toRenderModel(
+                MarkdownParser.parse(
+                    """
+                    ```mermaid
+                    flowchart TD
+                        Empty[Standalone node]
+                    ```
+                    """.trimIndent(),
+                ),
+            )
+
+        val mermaid = assertIs<MarkdownRenderBlock.Mermaid>(model.blocks.single())
+        assertEquals("Standalone node", mermaid.diagram.nodes.getValue("Empty").label)
+        assertTrue(mermaid.diagram.edges.isEmpty())
+    }
+
+    @Test
     fun renderModelHighlightsHtmlFencedCodeBlocks() {
         val model =
             MarkdownRenderer.toRenderModel(
