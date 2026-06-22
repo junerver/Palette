@@ -42,6 +42,7 @@ object PaletteCodeHighlighter {
                 "html", "xml", "svg" -> HtmlLexer().highlight(lines)
                 "bash", "sh", "shell", "zsh" -> ShellLexer.highlight(lines)
                 "yaml", "yml" -> YamlLexer.highlight(lines)
+                "toml" -> TomlLexer.highlight(lines)
                 "sql", "mysql", "postgresql", "postgres" -> SqlLexer().highlight(lines)
                 else -> lines.map { line -> listOf(CodeToken(CodeTokenType.Plain, line)) }
             }
@@ -918,6 +919,85 @@ private object YamlLexer {
     private val YamlPunctuation = setOf('[', ']', '{', '}', ',')
 }
 
+private object TomlLexer {
+    fun highlight(lines: List<String>): List<List<CodeToken>> = lines.map(::highlightLine)
+
+    private fun highlightLine(line: String): List<CodeToken> {
+        val tokens = mutableListOf<CodeToken>()
+        var index = 0
+        var inSection = false
+
+        while (index < line.length) {
+            val current = line[index]
+            when {
+                current.isWhitespace() -> {
+                    val end = line.nextWhile(index, Char::isWhitespace)
+                    tokens += CodeToken(CodeTokenType.Plain, line.substring(index, end))
+                    index = end
+                }
+
+                current == '#' -> {
+                    tokens += CodeToken(CodeTokenType.Comment, line.substring(index))
+                    index = line.length
+                }
+
+                current == '"' || current == '\'' -> {
+                    val end = scanQuotedString(line, index, current)
+                    tokens += CodeToken(CodeTokenType.StringLiteral, line.substring(index, end))
+                    index = end
+                }
+
+                current.isDigit() ||
+                    ((current == '-' || current == '+') && line.getOrNull(index + 1)?.isDigit() == true) -> {
+                    val end = line.nextTomlNumberEnd(index)
+                    tokens += CodeToken(CodeTokenType.NumberLiteral, line.substring(index, end))
+                    index = end
+                }
+
+                current.isTomlBareKeyStart() -> {
+                    val end = line.nextTomlBareKeyEnd(index)
+                    val text = line.substring(index, end)
+                    val type =
+                        when {
+                            inSection -> CodeTokenType.Type
+                            text in TomlKeywords -> CodeTokenType.Keyword
+                            line.nextNonWhitespace(end) == '=' -> CodeTokenType.Keyword
+                            else -> CodeTokenType.Plain
+                        }
+                    tokens += CodeToken(type, text)
+                    index = end
+                }
+
+                current == '=' -> {
+                    tokens += CodeToken(CodeTokenType.Operator, "=")
+                    index += 1
+                }
+
+                current in TomlPunctuation -> {
+                    tokens += CodeToken(CodeTokenType.Punctuation, current.toString())
+                    inSection =
+                        when (current) {
+                            '[' -> true
+                            ']' -> false
+                            else -> inSection
+                        }
+                    index += 1
+                }
+
+                else -> {
+                    tokens += CodeToken(CodeTokenType.Plain, current.toString())
+                    index += 1
+                }
+            }
+        }
+
+        return tokens
+    }
+
+    private val TomlKeywords = setOf("true", "false")
+    private val TomlPunctuation = setOf('[', ']', '{', '}', ',', '.')
+}
+
 private class SqlLexer {
     private var inBlockComment = false
 
@@ -1128,6 +1208,12 @@ private fun String.nextYamlWordEnd(start: Int): Int =
 private fun String.nextYamlNumberEnd(start: Int): Int =
     nextWhile(start) { it.isDigit() || it == '-' || it == '+' || it == '.' || it == '_' }
 
+private fun String.nextTomlBareKeyEnd(start: Int): Int =
+    nextWhile(start) { it.isLetterOrDigit() || it in setOf('_', '-', '.') }
+
+private fun String.nextTomlNumberEnd(start: Int): Int =
+    nextWhile(start) { it.isLetterOrDigit() || it in setOf('-', '+', '.', '_', ':') }
+
 private fun String.nextSqlIdentifierEnd(start: Int): Int =
     nextWhile(start) { it.isLetterOrDigit() || it == '_' || it == '$' }
 
@@ -1157,6 +1243,8 @@ private fun Char.isShellWordStart(): Boolean = isLetterOrDigit() || this in setO
 private fun Char.isShellWordPart(): Boolean = isShellWordStart() || this in setOf('-', '+')
 
 private fun Char.isYamlWordStart(): Boolean = isLetter() || this == '_' || this == '.'
+
+private fun Char.isTomlBareKeyStart(): Boolean = isLetter() || this == '_' || this == '-'
 
 private fun Char.isSqlIdentifierStart(): Boolean = isLetter() || this == '_'
 

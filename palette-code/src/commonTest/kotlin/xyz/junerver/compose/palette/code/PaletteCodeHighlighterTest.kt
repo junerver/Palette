@@ -231,6 +231,38 @@ class PaletteCodeHighlighterTest {
     }
 
     @Test
+    fun highlightsTomlSectionsKeysScalarsArraysAndComments() {
+        val highlighted =
+            PaletteCodeHighlighter.highlight(
+                code =
+                    """
+                    # package metadata
+                    [project]
+                    name = "Palette"
+                    enabled = true
+                    retries = 3
+                    targets = ["android", "desktop", "ios"]
+                    [tool.palette]
+                    theme = 'light'
+                    """.trimIndent(),
+                language = "toml",
+            )
+
+        val tokens = highlighted.tokens.flatten()
+        assertEquals("toml", highlighted.language)
+        assertTrue(tokens.any { it.text == "# package metadata" && it.type == CodeTokenType.Comment })
+        assertTrue(tokens.any { it.text == "project" && it.type == CodeTokenType.Type })
+        assertTrue(tokens.any { it.text == "tool.palette" && it.type == CodeTokenType.Type })
+        assertTrue(tokens.any { it.text == "name" && it.type == CodeTokenType.Keyword })
+        assertTrue(tokens.any { it.text == "=" && it.type == CodeTokenType.Operator })
+        assertTrue(tokens.any { it.text == "\"Palette\"" && it.type == CodeTokenType.StringLiteral })
+        assertTrue(tokens.any { it.text == "true" && it.type == CodeTokenType.Keyword })
+        assertTrue(tokens.any { it.text == "3" && it.type == CodeTokenType.NumberLiteral })
+        assertTrue(tokens.any { it.text == "[" && it.type == CodeTokenType.Punctuation })
+        assertTrue(tokens.any { it.text == "'light'" && it.type == CodeTokenType.StringLiteral })
+    }
+
+    @Test
     fun highlightsSqlKeywordsTypesStringsNumbersFunctionsAndComments() {
         val highlighted =
             PaletteCodeHighlighter.highlight(
