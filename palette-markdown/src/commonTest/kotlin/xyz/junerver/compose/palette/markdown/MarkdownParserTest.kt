@@ -370,6 +370,22 @@ class MarkdownParserTest {
     }
 
     @Test
+    fun parsesCodeSpansDelimitedByMatchingBacktickRuns() {
+        val inline = MarkdownInlineParser.parse("Use `` `literal` `` and `plain` code.")
+
+        assertEquals(
+            listOf(
+                MarkdownInlineText("Use "),
+                MarkdownInlineCode("`literal`"),
+                MarkdownInlineText(" and "),
+                MarkdownInlineCode("plain"),
+                MarkdownInlineText(" code."),
+            ),
+            inline,
+        )
+    }
+
+    @Test
     fun parsesUnderscoreStrongAndEmphasis() {
         val inline = MarkdownInlineParser.parse("Use __Palette__ with _Compose_.")
 

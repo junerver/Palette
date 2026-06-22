@@ -292,11 +292,12 @@ object MarkdownInlineParser {
                 }
 
                 source[index] == '`' -> {
-                    val end = source.indexOf('`', startIndex = index + 1)
+                    val delimiterLength = source.countRepeatedFrom(index, '`')
+                    val end = source.findMatchingBacktickRun(index + delimiterLength, delimiterLength)
                     if (end != -1) {
                         flushPlain()
-                        nodes += MarkdownInlineCode(source.substring(index + 1, end))
-                        index = end + 1
+                        nodes += MarkdownInlineCode(source.substring(index + delimiterLength, end).normalizedCodeSpan())
+                        index = end + delimiterLength
                     } else {
                         plain.append(source[index])
                         index += 1
@@ -550,6 +551,43 @@ object MarkdownInlineParser {
             candidate = index + 1
         }
         return -1
+    }
+
+    private fun String.normalizedCodeSpan(): String {
+        val normalized = replace(Regex("""\s+"""), " ")
+        return if (
+            normalized.length >= 2 &&
+            normalized.first() == ' ' &&
+            normalized.last() == ' ' &&
+            normalized.any { !it.isWhitespace() }
+        ) {
+            normalized.drop(1).dropLast(1)
+        } else {
+            normalized
+        }
+    }
+
+    private fun String.findMatchingBacktickRun(
+        startIndex: Int,
+        length: Int,
+    ): Int {
+        var candidate = startIndex
+        while (candidate < this.length) {
+            val index = indexOf('`', startIndex = candidate)
+            if (index == -1) return -1
+            if (countRepeatedFrom(index, '`') == length) return index
+            candidate = index + 1
+        }
+        return -1
+    }
+
+    private fun String.countRepeatedFrom(
+        start: Int,
+        char: Char,
+    ): Int {
+        var index = start
+        while (index < length && this[index] == char) index += 1
+        return index - start
     }
 
     private val WhitespaceRegex = Regex("""\s+""")
