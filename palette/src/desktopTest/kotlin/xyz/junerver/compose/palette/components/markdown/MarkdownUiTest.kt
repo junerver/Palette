@@ -26,7 +26,7 @@ class MarkdownUiTest {
 
                         ```mermaid
                         flowchart LR
-                            A[Markdown] --> B[Viewer]
+                            A[Markdown] -- renders --> B[Viewer]
                         ```
                         """.trimIndent(),
                 )
@@ -36,6 +36,7 @@ class MarkdownUiTest {
         rule.onNodeWithText("Markdown Viewer").assertTextEquals("Markdown Viewer")
         rule.onNodeWithText("val answer = 42").assertTextEquals("val answer = 42")
         rule.onNodeWithText("Markdown").assertTextEquals("Markdown")
+        rule.onNodeWithText("renders").assertTextEquals("renders")
         rule.onNodeWithText("Viewer").assertTextEquals("Viewer")
     }
 }
