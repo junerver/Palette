@@ -354,6 +354,33 @@ class MarkdownParserTest {
     }
 
     @Test
+    fun parsesInlineLinkAndImageTitles() {
+        val inline =
+            MarkdownInlineParser.parse(
+                """Open [docs](https://example.com/docs "Palette docs") and ![logo](https://example.com/logo.png 'Palette logo').""",
+            )
+
+        assertEquals(
+            listOf(
+                MarkdownInlineText("Open "),
+                MarkdownInlineLink(
+                    label = "docs",
+                    destination = "https://example.com/docs",
+                    title = "Palette docs",
+                ),
+                MarkdownInlineText(" and "),
+                MarkdownInlineImage(
+                    alt = "logo",
+                    destination = "https://example.com/logo.png",
+                    title = "Palette logo",
+                ),
+                MarkdownInlineText("."),
+            ),
+            inline,
+        )
+    }
+
+    @Test
     fun parsesReferenceStyleLinksAndImages() {
         val document =
             MarkdownParser.parse(
@@ -373,7 +400,11 @@ class MarkdownParserTest {
                 MarkdownInlineText(", open "),
                 MarkdownInlineLink(label = "guide", destination = "https://example.com/guide"),
                 MarkdownInlineText(", and inspect "),
-                MarkdownInlineImage(alt = "diagram", destination = "https://example.com/diagram.png"),
+                MarkdownInlineImage(
+                    alt = "diagram",
+                    destination = "https://example.com/diagram.png",
+                    title = "Architecture diagram",
+                ),
                 MarkdownInlineText("."),
             ),
             paragraph.inlines,

@@ -99,6 +99,7 @@ data class MarkdownInlineCode(
 data class MarkdownInlineLink(
     val label: String,
     val destination: String,
+    val title: String? = null,
 ) : MarkdownInlineNode {
     override val text: String
         get() = label
@@ -107,19 +108,40 @@ data class MarkdownInlineLink(
 data class MarkdownInlineImage(
     val alt: String,
     val destination: String,
+    val title: String? = null,
 ) : MarkdownInlineNode {
     override val text: String
         get() = alt
 }
 
+internal data class MarkdownLinkTarget(
+    val destination: String,
+    val title: String? = null,
+)
+
 object MarkdownInlineParser {
     fun parse(source: String): List<MarkdownInlineNode> {
-        return parse(source, emptyMap())
+        return parseResolvedReferences(source, emptyMap())
     }
 
     fun parse(
         source: String,
         references: Map<String, String>,
+    ): List<MarkdownInlineNode> {
+        return parseResolvedReferences(
+            source = source,
+            references = references.mapValues { (_, destination) -> MarkdownLinkTarget(destination = destination) },
+        )
+    }
+
+    internal fun parseWithTargets(
+        source: String,
+        references: Map<String, MarkdownLinkTarget>,
+    ): List<MarkdownInlineNode> = parseResolvedReferences(source, references)
+
+    private fun parseResolvedReferences(
+        source: String,
+        references: Map<String, MarkdownLinkTarget>,
     ): List<MarkdownInlineNode> {
         val nodes = mutableListOf<MarkdownInlineNode>()
         val plain = StringBuilder()
@@ -154,12 +176,19 @@ object MarkdownInlineParser {
                         source[destinationStart] == '('
                     ) {
                         val destinationEnd = source.indexOf(')', startIndex = destinationStart + 1)
-                        if (destinationEnd != -1) {
+                        val target =
+                            if (destinationEnd != -1) {
+                                source.substring(destinationStart + 1, destinationEnd).toLinkTarget()
+                            } else {
+                                null
+                            }
+                        if (target != null) {
                             flushPlain()
                             nodes +=
                                 MarkdownInlineImage(
                                     alt = source.substring(index + 2, altEnd),
-                                    destination = source.substring(destinationStart + 1, destinationEnd),
+                                    destination = target.destination,
+                                    title = target.title,
                                 )
                             index = destinationEnd + 1
                         } else {
@@ -175,13 +204,14 @@ object MarkdownInlineParser {
                         val alt = source.substring(index + 2, altEnd)
                         val referenceLabel =
                             if (referenceEnd != -1) source.substring(destinationStart + 1, referenceEnd).ifEmpty { alt } else ""
-                        val destination = references[referenceLabel.normalizedReferenceLabel()]
-                        if (destination != null) {
+                        val target = references[referenceLabel.normalizedReferenceLabel()]
+                        if (target != null) {
                             flushPlain()
                             nodes +=
                                 MarkdownInlineImage(
                                     alt = alt,
-                                    destination = destination,
+                                    destination = target.destination,
+                                    title = target.title,
                                 )
                             index = referenceEnd + 1
                         } else {
@@ -288,12 +318,19 @@ object MarkdownInlineParser {
                         source[destinationStart] == '('
                     ) {
                         val destinationEnd = source.indexOf(')', startIndex = destinationStart + 1)
-                        if (destinationEnd != -1) {
+                        val target =
+                            if (destinationEnd != -1) {
+                                source.substring(destinationStart + 1, destinationEnd).toLinkTarget()
+                            } else {
+                                null
+                            }
+                        if (target != null) {
                             flushPlain()
                             nodes +=
                                 MarkdownInlineLink(
                                     label = source.substring(index + 1, labelEnd),
-                                    destination = source.substring(destinationStart + 1, destinationEnd),
+                                    destination = target.destination,
+                                    title = target.title,
                                 )
                             index = destinationEnd + 1
                         } else {
@@ -309,13 +346,14 @@ object MarkdownInlineParser {
                         val label = source.substring(index + 1, labelEnd)
                         val referenceLabel =
                             if (referenceEnd != -1) source.substring(destinationStart + 1, referenceEnd).ifEmpty { label } else ""
-                        val destination = references[referenceLabel.normalizedReferenceLabel()]
-                        if (destination != null) {
+                        val target = references[referenceLabel.normalizedReferenceLabel()]
+                        if (target != null) {
                             flushPlain()
                             nodes +=
                                 MarkdownInlineLink(
                                     label = label,
-                                    destination = destination,
+                                    destination = target.destination,
+                                    title = target.title,
                                 )
                             index = referenceEnd + 1
                         } else {
@@ -324,13 +362,14 @@ object MarkdownInlineParser {
                         }
                     } else if (labelEnd != -1) {
                         val label = source.substring(index + 1, labelEnd)
-                        val destination = references[label.normalizedReferenceLabel()]
-                        if (destination != null) {
+                        val target = references[label.normalizedReferenceLabel()]
+                        if (target != null) {
                             flushPlain()
                             nodes +=
                                 MarkdownInlineLink(
                                     label = label,
-                                    destination = destination,
+                                    destination = target.destination,
+                                    title = target.title,
                                 )
                             index = labelEnd + 1
                         } else {
@@ -360,6 +399,43 @@ object MarkdownInlineParser {
             matches(AutolinkEmailRegex) -> MarkdownInlineLink(label = this, destination = "mailto:$this")
             else -> null
         }
+
+    private fun String.toLinkTarget(): MarkdownLinkTarget? {
+        val source = trim()
+        if (source.isEmpty()) return null
+        val (destinationSource, titleSource) =
+            if (source.startsWith("<")) {
+                val destinationEnd = source.indexOf('>')
+                if (destinationEnd == -1) return null
+                source.substring(1, destinationEnd) to source.substring(destinationEnd + 1).trim()
+            } else {
+                val destinationEnd = source.indexOfFirst(Char::isWhitespace)
+                if (destinationEnd == -1) {
+                    source to ""
+                } else {
+                    source.substring(0, destinationEnd) to source.substring(destinationEnd + 1).trim()
+                }
+            }
+        val destination = destinationSource.trimReferenceDestination().takeIf { it.isNotEmpty() } ?: return null
+        return MarkdownLinkTarget(destination = destination, title = titleSource.toLinkTitle())
+    }
+
+    private fun String.toLinkTitle(): String? {
+        val source = trim()
+        if (source.length < 2) return null
+        val quote = source.first()
+        val endQuote =
+            when (quote) {
+                '"', '\'' -> quote
+                '(' -> ')'
+                else -> return null
+            }
+        if (source.last() != endQuote) return null
+        return source.drop(1).dropLast(1).trim()
+    }
+
+    private fun String.trimReferenceDestination(): String =
+        trim().trim('<', '>')
 
     private fun String.startsBareAutolink(index: Int): Boolean =
         (startsWith("http://", index) || startsWith("https://", index)) &&
@@ -465,7 +541,7 @@ object MarkdownParser {
                         index += 1
                     }
                     val text = quote.joinToString(" ").trim()
-                    blocks += MarkdownBlockQuote(text = text, inlines = MarkdownInlineParser.parse(text, references))
+                    blocks += MarkdownBlockQuote(text = text, inlines = MarkdownInlineParser.parseWithTargets(text, references))
                 }
 
                 trimmed.isTaskListItem() -> {
@@ -478,7 +554,7 @@ object MarkdownParser {
                                 MarkdownTaskItem(
                                     text = text,
                                     checked = match.groupValues[2].equals("x", ignoreCase = true),
-                                    inlines = MarkdownInlineParser.parse(text, references),
+                                    inlines = MarkdownInlineParser.parseWithTargets(text, references),
                                 )
                         }
                         index += 1
@@ -500,8 +576,8 @@ object MarkdownParser {
                             headers = headers,
                             rows = rows,
                             alignments = alignments,
-                            headerInlines = headers.map { MarkdownInlineParser.parse(it, references) },
-                            rowInlines = rows.map { row -> row.map { MarkdownInlineParser.parse(it, references) } },
+                            headerInlines = headers.map { MarkdownInlineParser.parseWithTargets(it, references) },
+                            rowInlines = rows.map { row -> row.map { MarkdownInlineParser.parseWithTargets(it, references) } },
                         )
                 }
 
@@ -511,7 +587,7 @@ object MarkdownParser {
                         MarkdownHeading(
                             level = lines[index + 1].trim().toSetextHeadingLevel(),
                             text = text,
-                            inlines = MarkdownInlineParser.parse(text, references),
+                            inlines = MarkdownInlineParser.parseWithTargets(text, references),
                         )
                     index += 2
                 }
@@ -529,7 +605,7 @@ object MarkdownParser {
                             MarkdownHeading(
                                 level = match.groupValues[1].length.coerceIn(1, 6),
                                 text = text,
-                                inlines = MarkdownInlineParser.parse(text, references),
+                                inlines = MarkdownInlineParser.parseWithTargets(text, references),
                             )
                         index += 1
                     } else {
@@ -537,7 +613,7 @@ object MarkdownParser {
                         blocks +=
                             MarkdownParagraph(
                                 text = paragraph.text,
-                                inlines = MarkdownInlineParser.parse(paragraph.text, references),
+                                inlines = MarkdownInlineParser.parseWithTargets(paragraph.text, references),
                             )
                         index = paragraph.nextIndex
                     }
@@ -555,7 +631,7 @@ object MarkdownParser {
                         MarkdownListBlock(
                             items = items,
                             ordered = ordered,
-                            itemInlines = items.map { MarkdownInlineParser.parse(it, references) },
+                            itemInlines = items.map { MarkdownInlineParser.parseWithTargets(it, references) },
                             startNumber = startNumber,
                         )
                 }
@@ -565,7 +641,7 @@ object MarkdownParser {
                     blocks +=
                         MarkdownParagraph(
                             text = paragraph.text,
-                            inlines = MarkdownInlineParser.parse(paragraph.text, references),
+                            inlines = MarkdownInlineParser.parseWithTargets(paragraph.text, references),
                         )
                     index = paragraph.nextIndex
                 }
@@ -602,8 +678,8 @@ object MarkdownParser {
         return ParagraphRead(text = parts.joinToString(" ").trim(), nextIndex = index)
     }
 
-    private fun collectReferenceDefinitions(lines: List<String>): Map<String, String> {
-        val definitions = mutableMapOf<String, String>()
+    private fun collectReferenceDefinitions(lines: List<String>): Map<String, MarkdownLinkTarget> {
+        val definitions = mutableMapOf<String, MarkdownLinkTarget>()
         var index = 0
         while (index < lines.size) {
             val trimmed = lines[index].trim()
@@ -615,7 +691,7 @@ object MarkdownParser {
                 }
                 if (index < lines.size) index += 1
             } else {
-                trimmed.toReferenceDefinition()?.let { definitions[it.label] = it.destination }
+                trimmed.toReferenceDefinition()?.let { definitions[it.label] = it.target }
                 index += 1
             }
         }
@@ -633,7 +709,7 @@ object MarkdownParser {
     private val TaskListRegex = Regex("""^([-*+])\s+\[([ xX])]\s+(.+)$""")
     private val OrderedListRegex = Regex("""^(\d+)[.)]\s+.+$""")
     private val UnorderedListRegex = Regex("""^[-*+]\s+.+$""")
-    private val ReferenceDefinitionRegex = Regex("""^\[([^\]]+)]:\s*(\S+)(?:\s+.*)?$""")
+    private val ReferenceDefinitionRegex = Regex("""^\[([^\]]+)]:\s*(\S+)(?:\s+(.+))?$""")
 
     private fun String.canStartSetextHeading(nextLine: String?): Boolean =
         isNotEmpty() &&
@@ -663,7 +739,8 @@ object MarkdownParser {
         val match = ReferenceDefinitionRegex.matchEntire(this) ?: return null
         val label = match.groupValues[1].normalizedReferenceLabel().takeIf { it.isNotEmpty() } ?: return null
         val destination = match.groupValues[2].trimReferenceDestination().takeIf { it.isNotEmpty() } ?: return null
-        return MarkdownReferenceDefinition(label = label, destination = destination)
+        val title = match.groupValues.getOrNull(3).orEmpty().toLinkTitle()
+        return MarkdownReferenceDefinition(label = label, target = MarkdownLinkTarget(destination, title))
     }
 
     private fun String.normalizedReferenceLabel(): String =
@@ -673,6 +750,20 @@ object MarkdownParser {
 
     private fun String.trimReferenceDestination(): String =
         trim().trim('<', '>')
+
+    private fun String.toLinkTitle(): String? {
+        val source = trim()
+        if (source.length < 2) return null
+        val quote = source.first()
+        val endQuote =
+            when (quote) {
+                '"', '\'' -> quote
+                '(' -> ')'
+                else -> return null
+            }
+        if (source.last() != endQuote) return null
+        return source.drop(1).dropLast(1).trim()
+    }
 
     private fun String.isTableHeader(nextLine: String?): Boolean =
         isTableRow() && nextLine?.matches(TableDelimiterRegex) == true
@@ -715,7 +806,7 @@ object MarkdownParser {
 
     private data class MarkdownReferenceDefinition(
         val label: String,
-        val destination: String,
+        val target: MarkdownLinkTarget,
     )
 
     private data class MarkdownFence(

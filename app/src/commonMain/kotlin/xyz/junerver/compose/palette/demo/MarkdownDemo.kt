@@ -91,7 +91,7 @@ private fun markdownDemoText(): MarkdownDemoText =
                     行内语法支持 ~~删除线~~、_强调_、__加粗__、自动链接 <https://example.com>、裸链接 https://palette.example/docs 和转义 \*literal\*。
                     引用式链接也会解析：[文档][palette-docs]。
 
-                    [palette-docs]: https://palette.example/docs
+                    [palette-docs]: https://palette.example/docs "Palette docs"
 
                     ## ATX 结尾井号 ##
 
@@ -244,7 +244,7 @@ private fun markdownDemoText(): MarkdownDemoText =
                     Inline syntax supports ~~strikethrough~~, _emphasis_, __strong__, autolinks <https://example.com>, bare links https://palette.example/docs, and escaped \*literal\* text.
                     Reference-style links are parsed too: [docs][palette-docs].
 
-                    [palette-docs]: https://palette.example/docs
+                    [palette-docs]: https://palette.example/docs "Palette docs"
 
                     ## ATX Closing Hashes ##
 
