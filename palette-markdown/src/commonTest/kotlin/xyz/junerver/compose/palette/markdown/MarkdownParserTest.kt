@@ -65,4 +65,53 @@ class MarkdownParserTest {
         assertEquals("A", mermaid.diagram.edges.single().from)
         assertEquals("B", mermaid.diagram.edges.single().to)
     }
+
+    @Test
+    fun parsesInlineStrongEmphasisCodeAndLinks() {
+        val inline =
+            MarkdownInlineParser.parse(
+                "Use **Palette** with *Compose*, `PMarkdownViewer`, and [docs](https://example.com).",
+            )
+
+        assertEquals(
+            listOf(
+                MarkdownInlineText("Use "),
+                MarkdownInlineStrong("Palette"),
+                MarkdownInlineText(" with "),
+                MarkdownInlineEmphasis("Compose"),
+                MarkdownInlineText(", "),
+                MarkdownInlineCode("PMarkdownViewer"),
+                MarkdownInlineText(", and "),
+                MarkdownInlineLink(label = "docs", destination = "https://example.com"),
+                MarkdownInlineText("."),
+            ),
+            inline,
+        )
+    }
+
+    @Test
+    fun renderModelKeepsInlineNodesForParagraphsHeadingsAndLists() {
+        val model =
+            MarkdownRenderer.toRenderModel(
+                MarkdownParser.parse(
+                    """
+                    ## **Viewer**
+
+                    Render `code` and [links](https://example.com).
+
+                    1. *first*
+                    2. **second**
+                    """.trimIndent(),
+                ),
+            )
+
+        val heading = assertIs<MarkdownRenderBlock.Heading>(model.blocks[0])
+        assertEquals(listOf(MarkdownInlineStrong("Viewer")), heading.inlines)
+        val paragraph = assertIs<MarkdownRenderBlock.Paragraph>(model.blocks[1])
+        assertTrue(paragraph.inlines.any { it is MarkdownInlineCode && it.text == "code" })
+        assertTrue(paragraph.inlines.any { it is MarkdownInlineLink && it.destination == "https://example.com" })
+        val list = assertIs<MarkdownRenderBlock.ListBlock>(model.blocks[2])
+        assertEquals(listOf(MarkdownInlineEmphasis("first")), list.itemInlines.first())
+        assertEquals(listOf(MarkdownInlineStrong("second")), list.itemInlines.last())
+    }
 }

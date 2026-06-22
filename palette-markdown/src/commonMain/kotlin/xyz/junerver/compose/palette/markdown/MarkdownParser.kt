@@ -14,15 +14,18 @@ sealed interface MarkdownBlock
 data class MarkdownHeading(
     val level: Int,
     val text: String,
+    val inlines: List<MarkdownInlineNode> = MarkdownInlineParser.parse(text),
 ) : MarkdownBlock
 
 data class MarkdownParagraph(
     val text: String,
+    val inlines: List<MarkdownInlineNode> = MarkdownInlineParser.parse(text),
 ) : MarkdownBlock
 
 data class MarkdownListBlock(
     val items: List<String>,
     val ordered: Boolean,
+    val itemInlines: List<List<MarkdownInlineNode>> = items.map(MarkdownInlineParser::parse),
 ) : MarkdownBlock
 
 data class MarkdownCodeBlock(
@@ -35,6 +38,124 @@ data class MarkdownMermaidBlock(
 ) : MarkdownBlock
 
 data object MarkdownThematicBreak : MarkdownBlock
+
+sealed interface MarkdownInlineNode {
+    val text: String
+}
+
+data class MarkdownInlineText(
+    override val text: String,
+) : MarkdownInlineNode
+
+data class MarkdownInlineStrong(
+    override val text: String,
+) : MarkdownInlineNode
+
+data class MarkdownInlineEmphasis(
+    override val text: String,
+) : MarkdownInlineNode
+
+data class MarkdownInlineCode(
+    override val text: String,
+) : MarkdownInlineNode
+
+data class MarkdownInlineLink(
+    val label: String,
+    val destination: String,
+) : MarkdownInlineNode {
+    override val text: String
+        get() = label
+}
+
+object MarkdownInlineParser {
+    fun parse(source: String): List<MarkdownInlineNode> {
+        val nodes = mutableListOf<MarkdownInlineNode>()
+        val plain = StringBuilder()
+        var index = 0
+
+        fun flushPlain() {
+            if (plain.isNotEmpty()) {
+                nodes += MarkdownInlineText(plain.toString())
+                plain.clear()
+            }
+        }
+
+        while (index < source.length) {
+            when {
+                source.startsWith("**", index) -> {
+                    val end = source.indexOf("**", startIndex = index + 2)
+                    if (end != -1) {
+                        flushPlain()
+                        nodes += MarkdownInlineStrong(source.substring(index + 2, end))
+                        index = end + 2
+                    } else {
+                        plain.append(source[index])
+                        index += 1
+                    }
+                }
+
+                source[index] == '*' -> {
+                    val end = source.indexOf('*', startIndex = index + 1)
+                    if (end != -1) {
+                        flushPlain()
+                        nodes += MarkdownInlineEmphasis(source.substring(index + 1, end))
+                        index = end + 1
+                    } else {
+                        plain.append(source[index])
+                        index += 1
+                    }
+                }
+
+                source[index] == '`' -> {
+                    val end = source.indexOf('`', startIndex = index + 1)
+                    if (end != -1) {
+                        flushPlain()
+                        nodes += MarkdownInlineCode(source.substring(index + 1, end))
+                        index = end + 1
+                    } else {
+                        plain.append(source[index])
+                        index += 1
+                    }
+                }
+
+                source[index] == '[' -> {
+                    val labelEnd = source.indexOf(']', startIndex = index + 1)
+                    val destinationStart = labelEnd + 1
+                    if (
+                        labelEnd != -1 &&
+                        destinationStart < source.length &&
+                        source[destinationStart] == '('
+                    ) {
+                        val destinationEnd = source.indexOf(')', startIndex = destinationStart + 1)
+                        if (destinationEnd != -1) {
+                            flushPlain()
+                            nodes +=
+                                MarkdownInlineLink(
+                                    label = source.substring(index + 1, labelEnd),
+                                    destination = source.substring(destinationStart + 1, destinationEnd),
+                                )
+                            index = destinationEnd + 1
+                        } else {
+                            plain.append(source[index])
+                            index += 1
+                        }
+                    } else {
+                        plain.append(source[index])
+                        index += 1
+                    }
+                }
+
+                else -> {
+                    plain.append(source[index])
+                    index += 1
+                }
+            }
+        }
+
+        flushPlain()
+        return nodes
+    }
+}
 
 object MarkdownParser {
     fun parse(source: String): MarkdownDocument {
@@ -154,15 +275,18 @@ sealed interface MarkdownRenderBlock {
     data class Heading(
         val level: Int,
         val text: String,
+        val inlines: List<MarkdownInlineNode>,
     ) : MarkdownRenderBlock
 
     data class Paragraph(
         val text: String,
+        val inlines: List<MarkdownInlineNode>,
     ) : MarkdownRenderBlock
 
     data class ListBlock(
         val items: List<String>,
         val ordered: Boolean,
+        val itemInlines: List<List<MarkdownInlineNode>>,
     ) : MarkdownRenderBlock
 
     data class Code(
@@ -184,9 +308,9 @@ object MarkdownRenderer {
             blocks =
                 document.blocks.map { block ->
                     when (block) {
-                        is MarkdownHeading -> MarkdownRenderBlock.Heading(block.level, block.text)
-                        is MarkdownParagraph -> MarkdownRenderBlock.Paragraph(block.text)
-                        is MarkdownListBlock -> MarkdownRenderBlock.ListBlock(block.items, block.ordered)
+                        is MarkdownHeading -> MarkdownRenderBlock.Heading(block.level, block.text, block.inlines)
+                        is MarkdownParagraph -> MarkdownRenderBlock.Paragraph(block.text, block.inlines)
+                        is MarkdownListBlock -> MarkdownRenderBlock.ListBlock(block.items, block.ordered, block.itemInlines)
                         is MarkdownCodeBlock ->
                             MarkdownRenderBlock.Code(
                                 language = block.language,

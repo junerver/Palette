@@ -32,8 +32,10 @@ object PaletteCodeHighlighter {
         val lines = code.lines()
         val tokens =
             when (normalizedLanguage) {
-                "kt", "kts", "kotlin" -> KotlinLikeLexer(KotlinKeywords).highlight(lines)
-                "java" -> KotlinLikeLexer(JavaKeywords).highlight(lines)
+                "kt", "kts", "kotlin" -> KotlinLikeLexer(KotlinKeywords, KotlinPrimitiveTypes).highlight(lines)
+                "java" -> KotlinLikeLexer(JavaKeywords, JavaPrimitiveTypes).highlight(lines)
+                "js", "jsx", "javascript" -> KotlinLikeLexer(JavaScriptKeywords, JavaScriptPrimitiveTypes).highlight(lines)
+                "ts", "tsx", "typescript" -> KotlinLikeLexer(TypeScriptKeywords, TypeScriptPrimitiveTypes).highlight(lines)
                 else -> lines.map { line -> listOf(CodeToken(CodeTokenType.Plain, line)) }
             }
         return HighlightedCode(language = normalizedLanguage.ifEmpty { "plain" }, tokens = tokens)
@@ -103,10 +105,72 @@ object PaletteCodeHighlighter {
             "void",
             "while",
         )
+
+    private val JavaScriptKeywords =
+        setOf(
+            "async",
+            "await",
+            "break",
+            "case",
+            "catch",
+            "class",
+            "const",
+            "continue",
+            "default",
+            "else",
+            "export",
+            "false",
+            "for",
+            "from",
+            "function",
+            "if",
+            "import",
+            "let",
+            "new",
+            "null",
+            "return",
+            "switch",
+            "this",
+            "throw",
+            "true",
+            "try",
+            "undefined",
+            "var",
+            "while",
+        )
+
+    private val TypeScriptKeywords =
+        JavaScriptKeywords +
+            setOf(
+                "as",
+                "declare",
+                "enum",
+                "implements",
+                "interface",
+                "namespace",
+                "private",
+                "protected",
+                "public",
+                "readonly",
+                "type",
+            )
+
+    private val KotlinPrimitiveTypes =
+        setOf("Boolean", "Byte", "Char", "Double", "Float", "Int", "Long", "Short", "String", "Unit")
+
+    private val JavaPrimitiveTypes =
+        setOf("boolean", "byte", "char", "double", "float", "int", "long", "short", "String", "void")
+
+    private val JavaScriptPrimitiveTypes =
+        setOf("Array", "Boolean", "Date", "Map", "Number", "Object", "Promise", "Set", "String")
+
+    private val TypeScriptPrimitiveTypes =
+        JavaScriptPrimitiveTypes + setOf("any", "boolean", "never", "number", "string", "unknown", "void")
 }
 
 private class KotlinLikeLexer(
     private val keywords: Set<String>,
+    private val primitiveTypes: Set<String>,
 ) {
     private var inBlockComment = false
 
@@ -154,7 +218,7 @@ private class KotlinLikeLexer(
                     }
                 }
 
-                current == '"' || current == '\'' -> {
+                current == '"' || current == '\'' || current == '`' -> {
                     val end = scanString(line, index, current)
                     tokens += CodeToken(CodeTokenType.StringLiteral, line.substring(index, end))
                     index = end
@@ -178,6 +242,7 @@ private class KotlinLikeLexer(
                     val type =
                         when {
                             text in keywords -> CodeTokenType.Keyword
+                            text in primitiveTypes -> CodeTokenType.Type
                             line.nextNonWhitespace(end) == '(' -> CodeTokenType.Function
                             text.first().isUpperCase() -> CodeTokenType.Type
                             else -> CodeTokenType.Plain

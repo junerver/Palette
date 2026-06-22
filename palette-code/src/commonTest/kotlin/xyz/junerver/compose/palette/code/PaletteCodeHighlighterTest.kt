@@ -42,4 +42,29 @@ class PaletteCodeHighlighterTest {
         assertEquals(listOf(CodeToken(CodeTokenType.Plain, "alpha")), highlighted.tokens.first())
         assertEquals(listOf(CodeToken(CodeTokenType.Plain, "beta")), highlighted.tokens.last())
     }
+
+    @Test
+    fun highlightsTypeScriptKeywordsTemplateStringsAndRegexLikeJavaScript() {
+        val highlighted =
+            PaletteCodeHighlighter.highlight(
+                code =
+                    """
+                    export function greet(name: string) {
+                        const count = 2
+                        return `Hello, ${'$'}{name}`
+                    }
+                    """.trimIndent(),
+                language = "typescript",
+            )
+
+        val tokens = highlighted.tokens.flatten()
+        assertEquals("typescript", highlighted.language)
+        assertTrue(tokens.any { it.text == "export" && it.type == CodeTokenType.Keyword })
+        assertTrue(tokens.any { it.text == "function" && it.type == CodeTokenType.Keyword })
+        assertTrue(tokens.any { it.text == "greet" && it.type == CodeTokenType.Function })
+        assertTrue(tokens.any { it.text == "string" && it.type == CodeTokenType.Type })
+        assertTrue(tokens.any { it.text == "const" && it.type == CodeTokenType.Keyword })
+        assertTrue(tokens.any { it.text == "2" && it.type == CodeTokenType.NumberLiteral })
+        assertTrue(tokens.any { it.text == "`Hello, ${'$'}{name}`" && it.type == CodeTokenType.StringLiteral })
+    }
 }

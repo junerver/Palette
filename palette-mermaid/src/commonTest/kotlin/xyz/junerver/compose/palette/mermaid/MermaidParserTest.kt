@@ -50,4 +50,42 @@ class MermaidParserTest {
         assertEquals(1, layout.nodes.getValue("C").rank)
         assertEquals(2, layout.nodes.getValue("D").rank)
     }
+
+    @Test
+    fun parsesPipeLabelsAndCommonArrowStyles() {
+        val diagram =
+            MermaidParser.parse(
+                """
+                flowchart LR
+                    A[Start] -->|ok| B[Done]
+                    A -. retry .-> C[Retry]
+                    C ==> B
+                """.trimIndent(),
+            )
+
+        assertEquals(3, diagram.edges.size)
+        assertTrue(
+            diagram.edges.any {
+                it.from == "A" &&
+                    it.to == "B" &&
+                    it.label == "ok" &&
+                    it.style == MermaidEdgeStyle.Solid
+            },
+        )
+        assertTrue(
+            diagram.edges.any {
+                it.from == "A" &&
+                    it.to == "C" &&
+                    it.label == "retry" &&
+                    it.style == MermaidEdgeStyle.Dotted
+            },
+        )
+        assertTrue(
+            diagram.edges.any {
+                it.from == "C" &&
+                    it.to == "B" &&
+                    it.style == MermaidEdgeStyle.Thick
+            },
+        )
+    }
 }

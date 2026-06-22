@@ -16,7 +16,14 @@ data class MermaidEdge(
     val from: String,
     val to: String,
     val label: String? = null,
+    val style: MermaidEdgeStyle = MermaidEdgeStyle.Solid,
 )
+
+enum class MermaidEdgeStyle {
+    Solid,
+    Dotted,
+    Thick,
+}
 
 enum class MermaidDirection {
     TopDown,
@@ -52,7 +59,7 @@ object MermaidParser {
                 val edge = parseEdge(line) ?: return@forEachIndexed
                 if (edge.from.id !in nodes) nodes[edge.from.id] = edge.from
                 if (edge.to.id !in nodes) nodes[edge.to.id] = edge.to
-                edges += MermaidEdge(from = edge.from.id, to = edge.to.id, label = edge.label)
+                edges += MermaidEdge(from = edge.from.id, to = edge.to.id, label = edge.label, style = edge.style)
 
                 if (index == 0) {
                     direction = MermaidDirection.TopDown
@@ -75,20 +82,42 @@ object MermaidParser {
     }
 
     private fun parseEdge(line: String): ParsedEdge? {
+        val pipeLabeled = Regex("""^(.+?)\s*(-->|==>|-\.->)\|(.+?)\|\s*(.+)$""").matchEntire(line)
+        if (pipeLabeled != null) {
+            return ParsedEdge(
+                from = parseNode(pipeLabeled.groupValues[1]),
+                to = parseNode(pipeLabeled.groupValues[4]),
+                label = pipeLabeled.groupValues[3].trim().ifEmpty { null },
+                style = pipeLabeled.groupValues[2].toEdgeStyle(),
+            )
+        }
+
+        val dottedLabeled = Regex("""^(.+?)\s+-\.\s+(.+?)\s+\.->\s+(.+)$""").matchEntire(line)
+        if (dottedLabeled != null) {
+            return ParsedEdge(
+                from = parseNode(dottedLabeled.groupValues[1]),
+                label = dottedLabeled.groupValues[2].trim().ifEmpty { null },
+                to = parseNode(dottedLabeled.groupValues[3]),
+                style = MermaidEdgeStyle.Dotted,
+            )
+        }
+
         val labeled = Regex("""^(.+?)\s+--\s+(.+?)\s+-->\s+(.+)$""").matchEntire(line)
         if (labeled != null) {
             return ParsedEdge(
                 from = parseNode(labeled.groupValues[1]),
                 label = labeled.groupValues[2].trim().ifEmpty { null },
                 to = parseNode(labeled.groupValues[3]),
+                style = MermaidEdgeStyle.Solid,
             )
         }
 
-        val plain = Regex("""^(.+?)\s*-->\s*(.+)$""").matchEntire(line) ?: return null
+        val plain = Regex("""^(.+?)\s*(-->|==>|-\.->)\s*(.+)$""").matchEntire(line) ?: return null
         return ParsedEdge(
             from = parseNode(plain.groupValues[1]),
             label = null,
-            to = parseNode(plain.groupValues[2]),
+            to = parseNode(plain.groupValues[3]),
+            style = plain.groupValues[2].toEdgeStyle(),
         )
     }
 
@@ -125,7 +154,15 @@ object MermaidParser {
         val from: MermaidNode,
         val to: MermaidNode,
         val label: String?,
+        val style: MermaidEdgeStyle,
     )
+
+    private fun String.toEdgeStyle(): MermaidEdgeStyle =
+        when (this) {
+            "==>" -> MermaidEdgeStyle.Thick
+            "-.->" -> MermaidEdgeStyle.Dotted
+            else -> MermaidEdgeStyle.Solid
+        }
 }
 
 data class MermaidLayout(

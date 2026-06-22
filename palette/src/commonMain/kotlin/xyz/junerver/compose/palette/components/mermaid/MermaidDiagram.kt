@@ -20,6 +20,7 @@ import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import xyz.junerver.compose.palette.core.theme.PaletteTheme
+import xyz.junerver.compose.palette.mermaid.MermaidEdgeStyle
 import xyz.junerver.compose.palette.mermaid.MermaidLayout
 import xyz.junerver.compose.palette.mermaid.MermaidLayoutEngine
 import xyz.junerver.compose.palette.mermaid.MermaidParser
@@ -52,9 +53,14 @@ fun PMermaidDiagram(
                     color = colors.edgeColor,
                     start = start,
                     end = end,
-                    strokeWidth = 2.dp.toPx(),
+                    strokeWidth = if (edge.style == MermaidEdgeStyle.Thick) 3.dp.toPx() else 2.dp.toPx(),
                     cap = StrokeCap.Round,
-                    pathEffect = if (edge.label == null) null else PathEffect.dashPathEffect(floatArrayOf(8f, 6f)),
+                    pathEffect =
+                        if (edge.style == MermaidEdgeStyle.Dotted) {
+                            PathEffect.dashPathEffect(floatArrayOf(4f, 5f))
+                        } else {
+                            null
+                        },
                 )
             }
         }
