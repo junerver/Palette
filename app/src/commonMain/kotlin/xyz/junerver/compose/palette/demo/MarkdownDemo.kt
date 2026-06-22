@@ -99,12 +99,35 @@ private fun markdownDemoText(): MarkdownDemoText =
                     }
                     ```
 
+                    ```json
+                    {
+                      "component": "PMarkdownViewer",
+                      "preview": true
+                    }
+                    ```
+
+                    ```css
+                    .markdown-viewer {
+                      color: #fff;
+                      margin: 8px;
+                    }
+                    ```
+
                     ```mermaid
                     flowchart LR
                         Markdown[Markdown] --> Code[Kotlin code]
                         Markdown --> Mermaid[Mermaid]
                         Code --> Viewer[Viewer]
                         Mermaid --> Viewer
+                    ```
+
+                    ```mermaid
+                    sequenceDiagram
+                        participant Editor
+                        participant Parser
+                        participant Viewer
+                        Editor->>Parser: update markdown
+                        Parser-->>Viewer: render model
                     ```
                     """.trimIndent(),
                 editorMarkdown =
@@ -161,12 +184,35 @@ private fun markdownDemoText(): MarkdownDemoText =
                     }
                     ```
 
+                    ```json
+                    {
+                      "component": "PMarkdownViewer",
+                      "preview": true
+                    }
+                    ```
+
+                    ```css
+                    .markdown-viewer {
+                      color: #fff;
+                      margin: 8px;
+                    }
+                    ```
+
                     ```mermaid
                     flowchart LR
                         Markdown[Markdown] --> Code[Kotlin code]
                         Markdown --> Mermaid[Mermaid]
                         Code --> Viewer[Viewer]
                         Mermaid --> Viewer
+                    ```
+
+                    ```mermaid
+                    sequenceDiagram
+                        participant Editor
+                        participant Parser
+                        participant Viewer
+                        Editor->>Parser: update markdown
+                        Parser-->>Viewer: render model
                     ```
                     """.trimIndent(),
                 editorMarkdown =
