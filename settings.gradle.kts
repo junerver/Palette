@@ -23,4 +23,7 @@ dependencyResolutionManagement {
 rootProject.name = "Palette"
 include(":app")
 include(":palette")
+include(":palette-code")
+include(":palette-markdown")
+include(":palette-mermaid")
 include(":benchmark")

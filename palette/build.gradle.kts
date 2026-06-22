@@ -54,6 +54,9 @@ kotlin {
     sourceSets {
         val commonMain by getting {
             dependencies {
+                api(project(":palette-code"))
+                api(project(":palette-markdown"))
+                api(project(":palette-mermaid"))
                 implementation(libs.jb.compose.runtime)
                 implementation(libs.jb.compose.foundation)
                 implementation(libs.jb.compose.ui)

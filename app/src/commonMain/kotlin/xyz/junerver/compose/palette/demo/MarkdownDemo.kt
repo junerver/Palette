@@ -1,0 +1,164 @@
+package xyz.junerver.compose.palette.demo
+
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.ReadOnlyComposable
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
+import xyz.junerver.compose.hooks.useState
+import xyz.junerver.compose.palette.Language
+import xyz.junerver.compose.palette.LocalLanguage
+import xyz.junerver.compose.palette.components.markdown.PMarkdownEditor
+import xyz.junerver.compose.palette.components.markdown.PMarkdownViewer
+import xyz.junerver.compose.palette.components.text.PText
+
+@Composable
+fun MarkdownDemo() {
+    val text = markdownDemoText()
+    val (editorValue, setEditorValue) = useState(text.editorMarkdown)
+
+    Column(
+        modifier =
+            Modifier
+                .fillMaxSize()
+                .verticalScroll(rememberScrollState())
+                .padding(24.dp),
+    ) {
+        PText(
+            text = text.title,
+            style = MaterialTheme.typography.headlineMedium,
+        )
+        PText(
+            text = text.subtitle,
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+
+        Spacer(modifier = Modifier.height(32.dp))
+
+        DemoSection(title = text.viewerTitle) {
+            PMarkdownViewer(markdown = text.viewerMarkdown)
+        }
+
+        Spacer(modifier = Modifier.height(24.dp))
+
+        DemoSection(title = text.editorTitle) {
+            PMarkdownEditor(
+                value = editorValue,
+                onValueChange = setEditorValue,
+                placeholder = text.editorPlaceholder,
+                showPreview = true,
+            )
+        }
+    }
+}
+
+@Composable
+@ReadOnlyComposable
+private fun markdownDemoText(): MarkdownDemoText =
+    when (LocalLanguage.current) {
+        Language.ZH_CN ->
+            MarkdownDemoText(
+                title = "Markdown",
+                subtitle = "Markdown 查看器、编辑器、Kotlin 代码高亮和 Mermaid flowchart 渲染。",
+                viewerTitle = "查看器",
+                editorTitle = "编辑器",
+                editorPlaceholder = "输入 Markdown",
+                viewerMarkdown =
+                    """
+                    # Palette Markdown
+
+                    Markdown 渲染器会把 fenced code 分派到对应基础能力：
+
+                    - `kotlin` 代码块使用 Palette 代码高亮逻辑
+                    - `mermaid` 代码块使用 Mermaid flowchart 解析与布局逻辑
+
+                    ```kotlin
+                    @Composable
+                    fun Preview() {
+                        PMarkdownViewer(markdown = content)
+                    }
+                    ```
+
+                    ```mermaid
+                    flowchart LR
+                        Markdown[Markdown] --> Code[Kotlin code]
+                        Markdown --> Mermaid[Mermaid]
+                        Code --> Viewer[Viewer]
+                        Mermaid --> Viewer
+                    ```
+                    """.trimIndent(),
+                editorMarkdown =
+                    """
+                    ## Live Preview
+
+                    - edit markdown
+                    - preview code and diagram
+
+                    ```kotlin
+                    val component = "PMarkdownEditor"
+                    ```
+                    """.trimIndent(),
+            )
+
+        Language.EN_US ->
+            MarkdownDemoText(
+                title = "Markdown",
+                subtitle = "Markdown viewer, editor, Kotlin code highlighting, and Mermaid flowchart rendering.",
+                viewerTitle = "Viewer",
+                editorTitle = "Editor",
+                editorPlaceholder = "Enter Markdown",
+                viewerMarkdown =
+                    """
+                    # Palette Markdown
+
+                    The Markdown renderer dispatches fenced blocks to foundation logic:
+
+                    - `kotlin` code blocks use Palette code highlighting
+                    - `mermaid` code blocks use Mermaid flowchart parsing and layout
+
+                    ```kotlin
+                    @Composable
+                    fun Preview() {
+                        PMarkdownViewer(markdown = content)
+                    }
+                    ```
+
+                    ```mermaid
+                    flowchart LR
+                        Markdown[Markdown] --> Code[Kotlin code]
+                        Markdown --> Mermaid[Mermaid]
+                        Code --> Viewer[Viewer]
+                        Mermaid --> Viewer
+                    ```
+                    """.trimIndent(),
+                editorMarkdown =
+                    """
+                    ## Live Preview
+
+                    - edit markdown
+                    - preview code and diagram
+
+                    ```kotlin
+                    val component = "PMarkdownEditor"
+                    ```
+                    """.trimIndent(),
+            )
+    }
+
+private data class MarkdownDemoText(
+    val title: String,
+    val subtitle: String,
+    val viewerTitle: String,
+    val editorTitle: String,
+    val editorPlaceholder: String,
+    val viewerMarkdown: String,
+    val editorMarkdown: String,
+)

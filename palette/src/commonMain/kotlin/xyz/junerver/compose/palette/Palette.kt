@@ -191,6 +191,15 @@ import xyz.junerver.compose.palette.components.segmented.SegmentedDefaults as Se
 import xyz.junerver.compose.palette.components.segmented.SegmentedOption as SegmentedOptionImpl
 import xyz.junerver.compose.palette.components.colorpicker.ColorPickerDefaults as ColorPickerDefaultsImpl
 import xyz.junerver.compose.palette.components.colorpicker.PColorPicker as PColorPickerImpl
+import xyz.junerver.compose.palette.components.code.CodeBlockColors as CodeBlockColorsImpl
+import xyz.junerver.compose.palette.components.code.CodeBlockDefaults as CodeBlockDefaultsImpl
+import xyz.junerver.compose.palette.components.code.PCodeBlock as PCodeBlockImpl
+import xyz.junerver.compose.palette.components.markdown.MarkdownDefaults as MarkdownDefaultsImpl
+import xyz.junerver.compose.palette.components.markdown.PMarkdownEditor as PMarkdownEditorImpl
+import xyz.junerver.compose.palette.components.markdown.PMarkdownViewer as PMarkdownViewerImpl
+import xyz.junerver.compose.palette.components.mermaid.MermaidColors as MermaidColorsImpl
+import xyz.junerver.compose.palette.components.mermaid.MermaidDefaults as MermaidDefaultsImpl
+import xyz.junerver.compose.palette.components.mermaid.PMermaidDiagram as PMermaidDiagramImpl
 import xyz.junerver.compose.palette.components.barcode.BarcodeDefaults as BarcodeDefaultsImpl
 import xyz.junerver.compose.palette.components.barcode.PBarcode as PBarcodeImpl
 import xyz.junerver.compose.palette.components.barcode.PaletteBarcodeType as PaletteBarcodeTypeImpl
@@ -775,6 +784,21 @@ val GridDefaults = GridDefaultsImpl
 // Components - QRCode
 val PQRCode = ::PQRCodeImpl
 val QRCodeDefaults = QRCodeDefaultsImpl
+
+// Components - Code
+val PCodeBlock = ::PCodeBlockImpl
+val CodeBlockDefaults = CodeBlockDefaultsImpl
+typealias CodeBlockColors = CodeBlockColorsImpl
+
+// Components - Mermaid
+val PMermaidDiagram = ::PMermaidDiagramImpl
+val MermaidDefaults = MermaidDefaultsImpl
+typealias MermaidColors = MermaidColorsImpl
+
+// Components - Markdown
+val PMarkdownViewer = ::PMarkdownViewerImpl
+val PMarkdownEditor = ::PMarkdownEditorImpl
+val MarkdownDefaults = MarkdownDefaultsImpl
 
 // Components - Barcode
 val PBarcode = ::PBarcodeImpl

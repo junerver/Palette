@@ -194,6 +194,7 @@ private fun MainContent(route: String) {
                 NavItem.Backtop.route -> BacktopDemo()
                 NavItem.Watermark.route -> WatermarkDemo()
                 NavItem.QRCode.route -> QRCodeDemo()
+                NavItem.Markdown.route -> MarkdownDemo()
                 NavItem.FloatButton.route -> FloatButtonDemo()
                 NavItem.PageHeader.route -> PageHeaderDemo()
                 NavItem.Toggle.route -> ToggleDemo()
