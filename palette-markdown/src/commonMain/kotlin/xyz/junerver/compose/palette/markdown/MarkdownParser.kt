@@ -411,7 +411,7 @@ object MarkdownParser {
                         blocks +=
                             MarkdownHeading(
                                 level = match.groupValues[1].length.coerceIn(1, 6),
-                                text = match.groupValues[2].trim(),
+                                text = match.groupValues[2].trim().removeAtxClosingHashes(),
                             )
                         index += 1
                     } else {
@@ -492,6 +492,9 @@ object MarkdownParser {
     private fun String.toSetextHeadingLevel(): Int =
         if (startsWith("=")) 1 else 2
 
+    private fun String.removeAtxClosingHashes(): String =
+        replace(AtxClosingHashesRegex, "").trim()
+
     private fun String.isListItem(): Boolean = OrderedListRegex.matches(this) || UnorderedListRegex.matches(this)
 
     private fun String.isTaskListItem(): Boolean = TaskListRegex.matches(this)
@@ -538,6 +541,7 @@ object MarkdownParser {
     }
 
     private val TableDelimiterRegex = Regex("""^\|?\s*:?-{3,}:?\s*(\|\s*:?-{3,}:?\s*)+\|?$""")
+    private val AtxClosingHashesRegex = Regex("""\s+#+\s*$""")
 
     private data class MarkdownFence(
         val marker: Char,

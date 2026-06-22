@@ -361,6 +361,35 @@ class MarkdownParserTest {
     }
 
     @Test
+    fun parsesAtxHeadingsWithClosingHashes() {
+        val document =
+            MarkdownParser.parse(
+                """
+                ## **Viewer** ##
+
+                ### Keep trailing hash# ###
+                """.trimIndent(),
+            )
+
+        assertEquals(2, document.blocks.size)
+        val first = assertIs<MarkdownHeading>(document.blocks[0])
+        assertEquals(2, first.level)
+        assertEquals("**Viewer**", first.text)
+        assertEquals(listOf(MarkdownInlineStrong("Viewer")), first.inlines)
+
+        val second = assertIs<MarkdownHeading>(document.blocks[1])
+        assertEquals(3, second.level)
+        assertEquals("Keep trailing hash#", second.text)
+    }
+
+    @Test
+    fun keepsAtxHeadingHashWithoutClosingSeparator() {
+        val document = MarkdownParser.parse("## Version C#")
+
+        assertEquals(MarkdownHeading(level = 2, text = "Version C#"), document.blocks.single())
+    }
+
+    @Test
     fun parsesSetextHeadings() {
         val document =
             MarkdownParser.parse(
