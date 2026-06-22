@@ -4,6 +4,7 @@ data class MermaidDiagram(
     val direction: MermaidDirection,
     val nodes: Map<String, MermaidNode>,
     val edges: List<MermaidEdge>,
+    val type: MermaidDiagramType = MermaidDiagramType.Flowchart,
 )
 
 data class MermaidNode(
@@ -23,6 +24,11 @@ enum class MermaidEdgeStyle {
     Solid,
     Dotted,
     Thick,
+}
+
+enum class MermaidDiagramType {
+    Flowchart,
+    Sequence,
 }
 
 enum class MermaidDirection {
@@ -45,12 +51,39 @@ object MermaidParser {
         val nodes = linkedMapOf<String, MermaidNode>()
         val edges = mutableListOf<MermaidEdge>()
         var direction = MermaidDirection.TopDown
+        var type = MermaidDiagramType.Flowchart
 
         source
             .lines()
             .map { it.trim() }
             .filter { it.isNotEmpty() && !it.startsWith("%%") }
             .forEachIndexed { index, line ->
+                if (line.equals("sequenceDiagram", ignoreCase = true)) {
+                    type = MermaidDiagramType.Sequence
+                    direction = MermaidDirection.LeftRight
+                    return@forEachIndexed
+                }
+
+                val participant = parseSequenceParticipant(line)
+                if (participant != null) {
+                    if (participant.id !in nodes) nodes[participant.id] = participant
+                    return@forEachIndexed
+                }
+
+                val sequenceMessage = parseSequenceMessage(line)
+                if (sequenceMessage != null) {
+                    if (sequenceMessage.from.id !in nodes) nodes[sequenceMessage.from.id] = sequenceMessage.from
+                    if (sequenceMessage.to.id !in nodes) nodes[sequenceMessage.to.id] = sequenceMessage.to
+                    edges +=
+                        MermaidEdge(
+                            from = sequenceMessage.from.id,
+                            to = sequenceMessage.to.id,
+                            label = sequenceMessage.label,
+                            style = sequenceMessage.style,
+                        )
+                    return@forEachIndexed
+                }
+
                 val header = parseHeader(line)
                 if (header != null) {
                     direction = header
@@ -66,7 +99,7 @@ object MermaidParser {
                 }
             }
 
-        return MermaidDiagram(direction = direction, nodes = nodes, edges = edges)
+        return MermaidDiagram(direction = direction, nodes = nodes, edges = edges, type = type)
     }
 
     private fun parseHeader(line: String): MermaidDirection? {
@@ -150,6 +183,25 @@ object MermaidParser {
         return MermaidNode(id = id, label = label.trim().ifEmpty { id }, shape = shape)
     }
 
+    private fun parseSequenceParticipant(line: String): MermaidNode? {
+        val match = Regex("""^(participant|actor)\s+([A-Za-z0-9_]+)(?:\s+as\s+(.+))?$""").matchEntire(line) ?: return null
+        val id = match.groupValues[2]
+        val label = match.groupValues[3].trim().ifEmpty { id }
+        return MermaidNode(id = id, label = label, shape = MermaidNodeShape.Rectangle)
+    }
+
+    private fun parseSequenceMessage(line: String): ParsedEdge? {
+        val match = Regex("""^([A-Za-z0-9_]+)\s*(-->>|->>|-->|->)\s*([A-Za-z0-9_]+)\s*:\s*(.+)$""")
+            .matchEntire(line)
+            ?: return null
+        return ParsedEdge(
+            from = MermaidNode(match.groupValues[1], match.groupValues[1], MermaidNodeShape.Rectangle),
+            to = MermaidNode(match.groupValues[3], match.groupValues[3], MermaidNodeShape.Rectangle),
+            label = match.groupValues[4].trim().ifEmpty { null },
+            style = if (match.groupValues[2].startsWith("--")) MermaidEdgeStyle.Dotted else MermaidEdgeStyle.Solid,
+        )
+    }
+
     private data class ParsedEdge(
         val from: MermaidNode,
         val to: MermaidNode,
@@ -181,6 +233,8 @@ data class PositionedMermaidNode(
 
 object MermaidLayoutEngine {
     fun layout(diagram: MermaidDiagram): MermaidLayout {
+        if (diagram.type == MermaidDiagramType.Sequence) return layoutSequence(diagram)
+
         val rankById = calculateRanks(diagram)
         val orderByRank = mutableMapOf<Int, Int>()
         val positioned =
@@ -197,6 +251,22 @@ object MermaidLayoutEngine {
                         y = if (diagram.direction == MermaidDirection.LeftRight) order * 96f else rank * 96f,
                     )
             }
+
+        return MermaidLayout(direction = diagram.direction, nodes = positioned, edges = diagram.edges)
+    }
+
+    private fun layoutSequence(diagram: MermaidDiagram): MermaidLayout {
+        val positioned =
+            diagram.nodes.values.mapIndexed { index, node ->
+                node.id to
+                    PositionedMermaidNode(
+                        node = node,
+                        rank = index,
+                        order = 0,
+                        x = index * 180f,
+                        y = 0f,
+                    )
+            }.toMap()
 
         return MermaidLayout(direction = diagram.direction, nodes = positioned, edges = diagram.edges)
     }

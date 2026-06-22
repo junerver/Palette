@@ -6,6 +6,7 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.absoluteOffset
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -63,6 +64,26 @@ fun PMermaidDiagram(
                         },
                 )
             }
+        }
+
+        layout.edges.forEachIndexed { index, edge ->
+            val label = edge.label ?: return@forEachIndexed
+            val from = layout.nodes[edge.from] ?: return@forEachIndexed
+            val to = layout.nodes[edge.to] ?: return@forEachIndexed
+            val labelX = ((from.x + to.x) / 2f + 44f).coerceAtLeast(0f)
+            val labelY = ((from.y + to.y) / 2f + 8f + index * 18f).coerceAtLeast(0f)
+
+            Text(
+                text = label,
+                color = colors.nodeContentColor,
+                style = PaletteTheme.typography.label,
+                modifier =
+                    Modifier
+                        .absoluteOffset(x = labelX.dp, y = labelY.dp)
+                        .background(colors.nodeContainerColor, RoundedCornerShape(4.dp))
+                        .border(1.dp, colors.edgeColor, RoundedCornerShape(4.dp))
+                        .padding(horizontal = 6.dp, vertical = 2.dp),
+            )
         }
 
         layout.nodes.values.forEach { item ->

@@ -88,4 +88,62 @@ class MermaidParserTest {
             },
         )
     }
+
+    @Test
+    fun parsesSequenceDiagramParticipantsAndMessages() {
+        val diagram =
+            MermaidParser.parse(
+                """
+                sequenceDiagram
+                    participant UI as Markdown viewer
+                    participant Parser
+                    participant Renderer
+                    UI->>Parser: parse fenced mermaid
+                    Parser-->>Renderer: diagram model
+                """.trimIndent(),
+            )
+
+        assertEquals(MermaidDiagramType.Sequence, diagram.type)
+        assertEquals(MermaidDirection.LeftRight, diagram.direction)
+        assertEquals(3, diagram.nodes.size)
+        assertEquals("Markdown viewer", diagram.nodes.getValue("UI").label)
+        assertEquals("Parser", diagram.nodes.getValue("Parser").label)
+        assertEquals(2, diagram.edges.size)
+        assertTrue(
+            diagram.edges.any {
+                it.from == "UI" &&
+                    it.to == "Parser" &&
+                    it.label == "parse fenced mermaid" &&
+                    it.style == MermaidEdgeStyle.Solid
+            },
+        )
+        assertTrue(
+            diagram.edges.any {
+                it.from == "Parser" &&
+                    it.to == "Renderer" &&
+                    it.label == "diagram model" &&
+                    it.style == MermaidEdgeStyle.Dotted
+            },
+        )
+    }
+
+    @Test
+    fun laysOutSequenceParticipantsInDeclarationOrder() {
+        val layout =
+            MermaidLayoutEngine.layout(
+                MermaidParser.parse(
+                    """
+                    sequenceDiagram
+                        participant A
+                        participant B
+                        participant C
+                        C-->>A: reply
+                    """.trimIndent(),
+                ),
+            )
+
+        assertEquals(0, layout.nodes.getValue("A").rank)
+        assertEquals(1, layout.nodes.getValue("B").rank)
+        assertEquals(2, layout.nodes.getValue("C").rank)
+    }
 }
