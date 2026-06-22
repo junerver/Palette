@@ -22,6 +22,9 @@ data class CodeBlockColors(
     val annotationColor: Color,
     val operatorColor: Color,
     val punctuationColor: Color,
+    val lineNumberColor: Color = contentColor,
+    val highlightedLineColor: Color = Color.Unspecified,
+    val headerBackgroundColor: Color = Color.Unspecified,
 ) {
     fun colorFor(type: CodeTokenType): Color =
         when (type) {
@@ -55,6 +58,9 @@ object CodeBlockDefaults {
             annotationColor = tokens.codeBlockAnnotationColor,
             operatorColor = tokens.codeBlockOperatorColor,
             punctuationColor = tokens.codeBlockPunctuationColor,
+            lineNumberColor = tokens.codeBlockLineNumberColor,
+            highlightedLineColor = tokens.codeBlockHighlightedLineColor,
+            headerBackgroundColor = tokens.codeBlockHeaderBackgroundColor,
         )
     }
 

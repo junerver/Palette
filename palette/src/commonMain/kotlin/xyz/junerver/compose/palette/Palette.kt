@@ -8,6 +8,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.Dp
+import xyz.junerver.compose.palette.code.HighlightedCode
+import xyz.junerver.compose.palette.code.PaletteCodeHighlighter
 import xyz.junerver.compose.palette.components.avatar.AvatarDefaults as AvatarDefaultsImpl
 import xyz.junerver.compose.palette.components.avatar.AvatarShape as AvatarShapeImpl
 import xyz.junerver.compose.palette.components.avatar.AvatarSize as AvatarSizeImpl
@@ -787,7 +789,33 @@ val PQRCode = ::PQRCodeImpl
 val QRCodeDefaults = QRCodeDefaultsImpl
 
 // Components - Code
-val PCodeBlock = ::PCodeBlockImpl
+@Composable
+fun PCodeBlock(
+    code: String,
+    modifier: Modifier = Modifier,
+    language: String = "kotlin",
+    showCopyAction: Boolean = true,
+    showLineNumbers: Boolean = false,
+    highlightedLines: Set<Int> = emptySet(),
+    title: String? = null,
+    firstLineNumber: Int = 1,
+    colors: CodeBlockColors = CodeBlockDefaults.colors(),
+    highlightedCode: HighlightedCode = PaletteCodeHighlighter.highlight(code.trimIndent(), language),
+) {
+    PCodeBlockImpl(
+        code = code,
+        modifier = modifier,
+        language = language,
+        showCopyAction = showCopyAction,
+        showLineNumbers = showLineNumbers,
+        highlightedLines = highlightedLines,
+        title = title,
+        firstLineNumber = firstLineNumber,
+        colors = colors,
+        highlightedCode = highlightedCode,
+    )
+}
+
 val CodeBlockDefaults = CodeBlockDefaultsImpl
 typealias CodeBlockColors = CodeBlockColorsImpl
 

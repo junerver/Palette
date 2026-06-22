@@ -53,6 +53,9 @@ data class MarkdownTableBlock(
 data class MarkdownCodeBlock(
     val language: String,
     val content: String,
+    val title: String? = null,
+    val showLineNumbers: Boolean = false,
+    val highlightedLines: Set<Int> = emptySet(),
 ) : MarkdownBlock
 
 data class MarkdownMermaidBlock(
@@ -277,7 +280,7 @@ object MarkdownParser {
             when {
                 trimmed.isEmpty() -> index += 1
                 trimmed.startsWith("```") -> {
-                    val language = trimmed.removePrefix("```").trim().lowercase()
+                    val fenceInfo = CodeFenceInfo.parse(trimmed.removePrefix("```").trim())
                     val content = mutableListOf<String>()
                     index += 1
                     while (index < lines.size && !lines[index].trim().startsWith("```")) {
@@ -287,10 +290,16 @@ object MarkdownParser {
                     if (index < lines.size) index += 1
                     val blockContent = content.joinToString("\n")
                     blocks +=
-                        if (language == "mermaid") {
+                        if (fenceInfo.language == "mermaid") {
                             MarkdownMermaidBlock(blockContent)
                         } else {
-                            MarkdownCodeBlock(language = language.ifEmpty { "plain" }, content = blockContent)
+                            MarkdownCodeBlock(
+                                language = fenceInfo.language,
+                                content = blockContent,
+                                title = fenceInfo.title,
+                                showLineNumbers = fenceInfo.showLineNumbers,
+                                highlightedLines = fenceInfo.highlightedLines,
+                            )
                         }
                 }
 
@@ -429,6 +438,46 @@ object MarkdownParser {
             .filter { it.isNotEmpty() }
 
     private val TableDelimiterRegex = Regex("""^\|?\s*:?-{3,}:?\s*(\|\s*:?-{3,}:?\s*)+\|?$""")
+
+    private data class CodeFenceInfo(
+        val language: String,
+        val title: String?,
+        val showLineNumbers: Boolean,
+        val highlightedLines: Set<Int>,
+    ) {
+        companion object {
+            fun parse(source: String): CodeFenceInfo {
+                val language = source.substringBefore(' ').trim().lowercase().ifEmpty { "plain" }
+                return CodeFenceInfo(
+                    language = language,
+                    title = TitleRegex.find(source)?.groupValues?.get(1)?.trim()?.ifEmpty { null },
+                    showLineNumbers = source.contains("showLineNumbers", ignoreCase = true),
+                    highlightedLines = HighlightLinesRegex.find(source)?.groupValues?.get(1).orEmpty().toHighlightedLines(),
+                )
+            }
+
+            private val TitleRegex = Regex("""title="([^"]+)"""")
+            private val HighlightLinesRegex = Regex("""\{([0-9,\-\s]+)}""")
+        }
+    }
+
+    private fun String.toHighlightedLines(): Set<Int> =
+        split(',')
+            .map { it.trim() }
+            .filter { it.isNotEmpty() }
+            .flatMap { item ->
+                val rangeParts = item.split('-', limit = 2).map { it.trim().toIntOrNull() }
+                val start = rangeParts.getOrNull(0)
+                val end = rangeParts.getOrNull(1)
+                when {
+                    start == null -> emptyList()
+                    end == null -> listOf(start)
+                    end >= start -> (start..end).toList()
+                    else -> listOf(start)
+                }
+            }
+            .filter { it > 0 }
+            .toSet()
 }
 
 data class MarkdownRenderModel(
@@ -472,6 +521,9 @@ sealed interface MarkdownRenderBlock {
     data class Code(
         val language: String,
         val highlighted: HighlightedCode,
+        val title: String?,
+        val showLineNumbers: Boolean,
+        val highlightedLines: Set<Int>,
     ) : MarkdownRenderBlock
 
     data class Mermaid(
@@ -505,6 +557,9 @@ object MarkdownRenderer {
                             MarkdownRenderBlock.Code(
                                 language = block.language,
                                 highlighted = PaletteCodeHighlighter.highlight(block.content, block.language),
+                                title = block.title,
+                                showLineNumbers = block.showLineNumbers,
+                                highlightedLines = block.highlightedLines,
                             )
 
                         is MarkdownMermaidBlock ->

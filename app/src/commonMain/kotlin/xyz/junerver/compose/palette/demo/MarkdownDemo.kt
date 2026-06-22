@@ -100,7 +100,7 @@ private fun markdownDemoText(): MarkdownDemoText =
                     | Mermaid | ready | `PMermaidDiagram` |
                     | 图片 | placeholder | ![Palette icon](https://example.com/palette.png) |
 
-                    ```kotlin
+                    ```kotlin title="Preview.kt" showLineNumbers {2-4}
                     @Composable
                     fun Preview() {
                         PMarkdownViewer(markdown = content)
@@ -190,7 +190,7 @@ private fun markdownDemoText(): MarkdownDemoText =
                     | Mermaid | ready | `PMermaidDiagram` |
                     | Images | placeholder | ![Palette icon](https://example.com/palette.png) |
 
-                    ```kotlin
+                    ```kotlin title="Preview.kt" showLineNumbers {2-4}
                     @Composable
                     fun Preview() {
                         PMarkdownViewer(markdown = content)

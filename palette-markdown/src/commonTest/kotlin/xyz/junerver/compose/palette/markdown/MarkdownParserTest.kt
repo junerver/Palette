@@ -67,6 +67,29 @@ class MarkdownParserTest {
     }
 
     @Test
+    fun parsesCodeFenceInfoForTitleLineNumbersAndHighlightedLines() {
+        val model =
+            MarkdownRenderer.toRenderModel(
+                MarkdownParser.parse(
+                    """
+                    ```kotlin title="Greeting.kt" showLineNumbers {1,3-4}
+                    fun greeting(name: String) {
+                        println("Hello, ${'$'}name")
+                    }
+                    ```
+                    """.trimIndent(),
+                ),
+            )
+
+        val code = assertIs<MarkdownRenderBlock.Code>(model.blocks.single())
+        assertEquals("kotlin", code.language)
+        assertEquals("Greeting.kt", code.title)
+        assertEquals(true, code.showLineNumbers)
+        assertEquals(setOf(1, 3, 4), code.highlightedLines)
+        assertTrue(code.highlighted.tokens.flatten().any { it.text == "fun" && it.type == CodeTokenType.Keyword })
+    }
+
+    @Test
     fun parsesInlineStrongEmphasisCodeAndLinks() {
         val inline =
             MarkdownInlineParser.parse(

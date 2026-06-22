@@ -6,9 +6,11 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -23,13 +25,17 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.delay
+import xyz.junerver.compose.palette.code.CodeToken
 import xyz.junerver.compose.hooks.useState
 import xyz.junerver.compose.palette.code.HighlightedCode
 import xyz.junerver.compose.palette.code.PaletteCodeHighlighter
@@ -42,6 +48,10 @@ fun PCodeBlock(
     modifier: Modifier = Modifier,
     language: String = "kotlin",
     showCopyAction: Boolean = true,
+    showLineNumbers: Boolean = false,
+    highlightedLines: Set<Int> = emptySet(),
+    title: String? = null,
+    firstLineNumber: Int = 1,
     colors: CodeBlockColors = CodeBlockDefaults.colors(),
     highlightedCode: HighlightedCode = PaletteCodeHighlighter.highlight(code.trimIndent(), language),
 ) {
@@ -60,6 +70,18 @@ fun PCodeBlock(
         targetValue = if (copied) PaletteTheme.colors.success else colors.contentColor,
         animationSpec = tween(PaletteTheme.motion.durationFast),
     )
+    val headerBackgroundColor =
+        if (colors.headerBackgroundColor == Color.Unspecified) {
+            colors.backgroundColor
+        } else {
+            colors.headerBackgroundColor
+        }
+    val highlightedLineColor =
+        if (colors.highlightedLineColor == Color.Unspecified) {
+            PaletteTheme.colors.bgSelected
+        } else {
+            colors.highlightedLineColor
+        }
 
     Box(
         modifier =
@@ -69,19 +91,67 @@ fun PCodeBlock(
                 .background(colors.backgroundColor)
                 .border(CodeBlockDefaults.borderWidth(), colors.borderColor, shape),
     ) {
-        Row(
+        Column(
             modifier =
                 Modifier
                     .fillMaxWidth()
                     .horizontalScroll(rememberScrollState())
-                    .padding(CodeBlockDefaults.padding())
                     .padding(end = if (showCopyAction) 40.dp else 0.dp),
-            verticalAlignment = Alignment.Top,
         ) {
-            Text(
-                text = highlightedCode.toAnnotatedString(colors),
-                style = CodeBlockDefaults.textStyle().copy(fontFamily = FontFamily.Monospace),
-            )
+            if (title != null) {
+                Text(
+                    text = title,
+                    color = colors.contentColor,
+                    style = PaletteTheme.typography.label.copy(fontWeight = FontWeight.SemiBold),
+                    modifier =
+                        Modifier
+                            .fillMaxWidth()
+                            .background(headerBackgroundColor)
+                            .padding(horizontal = CodeBlockDefaults.padding(), vertical = 8.dp),
+                )
+            }
+
+            Column(
+                modifier =
+                    Modifier
+                        .fillMaxWidth()
+                        .padding(CodeBlockDefaults.padding()),
+            ) {
+                highlightedCode.tokens.forEachIndexed { index, line ->
+                    val lineNumber = firstLineNumber + index
+                    Row(
+                        modifier =
+                            Modifier
+                                .fillMaxWidth()
+                                .background(
+                                    if (lineNumber in highlightedLines) {
+                                        highlightedLineColor
+                                    } else {
+                                        Color.Transparent
+                                    },
+                                )
+                                .padding(vertical = 1.dp),
+                        verticalAlignment = Alignment.Top,
+                    ) {
+                        if (showLineNumbers) {
+                            Text(
+                                text = lineNumber.toString(),
+                                color = colors.lineNumberColor,
+                                style = CodeBlockDefaults.textStyle().copy(fontFamily = FontFamily.Monospace),
+                                textAlign = TextAlign.End,
+                                modifier =
+                                    Modifier
+                                        .width(36.dp)
+                                        .padding(end = 12.dp),
+                            )
+                        }
+                        Text(
+                            text = line.toAnnotatedString(colors),
+                            style = CodeBlockDefaults.textStyle().copy(fontFamily = FontFamily.Monospace),
+                        )
+                    }
+                }
+            }
         }
 
         if (showCopyAction) {
@@ -105,14 +175,11 @@ fun PCodeBlock(
     }
 }
 
-private fun HighlightedCode.toAnnotatedString(colors: CodeBlockColors): AnnotatedString =
+private fun List<CodeToken>.toAnnotatedString(colors: CodeBlockColors): AnnotatedString =
     buildAnnotatedString {
-        tokens.forEachIndexed { lineIndex, line ->
-            line.forEach { token ->
-                pushStyle(SpanStyle(color = colors.colorFor(token.type)))
-                append(token.text)
-                pop()
-            }
-            if (lineIndex != tokens.lastIndex) append('\n')
+        forEach { token ->
+            pushStyle(SpanStyle(color = colors.colorFor(token.type)))
+            append(token.text)
+            pop()
         }
     }

@@ -176,6 +176,9 @@ fun PMarkdownViewer(
                     PCodeBlock(
                         code = block.highlighted.tokens.joinToString("\n") { line -> line.joinToString("") { it.text } },
                         language = block.language,
+                        showLineNumbers = block.showLineNumbers,
+                        highlightedLines = block.highlightedLines,
+                        title = block.title,
                         highlightedCode = block.highlighted,
                     )
 
