@@ -169,6 +169,10 @@ private fun markdownDemoText(): MarkdownDemoText =
                     ```kotlin
                     val component = "PMarkdownEditor"
                     ```
+
+                    ~~~kotlin
+                    val fence = "tilde"
+                    ~~~
                     """.trimIndent(),
             )
 
@@ -274,6 +278,10 @@ private fun markdownDemoText(): MarkdownDemoText =
                     ```kotlin
                     val component = "PMarkdownEditor"
                     ```
+
+                    ~~~kotlin
+                    val fence = "tilde"
+                    ~~~
                     """.trimIndent(),
             )
     }

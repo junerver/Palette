@@ -67,6 +67,32 @@ class MarkdownParserTest {
     }
 
     @Test
+    fun renderModelDispatchesTildeFencedCodeAndMermaidBlocks() {
+        val model =
+            MarkdownRenderer.toRenderModel(
+                MarkdownParser.parse(
+                    """
+                    ~~~kotlin
+                    val title = "Palette"
+                    ~~~
+
+                    ~~~mermaid
+                    flowchart LR
+                        A --> B
+                    ~~~
+                    """.trimIndent(),
+                ),
+            )
+
+        val code = assertIs<MarkdownRenderBlock.Code>(model.blocks[0])
+        assertEquals("kotlin", code.language)
+        assertTrue(code.highlighted.tokens.flatten().any { it.text == "val" && it.type == CodeTokenType.Keyword })
+        val mermaid = assertIs<MarkdownRenderBlock.Mermaid>(model.blocks[1])
+        assertEquals("A", mermaid.diagram.edges.single().from)
+        assertEquals("B", mermaid.diagram.edges.single().to)
+    }
+
+    @Test
     fun renderModelParsesMermaidStandaloneNodes() {
         val model =
             MarkdownRenderer.toRenderModel(

@@ -285,13 +285,14 @@ object MarkdownParser {
         while (index < lines.size) {
             val line = lines[index]
             val trimmed = line.trim()
+            val fence = trimmed.toFenceStart()
             when {
                 trimmed.isEmpty() -> index += 1
-                trimmed.startsWith("```") -> {
-                    val fenceInfo = CodeFenceInfo.parse(trimmed.removePrefix("```").trim())
+                fence != null -> {
+                    val fenceInfo = CodeFenceInfo.parse(fence.info)
                     val content = mutableListOf<String>()
                     index += 1
-                    while (index < lines.size && !lines[index].trim().startsWith("```")) {
+                    while (index < lines.size && !lines[index].trim().isFenceEnd(fence)) {
                         content += lines[index]
                         index += 1
                     }
@@ -401,7 +402,7 @@ object MarkdownParser {
             val trimmed = lines[index].trim()
             if (
                 trimmed.isEmpty() ||
-                trimmed.startsWith("```") ||
+                trimmed.toFenceStart() != null ||
                 trimmed.startsWith(">") ||
                 HeadingRegex.matchEntire(trimmed) != null ||
                 trimmed.matches(ThematicBreakRegex) ||
@@ -474,6 +475,24 @@ object MarkdownParser {
     }
 
     private val TableDelimiterRegex = Regex("""^\|?\s*:?-{3,}:?\s*(\|\s*:?-{3,}:?\s*)+\|?$""")
+
+    private data class MarkdownFence(
+        val marker: Char,
+        val length: Int,
+        val info: String,
+    )
+
+    private fun String.toFenceStart(): MarkdownFence? {
+        val marker = firstOrNull()?.takeIf { it == '`' || it == '~' } ?: return null
+        val length = takeWhile { it == marker }.length
+        if (length < 3) return null
+        return MarkdownFence(marker = marker, length = length, info = drop(length).trim())
+    }
+
+    private fun String.isFenceEnd(fence: MarkdownFence): Boolean {
+        val length = takeWhile { it == fence.marker }.length
+        return length >= fence.length && drop(length).trim().isEmpty()
+    }
 
     private data class CodeFenceInfo(
         val language: String,
