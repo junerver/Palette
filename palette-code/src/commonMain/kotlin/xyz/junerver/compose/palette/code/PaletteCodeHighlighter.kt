@@ -46,6 +46,7 @@ object PaletteCodeHighlighter {
                 "yaml", "yml" -> YamlLexer.highlight(lines)
                 "toml" -> TomlLexer.highlight(lines)
                 "diff", "patch" -> DiffLexer.highlight(lines)
+                "md", "markdown", "mkd" -> MarkdownLexer.highlight(lines)
                 "sql", "mysql", "postgresql", "postgres" -> SqlLexer().highlight(lines)
                 else -> lines.map { line -> listOf(CodeToken(CodeTokenType.Plain, line)) }
             }
@@ -1019,6 +1020,178 @@ private object DiffLexer {
         }
 }
 
+private object MarkdownLexer {
+    fun highlight(lines: List<String>): List<List<CodeToken>> = lines.map(::highlightLine)
+
+    private fun highlightLine(line: String): List<CodeToken> {
+        val tokens = mutableListOf<CodeToken>()
+        var index = line.indexOfFirst { !it.isWhitespace() }.let { if (it == -1) line.length else it }
+        if (index > 0) {
+            tokens += CodeToken(CodeTokenType.Plain, line.substring(0, index))
+        }
+
+        when {
+            index == line.length -> return tokens
+            line.startsMarkdownFence(index) -> {
+                val fenceEnd = line.nextWhile(index) { it == line[index] }
+                tokens += CodeToken(CodeTokenType.Annotation, line.substring(index, fenceEnd))
+                val infoStart = line.nextWhile(fenceEnd, Char::isWhitespace)
+                if (infoStart > fenceEnd) {
+                    tokens += CodeToken(CodeTokenType.Plain, line.substring(fenceEnd, infoStart))
+                }
+                if (infoStart < line.length) {
+                    tokens += CodeToken(CodeTokenType.Type, line.substring(infoStart))
+                }
+            }
+
+            line.isMarkdownHeadingAt(index) -> {
+                val markerEnd = line.nextWhile(index) { it == '#' }
+                tokens += CodeToken(CodeTokenType.Keyword, line.substring(index, markerEnd))
+                index = markerEnd
+                tokens.addMarkdownInlineTokens(line, index)
+            }
+
+            line.startsWith(">", index) -> {
+                tokens += CodeToken(CodeTokenType.Operator, ">")
+                tokens.addMarkdownInlineTokens(line, index + 1)
+            }
+
+            else -> {
+                val listMarker = line.markdownListMarker(index)
+                if (listMarker != null) {
+                    tokens += CodeToken(CodeTokenType.Operator, listMarker.marker)
+                    index += listMarker.marker.length
+                    val afterMarker = line.nextWhile(index, Char::isWhitespace)
+                    if (afterMarker > index) {
+                        tokens += CodeToken(CodeTokenType.Plain, line.substring(index, afterMarker))
+                    }
+                    index = afterMarker
+                    val taskMarker = line.markdownTaskMarker(index)
+                    if (taskMarker != null) {
+                        tokens += CodeToken(CodeTokenType.Annotation, taskMarker)
+                        index += taskMarker.length
+                    }
+                }
+                tokens.addMarkdownInlineTokens(line, index)
+            }
+        }
+
+        return tokens
+    }
+
+    private fun MutableList<CodeToken>.addMarkdownInlineTokens(
+        line: String,
+        start: Int,
+    ) {
+        var index = start
+        while (index < line.length) {
+            when {
+                line[index].isWhitespace() -> {
+                    val end = line.nextWhile(index, Char::isWhitespace)
+                    this += CodeToken(CodeTokenType.Plain, line.substring(index, end))
+                    index = end
+                }
+
+                line[index] == '`' -> {
+                    val markerEnd = line.nextWhile(index) { it == '`' }
+                    val marker = line.substring(index, markerEnd)
+                    val close = line.indexOf(marker, startIndex = markerEnd)
+                    val end = if (close == -1) line.length else close + marker.length
+                    this += CodeToken(CodeTokenType.StringLiteral, line.substring(index, end))
+                    index = end
+                }
+
+                line.startsWith("![", index) -> {
+                    val read = addMarkdownLinkTokens(line, index, image = true)
+                    if (read == index) {
+                        this += CodeToken(CodeTokenType.Plain, line[index].toString())
+                        index += 1
+                    } else {
+                        index = read
+                    }
+                }
+
+                line[index] == '[' -> {
+                    val read = addMarkdownLinkTokens(line, index, image = false)
+                    if (read == index) {
+                        this += CodeToken(CodeTokenType.Plain, line[index].toString())
+                        index += 1
+                    } else {
+                        index = read
+                    }
+                }
+
+                line.startsWith("<http://", index) || line.startsWith("<https://", index) -> {
+                    val end = line.indexOf('>', startIndex = index + 1)
+                    if (end == -1) {
+                        this += CodeToken(CodeTokenType.Plain, line[index].toString())
+                        index += 1
+                    } else {
+                        this += CodeToken(CodeTokenType.Punctuation, "<")
+                        this += CodeToken(CodeTokenType.StringLiteral, line.substring(index + 1, end))
+                        this += CodeToken(CodeTokenType.Punctuation, ">")
+                        index = end + 1
+                    }
+                }
+
+                line.startsWith("**", index) || line.startsWith("__", index) || line.startsWith("~~", index) -> {
+                    this += CodeToken(CodeTokenType.Operator, line.substring(index, index + 2))
+                    index += 2
+                }
+
+                line[index] == '*' || line[index] == '_' -> {
+                    this += CodeToken(CodeTokenType.Operator, line[index].toString())
+                    index += 1
+                }
+
+                else -> {
+                    var end = line.nextMarkdownPlainEnd(index)
+                    if (end == index + 1 && line[index] in setOf('!', '<', '~')) {
+                        end = line.nextMarkdownPlainEnd(end)
+                    }
+                    this += CodeToken(CodeTokenType.Plain, line.substring(index, end))
+                    index = end
+                }
+            }
+        }
+    }
+
+    private fun MutableList<CodeToken>.addMarkdownLinkTokens(
+        line: String,
+        start: Int,
+        image: Boolean,
+    ): Int {
+        val labelStart = if (image) start + 2 else start + 1
+        val labelEnd = line.indexOf(']', startIndex = labelStart)
+        val destinationOpen = labelEnd + 1
+        if (
+            labelEnd == -1 ||
+            destinationOpen >= line.length ||
+            line[destinationOpen] != '('
+        ) {
+            return start
+        }
+
+        val destinationEnd = line.findMarkdownLinkDestinationEnd(destinationOpen)
+        if (destinationEnd == -1) return start
+
+        if (image) {
+            this += CodeToken(CodeTokenType.Punctuation, "!")
+        }
+        this += CodeToken(CodeTokenType.Punctuation, "[")
+        this += CodeToken(CodeTokenType.Type, line.substring(labelStart, labelEnd))
+        this += CodeToken(CodeTokenType.Punctuation, "]")
+        this += CodeToken(CodeTokenType.Punctuation, "(")
+        this += CodeToken(CodeTokenType.StringLiteral, line.substring(destinationOpen + 1, destinationEnd))
+        this += CodeToken(CodeTokenType.Punctuation, ")")
+        return destinationEnd + 1
+    }
+}
+
+private data class MarkdownListMarker(
+    val marker: String,
+)
+
 private class SqlLexer {
     private var inBlockComment = false
 
@@ -1241,6 +1414,11 @@ private fun String.nextSqlIdentifierEnd(start: Int): Int =
 private fun String.nextSqlNumberEnd(start: Int): Int =
     nextWhile(start) { it.isDigit() || it == '.' }
 
+private fun String.nextMarkdownPlainEnd(start: Int): Int {
+    val end = nextWhile(start) { it !in setOf('`', '[', '!', '<', '*', '_', '~') }
+    return if (end == start) (start + 1).coerceAtMost(length) else end
+}
+
 private fun String.nextNonWhitespace(start: Int): Char? {
     var index = start
     while (index < length) {
@@ -1268,6 +1446,69 @@ private fun Char.isYamlWordStart(): Boolean = isLetter() || this == '_' || this 
 private fun Char.isTomlBareKeyStart(): Boolean = isLetter() || this == '_' || this == '-'
 
 private fun Char.isSqlIdentifierStart(): Boolean = isLetter() || this == '_'
+
+private fun String.startsMarkdownFence(index: Int): Boolean {
+    val marker = getOrNull(index)?.takeIf { it == '`' || it == '~' } ?: return false
+    return nextWhile(index) { it == marker } - index >= 3
+}
+
+private fun String.isMarkdownHeadingAt(index: Int): Boolean {
+    if (getOrNull(index) != '#') return false
+    val markerEnd = nextWhile(index) { it == '#' }
+    return markerEnd - index in 1..6 && getOrNull(markerEnd)?.isWhitespace() == true
+}
+
+private fun String.markdownListMarker(index: Int): MarkdownListMarker? {
+    val marker =
+        when {
+            getOrNull(index) in setOf('-', '*', '+') && getOrNull(index + 1)?.isWhitespace() == true ->
+                get(index).toString()
+            getOrNull(index)?.isDigit() == true -> {
+                val numberEnd = nextWhile(index, Char::isDigit)
+                if (
+                    getOrNull(numberEnd) in setOf('.', ')') &&
+                    getOrNull(numberEnd + 1)?.isWhitespace() == true
+                ) {
+                    substring(index, numberEnd + 1)
+                } else {
+                    null
+                }
+            }
+            else -> null
+        }
+    return marker?.let { MarkdownListMarker(it) }
+}
+
+private fun String.markdownTaskMarker(index: Int): String? {
+    val marker = substring(index, (index + 3).coerceAtMost(length))
+    return marker.takeIf {
+        length >= index + 3 &&
+            marker.first() == '[' &&
+            marker.last() == ']' &&
+            marker[1] in setOf(' ', 'x', 'X')
+    }
+}
+
+private fun String.findMarkdownLinkDestinationEnd(openingParenIndex: Int): Int {
+    var index = openingParenIndex + 1
+    var nestedParentheses = 0
+    var quote: Char? = null
+    var escaped = false
+    while (index < length) {
+        val char = this[index]
+        when {
+            escaped -> escaped = false
+            char == '\\' -> escaped = true
+            quote != null -> if (char == quote) quote = null
+            char == '"' || char == '\'' -> quote = char
+            char == '(' -> nestedParentheses += 1
+            char == ')' && nestedParentheses > 0 -> nestedParentheses -= 1
+            char == ')' -> return index
+        }
+        index += 1
+    }
+    return -1
+}
 
 private fun String.isHexColorToken(): Boolean {
     val value = drop(1)

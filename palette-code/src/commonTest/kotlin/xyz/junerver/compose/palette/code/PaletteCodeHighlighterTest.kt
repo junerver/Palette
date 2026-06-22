@@ -291,6 +291,46 @@ class PaletteCodeHighlighterTest {
     }
 
     @Test
+    fun highlightsMarkdownHeadingsListsLinksInlineCodeAndFences() {
+        val highlighted =
+            PaletteCodeHighlighter.highlight(
+                code =
+                    """
+                    ## Palette Markdown
+
+                    - [x] Render `inline code`
+                    - [ ] Open [docs](https://example.com/docs)
+
+                    ```kotlin
+                    val component = "PMarkdownViewer"
+                    ```
+                    """.trimIndent(),
+                language = "markdown",
+            )
+
+        val tokens = highlighted.tokens.flatten()
+        assertEquals("markdown", highlighted.language)
+        assertTrue(tokens.any { it.text == "##" && it.type == CodeTokenType.Keyword })
+        assertTrue(tokens.any { it.text == "-" && it.type == CodeTokenType.Operator })
+        assertTrue(tokens.any { it.text == "[x]" && it.type == CodeTokenType.Annotation })
+        assertTrue(tokens.any { it.text == "`inline code`" && it.type == CodeTokenType.StringLiteral })
+        assertTrue(tokens.any { it.text == "docs" && it.type == CodeTokenType.Type })
+        assertTrue(tokens.any { it.text == "https://example.com/docs" && it.type == CodeTokenType.StringLiteral })
+        assertTrue(tokens.any { it.text == "```" && it.type == CodeTokenType.Annotation })
+        assertTrue(tokens.any { it.text == "kotlin" && it.type == CodeTokenType.Type })
+    }
+
+    @Test
+    fun keepsMarkdownUnsupportedInlinePunctuationAsPlainText() {
+        val highlighted = PaletteCodeHighlighter.highlight("Use !literal <tag> and ~approx.", language = "md")
+
+        assertEquals("md", highlighted.language)
+        assertTrue(highlighted.tokens.flatten().any { it.text.contains("!literal") && it.type == CodeTokenType.Plain })
+        assertTrue(highlighted.tokens.flatten().any { it.text.contains("<tag>") && it.type == CodeTokenType.Plain })
+        assertTrue(highlighted.tokens.flatten().any { it.text.contains("~approx") && it.type == CodeTokenType.Plain })
+    }
+
+    @Test
     fun highlightsSqlKeywordsTypesStringsNumbersFunctionsAndComments() {
         val highlighted =
             PaletteCodeHighlighter.highlight(

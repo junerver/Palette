@@ -264,6 +264,31 @@ class MarkdownParserTest {
     }
 
     @Test
+    fun renderModelHighlightsMarkdownFencedCodeBlocks() {
+        val model =
+            MarkdownRenderer.toRenderModel(
+                MarkdownParser.parse(
+                    """
+                    ```markdown
+                    ## Nested Markdown
+
+                    - [x] Render `inline code`
+                    - [ ] Open [docs](https://example.com/docs)
+                    ```
+                    """.trimIndent(),
+                ),
+            )
+
+        val code = assertIs<MarkdownRenderBlock.Code>(model.blocks.single())
+        assertEquals("markdown", code.language)
+        val tokens = code.highlighted.tokens.flatten()
+        assertTrue(tokens.any { it.text == "##" && it.type == CodeTokenType.Keyword })
+        assertTrue(tokens.any { it.text == "[x]" && it.type == CodeTokenType.Annotation })
+        assertTrue(tokens.any { it.text == "`inline code`" && it.type == CodeTokenType.StringLiteral })
+        assertTrue(tokens.any { it.text == "docs" && it.type == CodeTokenType.Type })
+    }
+
+    @Test
     fun parsesCodeFenceInfoForTitleLineNumbersAndHighlightedLines() {
         val model =
             MarkdownRenderer.toRenderModel(

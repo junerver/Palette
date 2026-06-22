@@ -118,6 +118,13 @@ private fun markdownDemoText(): MarkdownDemoText =
                     }
                     ```
 
+                    ```markdown
+                    ## 嵌套 Markdown 代码
+
+                    - [x] 显示 `inline code`
+                    - [ ] 打开 [文档](https://palette.example/docs)
+                    ```
+
                     缩进代码块会作为普通代码块渲染：
 
                         val mode = "indented"
@@ -282,6 +289,13 @@ private fun markdownDemoText(): MarkdownDemoText =
                     fun Preview() {
                         PMarkdownViewer(markdown = content)
                     }
+                    ```
+
+                    ```markdown
+                    ## Nested Markdown Code
+
+                    - [x] Render `inline code`
+                    - [ ] Open [docs](https://palette.example/docs)
                     ```
 
                     Indented code blocks render as plain code:
