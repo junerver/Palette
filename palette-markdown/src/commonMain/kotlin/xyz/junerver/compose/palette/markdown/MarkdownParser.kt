@@ -179,7 +179,7 @@ object MarkdownInlineParser {
                         destinationStart < source.length &&
                         source[destinationStart] == '('
                     ) {
-                        val destinationEnd = source.indexOf(')', startIndex = destinationStart + 1)
+                        val destinationEnd = source.findInlineLinkDestinationEnd(destinationStart)
                         val target =
                             if (destinationEnd != -1) {
                                 source.substring(destinationStart + 1, destinationEnd).toLinkTarget()
@@ -336,7 +336,7 @@ object MarkdownInlineParser {
                         destinationStart < source.length &&
                         source[destinationStart] == '('
                     ) {
-                        val destinationEnd = source.indexOf(')', startIndex = destinationStart + 1)
+                        val destinationEnd = source.findInlineLinkDestinationEnd(destinationStart)
                         val target =
                             if (destinationEnd != -1) {
                                 source.substring(destinationStart + 1, destinationEnd).toLinkTarget()
@@ -455,6 +455,27 @@ object MarkdownInlineParser {
             }
         if (source.last() != endQuote) return null
         return source.drop(1).dropLast(1).trim()
+    }
+
+    private fun String.findInlineLinkDestinationEnd(openingParenIndex: Int): Int {
+        var index = openingParenIndex + 1
+        var nestedParentheses = 0
+        var quote: Char? = null
+        var escaped = false
+        while (index < length) {
+            val char = this[index]
+            when {
+                escaped -> escaped = false
+                char == '\\' -> escaped = true
+                quote != null -> if (char == quote) quote = null
+                char == '"' || char == '\'' -> quote = char
+                char == '(' -> nestedParentheses += 1
+                char == ')' && nestedParentheses > 0 -> nestedParentheses -= 1
+                char == ')' -> return index
+            }
+            index += 1
+        }
+        return -1
     }
 
     private fun String.trimReferenceDestination(): String =

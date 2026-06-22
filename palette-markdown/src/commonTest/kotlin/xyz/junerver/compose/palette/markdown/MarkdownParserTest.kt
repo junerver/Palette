@@ -462,6 +462,25 @@ class MarkdownParserTest {
     }
 
     @Test
+    fun parsesInlineLinksAndImagesWithParenthesesInDestinations() {
+        val inline =
+            MarkdownInlineParser.parse(
+                "Open [docs](https://example.com/a_(b)) and ![chart](https://example.com/chart_(v2).png).",
+            )
+
+        assertEquals(
+            listOf(
+                MarkdownInlineText("Open "),
+                MarkdownInlineLink(label = "docs", destination = "https://example.com/a_(b)"),
+                MarkdownInlineText(" and "),
+                MarkdownInlineImage(alt = "chart", destination = "https://example.com/chart_(v2).png"),
+                MarkdownInlineText("."),
+            ),
+            inline,
+        )
+    }
+
+    @Test
     fun parsesReferenceStyleLinksAndImages() {
         val document =
             MarkdownParser.parse(
