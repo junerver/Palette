@@ -135,6 +135,11 @@ private fun markdownDemoText(): MarkdownDemoText =
                         return f"Hello, {name}"
                     ```
 
+                    ```bash
+                    export APP_NAME="Palette"
+                    ./gradlew :palette:desktopTest --info
+                    ```
+
                     ```mermaid
                     flowchart LR
                         Markdown[Markdown] --> Code[Kotlin code]
@@ -242,6 +247,11 @@ private fun markdownDemoText(): MarkdownDemoText =
                     ```python title="preview.py" showLineNumbers {2}
                     def render(name: str) -> str:
                         return f"Hello, {name}"
+                    ```
+
+                    ```bash
+                    export APP_NAME="Palette"
+                    ./gradlew :palette:desktopTest --info
                     ```
 
                     ```mermaid

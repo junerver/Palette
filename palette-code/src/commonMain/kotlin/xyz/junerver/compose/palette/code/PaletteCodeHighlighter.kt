@@ -40,6 +40,7 @@ object PaletteCodeHighlighter {
                 "css", "scss", "sass", "less" -> CssLexer().highlight(lines)
                 "py", "python" -> PythonLexer.highlight(lines)
                 "html", "xml", "svg" -> HtmlLexer().highlight(lines)
+                "bash", "sh", "shell", "zsh" -> ShellLexer.highlight(lines)
                 else -> lines.map { line -> listOf(CodeToken(CodeTokenType.Plain, line)) }
             }
         return HighlightedCode(language = normalizedLanguage.ifEmpty { "plain" }, tokens = tokens)
@@ -725,6 +726,115 @@ private class HtmlLexer {
     }
 }
 
+private object ShellLexer {
+    fun highlight(lines: List<String>): List<List<CodeToken>> = lines.map(::highlightLine)
+
+    private fun highlightLine(line: String): List<CodeToken> {
+        val tokens = mutableListOf<CodeToken>()
+        var index = 0
+        var expectingCommand = true
+
+        while (index < line.length) {
+            val current = line[index]
+            when {
+                current.isWhitespace() -> {
+                    val end = line.nextWhile(index, Char::isWhitespace)
+                    tokens += CodeToken(CodeTokenType.Plain, line.substring(index, end))
+                    index = end
+                }
+
+                current == '#' -> {
+                    tokens += CodeToken(CodeTokenType.Comment, line.substring(index))
+                    index = line.length
+                }
+
+                current == '"' || current == '\'' -> {
+                    val end = scanQuotedString(line, index, current)
+                    tokens += CodeToken(CodeTokenType.StringLiteral, line.substring(index, end))
+                    index = end
+                    expectingCommand = false
+                }
+
+                current == '$' -> {
+                    val end = line.nextShellVariableEnd(index)
+                    tokens += CodeToken(CodeTokenType.Annotation, line.substring(index, end))
+                    index = end
+                    expectingCommand = false
+                }
+
+                current == '-' && line.getOrNull(index + 1)?.isShellWordPart() == true -> {
+                    val end = line.nextShellWordEnd(index)
+                    tokens += CodeToken(CodeTokenType.Operator, line.substring(index, end))
+                    index = end
+                    expectingCommand = false
+                }
+
+                current.isDigit() -> {
+                    val end = line.nextWhile(index) { it.isDigit() }
+                    tokens += CodeToken(CodeTokenType.NumberLiteral, line.substring(index, end))
+                    index = end
+                    expectingCommand = false
+                }
+
+                current.isShellWordStart() -> {
+                    val end = line.nextShellWordEnd(index)
+                    val text = line.substring(index, end)
+                    val type =
+                        when {
+                            text in ShellKeywords -> CodeTokenType.Keyword
+                            expectingCommand -> CodeTokenType.Function
+                            else -> CodeTokenType.Plain
+                        }
+                    tokens += CodeToken(type, text)
+                    index = end
+                    expectingCommand = false
+                }
+
+                current in ShellOperators -> {
+                    tokens += CodeToken(CodeTokenType.Operator, current.toString())
+                    index += 1
+                    expectingCommand = true
+                }
+
+                current in ShellPunctuation -> {
+                    tokens += CodeToken(CodeTokenType.Punctuation, current.toString())
+                    index += 1
+                    expectingCommand = current in setOf(';', '(', '{')
+                }
+
+                else -> {
+                    tokens += CodeToken(CodeTokenType.Plain, current.toString())
+                    index += 1
+                    expectingCommand = false
+                }
+            }
+        }
+
+        return tokens
+    }
+
+    private val ShellKeywords =
+        setOf(
+            "case",
+            "do",
+            "done",
+            "elif",
+            "else",
+            "esac",
+            "export",
+            "fi",
+            "for",
+            "function",
+            "if",
+            "in",
+            "local",
+            "then",
+            "while",
+        )
+    private val ShellOperators = setOf('|', '&', '<', '>', '=')
+    private val ShellPunctuation = setOf('(', ')', '{', '}', '[', ']', ';', ':')
+}
+
 private fun String.nextWhile(
     start: Int,
     predicate: (Char) -> Boolean,
@@ -753,6 +863,19 @@ private fun String.nextCssNumberEnd(start: Int): Int =
 private fun String.nextHtmlIdentifierEnd(start: Int): Int =
     nextWhile(start) { it.isLetterOrDigit() || it == '_' || it == '-' || it == ':' }
 
+private fun String.nextShellWordEnd(start: Int): Int =
+    nextWhile(start) { it.isShellWordPart() }
+
+private fun String.nextShellVariableEnd(start: Int): Int =
+    when (getOrNull(start + 1)) {
+        '{' -> {
+            val end = indexOf('}', startIndex = start + 2)
+            if (end == -1) length else end + 1
+        }
+
+        else -> nextWhile(start + 1) { it.isLetterOrDigit() || it == '_' }.coerceAtLeast(start + 1)
+    }
+
 private fun String.nextNonWhitespace(start: Int): Char? {
     var index = start
     while (index < length) {
@@ -770,6 +893,10 @@ private fun Char.isPythonStringPrefixStart(): Boolean = this in setOf('f', 'F', 
 private fun Char.isCssIdentifierStart(): Boolean = isLetter() || this == '_' || this == '-'
 
 private fun Char.isHtmlIdentifierStart(): Boolean = isLetter() || this == '_' || this == ':'
+
+private fun Char.isShellWordStart(): Boolean = isLetterOrDigit() || this in setOf('_', '.', '/', '~')
+
+private fun Char.isShellWordPart(): Boolean = isShellWordStart() || this in setOf('-', '+')
 
 private fun String.isHexColorToken(): Boolean {
     val value = drop(1)

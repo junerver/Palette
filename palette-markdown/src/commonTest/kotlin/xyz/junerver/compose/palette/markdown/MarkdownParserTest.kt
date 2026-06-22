@@ -133,6 +133,28 @@ class MarkdownParserTest {
     }
 
     @Test
+    fun renderModelHighlightsShellFencedCodeBlocks() {
+        val model =
+            MarkdownRenderer.toRenderModel(
+                MarkdownParser.parse(
+                    """
+                    ```bash
+                    export APP_NAME="Palette"
+                    echo ${'$'}APP_NAME
+                    ```
+                    """.trimIndent(),
+                ),
+            )
+
+        val code = assertIs<MarkdownRenderBlock.Code>(model.blocks.single())
+        assertEquals("bash", code.language)
+        val tokens = code.highlighted.tokens.flatten()
+        assertTrue(tokens.any { it.text == "export" && it.type == CodeTokenType.Keyword })
+        assertTrue(tokens.any { it.text == "echo" && it.type == CodeTokenType.Function })
+        assertTrue(tokens.any { it.text == "${'$'}APP_NAME" && it.type == CodeTokenType.Annotation })
+    }
+
+    @Test
     fun parsesCodeFenceInfoForTitleLineNumbersAndHighlightedLines() {
         val model =
             MarkdownRenderer.toRenderModel(

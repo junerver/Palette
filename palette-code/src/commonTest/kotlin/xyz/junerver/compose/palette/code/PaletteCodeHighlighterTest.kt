@@ -175,4 +175,29 @@ class PaletteCodeHighlighterTest {
         assertTrue(tokens.any { it.text == "'3'" && it.type == CodeTokenType.StringLiteral })
         assertTrue(tokens.any { it.text == "</" && it.type == CodeTokenType.Punctuation })
     }
+
+    @Test
+    fun highlightsShellCommandsVariablesStringsAndComments() {
+        val highlighted =
+            PaletteCodeHighlighter.highlight(
+                code =
+                    """
+                    export APP_NAME="Palette"
+                    echo ${'$'}APP_NAME
+                    ./gradlew :palette:desktopTest --info # run desktop tests
+                    """.trimIndent(),
+                language = "bash",
+            )
+
+        val tokens = highlighted.tokens.flatten()
+        assertEquals("bash", highlighted.language)
+        assertTrue(tokens.any { it.text == "export" && it.type == CodeTokenType.Keyword })
+        assertTrue(tokens.any { it.text == "APP_NAME" && it.type == CodeTokenType.Plain })
+        assertTrue(tokens.any { it.text == "\"Palette\"" && it.type == CodeTokenType.StringLiteral })
+        assertTrue(tokens.any { it.text == "echo" && it.type == CodeTokenType.Function })
+        assertTrue(tokens.any { it.text == "${'$'}APP_NAME" && it.type == CodeTokenType.Annotation })
+        assertTrue(tokens.any { it.text == "./gradlew" && it.type == CodeTokenType.Function })
+        assertTrue(tokens.any { it.text == "--info" && it.type == CodeTokenType.Operator })
+        assertTrue(tokens.any { it.text == "# run desktop tests" && it.type == CodeTokenType.Comment })
+    }
 }
