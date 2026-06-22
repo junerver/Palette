@@ -112,6 +112,27 @@ class MarkdownParserTest {
     }
 
     @Test
+    fun renderModelParsesMermaidSequenceNotes() {
+        val model =
+            MarkdownRenderer.toRenderModel(
+                MarkdownParser.parse(
+                    """
+                    ```mermaid
+                    sequenceDiagram
+                        Viewer->>Parser: parse markdown
+                        Note right of Parser: Builds an AST
+                    ```
+                    """.trimIndent(),
+                ),
+            )
+
+        val mermaid = assertIs<MarkdownRenderBlock.Mermaid>(model.blocks.single())
+        assertEquals(1, mermaid.diagram.notes.size)
+        assertEquals("Builds an AST", mermaid.diagram.notes.single().text)
+        assertEquals(1, mermaid.diagram.notes.single().sequenceIndex)
+    }
+
+    @Test
     fun renderModelHighlightsHtmlFencedCodeBlocks() {
         val model =
             MarkdownRenderer.toRenderModel(

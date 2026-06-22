@@ -151,6 +151,41 @@ class MermaidParserTest {
     }
 
     @Test
+    fun parsesSequenceDiagramNotesInSourceOrder() {
+        val diagram =
+            MermaidParser.parse(
+                """
+                sequenceDiagram
+                    participant UI
+                    participant Parser
+                    UI->>Parser: parse markdown
+                    Note right of Parser: Builds an AST
+                    Parser-->>UI: render model
+                    Note over UI,Parser: Preview updates
+                """.trimIndent(),
+            )
+
+        assertEquals(MermaidDiagramType.Sequence, diagram.type)
+        assertEquals(2, diagram.edges.size)
+        assertEquals(2, diagram.notes.size)
+
+        val rightNote = diagram.notes.first()
+        assertEquals(MermaidNotePosition.RightOf, rightNote.position)
+        assertEquals(listOf("Parser"), rightNote.participants)
+        assertEquals("Builds an AST", rightNote.text)
+        assertEquals(1, rightNote.sequenceIndex)
+
+        val overNote = diagram.notes.last()
+        assertEquals(MermaidNotePosition.Over, overNote.position)
+        assertEquals(listOf("UI", "Parser"), overNote.participants)
+        assertEquals("Preview updates", overNote.text)
+        assertEquals(3, overNote.sequenceIndex)
+
+        assertEquals(0, diagram.edges.first().sequenceIndex)
+        assertEquals(2, diagram.edges.last().sequenceIndex)
+    }
+
+    @Test
     fun laysOutSequenceParticipantsInDeclarationOrder() {
         val layout =
             MermaidLayoutEngine.layout(
@@ -169,5 +204,25 @@ class MermaidParserTest {
         assertEquals(0, layout.nodes.getValue("A").rank)
         assertEquals(1, layout.nodes.getValue("B").rank)
         assertEquals(2, layout.nodes.getValue("C").rank)
+    }
+
+    @Test
+    fun keepsSequenceNotesInLayout() {
+        val layout =
+            MermaidLayoutEngine.layout(
+                MermaidParser.parse(
+                    """
+                    sequenceDiagram
+                        A->>B: request
+                        Note over A,B: shared context
+                    """.trimIndent(),
+                ),
+            )
+
+        assertEquals(MermaidDiagramType.Sequence, layout.type)
+        assertEquals(1, layout.notes.size)
+        assertEquals(listOf("A", "B"), layout.notes.single().participants)
+        assertEquals("shared context", layout.notes.single().text)
+        assertEquals(1, layout.notes.single().sequenceIndex)
     }
 }

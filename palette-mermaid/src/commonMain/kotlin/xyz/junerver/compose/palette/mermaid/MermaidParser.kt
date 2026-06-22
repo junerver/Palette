@@ -4,6 +4,7 @@ data class MermaidDiagram(
     val direction: MermaidDirection,
     val nodes: Map<String, MermaidNode>,
     val edges: List<MermaidEdge>,
+    val notes: List<MermaidNote> = emptyList(),
     val type: MermaidDiagramType = MermaidDiagramType.Flowchart,
 )
 
@@ -18,12 +19,26 @@ data class MermaidEdge(
     val to: String,
     val label: String? = null,
     val style: MermaidEdgeStyle = MermaidEdgeStyle.Solid,
+    val sequenceIndex: Int = 0,
+)
+
+data class MermaidNote(
+    val position: MermaidNotePosition,
+    val participants: List<String>,
+    val text: String,
+    val sequenceIndex: Int,
 )
 
 enum class MermaidEdgeStyle {
     Solid,
     Dotted,
     Thick,
+}
+
+enum class MermaidNotePosition {
+    LeftOf,
+    RightOf,
+    Over,
 }
 
 enum class MermaidDiagramType {
@@ -50,8 +65,10 @@ object MermaidParser {
     fun parse(source: String): MermaidDiagram {
         val nodes = linkedMapOf<String, MermaidNode>()
         val edges = mutableListOf<MermaidEdge>()
+        val notes = mutableListOf<MermaidNote>()
         var direction = MermaidDirection.TopDown
         var type = MermaidDiagramType.Flowchart
+        var sequenceIndex = 0
 
         source
             .lines()
@@ -70,6 +87,18 @@ object MermaidParser {
                     return@forEachIndexed
                 }
 
+                val sequenceNote = parseSequenceNote(line, sequenceIndex)
+                if (sequenceNote != null) {
+                    sequenceNote.participants.forEach { participant ->
+                        if (participant !in nodes) {
+                            nodes[participant] = MermaidNode(participant, participant, MermaidNodeShape.Rectangle)
+                        }
+                    }
+                    notes += sequenceNote
+                    sequenceIndex += 1
+                    return@forEachIndexed
+                }
+
                 val sequenceMessage = parseSequenceMessage(line)
                 if (sequenceMessage != null) {
                     if (sequenceMessage.from.id !in nodes) nodes[sequenceMessage.from.id] = sequenceMessage.from
@@ -80,7 +109,9 @@ object MermaidParser {
                             to = sequenceMessage.to.id,
                             label = sequenceMessage.label,
                             style = sequenceMessage.style,
+                            sequenceIndex = sequenceIndex,
                         )
+                    sequenceIndex += 1
                     return@forEachIndexed
                 }
 
@@ -94,7 +125,13 @@ object MermaidParser {
                 if (edge != null) {
                     if (edge.from.id !in nodes) nodes[edge.from.id] = edge.from
                     if (edge.to.id !in nodes) nodes[edge.to.id] = edge.to
-                    edges += MermaidEdge(from = edge.from.id, to = edge.to.id, label = edge.label, style = edge.style)
+                    edges +=
+                        MermaidEdge(
+                            from = edge.from.id,
+                            to = edge.to.id,
+                            label = edge.label,
+                            style = edge.style,
+                        )
                     return@forEachIndexed
                 }
 
@@ -106,7 +143,7 @@ object MermaidParser {
                 }
             }
 
-        return MermaidDiagram(direction = direction, nodes = nodes, edges = edges, type = type)
+        return MermaidDiagram(direction = direction, nodes = nodes, edges = edges, notes = notes, type = type)
     }
 
     private fun parseHeader(line: String): MermaidDirection? {
@@ -214,6 +251,34 @@ object MermaidParser {
         )
     }
 
+    private fun parseSequenceNote(
+        line: String,
+        sequenceIndex: Int,
+    ): MermaidNote? {
+        val match =
+            Regex("""^Note\s+(right of|left of|over)\s+([A-Za-z0-9_,\s]+)\s*:\s*(.+)$""", RegexOption.IGNORE_CASE)
+                .matchEntire(line)
+                ?: return null
+        val position =
+            when (match.groupValues[1].lowercase()) {
+                "left of" -> MermaidNotePosition.LeftOf
+                "right of" -> MermaidNotePosition.RightOf
+                else -> MermaidNotePosition.Over
+            }
+        val participants =
+            match.groupValues[2]
+                .split(',')
+                .map { it.trim() }
+                .filter { it.isNotEmpty() }
+        if (participants.isEmpty()) return null
+        return MermaidNote(
+            position = position,
+            participants = participants,
+            text = match.groupValues[3].trim(),
+            sequenceIndex = sequenceIndex,
+        )
+    }
+
     private data class ParsedEdge(
         val from: MermaidNode,
         val to: MermaidNode,
@@ -237,6 +302,7 @@ data class MermaidLayout(
     val direction: MermaidDirection,
     val nodes: Map<String, PositionedMermaidNode>,
     val edges: List<MermaidEdge>,
+    val notes: List<MermaidNote> = emptyList(),
 )
 
 data class PositionedMermaidNode(
@@ -273,6 +339,7 @@ object MermaidLayoutEngine {
             direction = diagram.direction,
             nodes = positioned,
             edges = diagram.edges,
+            notes = diagram.notes,
         )
     }
 
@@ -294,6 +361,7 @@ object MermaidLayoutEngine {
             direction = diagram.direction,
             nodes = positioned,
             edges = diagram.edges,
+            notes = diagram.notes,
         )
     }
 

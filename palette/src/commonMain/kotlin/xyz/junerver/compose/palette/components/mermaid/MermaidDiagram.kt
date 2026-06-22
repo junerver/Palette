@@ -29,6 +29,8 @@ import xyz.junerver.compose.palette.mermaid.MermaidEdgeStyle
 import xyz.junerver.compose.palette.mermaid.MermaidLayout
 import xyz.junerver.compose.palette.mermaid.MermaidLayoutEngine
 import xyz.junerver.compose.palette.mermaid.MermaidNodeShape
+import xyz.junerver.compose.palette.mermaid.MermaidNote
+import xyz.junerver.compose.palette.mermaid.MermaidNotePosition
 import xyz.junerver.compose.palette.mermaid.MermaidParser
 import kotlin.math.sqrt
 
@@ -223,8 +225,19 @@ private fun SequenceMermaidDiagram(
     val nodeHeight = 44.dp
     val messageStartY = 88f
     val messageGap = 56f
-    val width = ((layout.nodes.values.maxOfOrNull { it.x } ?: 0f) + 156f).dp
-    val height = (messageStartY + layout.edges.size.coerceAtLeast(1) * messageGap + 40f).dp
+    val sequenceItemCount =
+        (
+            layout.edges.map { it.sequenceIndex } +
+                layout.notes.map { it.sequenceIndex }
+        ).maxOrNull()?.plus(1) ?: 1
+    val maxNodeRight = (layout.nodes.values.maxOfOrNull { it.x } ?: 0f) + 156f
+    val maxNoteRight =
+        layout.notes
+            .mapNotNull { it.sequenceNoteFrame(layout = layout, nodeWidth = 132f) }
+            .maxOfOrNull { it.x + it.width + 24f }
+            ?: 0f
+    val width = maxOf(maxNodeRight, maxNoteRight).dp
+    val height = (messageStartY + sequenceItemCount.coerceAtLeast(1) * messageGap + 56f).dp
 
     Box(
         modifier =
@@ -252,7 +265,7 @@ private fun SequenceMermaidDiagram(
             layout.edges.forEachIndexed { index, edge ->
                 val from = layout.nodes[edge.from] ?: return@forEachIndexed
                 val to = layout.nodes[edge.to] ?: return@forEachIndexed
-                val y = messageStartYPx + index * messageGapPx
+                val y = messageStartYPx + edge.sequenceIndex * messageGapPx
                 val startX = from.x.dp.toPx() + nodeWidthPx / 2f
                 val endX = to.x.dp.toPx() + nodeWidthPx / 2f
                 val start = Offset(startX, y)
@@ -302,12 +315,23 @@ private fun SequenceMermaidDiagram(
                     Modifier
                         .absoluteOffset(
                             x = (left + 66f - labelWidth / 2f).coerceAtLeast(0f).dp,
-                            y = (messageStartY + index * messageGap - 30f).coerceAtLeast(48f).dp,
+                            y = (messageStartY + edge.sequenceIndex * messageGap - 30f).coerceAtLeast(48f).dp,
                         )
                         .width(labelWidth.dp)
                         .background(colors.nodeContainerColor, RoundedCornerShape(4.dp))
                         .border(1.dp, colors.edgeColor, RoundedCornerShape(4.dp))
                         .padding(horizontal = 6.dp, vertical = 2.dp),
+            )
+        }
+
+        layout.notes.forEach { note ->
+            SequenceNote(
+                note = note,
+                layout = layout,
+                colors = colors,
+                nodeWidth = 132f,
+                messageStartY = messageStartY,
+                messageGap = messageGap,
             )
         }
 
@@ -341,6 +365,68 @@ private fun SequenceMermaidDiagram(
             )
         }
     }
+}
+
+@Composable
+private fun SequenceNote(
+    note: MermaidNote,
+    layout: MermaidLayout,
+    colors: MermaidColors,
+    nodeWidth: Float,
+    messageStartY: Float,
+    messageGap: Float,
+) {
+    val frame = note.sequenceNoteFrame(layout = layout, nodeWidth = nodeWidth) ?: return
+    val noteY = messageStartY + note.sequenceIndex * messageGap - 24f
+
+    Text(
+        text = note.text,
+        color = colors.nodeContentColor,
+        style = PaletteTheme.typography.label,
+        textAlign = TextAlign.Center,
+        modifier =
+            Modifier
+                .absoluteOffset(x = frame.x.dp, y = noteY.dp)
+                .width(frame.width.dp)
+                .background(colors.nodeContainerColor, RoundedCornerShape(4.dp))
+                .border(1.dp, colors.nodeBorderColor, RoundedCornerShape(4.dp))
+                .padding(horizontal = 8.dp, vertical = 6.dp),
+    )
+}
+
+private data class SequenceNoteFrame(
+    val x: Float,
+    val width: Float,
+)
+
+private fun MermaidNote.sequenceNoteFrame(
+    layout: MermaidLayout,
+    nodeWidth: Float,
+): SequenceNoteFrame? {
+    val participantPositions =
+        participants
+            .mapNotNull { layout.nodes[it] }
+            .takeIf { it.isNotEmpty() }
+            ?: return null
+    val noteWidth =
+        when (position) {
+            MermaidNotePosition.Over -> {
+                val left = participantPositions.minOf { it.x }
+                val right = participantPositions.maxOf { it.x }
+                (right - left + nodeWidth).coerceAtLeast(132f)
+            }
+
+            MermaidNotePosition.LeftOf,
+            MermaidNotePosition.RightOf,
+            -> 132f
+        }
+    val noteX =
+        when (position) {
+            MermaidNotePosition.Over -> participantPositions.minOf { it.x }
+            MermaidNotePosition.LeftOf -> (participantPositions.first().x - noteWidth - 16f).coerceAtLeast(0f)
+            MermaidNotePosition.RightOf -> participantPositions.first().x + nodeWidth + 16f
+        }
+    return SequenceNoteFrame(x = noteX, width = noteWidth)
 }
 
 @Composable

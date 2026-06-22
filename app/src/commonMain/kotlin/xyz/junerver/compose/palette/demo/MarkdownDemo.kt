@@ -165,7 +165,9 @@ private fun markdownDemoText(): MarkdownDemoText =
                         participant Parser
                         participant Viewer
                         Editor->>Parser: update markdown
+                        Note right of Parser: Build AST and diagrams
                         Parser-->>Viewer: render model
+                        Note over Editor,Viewer: Preview refresh
                     ```
                     """.trimIndent(),
                 editorMarkdown =
@@ -289,7 +291,9 @@ private fun markdownDemoText(): MarkdownDemoText =
                         participant Parser
                         participant Viewer
                         Editor->>Parser: update markdown
+                        Note right of Parser: Build AST and diagrams
                         Parser-->>Viewer: render model
+                        Note over Editor,Viewer: Preview refresh
                     ```
                     """.trimIndent(),
                 editorMarkdown =
