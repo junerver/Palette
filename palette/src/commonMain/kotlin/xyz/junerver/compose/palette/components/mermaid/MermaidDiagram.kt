@@ -32,6 +32,7 @@ import xyz.junerver.compose.palette.mermaid.MermaidNodeShape
 import xyz.junerver.compose.palette.mermaid.MermaidNote
 import xyz.junerver.compose.palette.mermaid.MermaidNotePosition
 import xyz.junerver.compose.palette.mermaid.MermaidParser
+import kotlin.math.max
 import kotlin.math.sqrt
 
 internal enum class MermaidNodeContainerKind {
@@ -122,8 +123,12 @@ private fun FlowchartMermaidDiagram(
 ) {
     val nodeWidth = 132.dp
     val nodeHeight = 44.dp
-    val width = ((layout.nodes.values.maxOfOrNull { it.x } ?: 0f) + 156f).dp
-    val height = ((layout.nodes.values.maxOfOrNull { it.y } ?: 0f) + 72f).dp
+    val nodeRight = (layout.nodes.values.maxOfOrNull { it.x } ?: 0f) + 156f
+    val nodeBottom = (layout.nodes.values.maxOfOrNull { it.y } ?: 0f) + 72f
+    val subgraphRight = layout.subgraphs.maxOfOrNull { it.x + it.width } ?: 0f
+    val subgraphBottom = layout.subgraphs.maxOfOrNull { it.y + it.height } ?: 0f
+    val width = max(nodeRight, subgraphRight).dp
+    val height = max(nodeBottom, subgraphBottom).dp
 
     Box(
         modifier =
@@ -131,6 +136,25 @@ private fun FlowchartMermaidDiagram(
                 .width(width)
                 .height(height),
     ) {
+        layout.subgraphs.forEach { subgraph ->
+            Box(
+                modifier =
+                    Modifier
+                        .absoluteOffset(x = subgraph.x.dp, y = subgraph.y.dp)
+                        .size(width = subgraph.width.dp, height = subgraph.height.dp)
+                        .background(colors.nodeContainerColor.copy(alpha = 0.32f), RoundedCornerShape(8.dp))
+                        .border(1.dp, colors.nodeBorderColor.copy(alpha = 0.56f), RoundedCornerShape(8.dp))
+                        .padding(horizontal = 10.dp, vertical = 6.dp),
+                contentAlignment = Alignment.TopStart,
+            ) {
+                Text(
+                    text = subgraph.subgraph.label,
+                    color = colors.nodeContentColor,
+                    style = PaletteTheme.typography.label,
+                )
+            }
+        }
+
         Canvas(modifier = Modifier.matchParentSize()) {
             layout.edges.forEach { edge ->
                 val from = layout.nodes[edge.from] ?: return@forEach

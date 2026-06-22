@@ -53,6 +53,51 @@ class MermaidParserTest {
     }
 
     @Test
+    fun parsesFlowchartSubgraphsWithMemberNodes() {
+        val diagram =
+            MermaidParser.parse(
+                """
+                flowchart LR
+                    subgraph Client [Client Layer]
+                        Input[Editor] --> Preview[Preview]
+                    end
+                    Preview --> Renderer[Renderer]
+                """.trimIndent(),
+            )
+
+        assertEquals(1, diagram.subgraphs.size)
+        val subgraph = diagram.subgraphs.single()
+        assertEquals("Client", subgraph.id)
+        assertEquals("Client Layer", subgraph.label)
+        assertEquals(listOf("Input", "Preview"), subgraph.nodeIds)
+    }
+
+    @Test
+    fun laysOutFlowchartSubgraphBoundsAroundMembers() {
+        val layout =
+            MermaidLayoutEngine.layout(
+                MermaidParser.parse(
+                    """
+                    flowchart TD
+                        subgraph Pipeline [Pipeline]
+                            Source[Source] --> Parse[Parse]
+                        end
+                        Parse --> Render[Render]
+                    """.trimIndent(),
+                ),
+            )
+
+        assertEquals(1, layout.subgraphs.size)
+        val subgraph = layout.subgraphs.single()
+        val source = layout.nodes.getValue("Source")
+        val parse = layout.nodes.getValue("Parse")
+        assertTrue(subgraph.x <= source.x)
+        assertTrue(subgraph.y <= source.y)
+        assertTrue(subgraph.x + subgraph.width >= parse.x + 132f)
+        assertTrue(subgraph.y + subgraph.height >= parse.y + 44f)
+    }
+
+    @Test
     fun parsesPipeLabelsAndCommonArrowStyles() {
         val diagram =
             MermaidParser.parse(

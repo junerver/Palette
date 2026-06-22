@@ -6,6 +6,7 @@ data class MermaidDiagram(
     val edges: List<MermaidEdge>,
     val notes: List<MermaidNote> = emptyList(),
     val type: MermaidDiagramType = MermaidDiagramType.Flowchart,
+    val subgraphs: List<MermaidSubgraph> = emptyList(),
 )
 
 data class MermaidNode(
@@ -27,6 +28,12 @@ data class MermaidNote(
     val participants: List<String>,
     val text: String,
     val sequenceIndex: Int,
+)
+
+data class MermaidSubgraph(
+    val id: String,
+    val label: String,
+    val nodeIds: List<String>,
 )
 
 enum class MermaidEdgeStyle {
@@ -69,6 +76,8 @@ object MermaidParser {
         var direction = MermaidDirection.TopDown
         var type = MermaidDiagramType.Flowchart
         var sequenceIndex = 0
+        val subgraphs = mutableListOf<MermaidSubgraphBuilder>()
+        var currentSubgraph: MermaidSubgraphBuilder? = null
 
         source
             .lines()
@@ -121,10 +130,24 @@ object MermaidParser {
                     return@forEachIndexed
                 }
 
+                if (line.equals("end", ignoreCase = true)) {
+                    currentSubgraph = null
+                    return@forEachIndexed
+                }
+
+                val subgraph = parseSubgraphStart(line)
+                if (subgraph != null) {
+                    subgraphs += subgraph
+                    currentSubgraph = subgraph
+                    return@forEachIndexed
+                }
+
                 val edge = parseEdge(line)
                 if (edge != null) {
                     if (edge.from.id !in nodes) nodes[edge.from.id] = edge.from
                     if (edge.to.id !in nodes) nodes[edge.to.id] = edge.to
+                    currentSubgraph?.add(edge.from.id)
+                    currentSubgraph?.add(edge.to.id)
                     edges +=
                         MermaidEdge(
                             from = edge.from.id,
@@ -137,13 +160,21 @@ object MermaidParser {
 
                 val standaloneNode = parseStandaloneNode(line) ?: return@forEachIndexed
                 if (standaloneNode.id !in nodes) nodes[standaloneNode.id] = standaloneNode
+                currentSubgraph?.add(standaloneNode.id)
 
                 if (index == 0) {
                     direction = MermaidDirection.TopDown
                 }
             }
 
-        return MermaidDiagram(direction = direction, nodes = nodes, edges = edges, notes = notes, type = type)
+        return MermaidDiagram(
+            direction = direction,
+            nodes = nodes,
+            edges = edges,
+            notes = notes,
+            type = type,
+            subgraphs = subgraphs.map { it.toSubgraph() }.filter { it.nodeIds.isNotEmpty() },
+        )
     }
 
     private fun parseHeader(line: String): MermaidDirection? {
@@ -156,6 +187,28 @@ object MermaidParser {
             "RL" -> MermaidDirection.RightLeft
             else -> MermaidDirection.TopDown
         }
+    }
+
+    private fun parseSubgraphStart(line: String): MermaidSubgraphBuilder? {
+        if (!line.startsWith("subgraph ", ignoreCase = true)) return null
+        val source = line.replace(Regex("""^subgraph\s+""", RegexOption.IGNORE_CASE), "").trim()
+        if (source.isEmpty()) return null
+        val labelStart = source.indexOf('[')
+        val labelEnd = source.lastIndexOf(']')
+        val id =
+            if (labelStart > 0) {
+                source.substring(0, labelStart).trim()
+            } else {
+                source.substringBefore(' ').trim()
+            }
+        val label =
+            if (labelStart != -1 && labelEnd > labelStart) {
+                source.substring(labelStart + 1, labelEnd).trim()
+            } else {
+                source.substringAfter(' ', source).trim()
+            }
+        val normalizedId = id.ifEmpty { label }.ifEmpty { "subgraph" }
+        return MermaidSubgraphBuilder(id = normalizedId, label = label.ifEmpty { normalizedId })
     }
 
     private fun parseEdge(line: String): ParsedEdge? {
@@ -286,6 +339,23 @@ object MermaidParser {
         val style: MermaidEdgeStyle,
     )
 
+    private data class MermaidSubgraphBuilder(
+        val id: String,
+        val label: String,
+        val nodeIds: MutableList<String> = mutableListOf(),
+    ) {
+        fun add(nodeId: String) {
+            if (nodeId !in nodeIds) nodeIds += nodeId
+        }
+
+        fun toSubgraph(): MermaidSubgraph =
+            MermaidSubgraph(
+                id = id,
+                label = label,
+                nodeIds = nodeIds.toList(),
+            )
+    }
+
     private fun String.toEdgeStyle(): MermaidEdgeStyle =
         when (this) {
             "==>" -> MermaidEdgeStyle.Thick
@@ -303,6 +373,7 @@ data class MermaidLayout(
     val nodes: Map<String, PositionedMermaidNode>,
     val edges: List<MermaidEdge>,
     val notes: List<MermaidNote> = emptyList(),
+    val subgraphs: List<PositionedMermaidSubgraph> = emptyList(),
 )
 
 data class PositionedMermaidNode(
@@ -313,13 +384,21 @@ data class PositionedMermaidNode(
     val y: Float,
 )
 
+data class PositionedMermaidSubgraph(
+    val subgraph: MermaidSubgraph,
+    val x: Float,
+    val y: Float,
+    val width: Float,
+    val height: Float,
+)
+
 object MermaidLayoutEngine {
     fun layout(diagram: MermaidDiagram): MermaidLayout {
         if (diagram.type == MermaidDiagramType.Sequence) return layoutSequence(diagram)
 
         val rankById = calculateRanks(diagram)
         val orderByRank = mutableMapOf<Int, Int>()
-        val positioned =
+        val positionedNodes =
             diagram.nodes.values.associate { node ->
                 val rank = rankById.getValue(node.id)
                 val order = orderByRank.getOrPut(rank) { 0 }
@@ -333,6 +412,18 @@ object MermaidLayoutEngine {
                         y = if (diagram.direction == MermaidDirection.LeftRight) order * 96f else rank * 96f,
                     )
             }
+        val positioned =
+            if (diagram.subgraphs.isEmpty()) {
+                positionedNodes
+            } else {
+                positionedNodes.mapValues { (_, node) ->
+                    node.copy(
+                        x = node.x + SubgraphHorizontalPadding,
+                        y = node.y + SubgraphTopPadding,
+                    )
+                }
+            }
+        val subgraphs = layoutSubgraphs(diagram.subgraphs, positioned)
 
         return MermaidLayout(
             type = diagram.type,
@@ -340,6 +431,7 @@ object MermaidLayoutEngine {
             nodes = positioned,
             edges = diagram.edges,
             notes = diagram.notes,
+            subgraphs = subgraphs,
         )
     }
 
@@ -364,6 +456,28 @@ object MermaidLayoutEngine {
             notes = diagram.notes,
         )
     }
+
+    private fun layoutSubgraphs(
+        subgraphs: List<MermaidSubgraph>,
+        nodes: Map<String, PositionedMermaidNode>,
+    ): List<PositionedMermaidSubgraph> =
+        subgraphs.mapNotNull { subgraph ->
+            val members = subgraph.nodeIds.mapNotNull(nodes::get)
+            if (members.isEmpty()) return@mapNotNull null
+            val minX = members.minOf { it.x }
+            val minY = members.minOf { it.y }
+            val maxX = members.maxOf { it.x }
+            val maxY = members.maxOf { it.y }
+            val x = (minX - SubgraphHorizontalPadding).coerceAtLeast(0f)
+            val y = (minY - SubgraphTopPadding).coerceAtLeast(0f)
+            PositionedMermaidSubgraph(
+                subgraph = subgraph,
+                x = x,
+                y = y,
+                width = maxX - x + FlowchartNodeWidth + SubgraphHorizontalPadding,
+                height = maxY - y + FlowchartNodeHeight + SubgraphBottomPadding,
+            )
+        }
 
     private fun calculateRanks(diagram: MermaidDiagram): Map<String, Int> {
         val incoming = diagram.nodes.keys.associateWith { 0 }.toMutableMap()
@@ -390,4 +504,10 @@ object MermaidLayoutEngine {
 
         return rank
     }
+
+    private const val FlowchartNodeWidth = 132f
+    private const val FlowchartNodeHeight = 44f
+    private const val SubgraphHorizontalPadding = 24f
+    private const val SubgraphTopPadding = 32f
+    private const val SubgraphBottomPadding = 20f
 }

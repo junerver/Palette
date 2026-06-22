@@ -175,6 +175,10 @@ private fun markdownDemoText(): MarkdownDemoText =
 
                     ```mermaid
                     flowchart LR
+                        subgraph Foundation [基础能力]
+                            Code[Kotlin code]
+                            Mermaid[Mermaid]
+                        end
                         Markdown[Markdown] --> Code[Kotlin code]
                         Markdown --> Mermaid[Mermaid]
                         Code --> Viewer[Viewer]
@@ -324,6 +328,10 @@ private fun markdownDemoText(): MarkdownDemoText =
 
                     ```mermaid
                     flowchart LR
+                        subgraph Foundation [Foundation logic]
+                            Code[Kotlin code]
+                            Mermaid[Mermaid]
+                        end
                         Markdown[Markdown] --> Code[Kotlin code]
                         Markdown --> Mermaid[Mermaid]
                         Code --> Viewer[Viewer]
