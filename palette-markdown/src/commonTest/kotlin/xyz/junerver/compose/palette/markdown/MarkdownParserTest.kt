@@ -160,6 +160,25 @@ class MarkdownParserTest {
     }
 
     @Test
+    fun preservesOrderedListStartNumber() {
+        val document =
+            MarkdownParser.parse(
+                """
+                3. third
+                4. fourth
+                """.trimIndent(),
+            )
+
+        val parsedList = assertIs<MarkdownListBlock>(document.blocks.single())
+        assertEquals(true, parsedList.ordered)
+        assertEquals(3, parsedList.startNumber)
+
+        val model = MarkdownRenderer.toRenderModel(document)
+        val renderList = assertIs<MarkdownRenderBlock.ListBlock>(model.blocks.single())
+        assertEquals(3, renderList.startNumber)
+    }
+
+    @Test
     fun parsesBlockquotesTaskListsTablesAndImages() {
         val document =
             MarkdownParser.parse(

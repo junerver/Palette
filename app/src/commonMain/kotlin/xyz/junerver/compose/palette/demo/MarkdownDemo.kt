@@ -90,6 +90,9 @@ private fun markdownDemoText(): MarkdownDemoText =
 
                     行内语法支持 ~~删除线~~、自动链接 <https://example.com> 和转义 \*literal\*。
 
+                    3. 保留有序列表的起始编号
+                    4. 继续使用原始 Markdown 编号显示
+
                     - [x] 解析 Markdown 文档
                     - [x] 高亮 Kotlin fenced code
                     - [ ] 接入远程图片加载
@@ -184,6 +187,9 @@ private fun markdownDemoText(): MarkdownDemoText =
                     > Block quotes keep inline emphasis, links, and `inline code` styles.
 
                     Inline syntax supports ~~strikethrough~~, autolinks <https://example.com>, and escaped \*literal\* text.
+
+                    3. Preserve ordered list start numbers
+                    4. Continue rendering from the Markdown marker
 
                     - [x] Parse Markdown documents
                     - [x] Highlight Kotlin fenced code

@@ -79,7 +79,7 @@ fun PMarkdownViewer(
                         block.itemInlines.forEachIndexed { index, item ->
                             Row(modifier = Modifier.fillMaxWidth()) {
                                 Text(
-                                    text = if (block.ordered) "${index + 1}." else "-",
+                                    text = if (block.ordered) "${block.startNumber + index}." else "-",
                                     color = PaletteTheme.colors.textSecondary,
                                     modifier = Modifier.padding(end = 8.dp),
                                 )

@@ -26,6 +26,7 @@ data class MarkdownListBlock(
     val items: List<String>,
     val ordered: Boolean,
     val itemInlines: List<List<MarkdownInlineNode>> = items.map(MarkdownInlineParser::parse),
+    val startNumber: Int = 1,
 ) : MarkdownBlock
 
 data class MarkdownTaskItem(
@@ -370,12 +371,13 @@ object MarkdownParser {
 
                 trimmed.isListItem() -> {
                     val ordered = OrderedListRegex.matches(trimmed)
+                    val startNumber = if (ordered) trimmed.orderedListStartNumber() else 1
                     val items = mutableListOf<String>()
                     while (index < lines.size && lines[index].trim().isListItem()) {
                         items += lines[index].trim().removeListMarker()
                         index += 1
                     }
-                    blocks += MarkdownListBlock(items = items, ordered = ordered)
+                    blocks += MarkdownListBlock(items = items, ordered = ordered, startNumber = startNumber)
                 }
 
                 else -> {
@@ -423,7 +425,7 @@ object MarkdownParser {
     private val HeadingRegex = Regex("""^(#{1,6})\s+(.+)$""")
     private val ThematicBreakRegex = Regex("""^(-{3,}|\*{3,}|_{3,})$""")
     private val TaskListRegex = Regex("""^([-*+])\s+\[([ xX])]\s+(.+)$""")
-    private val OrderedListRegex = Regex("""^\d+[.)]\s+.+$""")
+    private val OrderedListRegex = Regex("""^(\d+)[.)]\s+.+$""")
     private val UnorderedListRegex = Regex("""^[-*+]\s+.+$""")
 
     private fun String.isListItem(): Boolean = OrderedListRegex.matches(this) || UnorderedListRegex.matches(this)
@@ -432,6 +434,9 @@ object MarkdownParser {
 
     private fun String.removeListMarker(): String =
         replace(Regex("""^(\d+[.)]|[-*+])\s+"""), "").trim()
+
+    private fun String.orderedListStartNumber(): Int =
+        OrderedListRegex.matchEntire(this)?.groupValues?.get(1)?.toIntOrNull() ?: 1
 
     private fun String.isTableHeader(nextLine: String?): Boolean =
         isTableRow() && nextLine?.matches(TableDelimiterRegex) == true
@@ -531,6 +536,7 @@ sealed interface MarkdownRenderBlock {
         val items: List<String>,
         val ordered: Boolean,
         val itemInlines: List<List<MarkdownInlineNode>>,
+        val startNumber: Int = 1,
     ) : MarkdownRenderBlock
 
     data class TaskList(
@@ -574,7 +580,13 @@ object MarkdownRenderer {
                     when (block) {
                         is MarkdownHeading -> MarkdownRenderBlock.Heading(block.level, block.text, block.inlines)
                         is MarkdownParagraph -> MarkdownRenderBlock.Paragraph(block.text, block.inlines)
-                        is MarkdownListBlock -> MarkdownRenderBlock.ListBlock(block.items, block.ordered, block.itemInlines)
+                        is MarkdownListBlock ->
+                            MarkdownRenderBlock.ListBlock(
+                                items = block.items,
+                                ordered = block.ordered,
+                                itemInlines = block.itemInlines,
+                                startNumber = block.startNumber,
+                            )
                         is MarkdownTaskListBlock -> MarkdownRenderBlock.TaskList(block.items)
                         is MarkdownBlockQuote -> MarkdownRenderBlock.BlockQuote(block.text, block.inlines)
                         is MarkdownTableBlock ->
