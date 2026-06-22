@@ -30,6 +30,7 @@ import xyz.junerver.compose.palette.mermaid.MermaidLayout
 import xyz.junerver.compose.palette.mermaid.MermaidLayoutEngine
 import xyz.junerver.compose.palette.mermaid.MermaidNodeShape
 import xyz.junerver.compose.palette.mermaid.MermaidParser
+import kotlin.math.sqrt
 
 internal enum class MermaidNodeContainerKind {
     Rectangle,
@@ -47,6 +48,45 @@ internal fun MermaidNodeShape.toContainerKind(): MermaidNodeContainerKind =
         MermaidNodeShape.Diamond -> MermaidNodeContainerKind.Diamond
         MermaidNodeShape.Circle -> MermaidNodeContainerKind.Circle
     }
+
+internal data class MermaidArrowHead(
+    val tip: Offset,
+    val left: Offset,
+    val right: Offset,
+)
+
+internal fun calculateMermaidArrowHead(
+    start: Offset,
+    end: Offset,
+    size: Float = 10f,
+    spread: Float = 0.55f,
+): MermaidArrowHead {
+    val dx = end.x - start.x
+    val dy = end.y - start.y
+    val length = sqrt(dx * dx + dy * dy)
+    if (length == 0f) return MermaidArrowHead(tip = end, left = end, right = end)
+
+    val unitX = dx / length
+    val unitY = dy / length
+    val base = Offset(
+        x = end.x - unitX * size,
+        y = end.y - unitY * size,
+    )
+    val perpendicular = Offset(x = -unitY, y = unitX)
+    return MermaidArrowHead(
+        tip = end,
+        left =
+            Offset(
+                x = base.x + perpendicular.x * size * spread,
+                y = base.y + perpendicular.y * size * spread,
+            ),
+        right =
+            Offset(
+                x = base.x - perpendicular.x * size * spread,
+                y = base.y - perpendicular.y * size * spread,
+            ),
+    )
+}
 
 @Composable
 fun PMermaidDiagram(
@@ -107,6 +147,16 @@ private fun FlowchartMermaidDiagram(
                         } else {
                             null
                         },
+                )
+                drawMermaidArrowHead(
+                    color = colors.edgeColor,
+                    arrowHead =
+                        calculateMermaidArrowHead(
+                            start = start,
+                            end = end,
+                            size = 10.dp.toPx(),
+                        ),
+                    strokeWidth = if (edge.style == MermaidEdgeStyle.Thick) 3.dp.toPx() else 2.dp.toPx(),
                 )
             }
         }
@@ -205,7 +255,8 @@ private fun SequenceMermaidDiagram(
                 val y = messageStartYPx + index * messageGapPx
                 val startX = from.x.dp.toPx() + nodeWidthPx / 2f
                 val endX = to.x.dp.toPx() + nodeWidthPx / 2f
-                val direction = if (endX >= startX) 1f else -1f
+                val start = Offset(startX, y)
+                val end = Offset(endX, y)
                 val pathEffect =
                     if (edge.style == MermaidEdgeStyle.Dotted) {
                         PathEffect.dashPathEffect(floatArrayOf(4f, 5f))
@@ -215,25 +266,21 @@ private fun SequenceMermaidDiagram(
 
                 drawLine(
                     color = colors.edgeColor,
-                    start = Offset(startX, y),
-                    end = Offset(endX, y),
+                    start = start,
+                    end = end,
                     strokeWidth = if (edge.style == MermaidEdgeStyle.Thick) 3.dp.toPx() else 2.dp.toPx(),
                     cap = StrokeCap.Round,
                     pathEffect = pathEffect,
                 )
-                drawLine(
+                drawMermaidArrowHead(
                     color = colors.edgeColor,
-                    start = Offset(endX, y),
-                    end = Offset(endX - direction * 8.dp.toPx(), y - 5.dp.toPx()),
-                    strokeWidth = 2.dp.toPx(),
-                    cap = StrokeCap.Round,
-                )
-                drawLine(
-                    color = colors.edgeColor,
-                    start = Offset(endX, y),
-                    end = Offset(endX - direction * 8.dp.toPx(), y + 5.dp.toPx()),
-                    strokeWidth = 2.dp.toPx(),
-                    cap = StrokeCap.Round,
+                    arrowHead =
+                        calculateMermaidArrowHead(
+                            start = start,
+                            end = end,
+                            size = 10.dp.toPx(),
+                        ),
+                    strokeWidth = if (edge.style == MermaidEdgeStyle.Thick) 3.dp.toPx() else 2.dp.toPx(),
                 )
             }
         }
@@ -314,3 +361,24 @@ private val DiamondShape =
         lineTo(0f, size.height / 2f)
         close()
     }
+
+private fun androidx.compose.ui.graphics.drawscope.DrawScope.drawMermaidArrowHead(
+    color: Color,
+    arrowHead: MermaidArrowHead,
+    strokeWidth: Float,
+) {
+    drawLine(
+        color = color,
+        start = arrowHead.tip,
+        end = arrowHead.left,
+        strokeWidth = strokeWidth,
+        cap = StrokeCap.Round,
+    )
+    drawLine(
+        color = color,
+        start = arrowHead.tip,
+        end = arrowHead.right,
+        strokeWidth = strokeWidth,
+        cap = StrokeCap.Round,
+    )
+}
