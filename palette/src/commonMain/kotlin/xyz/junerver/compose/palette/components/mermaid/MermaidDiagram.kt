@@ -21,6 +21,7 @@ import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import xyz.junerver.compose.palette.core.theme.PaletteTheme
+import xyz.junerver.compose.palette.mermaid.MermaidDiagramType
 import xyz.junerver.compose.palette.mermaid.MermaidEdgeStyle
 import xyz.junerver.compose.palette.mermaid.MermaidLayout
 import xyz.junerver.compose.palette.mermaid.MermaidLayoutEngine
@@ -32,6 +33,29 @@ fun PMermaidDiagram(
     modifier: Modifier = Modifier,
     colors: MermaidColors = MermaidDefaults.colors(),
     layout: MermaidLayout = MermaidLayoutEngine.layout(MermaidParser.parse(source)),
+) {
+    when (layout.type) {
+        MermaidDiagramType.Flowchart ->
+            FlowchartMermaidDiagram(
+                modifier = modifier,
+                colors = colors,
+                layout = layout,
+            )
+
+        MermaidDiagramType.Sequence ->
+            SequenceMermaidDiagram(
+                modifier = modifier,
+                colors = colors,
+                layout = layout,
+            )
+    }
+}
+
+@Composable
+private fun FlowchartMermaidDiagram(
+    modifier: Modifier,
+    colors: MermaidColors,
+    layout: MermaidLayout,
 ) {
     val nodeWidth = 132.dp
     val nodeHeight = 44.dp
@@ -80,6 +104,137 @@ fun PMermaidDiagram(
                 modifier =
                     Modifier
                         .absoluteOffset(x = labelX.dp, y = labelY.dp)
+                        .background(colors.nodeContainerColor, RoundedCornerShape(4.dp))
+                        .border(1.dp, colors.edgeColor, RoundedCornerShape(4.dp))
+                        .padding(horizontal = 6.dp, vertical = 2.dp),
+            )
+        }
+
+        layout.nodes.values.forEach { item ->
+            Box(
+                modifier =
+                    Modifier
+                        .absoluteOffset(x = item.x.dp, y = item.y.dp)
+                        .size(width = nodeWidth, height = nodeHeight)
+                        .background(colors.nodeContainerColor, RoundedCornerShape(MermaidDefaults.cornerRadius()))
+                        .border(1.dp, colors.nodeBorderColor, RoundedCornerShape(MermaidDefaults.cornerRadius())),
+                contentAlignment = Alignment.Center,
+            ) {
+                Text(
+                    text = item.node.label,
+                    color = colors.nodeContentColor,
+                    style = PaletteTheme.typography.label,
+                    textAlign = TextAlign.Center,
+                )
+            }
+        }
+
+        if (layout.nodes.isEmpty()) {
+            Text(
+                text = "Empty diagram",
+                color = Color.Unspecified,
+                style = PaletteTheme.typography.body,
+                modifier = Modifier.align(Alignment.Center),
+            )
+        }
+    }
+}
+
+@Composable
+private fun SequenceMermaidDiagram(
+    modifier: Modifier,
+    colors: MermaidColors,
+    layout: MermaidLayout,
+) {
+    val nodeWidth = 132.dp
+    val nodeHeight = 44.dp
+    val messageStartY = 88f
+    val messageGap = 56f
+    val width = ((layout.nodes.values.maxOfOrNull { it.x } ?: 0f) + 156f).dp
+    val height = (messageStartY + layout.edges.size.coerceAtLeast(1) * messageGap + 40f).dp
+
+    Box(
+        modifier =
+            modifier
+                .width(width)
+                .height(height),
+    ) {
+        Canvas(modifier = Modifier.matchParentSize()) {
+            val nodeWidthPx = nodeWidth.toPx()
+            val nodeHeightPx = nodeHeight.toPx()
+            val messageStartYPx = messageStartY.dp.toPx()
+            val messageGapPx = messageGap.dp.toPx()
+
+            layout.nodes.values.forEach { item ->
+                val x = item.x.dp.toPx() + nodeWidthPx / 2f
+                drawLine(
+                    color = colors.edgeColor.copy(alpha = 0.45f),
+                    start = Offset(x, nodeHeightPx + 10.dp.toPx()),
+                    end = Offset(x, size.height),
+                    strokeWidth = 1.dp.toPx(),
+                    pathEffect = PathEffect.dashPathEffect(floatArrayOf(6f, 6f)),
+                )
+            }
+
+            layout.edges.forEachIndexed { index, edge ->
+                val from = layout.nodes[edge.from] ?: return@forEachIndexed
+                val to = layout.nodes[edge.to] ?: return@forEachIndexed
+                val y = messageStartYPx + index * messageGapPx
+                val startX = from.x.dp.toPx() + nodeWidthPx / 2f
+                val endX = to.x.dp.toPx() + nodeWidthPx / 2f
+                val direction = if (endX >= startX) 1f else -1f
+                val pathEffect =
+                    if (edge.style == MermaidEdgeStyle.Dotted) {
+                        PathEffect.dashPathEffect(floatArrayOf(4f, 5f))
+                    } else {
+                        null
+                    }
+
+                drawLine(
+                    color = colors.edgeColor,
+                    start = Offset(startX, y),
+                    end = Offset(endX, y),
+                    strokeWidth = if (edge.style == MermaidEdgeStyle.Thick) 3.dp.toPx() else 2.dp.toPx(),
+                    cap = StrokeCap.Round,
+                    pathEffect = pathEffect,
+                )
+                drawLine(
+                    color = colors.edgeColor,
+                    start = Offset(endX, y),
+                    end = Offset(endX - direction * 8.dp.toPx(), y - 5.dp.toPx()),
+                    strokeWidth = 2.dp.toPx(),
+                    cap = StrokeCap.Round,
+                )
+                drawLine(
+                    color = colors.edgeColor,
+                    start = Offset(endX, y),
+                    end = Offset(endX - direction * 8.dp.toPx(), y + 5.dp.toPx()),
+                    strokeWidth = 2.dp.toPx(),
+                    cap = StrokeCap.Round,
+                )
+            }
+        }
+
+        layout.edges.forEachIndexed { index, edge ->
+            val label = edge.label ?: return@forEachIndexed
+            val from = layout.nodes[edge.from] ?: return@forEachIndexed
+            val to = layout.nodes[edge.to] ?: return@forEachIndexed
+            val left = minOf(from.x, to.x)
+            val right = maxOf(from.x, to.x)
+            val labelWidth = (right - left).coerceAtLeast(132f)
+
+            Text(
+                text = label,
+                color = colors.nodeContentColor,
+                style = PaletteTheme.typography.label,
+                textAlign = TextAlign.Center,
+                modifier =
+                    Modifier
+                        .absoluteOffset(
+                            x = (left + 66f - labelWidth / 2f).coerceAtLeast(0f).dp,
+                            y = (messageStartY + index * messageGap - 30f).coerceAtLeast(48f).dp,
+                        )
+                        .width(labelWidth.dp)
                         .background(colors.nodeContainerColor, RoundedCornerShape(4.dp))
                         .border(1.dp, colors.edgeColor, RoundedCornerShape(4.dp))
                         .padding(horizontal = 6.dp, vertical = 2.dp),

@@ -43,6 +43,7 @@ class MermaidParserTest {
 
         val layout = MermaidLayoutEngine.layout(diagram)
 
+        assertEquals(MermaidDiagramType.Flowchart, layout.type)
         assertEquals(MermaidDirection.LeftRight, layout.direction)
         assertEquals(4, layout.nodes.size)
         assertEquals(0, layout.nodes.getValue("A").rank)
@@ -142,6 +143,7 @@ class MermaidParserTest {
                 ),
             )
 
+        assertEquals(MermaidDiagramType.Sequence, layout.type)
         assertEquals(0, layout.nodes.getValue("A").rank)
         assertEquals(1, layout.nodes.getValue("B").rank)
         assertEquals(2, layout.nodes.getValue("C").rank)

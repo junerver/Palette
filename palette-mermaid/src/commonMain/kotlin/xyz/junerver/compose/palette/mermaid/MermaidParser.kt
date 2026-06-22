@@ -218,6 +218,7 @@ object MermaidParser {
 }
 
 data class MermaidLayout(
+    val type: MermaidDiagramType,
     val direction: MermaidDirection,
     val nodes: Map<String, PositionedMermaidNode>,
     val edges: List<MermaidEdge>,
@@ -252,7 +253,12 @@ object MermaidLayoutEngine {
                     )
             }
 
-        return MermaidLayout(direction = diagram.direction, nodes = positioned, edges = diagram.edges)
+        return MermaidLayout(
+            type = diagram.type,
+            direction = diagram.direction,
+            nodes = positioned,
+            edges = diagram.edges,
+        )
     }
 
     private fun layoutSequence(diagram: MermaidDiagram): MermaidLayout {
@@ -268,7 +274,12 @@ object MermaidLayoutEngine {
                     )
             }.toMap()
 
-        return MermaidLayout(direction = diagram.direction, nodes = positioned, edges = diagram.edges)
+        return MermaidLayout(
+            type = diagram.type,
+            direction = diagram.direction,
+            nodes = positioned,
+            edges = diagram.edges,
+        )
     }
 
     private fun calculateRanks(diagram: MermaidDiagram): Map<String, Int> {
