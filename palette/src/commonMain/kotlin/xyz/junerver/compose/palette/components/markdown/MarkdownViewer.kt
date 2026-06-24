@@ -19,9 +19,17 @@ import androidx.compose.foundation.text.InlineTextContent
 import androidx.compose.material3.Divider
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.Placeholder
 import androidx.compose.ui.text.PlaceholderVerticalAlign
@@ -37,30 +45,27 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.em
 import androidx.compose.ui.unit.sp
 import xyz.junerver.compose.hooks.useCreation
+import xyz.junerver.compose.palette.components.checkbox.ColoredCheckBox
 import xyz.junerver.compose.palette.components.code.PCodeBlock
 import xyz.junerver.compose.palette.components.mermaid.PMermaidDiagram
+import xyz.junerver.compose.palette.core.spec.ComponentSize
 import xyz.junerver.compose.palette.core.theme.PaletteTheme
 import xyz.junerver.compose.palette.markdown.MarkdownInlineCode
 import xyz.junerver.compose.palette.markdown.MarkdownInlineEmphasis
 import xyz.junerver.compose.palette.markdown.MarkdownInlineHardBreak
-import xyz.junerver.compose.palette.markdown.MarkdownInlineSoftBreak
 import xyz.junerver.compose.palette.markdown.MarkdownInlineHtml
 import xyz.junerver.compose.palette.markdown.MarkdownInlineImage
 import xyz.junerver.compose.palette.markdown.MarkdownInlineLink
 import xyz.junerver.compose.palette.markdown.MarkdownInlineNode
-import xyz.junerver.compose.palette.markdown.MarkdownInlineStrong
+import xyz.junerver.compose.palette.markdown.MarkdownInlineSoftBreak
 import xyz.junerver.compose.palette.markdown.MarkdownInlineStrikethrough
+import xyz.junerver.compose.palette.markdown.MarkdownInlineStrong
 import xyz.junerver.compose.palette.markdown.MarkdownInlineText
 import xyz.junerver.compose.palette.markdown.MarkdownParser
 import xyz.junerver.compose.palette.markdown.MarkdownRenderBlock
 import xyz.junerver.compose.palette.markdown.MarkdownRenderModel
 import xyz.junerver.compose.palette.markdown.MarkdownRenderer
 import xyz.junerver.compose.palette.markdown.MarkdownTableAlignment
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.semantics.contentDescription
-import androidx.compose.ui.semantics.semantics
 
 @Composable
 fun PMarkdownViewer(
@@ -69,6 +74,7 @@ fun PMarkdownViewer(
     renderModel: MarkdownRenderModel? = null,
     onLinkClick: ((String) -> Unit)? = null,
     onAnchorClick: ((String) -> Unit)? = null,
+    onTaskCheckedChange: ((taskIndex: Int, checked: Boolean) -> Unit)? = null,
     inlineImageContent: @Composable (MarkdownInlineImage) -> Unit = { image -> DefaultInlineImage(image) },
 ) {
     val resolvedRenderModel =
@@ -76,12 +82,17 @@ fun PMarkdownViewer(
             renderModel ?: MarkdownRenderer.toRenderModel(MarkdownParser.parse(markdown))
         }.current
 
+    var taskCounter by remember(markdown) { mutableIntStateOf(0) }
+
     MarkdownBlocks(
         blocks = resolvedRenderModel.blocks,
         modifier = modifier,
         onLinkClick = onLinkClick,
         onAnchorClick = onAnchorClick,
         inlineImageContent = inlineImageContent,
+        taskCheckboxEnabled = onTaskCheckedChange != null,
+        nextTaskIndex = { taskCounter++ },
+        onTaskCheckedChange = onTaskCheckedChange,
     )
 }
 
@@ -93,6 +104,9 @@ private fun MarkdownBlocks(
     onLinkClick: ((String) -> Unit)?,
     onAnchorClick: ((String) -> Unit)? = null,
     inlineImageContent: @Composable (MarkdownInlineImage) -> Unit,
+    taskCheckboxEnabled: Boolean = false,
+    nextTaskIndex: () -> Int = { -1 },
+    onTaskCheckedChange: ((taskIndex: Int, checked: Boolean) -> Unit)? = null,
 ) {
     Column(
         modifier = modifier,
@@ -109,6 +123,9 @@ private fun MarkdownBlocks(
                     }
                 },
                 inlineImageContent = inlineImageContent,
+                taskCheckboxEnabled = taskCheckboxEnabled,
+                nextTaskIndex = nextTaskIndex,
+                onTaskCheckedChange = onTaskCheckedChange,
             )
         }
     }
@@ -119,6 +136,9 @@ private fun MarkdownBlock(
     block: MarkdownRenderBlock,
     onLinkClick: ((String) -> Unit)?,
     inlineImageContent: @Composable (MarkdownInlineImage) -> Unit,
+    taskCheckboxEnabled: Boolean = false,
+    nextTaskIndex: () -> Int = { -1 },
+    onTaskCheckedChange: ((taskIndex: Int, checked: Boolean) -> Unit)? = null,
 ) {
     when (block) {
         is MarkdownRenderBlock.Heading ->
@@ -157,16 +177,34 @@ private fun MarkdownBlock(
                 block = block,
                 onLinkClick = onLinkClick,
                 inlineImageContent = inlineImageContent,
+                taskCheckboxEnabled = taskCheckboxEnabled,
+                nextTaskIndex = nextTaskIndex,
+                onTaskCheckedChange = onTaskCheckedChange,
             )
 
         is MarkdownRenderBlock.TaskList ->
             Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
                 block.items.forEach { item ->
+                    val taskIndex = nextTaskIndex()
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         verticalAlignment = Alignment.Top,
                     ) {
-                        TaskCheckbox(checked = item.checked)
+                        ColoredCheckBox(
+                            checked = item.checked,
+                            onCheckedChange = if (taskCheckboxEnabled) {
+                                { checked -> onTaskCheckedChange?.invoke(taskIndex, checked) }
+                            } else {
+                                null
+                            },
+                            enabled = taskCheckboxEnabled,
+                            size = ComponentSize.Small,
+                            modifier = if (taskCheckboxEnabled) {
+                                Modifier.testTag("task-checkbox:$taskIndex")
+                            } else {
+                                Modifier
+                            },
+                        )
                         InlineMarkdownText(
                             inlines = item.inlines,
                             color = PaletteTheme.colors.textPrimary,
@@ -210,6 +248,9 @@ private fun MarkdownBlock(
                         blockSpacing = 6.dp,
                         onLinkClick = onLinkClick,
                         inlineImageContent = inlineImageContent,
+                        taskCheckboxEnabled = taskCheckboxEnabled,
+                        nextTaskIndex = nextTaskIndex,
+                        onTaskCheckedChange = onTaskCheckedChange,
                     )
                 }
             }
@@ -264,6 +305,9 @@ private fun MarkdownListBlock(
     block: MarkdownRenderBlock.ListBlock,
     onLinkClick: ((String) -> Unit)?,
     inlineImageContent: @Composable (MarkdownInlineImage) -> Unit,
+    taskCheckboxEnabled: Boolean = false,
+    nextTaskIndex: () -> Int = { -1 },
+    onTaskCheckedChange: ((taskIndex: Int, checked: Boolean) -> Unit)? = null,
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
         block.listItems.forEachIndexed { index, item ->
@@ -272,10 +316,25 @@ private fun MarkdownListBlock(
                 verticalAlignment = Alignment.Top,
             ) {
                 if (item.taskChecked != null) {
-                    TaskCheckbox(checked = item.taskChecked!!)
+                    val taskIndex = nextTaskIndex()
+                    ColoredCheckBox(
+                        checked = item.taskChecked!!,
+                        onCheckedChange = if (taskCheckboxEnabled) {
+                            { checked -> onTaskCheckedChange?.invoke(taskIndex, checked) }
+                        } else {
+                            null
+                        },
+                        enabled = taskCheckboxEnabled,
+                        size = ComponentSize.Small,
+                        modifier = if (taskCheckboxEnabled) {
+                            Modifier.testTag("task-checkbox:$taskIndex")
+                        } else {
+                            Modifier
+                        },
+                    )
                 } else {
                     Text(
-                        text = if (block.ordered) "${block.startNumber + index}." else "-",
+                        text = if (block.ordered) "${block.startNumber + index}." else "•",
                         color = PaletteTheme.colors.textSecondary,
                         modifier = Modifier.padding(end = 8.dp),
                     )
@@ -297,38 +356,13 @@ private fun MarkdownListBlock(
                             blockSpacing = 6.dp,
                             onLinkClick = onLinkClick,
                             inlineImageContent = inlineImageContent,
+                            taskCheckboxEnabled = taskCheckboxEnabled,
+                            nextTaskIndex = nextTaskIndex,
+                            onTaskCheckedChange = onTaskCheckedChange,
                         )
                     }
                 }
             }
-        }
-    }
-}
-
-@Composable
-private fun TaskCheckbox(checked: Boolean) {
-    Box(
-        modifier =
-            Modifier
-                .padding(top = 3.dp, end = 8.dp)
-                .size(16.dp)
-                .border(1.dp, PaletteTheme.colors.border)
-                .background(
-                    if (checked) {
-                        PaletteTheme.colors.primary
-                    } else {
-                        PaletteTheme.colors.surface
-                    },
-                ),
-        contentAlignment = Alignment.Center,
-    ) {
-        if (checked) {
-            Text(
-                text = "x",
-                color = PaletteTheme.colors.surface,
-                fontSize = 10.sp,
-                fontWeight = FontWeight.SemiBold,
-            )
         }
     }
 }
@@ -507,9 +541,9 @@ private fun List<MarkdownInlineNode>.toAnnotatedContent(
 
                         is MarkdownInlineImage -> {
                             val contentId = "$ImageInlineContentTag-${imageIndex++}"
-                            append("\uFFFC")
+                            append("￼")
                             append(contentId)
-                            append("\u0000")
+                            append(" ")
                             inlineContent[contentId] =
                                 InlineTextContent(
                                     placeholder =

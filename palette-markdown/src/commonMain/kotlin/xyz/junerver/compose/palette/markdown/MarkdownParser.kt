@@ -1031,7 +1031,8 @@ object MarkdownParser {
                     val startNumber = if (ordered) trimmed.orderedListStartNumber() else 1
                     val itemContents = mutableListOf<String>()
                     val itemChildren = mutableListOf<List<MarkdownBlock>>()
-                    while (index < lines.size && lines[index].trim().isListItem()) {
+                    while (index < lines.size && lines[index].trim().isListItem() &&
+                        !lines[index].trim().isTaskListItem()) {
                         val itemFirstLine = lines[index].trim().removeListMarker()
                         val continuationLines = mutableListOf<String>()
                         index += 1
@@ -1053,7 +1054,7 @@ object MarkdownParser {
                                 }
                                 break
                             }
-                            if (nextTrimmed.isListItem() && !nextLine.startsWith("  ") && !nextLine.startsWith("\t")) {
+                            if ((nextTrimmed.isListItem() || nextTrimmed.isTaskListItem()) && !nextLine.startsWith("  ") && !nextLine.startsWith("\t")) {
                                 break
                             }
                             if (nextLine.startsWith("  ") || nextLine.startsWith("\t")) {

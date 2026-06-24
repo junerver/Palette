@@ -126,7 +126,10 @@ fun PToggleGroup(
     multiple: Boolean = false,
     content: @Composable PToggleGroupScope.() -> Unit,
 ) {
-    val scope = remember(value, variant, disabled, size, multiple) {
+    val isSurface = variant == ToggleVariant.Surface
+    val itemVariant = if (isSurface) ToggleVariant.Default else variant
+
+    val scope = remember(value, itemVariant, disabled, size, multiple) {
         PToggleGroupScopeImpl(
             selectedValues = value,
             onValueChange = { newValues ->
@@ -136,16 +139,35 @@ fun PToggleGroup(
                     onValueChange(if (newValues.size > 1) listOf(newValues.last()) else newValues)
                 }
             },
-            variant = variant,
+            variant = itemVariant,
             disabled = disabled,
             size = size,
         )
     }
 
-    Row(
-        modifier = modifier,
-        horizontalArrangement = Arrangement.spacedBy(ToggleDefaults.groupSpacing()),
-    ) {
-        scope.content()
+    if (isSurface) {
+        val containerShape = RoundedCornerShape(ToggleDefaults.groupContainerCornerRadius())
+        Box(
+            modifier = modifier
+                .clip(containerShape)
+                .background(ToggleDefaults.groupContainerColor(), containerShape)
+                .padding(
+                    horizontal = ToggleDefaults.groupContainerPaddingHorizontal(),
+                    vertical = ToggleDefaults.groupContainerPaddingVertical(),
+                ),
+        ) {
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(ToggleDefaults.groupSpacing()),
+            ) {
+                scope.content()
+            }
+        }
+    } else {
+        Row(
+            modifier = modifier,
+            horizontalArrangement = Arrangement.spacedBy(ToggleDefaults.groupSpacing()),
+        ) {
+            scope.content()
+        }
     }
 }

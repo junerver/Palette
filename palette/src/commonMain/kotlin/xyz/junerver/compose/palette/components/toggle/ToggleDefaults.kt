@@ -7,7 +7,7 @@ import androidx.compose.ui.unit.dp
 import xyz.junerver.compose.palette.core.theme.PaletteTheme
 
 enum class ToggleVariant {
-    Default, Outline
+    Default, Outline, Surface
 }
 
 data class ToggleItem(
@@ -68,4 +68,20 @@ object ToggleDefaults {
         } else {
             PaletteTheme.componentThemes.selectionControl.toggleDefaultContentColor
         }
+
+    @Composable
+    fun groupContainerColor(): Color =
+        PaletteTheme.componentThemes.selectionControl.toggleGroupContainerColor
+
+    @Composable
+    fun groupContainerCornerRadius(): Dp =
+        PaletteTheme.componentThemes.selectionControl.toggleGroupContainerCornerRadius
+
+    @Composable
+    fun groupContainerPaddingHorizontal(): Dp =
+        PaletteTheme.componentThemes.selectionControl.toggleGroupContainerPaddingHorizontal
+
+    @Composable
+    fun groupContainerPaddingVertical(): Dp =
+        PaletteTheme.componentThemes.selectionControl.toggleGroupContainerPaddingVertical
 }

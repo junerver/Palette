@@ -767,6 +767,33 @@ class MarkdownParserTest {
     }
 
     @Test
+    fun parsesMixedRegularAndTaskListItems() {
+        val document =
+            MarkdownParser.parse(
+                """
+                - item one
+                - [x] done
+                - [ ] open
+                """.trimIndent(),
+            )
+
+        // Debug: check all block types
+        val blockTypes = document.blocks.map { it::class.simpleName }
+        assertEquals(2, document.blocks.size, "Expected 2 blocks, got ${document.blocks.size}: $blockTypes")
+
+        val listBlock = document.blocks.filterIsInstance<MarkdownListBlock>()
+        val taskBlock = document.blocks.filterIsInstance<MarkdownTaskListBlock>()
+
+        assertEquals(1, listBlock.size, "Expected one regular list block, got types: $blockTypes")
+        assertEquals(1, taskBlock.size, "Expected one task list block, got types: $blockTypes")
+        assertEquals("item one", listBlock[0].listItems[0].text)
+        assertEquals("done", taskBlock[0].items[0].text)
+        assertEquals(true, taskBlock[0].items[0].checked)
+        assertEquals("open", taskBlock[0].items[1].text)
+        assertEquals(false, taskBlock[0].items[1].checked)
+    }
+
+    @Test
     fun renderModelKeepsRichBlockData() {
         val model =
             MarkdownRenderer.toRenderModel(

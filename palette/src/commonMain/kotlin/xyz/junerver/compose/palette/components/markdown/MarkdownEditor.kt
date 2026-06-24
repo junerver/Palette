@@ -5,11 +5,14 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Modifier
 import xyz.junerver.compose.hooks.useState
-import xyz.junerver.compose.palette.components.segmented.PSegmented
-import xyz.junerver.compose.palette.components.segmented.SegmentedOption
 import xyz.junerver.compose.palette.components.textfield.TextArea
+import xyz.junerver.compose.palette.components.toggle.PToggleGroup
+import xyz.junerver.compose.palette.components.toggle.ToggleVariant
 import xyz.junerver.compose.palette.core.spec.ComponentSize
 
 enum class MarkdownEditorMode {
@@ -44,26 +47,33 @@ fun PMarkdownEditor(
         }
     }
 
+    val latestValue by rememberUpdatedState(value)
+    val taskToggleHandler = remember<(Int, Boolean) -> Unit> {
+        { taskIndex: Int, checked: Boolean ->
+            onValueChange(toggleTaskCheckbox(latestValue, taskIndex, checked))
+        }
+    }
+
     Column(
         modifier = modifier,
         verticalArrangement = Arrangement.spacedBy(MarkdownDefaults.blockSpacing()),
     ) {
         if (showPreview) {
-            PSegmented(
-                options =
-                    listOf(
-                        SegmentedOption(value = MarkdownEditorMode.Edit.name, label = editLabel),
-                        SegmentedOption(value = MarkdownEditorMode.Preview.name, label = previewLabel),
-                        SegmentedOption(value = MarkdownEditorMode.Split.name, label = splitLabel),
-                    ),
-                value = currentMode.name,
-                onValueChange = { next ->
+            PToggleGroup(
+                value = listOf(currentMode.name),
+                onValueChange = { selected ->
+                    val next = selected.firstOrNull() ?: return@PToggleGroup
                     val nextMode = MarkdownEditorMode.valueOf(next)
                     if (mode == null) setInternalMode(nextMode)
                     onModeChange?.invoke(nextMode)
                 },
+                variant = ToggleVariant.Surface,
                 size = ComponentSize.Small,
-            )
+            ) {
+                PToggleItem(value = MarkdownEditorMode.Edit.name, label = editLabel)
+                PToggleItem(value = MarkdownEditorMode.Preview.name, label = previewLabel)
+                PToggleItem(value = MarkdownEditorMode.Split.name, label = splitLabel)
+            }
         }
 
         when (currentMode) {
@@ -75,7 +85,11 @@ fun PMarkdownEditor(
                     enabled = enabled,
                 )
 
-            MarkdownEditorMode.Preview -> PMarkdownViewer(markdown = value)
+            MarkdownEditorMode.Preview ->
+                PMarkdownViewer(
+                    markdown = value,
+                    onTaskCheckedChange = taskToggleHandler,
+                )
 
             MarkdownEditorMode.Split -> {
                 MarkdownEditorTextArea(
@@ -84,10 +98,32 @@ fun PMarkdownEditor(
                     placeholder = placeholder,
                     enabled = enabled,
                 )
-                PMarkdownViewer(markdown = value)
+                PMarkdownViewer(
+                    markdown = value,
+                    onTaskCheckedChange = taskToggleHandler,
+                )
             }
         }
     }
+}
+
+private val TaskLineRegex = Regex("""^(\s*[-*+])\s+\[([ xX])]\s+(.*)$""")
+
+internal fun toggleTaskCheckbox(markdown: String, taskIndex: Int, checked: Boolean): String {
+    val lines = markdown.lines()
+    var currentTaskIndex = 0
+    val newLines = lines.map { line ->
+        val match = TaskLineRegex.matchEntire(line)
+        if (match != null && currentTaskIndex++ == taskIndex) {
+            val marker = match.groupValues[1]
+            val text = match.groupValues[3]
+            val mark = if (checked) "x" else " "
+            "$marker [$mark] $text"
+        } else {
+            line
+        }
+    }
+    return newLines.joinToString("\n")
 }
 
 @Composable
