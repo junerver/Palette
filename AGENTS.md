@@ -39,17 +39,19 @@ Palette/
 
 ## 构建命令
 
+**Windows 环境下 agent 执行 Gradle 命令时必须使用 `.\gradlew.bat`，禁止使用 `./gradlew`（会导致进程卡住）。**
+
 ```bash
-./gradlew build                      # 构建全项目
-./gradlew :palette:build             # 仅构建组件库
-./gradlew :app:run                   # 运行 Desktop 应用
-./gradlew :app:hotRunDesktop         # 通过 hotrun 插件运行支持热更新的 Desktop 应用
-./gradlew :app:installDebug          # 安装 Android Debug 包
-./gradlew :palette:allTests          # 运行组件库全部测试
-./gradlew :palette:desktopTest       # 运行 Desktop 测试
-./gradlew :palette:testDebugUnitTest # 运行 Android 单元测试
-./gradlew :palette:desktopBenchmarkBenchmark # 运行 Desktop 逻辑基准测试
-./gradlew :palette:publishToMavenLocal # 发布到本地 Maven
+.\gradlew.bat build                      # 构建全项目
+.\gradlew.bat :palette:build             # 仅构建组件库
+.\gradlew.bat :app:run                   # 运行 Desktop 应用
+.\gradlew.bat :app:hotRunDesktop         # 通过 hotrun 插件运行支持热更新的 Desktop 应用
+.\gradlew.bat :app:installDebug          # 安装 Android Debug 包
+.\gradlew.bat :palette:allTests          # 运行组件库全部测试
+.\gradlew.bat :palette:desktopTest       # 运行 Desktop 测试
+.\gradlew.bat :palette:testDebugUnitTest # 运行 Android 单元测试
+.\gradlew.bat :palette:desktopBenchmarkBenchmark # 运行 Desktop 逻辑基准测试
+.\gradlew.bat :palette:publishToMavenLocal # 发布到本地 Maven
 ```
 
 ## 编码规范

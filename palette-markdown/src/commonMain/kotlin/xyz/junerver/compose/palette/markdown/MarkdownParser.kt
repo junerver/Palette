@@ -184,7 +184,8 @@ object MarkdownParser {
                     val itemContents = mutableListOf<String>()
                     val itemChildren = mutableListOf<List<MarkdownBlock>>()
                     while (index < lines.size && lines[index].trim().isListItem() &&
-                        !lines[index].trim().isTaskListItem()) {
+                        !lines[index].trim().isTaskListItem() &&
+                        OrderedListRegex.matches(lines[index].trim()) == ordered) {
                         val itemFirstLine = lines[index].trim().removeListMarker()
                         val continuationLines = mutableListOf<String>()
                         index += 1

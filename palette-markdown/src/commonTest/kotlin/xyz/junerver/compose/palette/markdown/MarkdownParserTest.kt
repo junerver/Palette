@@ -986,6 +986,52 @@ class MarkdownParserTest {
 
 
     @Test
+    fun separatesOrderedAndUnorderedListsWhenMixed() {
+        val document =
+            MarkdownParser.parse(
+                """
+                1. first ordered
+                2. second ordered
+                - unordered item
+                """.trimIndent(),
+            )
+
+        assertEquals(2, document.blocks.size, "Mixed ordered/unordered should produce two separate list blocks")
+        val orderedList = assertIs<MarkdownListBlock>(document.blocks[0])
+        assertEquals(true, orderedList.ordered)
+        assertEquals(2, orderedList.items.size)
+        assertEquals("first ordered", orderedList.items[0])
+        assertEquals("second ordered", orderedList.items[1])
+
+        val unorderedList = assertIs<MarkdownListBlock>(document.blocks[1])
+        assertEquals(false, unorderedList.ordered)
+        assertEquals(1, unorderedList.items.size)
+        assertEquals("unordered item", unorderedList.items[0])
+    }
+
+    @Test
+    fun separatesUnorderedAndOrderedListsWhenMixed() {
+        val document =
+            MarkdownParser.parse(
+                """
+                - unordered first
+                - unordered second
+                1. ordered item
+                """.trimIndent(),
+            )
+
+        assertEquals(2, document.blocks.size, "Mixed unordered/ordered should produce two separate list blocks")
+        val unorderedList = assertIs<MarkdownListBlock>(document.blocks[0])
+        assertEquals(false, unorderedList.ordered)
+        assertEquals(2, unorderedList.items.size)
+
+        val orderedList = assertIs<MarkdownListBlock>(document.blocks[1])
+        assertEquals(true, orderedList.ordered)
+        assertEquals(1, orderedList.items.size)
+        assertEquals("ordered item", orderedList.items[0])
+    }
+
+    @Test
     fun parsesMultiLineReferenceDefinitionTitle() {
         val document =
             MarkdownParser.parse(

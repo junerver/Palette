@@ -40,6 +40,7 @@ import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -356,7 +357,7 @@ private fun MarkdownListBlock(
                 } else {
                     Text(
                         text = if (block.ordered) "${block.startNumber + index}." else "•",
-                        color = PaletteTheme.colors.textSecondary,
+                        style = PaletteTheme.typography.body.copy(color = PaletteTheme.colors.textSecondary),
                         modifier = Modifier.padding(end = 8.dp),
                     )
                 }
@@ -599,10 +600,14 @@ private fun TaskCheckbox(
     val fillColor = if (checked) PaletteTheme.colors.primary else PaletteTheme.colors.surface
     val borderColor = if (checked) PaletteTheme.colors.primary else PaletteTheme.colors.border
     val checkColor = PaletteTheme.colors.surface
+    val bodyStyle = PaletteTheme.typography.body
+    val lineHeightDp = with(LocalDensity.current) { bodyStyle.lineHeight.toDp() }
+    val fontSizeDp = with(LocalDensity.current) { bodyStyle.fontSize.toDp() }
+    val topPadding = ((lineHeightDp - fontSizeDp) / 2).coerceAtLeast(0.dp)
 
     Box(
         modifier = modifier
-            .padding(top = 3.dp, end = 8.dp)
+            .padding(top = topPadding, end = 8.dp)
             .defaultMinSize(minWidth = size, minHeight = size)
             .pointerInput(checked, enabled, onCheckedChange) {
                 if (enabled && onCheckedChange != null) {
