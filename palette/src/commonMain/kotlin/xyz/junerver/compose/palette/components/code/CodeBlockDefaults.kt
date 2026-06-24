@@ -40,6 +40,12 @@ data class CodeBlockColors(
             CodeTokenType.Punctuation -> punctuationColor
             CodeTokenType.Inserted -> stringColor
             CodeTokenType.Deleted -> commentColor
+            CodeTokenType.Property -> functionColor
+            CodeTokenType.Variable -> contentColor
+            CodeTokenType.Constant -> keywordColor
+            CodeTokenType.Builtin -> functionColor
+            CodeTokenType.ClassName -> typeColor
+            CodeTokenType.Namespace -> typeColor
         }
 }
 

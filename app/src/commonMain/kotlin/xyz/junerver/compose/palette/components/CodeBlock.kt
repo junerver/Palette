@@ -2,20 +2,17 @@ package xyz.junerver.compose.palette.components
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import xyz.junerver.compose.palette.components.markdown.PMarkdownViewer
+import xyz.junerver.compose.palette.components.code.PCodeBlock
 
 @Composable
 fun CodeBlock(
     code: String,
     modifier: Modifier = Modifier,
+    language: String = "kotlin",
 ) {
-    PMarkdownViewer(
-        markdown =
-            """
-            ```kotlin
-            ${code.trimIndent()}
-            ```
-            """.trimIndent(),
+    PCodeBlock(
+        code = code,
         modifier = modifier,
+        language = language,
     )
 }

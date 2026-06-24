@@ -9,7 +9,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.Dp
 import xyz.junerver.compose.palette.code.HighlightedCode
-import xyz.junerver.compose.palette.code.PaletteCodeHighlighter
 import xyz.junerver.compose.palette.components.avatar.AvatarDefaults as AvatarDefaultsImpl
 import xyz.junerver.compose.palette.components.avatar.AvatarShape as AvatarShapeImpl
 import xyz.junerver.compose.palette.components.avatar.AvatarSize as AvatarSizeImpl
@@ -800,7 +799,7 @@ fun PCodeBlock(
     title: String? = null,
     firstLineNumber: Int = 1,
     colors: CodeBlockColors = CodeBlockDefaults.colors(),
-    highlightedCode: HighlightedCode = PaletteCodeHighlighter.highlight(code.trimIndent(), language),
+    highlightedCode: HighlightedCode? = null,
 ) {
     PCodeBlockImpl(
         code = code,

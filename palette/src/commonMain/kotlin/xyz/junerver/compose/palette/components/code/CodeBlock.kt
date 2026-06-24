@@ -35,8 +35,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.delay
-import xyz.junerver.compose.palette.code.CodeToken
+import xyz.junerver.compose.hooks.useCreation
 import xyz.junerver.compose.hooks.useState
+import xyz.junerver.compose.palette.code.CodeToken
 import xyz.junerver.compose.palette.code.HighlightedCode
 import xyz.junerver.compose.palette.code.PaletteCodeHighlighter
 import xyz.junerver.compose.palette.core.theme.PaletteTheme
@@ -53,8 +54,13 @@ fun PCodeBlock(
     title: String? = null,
     firstLineNumber: Int = 1,
     colors: CodeBlockColors = CodeBlockDefaults.colors(),
-    highlightedCode: HighlightedCode = PaletteCodeHighlighter.highlight(code.trimIndent(), language),
+    highlightedCode: HighlightedCode? = null,
 ) {
+    val trimmedCode = code.trimIndent()
+    val resolvedHighlightedCode =
+        useCreation(highlightedCode, trimmedCode, language) {
+            highlightedCode ?: PaletteCodeHighlighter.highlight(trimmedCode, language)
+        }.current
     val clipboardManager = LocalClipboardManager.current
     val (copied, setCopied) = useState(false)
     val shape = RoundedCornerShape(CodeBlockDefaults.cornerRadius())
@@ -117,7 +123,7 @@ fun PCodeBlock(
                         .fillMaxWidth()
                         .padding(CodeBlockDefaults.padding()),
             ) {
-                highlightedCode.tokens.forEachIndexed { index, line ->
+                resolvedHighlightedCode.tokens.forEachIndexed { index, line ->
                     val lineNumber = firstLineNumber + index
                     Row(
                         modifier =
@@ -157,7 +163,7 @@ fun PCodeBlock(
         if (showCopyAction) {
             IconButton(
                 onClick = {
-                    clipboardManager.setText(AnnotatedString(code.trimIndent()))
+                    clipboardManager.setText(AnnotatedString(trimmedCode))
                     setCopied(true)
                 },
                 modifier =
@@ -167,7 +173,7 @@ fun PCodeBlock(
             ) {
                 Icon(
                     imageVector = if (copied) Icons.Default.Done else Icons.Default.ContentCopy,
-                    contentDescription = if (copied) "已复制" else "复制代码",
+                    contentDescription = if (copied) "Copied" else "Copy code",
                     tint = iconTint,
                 )
             }
