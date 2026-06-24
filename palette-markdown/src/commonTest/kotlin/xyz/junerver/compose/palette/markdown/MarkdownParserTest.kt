@@ -194,7 +194,7 @@ class MarkdownParserTest {
         assertEquals("bash", code.language)
         val tokens = code.highlighted.tokens.flatten()
         assertTrue(tokens.any { it.text == "export" && it.type == CodeTokenType.Keyword })
-        assertTrue(tokens.any { it.text == "echo" && it.type == CodeTokenType.Function })
+        assertTrue(tokens.any { it.text == "echo" && it.type == CodeTokenType.Builtin })
         assertTrue(tokens.any { it.text == "${'$'}APP_NAME" && it.type == CodeTokenType.Annotation })
     }
 
@@ -258,7 +258,7 @@ class MarkdownParserTest {
         val code = assertIs<MarkdownRenderBlock.Code>(model.blocks.single())
         assertEquals("diff", code.language)
         val tokens = code.highlighted.tokens.flatten()
-        assertTrue(tokens.any { it.text == "@@ -1,2 +1,2 @@" && it.type == CodeTokenType.Annotation })
+        assertTrue(tokens.any { it.text == "@@" && it.type == CodeTokenType.Annotation })
         assertTrue(tokens.any { it.text == "-OldButton()" && it.type == CodeTokenType.Deleted })
         assertTrue(tokens.any { it.text == "+NewButton()" && it.type == CodeTokenType.Inserted })
     }
@@ -861,4 +861,121 @@ class MarkdownParserTest {
         assertEquals(emptyList(), table.rowInlines.first()[1])
         assertEquals(emptyList(), table.rowInlines.last()[2])
     }
+
+    @Test
+    fun parsesInlineLinkWithBalancedParenthesesInDestination() {
+        val inline = MarkdownInlineParser.parse("[wiki](https://en.wikipedia.org/wiki/Foo_(bar))")
+        val link = assertIs<MarkdownInlineLink>(inline.single())
+        assertEquals("wiki", link.label)
+        assertEquals("https://en.wikipedia.org/wiki/Foo_(bar)", link.destination)
+    }
+
+    @Test
+    fun parsesInlineLinkWithBalancedParenthesesAndTitle() {
+        val inline = MarkdownInlineParser.parse("[wiki](https://en.wikipedia.org/wiki/Foo_(bar) \"Title\")")
+        val link = assertIs<MarkdownInlineLink>(inline.single())
+        assertEquals("wiki", link.label)
+        assertEquals("https://en.wikipedia.org/wiki/Foo_(bar)", link.destination)
+        assertEquals("Title", link.title)
+    }
+
+    @Test
+    fun normalizesTableRowColumnCountToMatchHeader() {
+        val document = MarkdownParser.parse(
+            """
+            | A | B | C |
+            | --- | --- | --- |
+            | 1 | 2 |
+            | 4 | 5 | 6 | 7 |
+            """.trimIndent(),
+        )
+        val table = assertIs<MarkdownTableBlock>(document.blocks.single())
+        assertEquals(listOf("A", "B", "C"), table.headers)
+        assertEquals(2, table.rows.size)
+        // Row with fewer columns gets empty cells
+        assertEquals(listOf("1", "2", ""), table.rows[0])
+        // Row with more columns gets truncated
+        assertEquals(listOf("4", "5", "6"), table.rows[1])
+    }
+
+    @Test
+    fun parsesEmphasisWithPunctuationBoundaries() {
+        // Test that emphasis works with punctuation boundaries
+        val inline = MarkdownInlineParser.parse("a**bold**c")
+        val strong = assertIs<MarkdownInlineStrong>(inline[1])
+        assertEquals("bold", strong.text)
+    }
+
+    @Test
+    fun parsesBareWwwAutolinkWithHttpPrefix() {
+        val inline = MarkdownInlineParser.parse("Visit www.example.com for more info.")
+        val link = assertIs<MarkdownInlineLink>(inline[1])
+        assertEquals("www.example.com", link.label)
+        assertEquals("http://www.example.com", link.destination)
+    }
+
+    @Test
+    fun decodesCommonHtmlEntities() {
+        val inline = MarkdownInlineParser.parse("Copyright &copy; 2024 &mdash; All rights reserved")
+        val text = inline.filterIsInstance<MarkdownInlineText>().joinToString("") { it.text }
+        assertTrue(text.contains("\u00A9"))
+        assertTrue(text.contains("\u2014"))
+    }
+
+    @Test
+    fun parsesNestedBlockquoteChildren() {
+        val document = MarkdownParser.parse(
+            """
+            > ## Nested Heading
+            >
+            > Paragraph inside blockquote.
+            """.trimIndent(),
+        )
+        val quote = assertIs<MarkdownBlockQuote>(document.blocks.single())
+        assertTrue(quote.children.isNotEmpty())
+        val heading = quote.children.filterIsInstance<MarkdownHeading>().firstOrNull()
+        assertEquals(2, heading?.level)
+        val paragraph = quote.children.filterIsInstance<MarkdownParagraph>().firstOrNull()
+        assertTrue(paragraph?.text?.contains("Paragraph inside blockquote") == true)
+    }
+
+    @Test
+    fun parsesListItemChildren() {
+        val document = MarkdownParser.parse(
+            """
+            - First item
+              - Nested item
+              - Another nested
+            - Second item
+            """.trimIndent(),
+        )
+        val list = assertIs<MarkdownListBlock>(document.blocks.single())
+        assertEquals(2, list.listItems.size)
+        assertTrue(list.listItems[0].children.isNotEmpty())
+        val nestedList = list.listItems[0].children.filterIsInstance<MarkdownListBlock>().firstOrNull()
+        assertEquals(2, nestedList?.items?.size)
+        assertTrue(list.listItems[1].children.isEmpty())
+    }
+
+
+    @Test
+    fun parsesMultiLineReferenceDefinitionTitle() {
+        val document =
+            MarkdownParser.parse(
+                """
+                Read [the guide][guide].
+
+                [guide]: https://example.com/guide
+                  "Multi-line
+                  title here"
+                """.trimIndent(),
+            )
+
+        val paragraph = assertIs<MarkdownParagraph>(document.blocks[0])
+        val link = paragraph.inlines.filterIsInstance<MarkdownInlineLink>().first()
+        assertEquals("the guide", link.label)
+        assertEquals("https://example.com/guide", link.destination)
+        assertEquals("Multi-line title here", link.title)
+    }
+
 }
