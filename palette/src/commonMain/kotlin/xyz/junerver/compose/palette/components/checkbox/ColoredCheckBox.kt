@@ -33,7 +33,6 @@ fun ColoredCheckBox(
     enabled: Boolean = true,
     size: ComponentSize = ComponentSize.Medium,
     colors: CheckboxColors = CheckboxDefaults.colors(),
-    visualOnly: Boolean = false,
 ) {
     val interactionSource = remember { MutableInteractionSource() }
     val isFocused by interactionSource.collectIsFocusedAsState()
@@ -70,19 +69,13 @@ fun ColoredCheckBox(
     Box(
         modifier = modifier
             .size(checkboxSize + CheckboxDefaults.touchPadding(size))
-            .then(
-                if (visualOnly) {
-                    Modifier
-                } else {
-                    Modifier.toggleable(
-                        value = checked,
-                        enabled = enabled,
-                        role = Role.Checkbox,
-                        interactionSource = interactionSource,
-                        indication = null,
-                        onValueChange = { onCheckedChange?.invoke(it) }
-                    )
-                }
+            .toggleable(
+                value = checked,
+                enabled = enabled,
+                role = Role.Checkbox,
+                interactionSource = interactionSource,
+                indication = null,
+                onValueChange = { onCheckedChange?.invoke(it) }
             ),
         contentAlignment = Alignment.Center
     ) {
