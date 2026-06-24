@@ -21,9 +21,12 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import xyz.junerver.compose.hooks.useCreation
 import xyz.junerver.compose.palette.core.theme.PaletteTheme
+import xyz.junerver.compose.palette.mermaid.MermaidDirection
 import xyz.junerver.compose.palette.mermaid.MermaidDiagramType
 import xyz.junerver.compose.palette.mermaid.MermaidEdgeArrow
 import xyz.junerver.compose.palette.mermaid.MermaidEdgeStyle
@@ -33,6 +36,7 @@ import xyz.junerver.compose.palette.mermaid.MermaidNodeShape
 import xyz.junerver.compose.palette.mermaid.MermaidNote
 import xyz.junerver.compose.palette.mermaid.MermaidNotePosition
 import xyz.junerver.compose.palette.mermaid.MermaidParser
+import kotlin.math.abs
 import kotlin.math.max
 import kotlin.math.sqrt
 
@@ -51,6 +55,15 @@ internal fun MermaidNodeShape.toContainerKind(): MermaidNodeContainerKind =
         MermaidNodeShape.Stadium -> MermaidNodeContainerKind.Stadium
         MermaidNodeShape.Diamond -> MermaidNodeContainerKind.Diamond
         MermaidNodeShape.Circle -> MermaidNodeContainerKind.Circle
+        MermaidNodeShape.Subroutine -> MermaidNodeContainerKind.Rectangle
+        MermaidNodeShape.Database -> MermaidNodeContainerKind.Stadium
+        MermaidNodeShape.Asymmetric -> MermaidNodeContainerKind.Rectangle
+        MermaidNodeShape.Hexagon -> MermaidNodeContainerKind.Diamond
+        MermaidNodeShape.Parallelogram -> MermaidNodeContainerKind.Rectangle
+        MermaidNodeShape.ParallelogramAlt -> MermaidNodeContainerKind.Rectangle
+        MermaidNodeShape.Trapezoid -> MermaidNodeContainerKind.Rectangle
+        MermaidNodeShape.TrapezoidAlt -> MermaidNodeContainerKind.Rectangle
+        MermaidNodeShape.DoubleCircle -> MermaidNodeContainerKind.Circle
     }
 
 internal data class MermaidArrowHead(
@@ -58,6 +71,217 @@ internal data class MermaidArrowHead(
     val left: Offset,
     val right: Offset,
 )
+
+internal data class MermaidEdgeEndpoints(
+    val start: Offset,
+    val end: Offset,
+)
+
+internal data class MermaidFlowchartNodeVisualStyle(
+    val fill: Color? = null,
+    val stroke: Color? = null,
+    val color: Color? = null,
+    val strokeWidth: Float? = null,
+)
+
+internal data class MermaidFlowchartEdgeVisualStyle(
+    val stroke: Color? = null,
+    val color: Color? = null,
+    val strokeWidth: Float? = null,
+)
+
+internal fun resolveFlowchartNodeVisualStyles(layout: MermaidLayout): Map<String, MermaidFlowchartNodeVisualStyle> {
+    if (
+        layout.flowchartClassDefs.isEmpty() &&
+        layout.flowchartClassAssignments.isEmpty() &&
+        layout.flowchartNodeStyles.isEmpty()
+    ) {
+        return emptyMap()
+    }
+
+    val classDeclarations =
+        layout.flowchartClassDefs.associate { classDef ->
+            classDef.name to classDef.declarations.parseMermaidStyleDeclarations()
+        }
+    val styles = mutableMapOf<String, MermaidFlowchartNodeVisualStyle>()
+
+    layout.flowchartClassAssignments.forEach { assignment ->
+        val declarations = classDeclarations[assignment.className] ?: return@forEach
+        assignment.nodeIds.forEach { nodeId ->
+            styles[nodeId] = (styles[nodeId] ?: MermaidFlowchartNodeVisualStyle()).mergeNodeDeclarations(declarations)
+        }
+    }
+
+    layout.flowchartNodeStyles.forEach { nodeStyle ->
+        styles[nodeStyle.nodeId] =
+            (styles[nodeStyle.nodeId] ?: MermaidFlowchartNodeVisualStyle())
+                .mergeNodeDeclarations(nodeStyle.declarations.parseMermaidStyleDeclarations())
+    }
+
+    return styles
+}
+
+internal fun resolveFlowchartEdgeVisualStyles(layout: MermaidLayout): Map<Int, MermaidFlowchartEdgeVisualStyle> {
+    if (layout.flowchartLinkStyles.isEmpty()) return emptyMap()
+
+    val styles = mutableMapOf<Int, MermaidFlowchartEdgeVisualStyle>()
+    layout.flowchartLinkStyles.forEach { linkStyle ->
+        val declarations = linkStyle.declarations.parseMermaidStyleDeclarations()
+        val edgeIndexes = linkStyle.edgeIndexes ?: layout.edges.indices.toList()
+        edgeIndexes.forEach { index ->
+            if (index in layout.edges.indices) {
+                styles[index] = (styles[index] ?: MermaidFlowchartEdgeVisualStyle()).mergeEdgeDeclarations(declarations)
+            }
+        }
+    }
+
+    return styles
+}
+
+private fun MermaidFlowchartNodeVisualStyle.mergeNodeDeclarations(
+    declarations: Map<String, String>,
+): MermaidFlowchartNodeVisualStyle =
+    copy(
+        fill = declarations["fill"]?.parseMermaidCssColor() ?: declarations["background-color"]?.parseMermaidCssColor() ?: fill,
+        stroke = declarations["stroke"]?.parseMermaidCssColor() ?: stroke,
+        color = declarations["color"]?.parseMermaidCssColor() ?: color,
+        strokeWidth = declarations["stroke-width"]?.parseMermaidStrokeWidth() ?: strokeWidth,
+    )
+
+private fun MermaidFlowchartEdgeVisualStyle.mergeEdgeDeclarations(
+    declarations: Map<String, String>,
+): MermaidFlowchartEdgeVisualStyle =
+    copy(
+        stroke = declarations["stroke"]?.parseMermaidCssColor() ?: stroke,
+        color = declarations["color"]?.parseMermaidCssColor() ?: color,
+        strokeWidth = declarations["stroke-width"]?.parseMermaidStrokeWidth() ?: strokeWidth,
+    )
+
+internal fun String.parseMermaidStyleDeclarations(): Map<String, String> =
+    splitMermaidStyleDeclarations()
+        .mapNotNull { declaration ->
+            val separator = declaration.indexOf(':')
+            if (separator <= 0) return@mapNotNull null
+            val key = declaration.substring(0, separator).trim().lowercase()
+            val value = declaration.substring(separator + 1).trim()
+            if (key.isEmpty() || value.isEmpty()) null else key to value
+        }.toMap()
+
+private fun String.splitMermaidStyleDeclarations(): List<String> {
+    val parts = mutableListOf<String>()
+    val current = StringBuilder()
+    var parenDepth = 0
+    var inQuote = false
+    var escaped = false
+
+    for (char in this) {
+        when {
+            escaped -> {
+                current.append(char)
+                escaped = false
+            }
+
+            char == '\\' -> {
+                current.append(char)
+                escaped = true
+            }
+
+            char == '"' -> {
+                current.append(char)
+                inQuote = !inQuote
+            }
+
+            !inQuote && char == '(' -> {
+                current.append(char)
+                parenDepth += 1
+            }
+
+            !inQuote && char == ')' -> {
+                current.append(char)
+                parenDepth = (parenDepth - 1).coerceAtLeast(0)
+            }
+
+            !inQuote && parenDepth == 0 && (char == ',' || char == ';') -> {
+                parts += current.toString()
+                current.clear()
+            }
+
+            else -> current.append(char)
+        }
+    }
+
+    parts += current.toString()
+    return parts.map { it.trim() }.filter { it.isNotEmpty() }
+}
+
+private fun String.parseMermaidStrokeWidth(): Float? =
+    trim()
+        .removeSuffix("px")
+        .removeSuffix("PX")
+        .trim()
+        .toFloatOrNull()
+        ?.takeIf { it >= 0f }
+
+internal fun String.parseMermaidCssColor(): Color? {
+    val value = trim().lowercase()
+    if (value == "transparent") return Color.Transparent
+
+    MermaidNamedCssColors[value]?.let { return it }
+
+    if (value.startsWith("#")) {
+        val hex = value.drop(1)
+        val expanded =
+            when (hex.length) {
+                3 -> hex.flatMap { listOf(it, it) }.joinToString("")
+                6 -> hex
+                else -> return null
+            }
+        val rgb = expanded.toLongOrNull(radix = 16) ?: return null
+        return Color(0xFF000000 or rgb)
+    }
+
+    val rgba = CssRgbRegex.matchEntire(value) ?: return null
+    val red = rgba.groupValues[1].toIntOrNull()?.coerceIn(0, 255) ?: return null
+    val green = rgba.groupValues[2].toIntOrNull()?.coerceIn(0, 255) ?: return null
+    val blue = rgba.groupValues[3].toIntOrNull()?.coerceIn(0, 255) ?: return null
+    val alpha = rgba.groupValues.getOrNull(4)?.takeIf { it.isNotEmpty() }?.toFloatOrNull()?.coerceIn(0f, 1f) ?: 1f
+    return Color(red = red / 255f, green = green / 255f, blue = blue / 255f, alpha = alpha)
+}
+
+internal fun calculateFlowchartEdgeEndpoints(
+    direction: MermaidDirection,
+    fromX: Float,
+    fromY: Float,
+    toX: Float,
+    toY: Float,
+    nodeWidth: Float,
+    nodeHeight: Float,
+): MermaidEdgeEndpoints =
+    when (direction) {
+        MermaidDirection.TopDown ->
+            MermaidEdgeEndpoints(
+                start = Offset(fromX + nodeWidth / 2f, fromY + nodeHeight),
+                end = Offset(toX + nodeWidth / 2f, toY),
+            )
+
+        MermaidDirection.BottomTop ->
+            MermaidEdgeEndpoints(
+                start = Offset(fromX + nodeWidth / 2f, fromY),
+                end = Offset(toX + nodeWidth / 2f, toY + nodeHeight),
+            )
+
+        MermaidDirection.LeftRight ->
+            MermaidEdgeEndpoints(
+                start = Offset(fromX + nodeWidth, fromY + nodeHeight / 2f),
+                end = Offset(toX, toY + nodeHeight / 2f),
+            )
+
+        MermaidDirection.RightLeft ->
+            MermaidEdgeEndpoints(
+                start = Offset(fromX, fromY + nodeHeight / 2f),
+                end = Offset(toX + nodeWidth, toY + nodeHeight / 2f),
+            )
+    }
 
 internal fun calculateMermaidArrowHead(
     start: Offset,
@@ -97,21 +321,33 @@ fun PMermaidDiagram(
     source: String,
     modifier: Modifier = Modifier,
     colors: MermaidColors = MermaidDefaults.colors(),
-    layout: MermaidLayout = MermaidLayoutEngine.layout(MermaidParser.parse(source)),
+    layout: MermaidLayout? = null,
 ) {
-    when (layout.type) {
+    val resolvedLayout =
+        useCreation(layout, source) {
+            layout ?: MermaidLayoutEngine.layout(MermaidParser.parse(source))
+        }.current
+
+    when (resolvedLayout.type) {
         MermaidDiagramType.Flowchart ->
             FlowchartMermaidDiagram(
                 modifier = modifier,
                 colors = colors,
-                layout = layout,
+                layout = resolvedLayout,
             )
 
         MermaidDiagramType.Sequence ->
             SequenceMermaidDiagram(
                 modifier = modifier,
                 colors = colors,
-                layout = layout,
+                layout = resolvedLayout,
+            )
+
+        MermaidDiagramType.ClassDiagram ->
+            FlowchartMermaidDiagram(
+                modifier = modifier,
+                colors = colors,
+                layout = resolvedLayout,
             )
     }
 }
@@ -130,6 +366,9 @@ private fun FlowchartMermaidDiagram(
     val subgraphBottom = layout.subgraphs.maxOfOrNull { it.y + it.height } ?: 0f
     val width = max(nodeRight, subgraphRight).dp
     val height = max(nodeBottom, subgraphBottom).dp
+    val labelPositions = calculateFlowchartEdgeLabelPositions(layout)
+    val nodeVisualStyles = resolveFlowchartNodeVisualStyles(layout)
+    val edgeVisualStyles = resolveFlowchartEdgeVisualStyles(layout)
 
     Box(
         modifier =
@@ -157,16 +396,29 @@ private fun FlowchartMermaidDiagram(
         }
 
         Canvas(modifier = Modifier.matchParentSize()) {
-            layout.edges.forEach { edge ->
-                val from = layout.nodes[edge.from] ?: return@forEach
-                val to = layout.nodes[edge.to] ?: return@forEach
-                val start = Offset(from.x + nodeWidth.toPx(), from.y + nodeHeight.toPx() / 2f)
-                val end = Offset(to.x, to.y + nodeHeight.toPx() / 2f)
+            layout.edges.forEachIndexed { index, edge ->
+                if (!edge.visible) return@forEachIndexed
+                val from = layout.nodes[edge.from] ?: return@forEachIndexed
+                val to = layout.nodes[edge.to] ?: return@forEachIndexed
+                val edgeVisualStyle = edgeVisualStyles[index]
+                val edgeColor = edgeVisualStyle?.stroke ?: colors.edgeColor
+                val edgeStrokeWidth = edgeVisualStyle?.strokeWidth?.dp?.toPx()
+                    ?: if (edge.style == MermaidEdgeStyle.Thick) 3.dp.toPx() else 2.dp.toPx()
+                val endpoints =
+                    calculateFlowchartEdgeEndpoints(
+                        direction = layout.direction,
+                        fromX = from.x,
+                        fromY = from.y,
+                        toX = to.x,
+                        toY = to.y,
+                        nodeWidth = nodeWidth.toPx(),
+                        nodeHeight = nodeHeight.toPx(),
+                    )
                 drawLine(
-                    color = colors.edgeColor,
-                    start = start,
-                    end = end,
-                    strokeWidth = if (edge.style == MermaidEdgeStyle.Thick) 3.dp.toPx() else 2.dp.toPx(),
+                    color = edgeColor,
+                    start = endpoints.start,
+                    end = endpoints.end,
+                    strokeWidth = edgeStrokeWidth,
                     cap = StrokeCap.Round,
                     pathEffect =
                         if (edge.style == MermaidEdgeStyle.Dotted) {
@@ -175,68 +427,75 @@ private fun FlowchartMermaidDiagram(
                             null
                         },
                 )
-                if (edge.arrow != MermaidEdgeArrow.None) {
-                    drawMermaidArrowHead(
-                        color = colors.edgeColor,
-                        arrowHead =
-                            calculateMermaidArrowHead(
-                                start = start,
-                                end = end,
-                                size = 10.dp.toPx(),
-                            ),
-                        strokeWidth = if (edge.style == MermaidEdgeStyle.Thick) 3.dp.toPx() else 2.dp.toPx(),
-                    )
-                }
+                drawMermaidEdgeEndMarker(
+                    color = edgeColor,
+                    start = endpoints.start,
+                    end = endpoints.end,
+                    arrow = edge.arrow,
+                    strokeWidth = edgeStrokeWidth,
+                )
+                drawMermaidEdgeEndMarker(
+                    color = edgeColor,
+                    start = endpoints.end,
+                    end = endpoints.start,
+                    arrow = edge.startArrow,
+                    strokeWidth = edgeStrokeWidth,
+                )
                 if (edge.arrow == MermaidEdgeArrow.Bidirectional) {
-                    drawMermaidArrowHead(
-                        color = colors.edgeColor,
-                        arrowHead =
-                            calculateMermaidArrowHead(
-                                start = end,
-                                end = start,
-                                size = 10.dp.toPx(),
-                            ),
-                        strokeWidth = if (edge.style == MermaidEdgeStyle.Thick) 3.dp.toPx() else 2.dp.toPx(),
+                    drawMermaidEdgeEndMarker(
+                        color = edgeColor,
+                        start = endpoints.end,
+                        end = endpoints.start,
+                        arrow = MermaidEdgeArrow.Forward,
+                        strokeWidth = edgeStrokeWidth,
                     )
                 }
             }
         }
 
         layout.edges.forEachIndexed { index, edge ->
+            if (!edge.visible) return@forEachIndexed
             val label = edge.label ?: return@forEachIndexed
-            val from = layout.nodes[edge.from] ?: return@forEachIndexed
-            val to = layout.nodes[edge.to] ?: return@forEachIndexed
-            val labelX = ((from.x + to.x) / 2f + 44f).coerceAtLeast(0f)
-            val labelY = ((from.y + to.y) / 2f + 8f + index * 18f).coerceAtLeast(0f)
+            val labelPosition = labelPositions[index] ?: return@forEachIndexed
+            val edgeVisualStyle = edgeVisualStyles[index]
 
             Text(
                 text = label,
-                color = colors.nodeContentColor,
+                color = edgeVisualStyle?.color ?: colors.nodeContentColor,
                 style = PaletteTheme.typography.label,
                 modifier =
                     Modifier
-                        .absoluteOffset(x = labelX.dp, y = labelY.dp)
+                        .absoluteOffset(x = labelPosition.x.dp, y = labelPosition.y.dp)
                         .background(colors.nodeContainerColor, RoundedCornerShape(4.dp))
-                        .border(1.dp, colors.edgeColor, RoundedCornerShape(4.dp))
+                        .border(
+                            width = (edgeVisualStyle?.strokeWidth ?: 1f).dp,
+                            color = edgeVisualStyle?.stroke ?: colors.edgeColor,
+                            shape = RoundedCornerShape(4.dp),
+                        )
                         .padding(horizontal = 6.dp, vertical = 2.dp),
             )
         }
 
         layout.nodes.values.forEach { item ->
             val nodeShape = item.node.shape.toComposeShape()
+            val nodeVisualStyle = nodeVisualStyles[item.node.id]
             Box(
                 modifier =
                     Modifier
                         .absoluteOffset(x = item.x.dp, y = item.y.dp)
                         .size(width = nodeWidth, height = nodeHeight)
-                        .background(colors.nodeContainerColor, nodeShape)
-                        .border(1.dp, colors.nodeBorderColor, nodeShape)
+                        .background(nodeVisualStyle?.fill ?: colors.nodeContainerColor, nodeShape)
+                        .border(
+                            width = (nodeVisualStyle?.strokeWidth ?: 1f).dp,
+                            color = nodeVisualStyle?.stroke ?: colors.nodeBorderColor,
+                            shape = nodeShape,
+                        )
                         .padding(horizontal = if (item.node.shape == MermaidNodeShape.Diamond) 20.dp else 8.dp),
                 contentAlignment = Alignment.Center,
             ) {
                 Text(
                     text = item.node.label,
-                    color = colors.nodeContentColor,
+                    color = nodeVisualStyle?.color ?: colors.nodeContentColor,
                     style = PaletteTheme.typography.label,
                     textAlign = TextAlign.Center,
                 )
@@ -252,6 +511,34 @@ private fun FlowchartMermaidDiagram(
             )
         }
     }
+}
+
+private data class MermaidEdgeLabelPosition(
+    val x: Float,
+    val y: Float,
+)
+
+private fun calculateFlowchartEdgeLabelPositions(layout: MermaidLayout): Map<Int, MermaidEdgeLabelPosition> {
+    val placed = mutableListOf<MermaidEdgeLabelPosition>()
+    val positions = mutableMapOf<Int, MermaidEdgeLabelPosition>()
+
+    layout.edges.forEachIndexed { index, edge ->
+        if (edge.label == null) return@forEachIndexed
+        val from = layout.nodes[edge.from] ?: return@forEachIndexed
+        val to = layout.nodes[edge.to] ?: return@forEachIndexed
+        val labelX = ((from.x + to.x) / 2f + 44f).coerceAtLeast(0f)
+        var labelY = ((from.y + to.y) / 2f + 8f).coerceAtLeast(0f)
+
+        while (placed.any { abs(it.x - labelX) < 96f && abs(it.y - labelY) < 24f }) {
+            labelY += 18f
+        }
+
+        val position = MermaidEdgeLabelPosition(labelX, labelY)
+        placed += position
+        positions[index] = position
+    }
+
+    return positions
 }
 
 @Composable
@@ -324,27 +611,26 @@ private fun SequenceMermaidDiagram(
                     cap = StrokeCap.Round,
                     pathEffect = pathEffect,
                 )
-                if (edge.arrow != MermaidEdgeArrow.None) {
-                    drawMermaidArrowHead(
-                        color = colors.edgeColor,
-                        arrowHead =
-                            calculateMermaidArrowHead(
-                                start = start,
-                                end = end,
-                                size = 10.dp.toPx(),
-                            ),
-                        strokeWidth = if (edge.style == MermaidEdgeStyle.Thick) 3.dp.toPx() else 2.dp.toPx(),
-                    )
-                }
+                drawMermaidEdgeEndMarker(
+                    color = colors.edgeColor,
+                    start = start,
+                    end = end,
+                    arrow = edge.arrow,
+                    strokeWidth = if (edge.style == MermaidEdgeStyle.Thick) 3.dp.toPx() else 2.dp.toPx(),
+                )
+                drawMermaidEdgeEndMarker(
+                    color = colors.edgeColor,
+                    start = end,
+                    end = start,
+                    arrow = edge.startArrow,
+                    strokeWidth = if (edge.style == MermaidEdgeStyle.Thick) 3.dp.toPx() else 2.dp.toPx(),
+                )
                 if (edge.arrow == MermaidEdgeArrow.Bidirectional) {
-                    drawMermaidArrowHead(
+                    drawMermaidEdgeEndMarker(
                         color = colors.edgeColor,
-                        arrowHead =
-                            calculateMermaidArrowHead(
-                                start = end,
-                                end = start,
-                                size = 10.dp.toPx(),
-                            ),
+                        start = end,
+                        end = start,
+                        arrow = MermaidEdgeArrow.Forward,
                         strokeWidth = if (edge.style == MermaidEdgeStyle.Thick) 3.dp.toPx() else 2.dp.toPx(),
                     )
                 }
@@ -500,6 +786,75 @@ private val DiamondShape =
         lineTo(0f, size.height / 2f)
         close()
     }
+
+private val CssRgbRegex =
+    Regex("""rgba?\(\s*([0-9]{1,3})\s*,\s*([0-9]{1,3})\s*,\s*([0-9]{1,3})(?:\s*,\s*([0-9.]+))?\s*\)""")
+
+private val MermaidNamedCssColors =
+    mapOf(
+        "black" to Color.Black,
+        "white" to Color.White,
+        "red" to Color.Red,
+        "green" to Color.Green,
+        "blue" to Color.Blue,
+        "yellow" to Color.Yellow,
+        "cyan" to Color.Cyan,
+        "magenta" to Color.Magenta,
+        "gray" to Color.Gray,
+        "grey" to Color.Gray,
+        "darkgray" to Color.DarkGray,
+        "darkgrey" to Color.DarkGray,
+        "lightgray" to Color.LightGray,
+        "lightgrey" to Color.LightGray,
+    )
+
+private fun androidx.compose.ui.graphics.drawscope.DrawScope.drawMermaidEdgeEndMarker(
+    color: Color,
+    start: Offset,
+    end: Offset,
+    arrow: MermaidEdgeArrow,
+    strokeWidth: Float,
+) {
+    when (arrow) {
+        MermaidEdgeArrow.Forward,
+        MermaidEdgeArrow.Open,
+        MermaidEdgeArrow.Bidirectional,
+        ->
+            drawMermaidArrowHead(
+                color = color,
+                arrowHead = calculateMermaidArrowHead(start = start, end = end, size = 10.dp.toPx()),
+                strokeWidth = strokeWidth,
+            )
+
+        MermaidEdgeArrow.Circle ->
+            drawCircle(
+                color = color,
+                radius = 5.dp.toPx(),
+                center = end,
+                style = Stroke(width = strokeWidth),
+            )
+
+        MermaidEdgeArrow.Cross -> {
+            val size = 5.dp.toPx()
+            drawLine(
+                color = color,
+                start = Offset(end.x - size, end.y - size),
+                end = Offset(end.x + size, end.y + size),
+                strokeWidth = strokeWidth,
+                cap = StrokeCap.Round,
+            )
+            drawLine(
+                color = color,
+                start = Offset(end.x - size, end.y + size),
+                end = Offset(end.x + size, end.y - size),
+                strokeWidth = strokeWidth,
+                cap = StrokeCap.Round,
+            )
+        }
+
+        MermaidEdgeArrow.None -> Unit
+    }
+}
 
 private fun androidx.compose.ui.graphics.drawscope.DrawScope.drawMermaidArrowHead(
     color: Color,
