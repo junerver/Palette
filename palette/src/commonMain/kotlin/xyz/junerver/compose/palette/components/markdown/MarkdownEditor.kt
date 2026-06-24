@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
 import xyz.junerver.compose.hooks.useState
 import xyz.junerver.compose.palette.components.segmented.PSegmented
@@ -33,7 +34,15 @@ fun PMarkdownEditor(
 ) {
     val defaultMode = if (showPreview) MarkdownEditorMode.Split else MarkdownEditorMode.Edit
     val (internalMode, setInternalMode) = useState(mode ?: defaultMode)
-    val currentMode = if (showPreview) mode ?: internalMode else MarkdownEditorMode.Edit
+    val requestedMode = mode ?: internalMode
+    val currentMode = if (showPreview || mode != null) requestedMode else MarkdownEditorMode.Edit
+
+    LaunchedEffect(mode, showPreview) {
+        when {
+            mode != null -> setInternalMode(mode)
+            !showPreview -> setInternalMode(MarkdownEditorMode.Edit)
+        }
+    }
 
     Column(
         modifier = modifier,
