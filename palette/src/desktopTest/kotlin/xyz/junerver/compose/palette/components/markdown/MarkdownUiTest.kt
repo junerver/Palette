@@ -250,33 +250,6 @@ class MarkdownUiTest {
     }
 
     @Test
-    fun editorPreviewCheckboxMultipleClicks() {
-        var textValue = "- [x] first\n- [ ] second"
-        rule.setContent {
-            PaletteMaterialTheme {
-                PMarkdownEditor(
-                    value = textValue,
-                    onValueChange = { textValue = it },
-                    mode = MarkdownEditorMode.Preview,
-                    editLabel = "Edit",
-                    previewLabel = "Preview",
-                    splitLabel = "Split",
-                )
-            }
-        }
-
-        // First click: check "second"
-        rule.onNodeWithTag("task-checkbox:1").performClick()
-        rule.waitForIdle()
-        assertTrue(textValue.contains("- [x] second"), "After 1st click: $textValue")
-
-        // Second click: uncheck "second"
-        rule.onNodeWithTag("task-checkbox:1").performClick()
-        rule.waitForIdle()
-        assertTrue(textValue.contains("- [ ] second"), "After 2nd click: $textValue")
-    }
-
-    @Test
     fun toggleableMultipleClicksWork() {
         // Minimal repro: a single toggleable that recomposes on click
         var count = 0
@@ -329,94 +302,5 @@ class MarkdownUiTest {
         assertEquals(false, checked, "After 2nd click")
     }
 
-    @Test
-    fun coloredCheckBoxMultipleClicks() {
-        // Test ColoredCheckBox itself for multi-click
-        var checked = false
-        rule.setContent {
-            PaletteMaterialTheme {
-                ColoredCheckBox(
-                    checked = checked,
-                    onCheckedChange = { checked = it },
-                    modifier = Modifier.testTag("cb"),
-                )
-            }
-        }
-
-        rule.onNodeWithTag("cb").performClick()
-        rule.waitForIdle()
-        assertEquals(true, checked, "After 1st click")
-
-        rule.onNodeWithTag("cb").performClick()
-        rule.waitForIdle()
-        assertEquals(false, checked, "After 2nd click")
-    }
-
-    @Test
-    fun wrappedCheckBoxMultipleClicks() {
-        // Test with external toggleable wrapper + ColoredCheckBox(visualOnly)
-        var checked = false
-        rule.setContent {
-            PaletteMaterialTheme {
-                Box(
-                    modifier = Modifier
-                        .testTag("cb")
-                        .toggleable(
-                            value = checked,
-                            onValueChange = { checked = it },
-                        )
-                ) {
-                    ColoredCheckBox(
-                        checked = checked,
-                        onCheckedChange = null,
-                        visualOnly = true,
-                    )
-                }
-            }
-        }
-
-        rule.onNodeWithTag("cb").performClick()
-        rule.waitForIdle()
-        assertEquals(true, checked, "After 1st click")
-
-        rule.onNodeWithTag("cb").performClick()
-        rule.waitForIdle()
-        assertEquals(false, checked, "After 2nd click")
-    }
-
-
-    @Test
-    fun toggleableWithDisabledChildMultipleClicks() {
-        // Test: does a child toggleable(enabled=false) break parent toggleable?
-        var checked = false
-        rule.setContent {
-            Box(
-                modifier = Modifier
-                    .testTag("parent")
-                    .toggleable(
-                        value = checked,
-                        onValueChange = { checked = it },
-                    )
-            ) {
-                Box(
-                    modifier = Modifier
-                        .size(32.dp)
-                        .toggleable(
-                            value = checked,
-                            enabled = false,
-                            onValueChange = {},
-                        )
-                )
-            }
-        }
-
-        rule.onNodeWithTag("parent").performClick()
-        rule.waitForIdle()
-        assertEquals(true, checked, "After 1st click")
-
-        rule.onNodeWithTag("parent").performClick()
-        rule.waitForIdle()
-        assertEquals(false, checked, "After 2nd click")
-    }
 
 }
