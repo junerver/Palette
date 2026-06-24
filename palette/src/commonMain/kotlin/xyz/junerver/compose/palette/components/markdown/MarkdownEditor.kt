@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import xyz.junerver.compose.hooks.useState
 import xyz.junerver.compose.palette.components.textfield.TextArea
@@ -44,8 +45,8 @@ fun PMarkdownEditor(
         }
     }
 
-    val taskToggleHandler: (Int, Boolean) -> Unit = { taskIndex, checked ->
-        onValueChange(toggleTaskCheckbox(value, taskIndex, checked))
+    val taskToggleHandler: (Int) -> Unit = { taskIndex ->
+        onValueChange(toggleTaskCheckbox(value, taskIndex))
     }
 
     Column(
@@ -103,16 +104,18 @@ fun PMarkdownEditor(
 
 private val TaskLineRegex = Regex("""^(\s*[-*+])\s+\[([ xX])]\s+(.*)$""")
 
-internal fun toggleTaskCheckbox(markdown: String, taskIndex: Int, checked: Boolean): String {
+internal fun toggleTaskCheckbox(markdown: String, taskIndex: Int): String {
     val lines = markdown.lines()
     var currentTaskIndex = 0
     val newLines = lines.map { line ->
         val match = TaskLineRegex.matchEntire(line)
         if (match != null && currentTaskIndex++ == taskIndex) {
             val marker = match.groupValues[1]
+            val currentMark = match.groupValues[2]
             val text = match.groupValues[3]
-            val mark = if (checked) "x" else " "
-            "$marker [$mark] $text"
+            val newMark = if (currentMark.equals("x", ignoreCase = true)) " " else "x"
+            val result = "$marker [$newMark] $text"
+            result
         } else {
             line
         }

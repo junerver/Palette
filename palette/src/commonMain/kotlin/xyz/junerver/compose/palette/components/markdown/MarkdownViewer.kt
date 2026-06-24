@@ -2,7 +2,11 @@ package xyz.junerver.compose.palette.components.markdown
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.layout.defaultMinSize
+import androidx.compose.ui.semantics.Role
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -20,12 +24,21 @@ import androidx.compose.material3.Divider
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.geometry.CornerRadius
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.contentDescription
@@ -45,10 +58,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.em
 import androidx.compose.ui.unit.sp
 import xyz.junerver.compose.hooks.useCreation
-import xyz.junerver.compose.palette.components.checkbox.ColoredCheckBox
 import xyz.junerver.compose.palette.components.code.PCodeBlock
 import xyz.junerver.compose.palette.components.mermaid.PMermaidDiagram
-import xyz.junerver.compose.palette.core.spec.ComponentSize
 import xyz.junerver.compose.palette.core.theme.PaletteTheme
 import xyz.junerver.compose.palette.markdown.MarkdownInlineCode
 import xyz.junerver.compose.palette.markdown.MarkdownInlineEmphasis
@@ -74,7 +85,7 @@ fun PMarkdownViewer(
     renderModel: MarkdownRenderModel? = null,
     onLinkClick: ((String) -> Unit)? = null,
     onAnchorClick: ((String) -> Unit)? = null,
-    onTaskCheckedChange: ((taskIndex: Int, checked: Boolean) -> Unit)? = null,
+    onTaskCheckedChange: ((taskIndex: Int) -> Unit)? = null,
     inlineImageContent: @Composable (MarkdownInlineImage) -> Unit = { image -> DefaultInlineImage(image) },
 ) {
     val resolvedRenderModel =
@@ -84,16 +95,18 @@ fun PMarkdownViewer(
 
     var taskCounter by remember(markdown) { mutableIntStateOf(0) }
 
-    MarkdownBlocks(
-        blocks = resolvedRenderModel.blocks,
-        modifier = modifier,
-        onLinkClick = onLinkClick,
-        onAnchorClick = onAnchorClick,
-        inlineImageContent = inlineImageContent,
-        taskCheckboxEnabled = onTaskCheckedChange != null,
-        nextTaskIndex = { taskCounter++ },
-        onTaskCheckedChange = onTaskCheckedChange,
-    )
+    key(markdown) {
+        MarkdownBlocks(
+            blocks = resolvedRenderModel.blocks,
+            modifier = modifier,
+            onLinkClick = onLinkClick,
+            onAnchorClick = onAnchorClick,
+            inlineImageContent = inlineImageContent,
+            taskCheckboxEnabled = onTaskCheckedChange != null,
+            nextTaskIndex = { taskCounter++ },
+            onTaskCheckedChange = onTaskCheckedChange,
+        )
+    }
 }
 
 @Composable
@@ -106,8 +119,11 @@ private fun MarkdownBlocks(
     inlineImageContent: @Composable (MarkdownInlineImage) -> Unit,
     taskCheckboxEnabled: Boolean = false,
     nextTaskIndex: () -> Int = { -1 },
-    onTaskCheckedChange: ((taskIndex: Int, checked: Boolean) -> Unit)? = null,
+    onTaskCheckedChange: ((taskIndex: Int) -> Unit)? = null,
 ) {
+    // Ensure callbacks are always fresh even if composable skips recomposition
+    val latestOnTaskCheckedChange by rememberUpdatedState(onTaskCheckedChange)
+
     Column(
         modifier = modifier,
         verticalArrangement = Arrangement.spacedBy(blockSpacing),
@@ -125,7 +141,7 @@ private fun MarkdownBlocks(
                 inlineImageContent = inlineImageContent,
                 taskCheckboxEnabled = taskCheckboxEnabled,
                 nextTaskIndex = nextTaskIndex,
-                onTaskCheckedChange = onTaskCheckedChange,
+                onTaskCheckedChange = latestOnTaskCheckedChange,
             )
         }
     }
@@ -138,8 +154,10 @@ private fun MarkdownBlock(
     inlineImageContent: @Composable (MarkdownInlineImage) -> Unit,
     taskCheckboxEnabled: Boolean = false,
     nextTaskIndex: () -> Int = { -1 },
-    onTaskCheckedChange: ((taskIndex: Int, checked: Boolean) -> Unit)? = null,
+    onTaskCheckedChange: ((taskIndex: Int) -> Unit)? = null,
 ) {
+    val latestOnTaskCheckedChange by rememberUpdatedState(onTaskCheckedChange)
+
     when (block) {
         is MarkdownRenderBlock.Heading ->
             InlineMarkdownText(
@@ -186,19 +204,19 @@ private fun MarkdownBlock(
             Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
                 block.items.forEach { item ->
                     val taskIndex = nextTaskIndex()
+                    key(item.checked) {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         verticalAlignment = Alignment.Top,
                     ) {
-                        ColoredCheckBox(
+                        TaskCheckbox(
                             checked = item.checked,
+                            enabled = taskCheckboxEnabled,
                             onCheckedChange = if (taskCheckboxEnabled) {
-                                { checked -> onTaskCheckedChange?.invoke(taskIndex, checked) }
+                                { latestOnTaskCheckedChange?.invoke(taskIndex) }
                             } else {
                                 null
                             },
-                            enabled = taskCheckboxEnabled,
-                            size = ComponentSize.Small,
                             modifier = if (taskCheckboxEnabled) {
                                 Modifier.testTag("task-checkbox:$taskIndex")
                             } else {
@@ -213,6 +231,7 @@ private fun MarkdownBlock(
                             inlineImageContent = inlineImageContent,
                         )
                     }
+                    } // key(item.checked)
                 }
             }
 
@@ -307,25 +326,27 @@ private fun MarkdownListBlock(
     inlineImageContent: @Composable (MarkdownInlineImage) -> Unit,
     taskCheckboxEnabled: Boolean = false,
     nextTaskIndex: () -> Int = { -1 },
-    onTaskCheckedChange: ((taskIndex: Int, checked: Boolean) -> Unit)? = null,
+    onTaskCheckedChange: ((taskIndex: Int) -> Unit)? = null,
 ) {
+    val latestOnTaskCheckedChange by rememberUpdatedState(onTaskCheckedChange)
+
     Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
         block.listItems.forEachIndexed { index, item ->
+            key(item.taskChecked) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.Top,
             ) {
                 if (item.taskChecked != null) {
                     val taskIndex = nextTaskIndex()
-                    ColoredCheckBox(
+                    TaskCheckbox(
                         checked = item.taskChecked!!,
+                        enabled = taskCheckboxEnabled,
                         onCheckedChange = if (taskCheckboxEnabled) {
-                            { checked -> onTaskCheckedChange?.invoke(taskIndex, checked) }
+                            { latestOnTaskCheckedChange?.invoke(taskIndex) }
                         } else {
                             null
                         },
-                        enabled = taskCheckboxEnabled,
-                        size = ComponentSize.Small,
                         modifier = if (taskCheckboxEnabled) {
                             Modifier.testTag("task-checkbox:$taskIndex")
                         } else {
@@ -358,11 +379,12 @@ private fun MarkdownListBlock(
                             inlineImageContent = inlineImageContent,
                             taskCheckboxEnabled = taskCheckboxEnabled,
                             nextTaskIndex = nextTaskIndex,
-                            onTaskCheckedChange = onTaskCheckedChange,
+                            onTaskCheckedChange = latestOnTaskCheckedChange,
                         )
                     }
                 }
             }
+            } // key(item.taskChecked)
         }
     }
 }
@@ -562,6 +584,64 @@ private fun List<MarkdownInlineNode>.toAnnotatedContent(
             appendNodes(this@toAnnotatedContent)
         }
     return MarkdownAnnotatedContent(text = text, inlineContent = inlineContent)
+}
+
+@Composable
+private fun TaskCheckbox(
+    checked: Boolean,
+    enabled: Boolean,
+    onCheckedChange: (() -> Unit)?,
+    modifier: Modifier = Modifier,
+) {
+    val size = 18.dp
+    val borderWidth = 1.5.dp
+    val cornerRadius = 3.dp
+    val fillColor = if (checked) PaletteTheme.colors.primary else PaletteTheme.colors.surface
+    val borderColor = if (checked) PaletteTheme.colors.primary else PaletteTheme.colors.border
+    val checkColor = PaletteTheme.colors.surface
+
+    Box(
+        modifier = modifier
+            .padding(top = 3.dp, end = 8.dp)
+            .defaultMinSize(minWidth = size, minHeight = size)
+            .pointerInput(checked, enabled, onCheckedChange) {
+                if (enabled && onCheckedChange != null) {
+                    detectTapGestures { onCheckedChange() }
+                }
+            }
+            .drawBehind {
+                val s = size.toPx()
+                val bw = borderWidth.toPx()
+                val cr = cornerRadius.toPx()
+
+                // Fill
+                drawRoundRect(
+                    color = fillColor,
+                    size = Size(s, s),
+                    cornerRadius = CornerRadius(cr),
+                )
+                // Border
+                drawRoundRect(
+                    color = borderColor,
+                    size = Size(s, s),
+                    cornerRadius = CornerRadius(cr),
+                    style = Stroke(width = bw),
+                )
+                // Checkmark
+                if (checked) {
+                    val path = Path().apply {
+                        val w = s * 0.65f
+                        val h = s * 0.45f
+                        val sx = s * 0.18f
+                        val sy = s * 0.5f
+                        moveTo(sx, sy)
+                        lineTo(sx + w * 0.35f, sy + h * 0.5f)
+                        lineTo(sx + w, sy - h * 0.3f)
+                    }
+                    drawPath(path, checkColor, style = Stroke(width = bw, cap = StrokeCap.Round))
+                }
+            }
+    )
 }
 
 private const val LinkAnnotationTag = "palette-markdown-link"

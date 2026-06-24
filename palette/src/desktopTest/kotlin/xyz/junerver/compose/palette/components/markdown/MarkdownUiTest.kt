@@ -1,9 +1,14 @@
 package xyz.junerver.compose.palette.components.markdown
 
-import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.selection.toggleable
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.geometry.CornerRadius
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.material3.Text
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
@@ -16,6 +21,7 @@ import androidx.compose.ui.test.performClick
 import org.junit.Rule
 import xyz.junerver.compose.palette.components.checkbox.ColoredCheckBox
 import xyz.junerver.compose.palette.core.theme.PaletteMaterialTheme
+import xyz.junerver.compose.palette.core.util.clickableWithoutRipple
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
@@ -196,14 +202,18 @@ class MarkdownUiTest {
     fun toggleTaskCheckboxUpdatesCorrectLine() {
         val markdown = "- [x] first\n- [ ] second\n- [x] third"
 
-        // Toggle second item on
-        val result1 = toggleTaskCheckbox(markdown, 1, true)
+        // Toggle second item (unchecked → checked)
+        val result1 = toggleTaskCheckbox(markdown, 1)
         assertTrue(result1.contains("- [x] second"), "Expected second checked: $result1")
         assertTrue(result1.contains("- [x] first"), "Expected first unchanged: $result1")
         assertTrue(result1.contains("- [x] third"), "Expected third unchanged: $result1")
 
-        // Toggle first item off
-        val result2 = toggleTaskCheckbox(markdown, 0, false)
+        // Toggle second item back (checked → unchecked)
+        val result1b = toggleTaskCheckbox(result1, 1)
+        assertTrue(result1b.contains("- [ ] second"), "Expected second unchecked: $result1b")
+
+        // Toggle first item (checked → unchecked)
+        val result2 = toggleTaskCheckbox(markdown, 0)
         assertTrue(result2.contains("- [ ] first"), "Expected first unchecked: $result2")
         assertTrue(result2.contains("- [ ] second"), "Expected second unchanged: $result2")
     }
@@ -226,12 +236,12 @@ class MarkdownUiTest {
 
     @Test
     fun editorPreviewCheckboxClickUpdatesMarkdown() {
-        var textValue = "- [x] first\n- [ ] second"
+        val textValue = androidx.compose.runtime.mutableStateOf("- [x] first\n- [ ] second")
         rule.setContent {
             PaletteMaterialTheme {
                 PMarkdownEditor(
-                    value = textValue,
-                    onValueChange = { textValue = it },
+                    value = textValue.value,
+                    onValueChange = { textValue.value = it },
                     mode = MarkdownEditorMode.Preview,
                     editLabel = "Edit",
                     previewLabel = "Preview",
@@ -244,9 +254,167 @@ class MarkdownUiTest {
         rule.onNodeWithTag("task-checkbox:1").performClick()
 
         rule.runOnIdle {
-            assertTrue(textValue.contains("- [x] second"), "Expected second checked after click: $textValue")
-            assertTrue(textValue.contains("- [x] first"), "Expected first unchanged: $textValue")
+            assertTrue(textValue.value.contains("- [x] second"), "Expected second checked: ${textValue.value}")
+            assertTrue(textValue.value.contains("- [x] first"), "Expected first unchanged: ${textValue.value}")
         }
+    }
+
+    @Test
+    fun editorPreviewCheckboxMultipleClicks() {
+        val textValue = androidx.compose.runtime.mutableStateOf("- [x] first\n- [ ] second")
+        rule.setContent {
+            PaletteMaterialTheme {
+                PMarkdownEditor(
+                    value = textValue.value,
+                    onValueChange = { textValue.value = it },
+                    mode = MarkdownEditorMode.Preview,
+                    editLabel = "Edit",
+                    previewLabel = "Preview",
+                    splitLabel = "Split",
+                )
+            }
+        }
+
+        // First click: check "second"
+        rule.onNodeWithTag("task-checkbox:1").performClick()
+        rule.waitForIdle()
+        assertTrue(textValue.value.contains("- [x] second"), "After 1st click: ${textValue.value}")
+
+        // Second click: uncheck "second"
+        rule.onNodeWithTag("task-checkbox:1").performClick()
+        rule.waitForIdle()
+        assertTrue(textValue.value.contains("- [ ] second"), "After 2nd click: ${textValue.value}")
+    }
+
+    @Test
+    fun clickableMultipleClicks() {
+        var count = 0
+        rule.setContent {
+            Box(
+                modifier = Modifier
+                    .testTag("clickable")
+                    .clickableWithoutRipple { count++ }
+            ) {
+                Text(text = "Count: $count")
+            }
+        }
+
+        rule.onNodeWithTag("clickable").performClick()
+        rule.waitForIdle()
+        assertEquals(1, count, "After 1st click")
+
+        rule.onNodeWithTag("clickable").performClick()
+        rule.waitForIdle()
+        assertEquals(2, count, "After 2nd click")
+    }
+
+    @Test
+    fun clickableNestedMultipleClicks() {
+        // Test clickable deep inside a composable tree (simulates editor/viewer)
+        var checked = false
+        rule.setContent {
+            Column {
+                Text("Header")
+                Row {
+                    Box(modifier = Modifier.testTag("spacer").size(10.dp))
+                    Box(
+                        modifier = Modifier
+                            .testTag("deep-clickable")
+                            .clickableWithoutRipple { checked = !checked }
+                    ) {
+                        Text(text = if (checked) "ON" else "OFF")
+                    }
+                }
+                Text("Footer")
+            }
+        }
+
+        rule.onNodeWithTag("deep-clickable").performClick()
+        rule.waitForIdle()
+        assertEquals(true, checked, "After 1st click")
+
+        rule.onNodeWithTag("deep-clickable").performClick()
+        rule.waitForIdle()
+        assertEquals(false, checked, "After 2nd click")
+    }
+
+    @Test
+    fun clickableWithDrawBehindChildMultipleClicks() {
+        // Test: does Box(drawBehind) child break clickable multi-click?
+        var checked = false
+        rule.setContent {
+            Box(
+                modifier = Modifier
+                    .testTag("cb")
+                    .clickableWithoutRipple { checked = !checked }
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(20.dp)
+                        .drawBehind {
+                            drawRoundRect(
+                                color = if (checked) Color(0xFF6200EE) else Color.Gray,
+                                cornerRadius = CornerRadius(4.dp.toPx()),
+                                style = Stroke(2.dp.toPx())
+                            )
+                        }
+                )
+            }
+        }
+
+        rule.onNodeWithTag("cb").performClick()
+        rule.waitForIdle()
+        assertEquals(true, checked, "After 1st click")
+
+        rule.onNodeWithTag("cb").performClick()
+        rule.waitForIdle()
+        assertEquals(false, checked, "After 2nd click")
+    }
+
+    @Test
+    fun editorPreviewCheckboxMultipleClicksWithSimpleCheckbox() {
+        // Test: does the issue reproduce with a simplified ColoredCheckBox (no animations)?
+        var textValue = "- [x] first\n- [ ] second"
+        rule.setContent {
+            PaletteMaterialTheme {
+                // Simulate editor preview with a simple clickable checkbox
+                Column {
+                    val items = textValue.lines().map { line ->
+                        val checked = line.startsWith("- [x]")
+                        val text = line.removePrefix("- [x] ").removePrefix("- [ ] ")
+                        checked to text
+                    }
+                    items.forEachIndexed { index, (checked, text) ->
+                        Row {
+                            Box(
+                                modifier = Modifier
+                                    .testTag("task-checkbox:$index")
+                                    .size(32.dp)
+                                    .clickableWithoutRipple {
+                                        textValue = textValue.lines().mapIndexed { i, line ->
+                                            if (i == index) {
+                                                if (line.startsWith("- [x]")) line.replace("- [x]", "- [ ]")
+                                                else line.replace("- [ ]", "- [x]")
+                                            } else line
+                                        }.joinToString("\n")
+                                    }
+                            ) {
+                                Text(text = if (checked) "☑" else "☐")
+                            }
+                            Text(text = text)
+                        }
+                    }
+                }
+            }
+        }
+
+        rule.onNodeWithTag("task-checkbox:1").performClick()
+        rule.waitForIdle()
+        assertTrue(textValue.contains("- [x] second"), "After 1st click: $textValue")
+
+        rule.onNodeWithTag("task-checkbox:1").performClick()
+        rule.waitForIdle()
+        assertTrue(textValue.contains("- [ ] second"), "After 2nd click: $textValue")
     }
 
     @Test

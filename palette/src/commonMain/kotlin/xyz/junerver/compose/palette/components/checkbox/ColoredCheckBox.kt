@@ -8,7 +8,6 @@ import androidx.compose.foundation.interaction.collectIsFocusedAsState
 import androidx.compose.foundation.interaction.collectIsHoveredAsState
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.selection.toggleable
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -22,8 +21,9 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
-import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.input.pointer.pointerInput
 import xyz.junerver.compose.palette.core.spec.ComponentSize
+import xyz.junerver.compose.palette.core.util.clickableWithoutRipple
 
 @Composable
 fun ColoredCheckBox(
@@ -34,7 +34,7 @@ fun ColoredCheckBox(
     size: ComponentSize = ComponentSize.Medium,
     colors: CheckboxColors = CheckboxDefaults.colors(),
 ) {
-    val interactionSource = remember { MutableInteractionSource() }
+    val interactionSource = remember(checked) { MutableInteractionSource() }
     val isFocused by interactionSource.collectIsFocusedAsState()
     val isHovered by interactionSource.collectIsHoveredAsState()
     val sizeTokens = CheckboxDefaults.sizeTokens(size)
@@ -69,13 +69,12 @@ fun ColoredCheckBox(
     Box(
         modifier = modifier
             .size(checkboxSize + CheckboxDefaults.touchPadding(size))
-            .toggleable(
-                value = checked,
-                enabled = enabled,
-                role = Role.Checkbox,
-                interactionSource = interactionSource,
-                indication = null,
-                onValueChange = { onCheckedChange?.invoke(it) }
+            .then(
+                if (enabled && onCheckedChange != null) {
+                    Modifier.clickableWithoutRipple { onCheckedChange(!checked) }
+                } else {
+                    Modifier
+                }
             ),
         contentAlignment = Alignment.Center
     ) {
@@ -93,6 +92,7 @@ fun ColoredCheckBox(
                     val cornerR = cornerRadius.toPx()
                     val focusOff = focusRingOffset.toPx()
 
+                    // Focus ring
                     if (isFocused) {
                         drawRoundRect(
                             color = borderColor.copy(alpha = focusRingAlpha),
@@ -102,6 +102,7 @@ fun ColoredCheckBox(
                         )
                     }
 
+                    // Hover background
                     if (isHovered && !checked) {
                         drawRoundRect(
                             color = borderColor.copy(alpha = hoverBackgroundAlpha),
@@ -110,12 +111,14 @@ fun ColoredCheckBox(
                         )
                     }
 
+                    // Checkbox fill
                     drawRoundRect(
                         color = fillColor,
                         size = Size(canvasSize, canvasSize),
                         cornerRadius = CornerRadius(cornerR)
                     )
 
+                    // Checkbox border
                     drawRoundRect(
                         color = borderColor.copy(alpha = if (enabled) 1f else disabledBorderAlpha),
                         size = Size(canvasSize, canvasSize),
@@ -123,6 +126,7 @@ fun ColoredCheckBox(
                         style = Stroke(width = strokeW)
                     )
 
+                    // Checkmark
                     if (checked) {
                         val checkPath = Path().apply {
                             val checkWidth = canvasSize * 0.7f
