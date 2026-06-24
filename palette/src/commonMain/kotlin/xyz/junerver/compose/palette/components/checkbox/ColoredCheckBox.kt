@@ -3,7 +3,6 @@ package xyz.junerver.compose.palette.components.checkbox
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.tween
-import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsFocusedAsState
 import androidx.compose.foundation.interaction.collectIsHoveredAsState
@@ -15,13 +14,13 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
-import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.semantics.Role
 import xyz.junerver.compose.palette.core.spec.ComponentSize
@@ -33,7 +32,8 @@ fun ColoredCheckBox(
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
     size: ComponentSize = ComponentSize.Medium,
-    colors: CheckboxColors = CheckboxDefaults.colors()
+    colors: CheckboxColors = CheckboxDefaults.colors(),
+    visualOnly: Boolean = false,
 ) {
     val interactionSource = remember { MutableInteractionSource() }
     val isFocused by interactionSource.collectIsFocusedAsState()
@@ -70,79 +70,85 @@ fun ColoredCheckBox(
     Box(
         modifier = modifier
             .size(checkboxSize + CheckboxDefaults.touchPadding(size))
-            .toggleable(
-                value = checked,
-                enabled = enabled,
-                role = Role.Checkbox,
-                interactionSource = interactionSource,
-                indication = null,
-                onValueChange = { onCheckedChange?.invoke(it) }
+            .then(
+                if (visualOnly) {
+                    Modifier
+                } else {
+                    Modifier.toggleable(
+                        value = checked,
+                        enabled = enabled,
+                        role = Role.Checkbox,
+                        interactionSource = interactionSource,
+                        indication = null,
+                        onValueChange = { onCheckedChange?.invoke(it) }
+                    )
+                }
             ),
         contentAlignment = Alignment.Center
     ) {
-        Canvas(modifier = Modifier.size(checkboxSize)) {
-            val canvasSize = checkboxSize.toPx()
-            val strokeWidth = sizeTokens.strokeWidth.toPx()
-            val cornerRadius = sizeTokens.cornerRadius.toPx()
-            val focusRingOffset = sizeTokens.focusRingOffset.toPx()
+        val drawSize = checkboxSize
+        val strokeWidth = sizeTokens.strokeWidth
+        val cornerRadius = sizeTokens.cornerRadius
+        val focusRingOffset = sizeTokens.focusRingOffset
 
-            // Focus ring
-            if (isFocused) {
-                drawRoundRect(
-                    color = borderColor.copy(alpha = focusRingAlpha),
-                    topLeft = Offset(-focusRingOffset, -focusRingOffset),
-                    size = Size(canvasSize + focusRingOffset * 2, canvasSize + focusRingOffset * 2),
-                    cornerRadius = CornerRadius(cornerRadius + focusRingOffset)
-                )
-            }
+        Box(
+            modifier = Modifier
+                .size(checkboxSize)
+                .drawBehind {
+                    val canvasSize = drawSize.toPx()
+                    val strokeW = strokeWidth.toPx()
+                    val cornerR = cornerRadius.toPx()
+                    val focusOff = focusRingOffset.toPx()
 
-            // Hover background
-            if (isHovered && !checked) {
-                drawRoundRect(
-                    color = borderColor.copy(alpha = hoverBackgroundAlpha),
-                    size = Size(canvasSize, canvasSize),
-                    cornerRadius = CornerRadius(cornerRadius)
-                )
-            }
+                    if (isFocused) {
+                        drawRoundRect(
+                            color = borderColor.copy(alpha = focusRingAlpha),
+                            topLeft = Offset(-focusOff, -focusOff),
+                            size = Size(canvasSize + focusOff * 2, canvasSize + focusOff * 2),
+                            cornerRadius = CornerRadius(cornerR + focusOff)
+                        )
+                    }
 
-            // Checkbox fill
-            drawRoundRect(
-                color = fillColor,
-                size = Size(canvasSize, canvasSize),
-                cornerRadius = CornerRadius(cornerRadius)
-            )
+                    if (isHovered && !checked) {
+                        drawRoundRect(
+                            color = borderColor.copy(alpha = hoverBackgroundAlpha),
+                            size = Size(canvasSize, canvasSize),
+                            cornerRadius = CornerRadius(cornerR)
+                        )
+                    }
 
-            // Checkbox border
-            drawRoundRect(
-                color = borderColor.copy(alpha = if (enabled) 1f else disabledBorderAlpha),
-                size = Size(canvasSize, canvasSize),
-                cornerRadius = CornerRadius(cornerRadius),
-                style = Stroke(width = strokeWidth)
-            )
+                    drawRoundRect(
+                        color = fillColor,
+                        size = Size(canvasSize, canvasSize),
+                        cornerRadius = CornerRadius(cornerR)
+                    )
 
-            // Checkmark
-            if (checked) {
-                drawCheckmark(checkmarkAlpha, canvasSize, strokeWidth)
-            }
-        }
+                    drawRoundRect(
+                        color = borderColor.copy(alpha = if (enabled) 1f else disabledBorderAlpha),
+                        size = Size(canvasSize, canvasSize),
+                        cornerRadius = CornerRadius(cornerR),
+                        style = Stroke(width = strokeW)
+                    )
+
+                    if (checked) {
+                        val checkPath = Path().apply {
+                            val checkWidth = canvasSize * 0.7f
+                            val checkHeight = canvasSize * 0.5f
+                            val startX = canvasSize * 0.15f
+                            val startY = canvasSize * 0.5f
+
+                            moveTo(startX, startY)
+                            lineTo(startX + checkWidth * 0.35f, startY + checkHeight * 0.5f)
+                            lineTo(startX + checkWidth, startY - checkHeight * 0.3f)
+                        }
+
+                        drawPath(
+                            path = checkPath,
+                            color = checkmarkAlpha,
+                            style = Stroke(width = strokeW, cap = StrokeCap.Round)
+                        )
+                    }
+                }
+        )
     }
-}
-
-private fun DrawScope.drawCheckmark(color: Color, canvasSize: Float, strokeWidth: Float) {
-    val checkPath = Path().apply {
-        val checkWidth = canvasSize * 0.7f
-        val checkHeight = canvasSize * 0.5f
-        val startX = canvasSize * 0.15f
-        val startY = canvasSize * 0.5f
-
-        moveTo(startX, startY)
-        lineTo(startX + checkWidth * 0.35f, startY + checkHeight * 0.5f)
-        lineTo(startX + checkWidth, startY - checkHeight * 0.3f)
-    }
-
-    drawPath(
-        path = checkPath,
-        color = color,
-        style = Stroke(width = strokeWidth, cap = StrokeCap.Round)
-    )
 }

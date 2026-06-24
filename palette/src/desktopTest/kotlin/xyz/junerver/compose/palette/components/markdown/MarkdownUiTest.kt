@@ -1,11 +1,20 @@
 package xyz.junerver.compose.palette.components.markdown
 
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.selection.toggleable
+import androidx.compose.material3.Text
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.test.assertTextEquals
 import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import org.junit.Rule
+import xyz.junerver.compose.palette.components.checkbox.ColoredCheckBox
 import xyz.junerver.compose.palette.core.theme.PaletteMaterialTheme
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -214,6 +223,7 @@ class MarkdownUiTest {
         rule.onNodeWithTag("task-checkbox:0").assertDoesNotExist()
     }
 
+
     @Test
     fun editorPreviewCheckboxClickUpdatesMarkdown() {
         var textValue = "- [x] first\n- [ ] second"
@@ -238,4 +248,175 @@ class MarkdownUiTest {
             assertTrue(textValue.contains("- [x] first"), "Expected first unchanged: $textValue")
         }
     }
+
+    @Test
+    fun editorPreviewCheckboxMultipleClicks() {
+        var textValue = "- [x] first\n- [ ] second"
+        rule.setContent {
+            PaletteMaterialTheme {
+                PMarkdownEditor(
+                    value = textValue,
+                    onValueChange = { textValue = it },
+                    mode = MarkdownEditorMode.Preview,
+                    editLabel = "Edit",
+                    previewLabel = "Preview",
+                    splitLabel = "Split",
+                )
+            }
+        }
+
+        // First click: check "second"
+        rule.onNodeWithTag("task-checkbox:1").performClick()
+        rule.waitForIdle()
+        assertTrue(textValue.contains("- [x] second"), "After 1st click: $textValue")
+
+        // Second click: uncheck "second"
+        rule.onNodeWithTag("task-checkbox:1").performClick()
+        rule.waitForIdle()
+        assertTrue(textValue.contains("- [ ] second"), "After 2nd click: $textValue")
+    }
+
+    @Test
+    fun toggleableMultipleClicksWork() {
+        // Minimal repro: a single toggleable that recomposes on click
+        var count = 0
+        rule.setContent {
+            val checked = count % 2 == 1
+            Box(
+                modifier = Modifier
+                    .testTag("toggle")
+                    .toggleable(
+                        value = checked,
+                        onValueChange = { count++ },
+                    )
+            ) {
+                Text(text = if (checked) "ON" else "OFF")
+            }
+        }
+
+        rule.onNodeWithTag("toggle").performClick()
+        rule.waitForIdle()
+        assertEquals(1, count, "After 1st click")
+
+        rule.onNodeWithTag("toggle").performClick()
+        rule.waitForIdle()
+        assertEquals(2, count, "After 2nd click")
+    }
+
+    @Test
+    fun textToggleableMultipleClicks() {
+        // Exact same as toggleableMultipleClicksWork but with state = Boolean
+        var checked = false
+        rule.setContent {
+            Box(
+                modifier = Modifier
+                    .testTag("cb")
+                    .toggleable(
+                        value = checked,
+                        onValueChange = { checked = !checked },
+                    )
+            ) {
+                Text(text = if (checked) "ON" else "OFF")
+            }
+        }
+
+        rule.onNodeWithTag("cb").performClick()
+        rule.waitForIdle()
+        assertEquals(true, checked, "After 1st click")
+
+        rule.onNodeWithTag("cb").performClick()
+        rule.waitForIdle()
+        assertEquals(false, checked, "After 2nd click")
+    }
+
+    @Test
+    fun coloredCheckBoxMultipleClicks() {
+        // Test ColoredCheckBox itself for multi-click
+        var checked = false
+        rule.setContent {
+            PaletteMaterialTheme {
+                ColoredCheckBox(
+                    checked = checked,
+                    onCheckedChange = { checked = it },
+                    modifier = Modifier.testTag("cb"),
+                )
+            }
+        }
+
+        rule.onNodeWithTag("cb").performClick()
+        rule.waitForIdle()
+        assertEquals(true, checked, "After 1st click")
+
+        rule.onNodeWithTag("cb").performClick()
+        rule.waitForIdle()
+        assertEquals(false, checked, "After 2nd click")
+    }
+
+    @Test
+    fun wrappedCheckBoxMultipleClicks() {
+        // Test with external toggleable wrapper + ColoredCheckBox(visualOnly)
+        var checked = false
+        rule.setContent {
+            PaletteMaterialTheme {
+                Box(
+                    modifier = Modifier
+                        .testTag("cb")
+                        .toggleable(
+                            value = checked,
+                            onValueChange = { checked = it },
+                        )
+                ) {
+                    ColoredCheckBox(
+                        checked = checked,
+                        onCheckedChange = null,
+                        visualOnly = true,
+                    )
+                }
+            }
+        }
+
+        rule.onNodeWithTag("cb").performClick()
+        rule.waitForIdle()
+        assertEquals(true, checked, "After 1st click")
+
+        rule.onNodeWithTag("cb").performClick()
+        rule.waitForIdle()
+        assertEquals(false, checked, "After 2nd click")
+    }
+
+
+    @Test
+    fun toggleableWithDisabledChildMultipleClicks() {
+        // Test: does a child toggleable(enabled=false) break parent toggleable?
+        var checked = false
+        rule.setContent {
+            Box(
+                modifier = Modifier
+                    .testTag("parent")
+                    .toggleable(
+                        value = checked,
+                        onValueChange = { checked = it },
+                    )
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(32.dp)
+                        .toggleable(
+                            value = checked,
+                            enabled = false,
+                            onValueChange = {},
+                        )
+                )
+            }
+        }
+
+        rule.onNodeWithTag("parent").performClick()
+        rule.waitForIdle()
+        assertEquals(true, checked, "After 1st click")
+
+        rule.onNodeWithTag("parent").performClick()
+        rule.waitForIdle()
+        assertEquals(false, checked, "After 2nd click")
+    }
+
 }

@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.text.BasicText
 import androidx.compose.foundation.text.InlineTextContent
@@ -45,10 +46,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.em
 import androidx.compose.ui.unit.sp
 import xyz.junerver.compose.hooks.useCreation
-import xyz.junerver.compose.palette.components.checkbox.ColoredCheckBox
 import xyz.junerver.compose.palette.components.code.PCodeBlock
 import xyz.junerver.compose.palette.components.mermaid.PMermaidDiagram
-import xyz.junerver.compose.palette.core.spec.ComponentSize
 import xyz.junerver.compose.palette.core.theme.PaletteTheme
 import xyz.junerver.compose.palette.markdown.MarkdownInlineCode
 import xyz.junerver.compose.palette.markdown.MarkdownInlineEmphasis
@@ -190,21 +189,30 @@ private fun MarkdownBlock(
                         modifier = Modifier.fillMaxWidth(),
                         verticalAlignment = Alignment.Top,
                     ) {
-                        ColoredCheckBox(
-                            checked = item.checked,
-                            onCheckedChange = if (taskCheckboxEnabled) {
-                                { checked -> onTaskCheckedChange?.invoke(taskIndex, checked) }
-                            } else {
-                                null
-                            },
-                            enabled = taskCheckboxEnabled,
-                            size = ComponentSize.Small,
-                            modifier = if (taskCheckboxEnabled) {
-                                Modifier.testTag("task-checkbox:$taskIndex")
-                            } else {
-                                Modifier
-                            },
-                        )
+                        val checkboxChar = if (item.checked) "☑" else "☐"
+                        val checkboxColor = if (item.checked) PaletteTheme.colors.primary else PaletteTheme.colors.textSecondary
+                        if (taskCheckboxEnabled) {
+                            Box(
+                                modifier = Modifier
+                                    .padding(end = 8.dp)
+                                    .testTag("task-checkbox:$taskIndex")
+                                    .toggleable(
+                                        value = item.checked,
+                                        onValueChange = {
+                                            onTaskCheckedChange?.invoke(taskIndex, !item.checked)
+                                        },
+                                    )
+                            ) {
+                                Text(text = checkboxChar, fontSize = 16.sp, color = checkboxColor)
+                            }
+                        } else {
+                            Text(
+                                text = checkboxChar,
+                                fontSize = 16.sp,
+                                color = checkboxColor,
+                                modifier = Modifier.padding(end = 8.dp),
+                            )
+                        }
                         InlineMarkdownText(
                             inlines = item.inlines,
                             color = PaletteTheme.colors.textPrimary,
@@ -317,21 +325,30 @@ private fun MarkdownListBlock(
             ) {
                 if (item.taskChecked != null) {
                     val taskIndex = nextTaskIndex()
-                    ColoredCheckBox(
-                        checked = item.taskChecked!!,
-                        onCheckedChange = if (taskCheckboxEnabled) {
-                            { checked -> onTaskCheckedChange?.invoke(taskIndex, checked) }
-                        } else {
-                            null
-                        },
-                        enabled = taskCheckboxEnabled,
-                        size = ComponentSize.Small,
-                        modifier = if (taskCheckboxEnabled) {
-                            Modifier.testTag("task-checkbox:$taskIndex")
-                        } else {
-                            Modifier
-                        },
-                    )
+                    val checkboxChar = if (item.taskChecked!!) "☑" else "☐"
+                    val checkboxColor = if (item.taskChecked!!) PaletteTheme.colors.primary else PaletteTheme.colors.textSecondary
+                    if (taskCheckboxEnabled) {
+                        Box(
+                            modifier = Modifier
+                                .padding(end = 8.dp)
+                                .testTag("task-checkbox:$taskIndex")
+                                .toggleable(
+                                    value = item.taskChecked!!,
+                                    onValueChange = {
+                                        onTaskCheckedChange?.invoke(taskIndex, !item.taskChecked!!)
+                                    },
+                                )
+                        ) {
+                            Text(text = checkboxChar, fontSize = 16.sp, color = checkboxColor)
+                        }
+                    } else {
+                        Text(
+                            text = checkboxChar,
+                            fontSize = 16.sp,
+                            color = checkboxColor,
+                            modifier = Modifier.padding(end = 8.dp),
+                        )
+                    }
                 } else {
                     Text(
                         text = if (block.ordered) "${block.startNumber + index}." else "•",

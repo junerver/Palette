@@ -5,9 +5,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Modifier
 import xyz.junerver.compose.hooks.useState
 import xyz.junerver.compose.palette.components.textfield.TextArea
@@ -47,11 +44,8 @@ fun PMarkdownEditor(
         }
     }
 
-    val latestValue by rememberUpdatedState(value)
-    val taskToggleHandler = remember<(Int, Boolean) -> Unit> {
-        { taskIndex: Int, checked: Boolean ->
-            onValueChange(toggleTaskCheckbox(latestValue, taskIndex, checked))
-        }
+    val taskToggleHandler: (Int, Boolean) -> Unit = { taskIndex, checked ->
+        onValueChange(toggleTaskCheckbox(value, taskIndex, checked))
     }
 
     Column(
