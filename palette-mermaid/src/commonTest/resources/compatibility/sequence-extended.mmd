@@ -1,0 +1,44 @@
+sequenceDiagram
+    autonumber
+    title Sequence Extended
+    
+    participant A as Alice
+    participant B as Bob
+    
+    rect rgb(200, 200, 200)
+        note right of A: Alice thinks
+        A->>B: Hello Bob
+        activate B
+        B-->>A: Hi Alice
+        deactivate B
+    end
+    
+    loop Every minute
+        A->>B: Ping
+        B->>A: Pong
+    end
+    
+    alt success
+        A->>B: Done
+    else failure
+        A->>B: Error
+    end
+    
+    par Action 1
+        A->>B: Do this
+    and Action 2
+        A->>B: Do that
+    end
+    
+    opt Optional
+        B->>A: Maybe
+    end
+    
+    create participant C as Charlie
+    A->>C: Hello Charlie
+    destroy C
+    
+    link A: Dashboard @ https://example.com
+    links B: {"Website": "https://bob.com", "Docs": "https://docs.bob.com"}
+    
+    Note over A,B: Final note

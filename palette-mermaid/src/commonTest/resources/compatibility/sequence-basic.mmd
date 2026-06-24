@@ -1,0 +1,12 @@
+sequenceDiagram
+    autonumber
+    participant U as User
+    participant V as Viewer
+    U->>V: render markdown
+    activate V
+    V-->>U: show preview
+    deactivate V
+    rect rgb(200, 220, 255)
+        Note over U,V: compatibility fixture
+    end
+

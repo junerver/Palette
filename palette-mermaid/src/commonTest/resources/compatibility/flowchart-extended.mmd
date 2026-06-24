@@ -1,0 +1,24 @@
+flowchart LR
+    A[Node A] --> B[Node B]
+    B --> C[Node C]
+    A -.-> D{Decision}
+    D -->|Yes| E((Circle))
+    D -->|No| F[[Subroutine]]
+    
+    subgraph group1[Group 1]
+        direction TB
+        G[Inside] --> H[Also Inside]
+    end
+    
+    subgraph group2[Group 2]
+        I[Node I]
+    end
+    
+    A --> G
+    H --> I
+    
+    classDef default fill:#f9f,stroke:#333
+    class A,B default
+    style C fill:#bbf,stroke:#333
+    linkStyle 0 stroke:red
+    click A "https://example.com" "Tooltip"

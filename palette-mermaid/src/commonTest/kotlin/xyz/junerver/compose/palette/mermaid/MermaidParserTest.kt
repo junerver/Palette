@@ -340,4 +340,136 @@ class MermaidParserTest {
         assertEquals("shared context", layout.notes.single().text)
         assertEquals(1, layout.notes.single().sequenceIndex)
     }
+
+    @Test
+    fun parsesClassDiagramBasicClassesAndRelationships() {
+        val diagram = MermaidParser.parse(
+            """
+            classDiagram
+                class Animal {
+                    +String name
+                    +int age
+                    +isMammal() bool
+                }
+                class Dog {
+                    +bark() void
+                }
+                Animal <|-- Dog
+            """.trimIndent()
+        )
+
+        assertEquals(MermaidDiagramType.ClassDiagram, diagram.type)
+        assertEquals(2, diagram.classDefinitions.size)
+        assertEquals(1, diagram.classRelationships.size)
+
+        val animal = diagram.classDefinitions.first { it.id == "Animal" }
+        assertEquals(3, animal.members.size)
+        assertTrue(animal.members.any { it.name == "name" && it.kind == MermaidClassMemberKind.Field })
+        assertTrue(animal.members.any { it.name == "age" && it.kind == MermaidClassMemberKind.Field })
+        assertTrue(animal.members.any { it.name == "isMammal" && it.kind == MermaidClassMemberKind.Method })
+
+        val dog = diagram.classDefinitions.first { it.id == "Dog" }
+        assertEquals(1, dog.members.size)
+        assertEquals("bark", dog.members[0].name)
+
+        val rel = diagram.classRelationships.single()
+        assertEquals("Animal", rel.from)
+        assertEquals("Dog", rel.to)
+        assertEquals(MermaidClassRelationType.Inheritance, rel.type)
+    }
+
+    @Test
+    fun parsesClassDiagramAnnotationsAndVisibility() {
+        val diagram = MermaidParser.parse(
+            """
+            classDiagram
+                class IShape {
+                    <<interface>>
+                    +area() double
+                }
+                class AbstractShape {
+                    <<abstract>>
+                    #calculate() double
+                }
+                IShape <|.. AbstractShape
+            """.trimIndent()
+        )
+
+        assertEquals(2, diagram.classDefinitions.size)
+        val iShape = diagram.classDefinitions.first { it.id == "IShape" }
+        assertEquals("interface", iShape.annotation)
+        assertTrue(iShape.members.any { it.visibility == MermaidClassVisibility.Public })
+
+        val abstractShape = diagram.classDefinitions.first { it.id == "AbstractShape" }
+        assertEquals("abstract", abstractShape.annotation)
+        assertTrue(abstractShape.members.any { it.visibility == MermaidClassVisibility.Protected })
+
+        val rel = diagram.classRelationships.single()
+        assertEquals(MermaidClassRelationType.Realization, rel.type)
+    }
+
+    @Test
+    fun parsesClassDiagramMultipleRelationshipTypes() {
+        val diagram = MermaidParser.parse(
+            """
+            classDiagram
+                class Company
+                class Department
+                class Employee
+                Company *-- Department
+                Company o-- Employee
+                Department --> Employee
+            """.trimIndent()
+        )
+
+        assertEquals(3, diagram.classRelationships.size)
+        assertTrue(diagram.classRelationships.any { it.type == MermaidClassRelationType.Composition })
+        assertTrue(diagram.classRelationships.any { it.type == MermaidClassRelationType.Aggregation })
+        assertTrue(diagram.classRelationships.any { it.type == MermaidClassRelationType.Association })
+    }
+
+    @Test
+    fun parsesClassDiagramRelationshipLabels() {
+        val diagram = MermaidParser.parse(
+            """
+            classDiagram
+                class Customer
+                class Order
+                Customer "1" --> "n" Order : places
+            """.trimIndent()
+        )
+
+        assertEquals(1, diagram.classRelationships.size)
+        val rel = diagram.classRelationships.single()
+        assertEquals("Customer", rel.from)
+        assertEquals("Order", rel.to)
+        assertEquals("places", rel.label)
+        assertEquals("1", rel.fromCardinality)
+        assertEquals("n", rel.toCardinality)
+    }
+
+    @Test
+    fun laysOutClassDiagramNodes() {
+        val diagram = MermaidParser.parse(
+            """
+            classDiagram
+                class A
+                class B
+                class C
+                A <|-- B
+                A <|-- C
+            """.trimIndent()
+        )
+
+        val layout = MermaidLayoutEngine.layout(diagram)
+        assertEquals(MermaidDiagramType.ClassDiagram, layout.type)
+        assertEquals(3, layout.nodes.size)
+        assertTrue(layout.nodes.containsKey("A"))
+        assertTrue(layout.nodes.containsKey("B"))
+        assertTrue(layout.nodes.containsKey("C"))
+        // A should be at rank 0, B and C at rank 1
+        assertEquals(0, layout.nodes.getValue("A").rank)
+        assertEquals(1, layout.nodes.getValue("B").rank)
+        assertEquals(1, layout.nodes.getValue("C").rank)
+    }
 }
