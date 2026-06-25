@@ -106,6 +106,14 @@ internal sealed interface ParseResult {
     ) : ParseResult {
         override val diagramType = MermaidDiagramType.PieDiagram
     }
+
+    data class GanttDiagram(
+        override val direction: MermaidDirection,
+        val config: GanttConfig,
+        val sections: List<GanttSection>,
+    ) : ParseResult {
+        override val diagramType = MermaidDiagramType.GanttDiagram
+    }
 }
 
 /**
@@ -180,5 +188,15 @@ internal fun ParseResult.toMermaidDiagram(): MermaidDiagram =
             title = title,
             pieSlices = slices,
             pieShowData = showData,
+        )
+
+        is ParseResult.GanttDiagram -> MermaidDiagram(
+            direction = direction,
+            nodes = emptyMap(),
+            edges = emptyList(),
+            type = diagramType,
+            title = config.title,
+            ganttConfig = config,
+            ganttSections = sections,
         )
     }

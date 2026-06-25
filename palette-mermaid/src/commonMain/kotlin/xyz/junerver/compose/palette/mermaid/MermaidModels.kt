@@ -8,6 +8,55 @@ data class PieSlice(
     val value: Double,
 )
 
+// ── Gantt Chart models ────────────────────────────────────────────────
+
+/** Execution status of a gantt task, derived from the `done`/`active`/`crit` tags. */
+enum class GanttTaskStatus {
+    /** Default, not yet started. */
+    Todo,
+    /** `active` — currently in progress. */
+    Active,
+    /** `done` — completed. */
+    Done,
+    /** `crit` — on the critical path (orthogonal to active/done, encoded via [isCritical]). */
+    ;
+}
+
+/**
+ * A single gantt task. For the core implementation we capture the raw start/end tokens
+ * (dates or durations) plus an optional dependency (`after <id>`); concrete date math is
+ * deferred to the renderer/layout which has access to a clock and date formatting.
+ */
+data class GanttTask(
+    val id: String?,
+    val title: String,
+    val status: GanttTaskStatus,
+    val isCritical: Boolean,
+    val isMilestone: Boolean,
+    /** Raw start token as written: a date string, a duration, or `after <taskId>`. */
+    val startToken: String?,
+    /** Raw end token as written: a date string or a duration. */
+    val endToken: String?,
+    /** Parsed duration in days when the end token is a duration (e.g. "30d"); null otherwise. */
+    val durationDays: Double?,
+    /** IDs this task depends on, populated from `after a b` syntax. */
+    val dependsOn: List<String> = emptyList(),
+)
+
+/** A named group of gantt tasks. */
+data class GanttSection(
+    val name: String,
+    val tasks: List<GanttTask>,
+)
+
+/** Top-level gantt configuration parsed from the header region. */
+data class GanttConfig(
+    val title: String? = null,
+    val dateFormat: String? = null,
+    val axisFormat: String? = null,
+    val excludes: List<String> = emptyList(),
+)
+
 // ── Class Diagram models ──────────────────────────────────────────────
 
 enum class MermaidClassMemberKind {
@@ -160,6 +209,8 @@ data class MermaidDiagram(
     val stateNotes: List<StateNote> = emptyList(),
     val pieSlices: List<PieSlice> = emptyList(),
     val pieShowData: Boolean = false,
+    val ganttConfig: GanttConfig? = null,
+    val ganttSections: List<GanttSection> = emptyList(),
 )
 
 data class MermaidNode(
@@ -221,6 +272,7 @@ enum class MermaidDiagramType {
     ErDiagram,
     StateDiagram,
     PieDiagram,
+    GanttDiagram,
 }
 
 enum class MermaidDirection {

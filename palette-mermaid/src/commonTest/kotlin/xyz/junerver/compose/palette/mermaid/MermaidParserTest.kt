@@ -739,4 +739,44 @@ class MermaidParserTest {
         assertEquals(1.0, diagram.pieSlices.first { it.label == "A" }.value)
         assertEquals(3.0, diagram.pieSlices.first { it.label == "B" }.value)
     }
+
+    @Test
+    fun parsesGanttDiagram() {
+        val diagram =
+            MermaidParser.parse(
+                """
+                gantt
+                    title A Gantt Diagram
+                    dateFormat YYYY-MM-DD
+                    section Section
+                        A task          :a1, 2014-01-01, 30d
+                        Another task    :done, after a1, 20d
+                    section Critical
+                        Critical task   :crit, active, 3d
+                """.trimIndent(),
+            )
+
+        assertEquals(MermaidDiagramType.GanttDiagram, diagram.type)
+        assertEquals("A Gantt Diagram", diagram.ganttConfig?.title)
+        assertEquals("YYYY-MM-DD", diagram.ganttConfig?.dateFormat)
+        assertEquals(2, diagram.ganttSections.size)
+
+        val section1 = diagram.ganttSections.first { it.name == "Section" }
+        assertEquals(2, section1.tasks.size)
+        val task1 = section1.tasks.first { it.id == "a1" }
+        assertEquals("A task", task1.title)
+        assertEquals("2014-01-01", task1.startToken)
+        assertEquals(30.0, task1.durationDays)
+        assertFalse(task1.isCritical)
+        assertEquals(GanttTaskStatus.Todo, task1.status)
+
+        val task2 = section1.tasks.first { it.title == "Another task" }
+        assertEquals(GanttTaskStatus.Done, task2.status)
+        assertEquals(listOf("a1"), task2.dependsOn)
+        assertEquals(20.0, task2.durationDays)
+
+        val critical = diagram.ganttSections.first { it.name == "Critical" }.tasks.first()
+        assertTrue(critical.isCritical)
+        assertEquals(GanttTaskStatus.Active, critical.status)
+    }
 }

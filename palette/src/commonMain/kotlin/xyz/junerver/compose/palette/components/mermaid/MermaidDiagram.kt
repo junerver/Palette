@@ -6,6 +6,7 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.absoluteOffset
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -40,6 +41,10 @@ import xyz.junerver.compose.palette.core.theme.PaletteTheme
 import xyz.junerver.compose.palette.mermaid.ErEntity
 import xyz.junerver.compose.palette.mermaid.ErRelationship
 import xyz.junerver.compose.palette.mermaid.ErRelationshipKind
+import xyz.junerver.compose.palette.mermaid.GanttConfig
+import xyz.junerver.compose.palette.mermaid.GanttSection
+import xyz.junerver.compose.palette.mermaid.GanttTask
+import xyz.junerver.compose.palette.mermaid.GanttTaskStatus
 import xyz.junerver.compose.palette.mermaid.MermaidClassDefinition
 import xyz.junerver.compose.palette.mermaid.MermaidClassMemberKind
 import xyz.junerver.compose.palette.mermaid.MermaidClassRelationType
@@ -400,6 +405,14 @@ fun PMermaidDiagram(
                 title = parsedDiagram?.title,
                 slices = parsedDiagram?.pieSlices.orEmpty(),
                 showData = parsedDiagram?.pieShowData ?: false,
+            )
+
+        MermaidDiagramType.GanttDiagram ->
+            GanttDiagramMermaidDiagram(
+                modifier = modifier,
+                colors = colors,
+                config = parsedDiagram?.ganttConfig,
+                sections = parsedDiagram?.ganttSections.orEmpty(),
             )
     }
 }
@@ -1793,4 +1806,151 @@ private fun rememberSliceColors(): List<Color> {
         .filter { it != Color.Unspecified }
         .ifEmpty { listOf(c.textPrimary) }
     return base + base.map { it.copy(alpha = 0.65f) } + base.map { it.copy(alpha = 0.40f) }
+}
+
+// ── Gantt chart rendering ─────────────────────────────────────────────
+
+/** A task resolved to a horizontal span (start/end as fractions of the timeline width). */
+private data class PositionedGanttTask(
+    val task: GanttTask,
+    val start: Float,
+    val end: Float,
+    val row: Int,
+)
+
+@Composable
+private fun GanttDiagramMermaidDiagram(
+    modifier: Modifier,
+    colors: MermaidColors,
+    config: GanttConfig?,
+    sections: List<GanttSection>,
+) {
+    val allTasks = sections.flatMap { it.tasks }
+    if (allTasks.isEmpty()) {
+        Box(modifier = modifier, contentAlignment = Alignment.Center) {
+            Text("Empty gantt chart", color = colors.nodeContentColor, style = PaletteTheme.typography.body)
+        }
+        return
+    }
+
+    // Resolve each task's span on a synthetic timeline (0..N "slots"), where durations map
+    // to width and `after` deps push the start to the dependency's end.
+    val taskEndOffsets = mutableMapOf<String, Float>()
+    val positioned = mutableListOf<PositionedGanttTask>()
+    var cursor = 0f
+    var row = 0
+    val pixelsPerDay = 3f
+    val minTaskWidth = 24f
+
+    sections.forEach { section ->
+        section.tasks.forEach { task ->
+            val depEnd = task.dependsOn.mapNotNull { taskEndOffsets[it] }.maxOrNull() ?: 0f
+            val start = maxOf(cursor, depEnd)
+            val duration = task.durationDays?.toFloat() ?: 10f
+            val width = (duration * pixelsPerDay).coerceAtLeast(if (task.isMilestone) 4f else minTaskWidth)
+            val end = start + width
+            task.id?.let { taskEndOffsets[it] = end }
+            positioned.add(PositionedGanttTask(task = task, start = start, end = end, row = row))
+            cursor = end
+            row += 1
+        }
+        // Section break: a blank row separates sections visually.
+        row += 1
+    }
+
+    val timelineWidth = (positioned.maxOfOrNull { it.end } ?: 0f) + pixelsPerDay * 5
+    val labelColumn = 140.dp
+    val padding = 16.dp
+    val rowHeight = 24.dp
+    val sectionHeight = 28.dp
+    val titleHeight: Dp = if (config?.title != null) 32.dp else 0.dp
+    val axisHeight = 24.dp
+
+    // Total rows: section headers + tasks + a trailing gap per section.
+    val sectionCount = sections.count { it.name.isNotEmpty() }
+    val totalRows = allTasks.size + sectionCount + sections.size
+    val width = labelColumn + timelineWidth.dp + padding * 2
+    val height = titleHeight + axisHeight + (totalRows * rowHeight.value).dp + padding * 2
+
+    val c = PaletteTheme.colors
+    val statusColor = mapOf(
+        GanttTaskStatus.Done to c.success,
+        GanttTaskStatus.Active to c.warning,
+        GanttTaskStatus.Todo to c.primary,
+    )
+
+    Box(modifier = modifier.width(width).height(height)) {
+        // Title.
+        val titleText = config?.title
+        if (titleText != null) {
+            Text(
+                text = titleText,
+                color = colors.nodeContentColor,
+                style = PaletteTheme.typography.body,
+                modifier = Modifier.absoluteOffset(x = padding, y = padding).width(width - padding * 2),
+            )
+        }
+
+        // Rows: section headers + task bars.
+        Column(
+            modifier = Modifier.absoluteOffset(x = padding, y = padding + titleHeight + axisHeight),
+        ) {
+            var drawRow = 0
+            sections.forEach { section ->
+                if (section.name.isNotEmpty()) {
+                    Text(
+                        text = section.name,
+                        color = colors.nodeContentColor,
+                        style = PaletteTheme.typography.label.copy(fontWeight = FontWeight.Bold),
+                        modifier = Modifier.height(sectionHeight).fillMaxWidth(),
+                    )
+                    drawRow += 1
+                }
+                section.tasks.forEach { task ->
+                    val pos = positioned.first { it.task === task }
+                    Row(
+                        modifier = Modifier.height(rowHeight).fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Text(
+                            text = task.title,
+                            color = colors.nodeContentColor,
+                            style = PaletteTheme.typography.label,
+                            modifier = Modifier.width(labelColumn),
+                            maxLines = 1,
+                        )
+                        Box(
+                            modifier = Modifier
+                                .absoluteOffset(x = pos.start.dp, y = 0.dp)
+                                .width((pos.end - pos.start).dp)
+                                .height(rowHeight - 6.dp)
+                                .background(
+                                    color = (if (task.isCritical) c.error else statusColor[task.status] ?: c.primary)
+                                        .let { if (it == Color.Unspecified) colors.edgeColor else it },
+                                    RoundedCornerShape(3.dp),
+                                ),
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            if (task.isMilestone) {
+                                Text("◆", color = Color.White, style = PaletteTheme.typography.label)
+                            }
+                        }
+                    }
+                    drawRow += 1
+                }
+                Spacer(modifier = Modifier.height(4.dp))
+            }
+        }
+
+        // Timeline axis line at top.
+        Canvas(modifier = Modifier.matchParentSize()) {
+            val axisY = (padding.value + titleHeight.value + axisHeight.value / 2f) * 1f
+            drawLine(
+                color = colors.edgeColor,
+                start = Offset(padding.value + labelColumn.value, axisY),
+                end = Offset(padding.value + labelColumn.value + timelineWidth, axisY),
+                strokeWidth = 1.dp.toPx(),
+            )
+        }
+    }
 }

@@ -3,6 +3,7 @@ package xyz.junerver.compose.palette.mermaid
 import xyz.junerver.compose.palette.mermaid.parsers.ClassDiagramParser
 import xyz.junerver.compose.palette.mermaid.parsers.ErDiagramParser
 import xyz.junerver.compose.palette.mermaid.parsers.FlowchartParser
+import xyz.junerver.compose.palette.mermaid.parsers.GanttParser
 import xyz.junerver.compose.palette.mermaid.parsers.PieParser
 import xyz.junerver.compose.palette.mermaid.parsers.SequenceParser
 import xyz.junerver.compose.palette.mermaid.parsers.StateDiagramParser
@@ -14,7 +15,7 @@ object MermaidParser {
      * anything else falls through to the flowchart path below.
      */
     private val registeredParsers: Map<String, MermaidDiagramParser> =
-        listOf(StateDiagramParser, ErDiagramParser, ClassDiagramParser, SequenceParser, PieParser)
+        listOf(StateDiagramParser, ErDiagramParser, ClassDiagramParser, SequenceParser, PieParser, GanttParser)
             .flatMap { parser -> (parser.aliases + parser.keyword).map { it.lowercase() to parser } }
             .toMap()
 

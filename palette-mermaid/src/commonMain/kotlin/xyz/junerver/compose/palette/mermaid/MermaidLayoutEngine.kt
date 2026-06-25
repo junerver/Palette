@@ -7,6 +7,7 @@ object MermaidLayoutEngine {
         if (diagram.type == MermaidDiagramType.ErDiagram) return layoutErDiagram(diagram)
         if (diagram.type == MermaidDiagramType.StateDiagram) return layoutStateDiagram(diagram)
         if (diagram.type == MermaidDiagramType.PieDiagram) return layoutPieDiagram(diagram)
+        if (diagram.type == MermaidDiagramType.GanttDiagram) return layoutGanttDiagram(diagram)
 
         val rankById = calculateRanks(diagram)
         val orderByRank = mutableMapOf<Int, Int>()
@@ -365,6 +366,19 @@ object MermaidLayoutEngine {
     private fun layoutPieDiagram(diagram: MermaidDiagram): MermaidLayout =
         MermaidLayout(
             type = MermaidDiagramType.PieDiagram,
+            direction = diagram.direction,
+            nodes = emptyMap(),
+            edges = emptyList(),
+        )
+
+    /**
+     * Gantt charts render as a row-per-task timeline; there is no node/edge graph. The
+     * renderer computes each task's horizontal span (from durations and `after` deps) and
+     * vertical row, so the layout returns an empty node set.
+     */
+    private fun layoutGanttDiagram(diagram: MermaidDiagram): MermaidLayout =
+        MermaidLayout(
+            type = MermaidDiagramType.GanttDiagram,
             direction = diagram.direction,
             nodes = emptyMap(),
             edges = emptyList(),

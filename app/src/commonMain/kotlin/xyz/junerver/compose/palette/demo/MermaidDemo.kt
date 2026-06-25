@@ -73,6 +73,12 @@ fun MermaidDemo() {
         DemoSection(title = text.pieTitle) {
             PMermaidDiagram(source = text.pieSource)
         }
+
+        Spacer(modifier = Modifier.height(24.dp))
+
+        DemoSection(title = text.ganttTitle) {
+            PMermaidDiagram(source = text.ganttSource)
+        }
     }
 }
 
@@ -83,7 +89,7 @@ private fun mermaidDemoText(): MermaidDemoText =
         Language.ZH_CN ->
             MermaidDemoText(
                 title = "Mermaid",
-                subtitle = "Mermaid 图表渲染，支持流程图、时序图、类图、ER 图、状态图和饼图。",
+                subtitle = "Mermaid 图表渲染，支持流程图、时序图、类图、ER 图、状态图、饼图和甘特图。",
                 flowchartTitle = "流程图 (Flowchart)",
                 flowchartSource =
                     """
@@ -176,12 +182,25 @@ private fun mermaidDemoText(): MermaidDemoText =
                         "mermaid" : 15
                         "code" : 10
                     """.trimIndent(),
+                ganttTitle = "甘特图 (Gantt)",
+                ganttSource =
+                    """
+                    gantt
+                        title 发版计划
+                        dateFormat YYYY-MM-DD
+                        section 开发
+                            设计   :des, 2024-01-01, 5d
+                            编码   :after des, 10d
+                        section 测试
+                            测试   :crit, active, 3d
+                            修复   :2d
+                    """.trimIndent(),
             )
 
         Language.EN_US ->
             MermaidDemoText(
                 title = "Mermaid",
-                subtitle = "Mermaid diagram rendering, supporting flowcharts, sequence diagrams, class diagrams, ER diagrams, state diagrams, and pie charts.",
+                subtitle = "Mermaid diagram rendering, supporting flowcharts, sequence diagrams, class diagrams, ER diagrams, state diagrams, pie charts, and gantt charts.",
                 flowchartTitle = "Flowchart",
                 flowchartSource =
                     """
@@ -274,6 +293,19 @@ private fun mermaidDemoText(): MermaidDemoText =
                         "mermaid" : 15
                         "code" : 10
                     """.trimIndent(),
+                ganttTitle = "Gantt",
+                ganttSource =
+                    """
+                    gantt
+                        title Release Plan
+                        dateFormat YYYY-MM-DD
+                        section Dev
+                            Design :des, 2024-01-01, 5d
+                            Code   :after des, 10d
+                        section QA
+                            Test   :crit, active, 3d
+                            Fix    :2d
+                    """.trimIndent(),
             )
     }
 
@@ -292,4 +324,6 @@ private data class MermaidDemoText(
     val stateDiagramSource: String,
     val pieTitle: String,
     val pieSource: String,
+    val ganttTitle: String,
+    val ganttSource: String,
 )
