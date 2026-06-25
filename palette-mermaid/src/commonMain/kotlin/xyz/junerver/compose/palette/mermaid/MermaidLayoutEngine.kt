@@ -4,6 +4,7 @@ object MermaidLayoutEngine {
     fun layout(diagram: MermaidDiagram): MermaidLayout {
         if (diagram.type == MermaidDiagramType.Sequence) return layoutSequence(diagram)
         if (diagram.type == MermaidDiagramType.ClassDiagram) return layoutClassDiagram(diagram)
+        if (diagram.type == MermaidDiagramType.ErDiagram) return layoutErDiagram(diagram)
 
         val rankById = calculateRanks(diagram)
         val orderByRank = mutableMapOf<Int, Int>()
@@ -100,6 +101,50 @@ object MermaidLayoutEngine {
             edges = edges,
         )
     }
+
+    private fun layoutErDiagram(diagram: MermaidDiagram): MermaidLayout {
+        val nodes = linkedMapOf<String, MermaidNode>()
+        diagram.erEntities.forEach { entity ->
+            nodes[entity.name] = MermaidNode(
+                id = entity.name,
+                label = entity.name,
+                shape = MermaidNodeShape.Rectangle,
+            )
+        }
+
+        val edges = diagram.erRelationships.map { rel ->
+            MermaidEdge(
+                from = rel.from,
+                to = rel.to,
+                label = rel.label,
+                style = if (rel.kind.name.startsWith("NonIdentifying")) MermaidEdgeStyle.Dotted else MermaidEdgeStyle.Solid,
+                arrow = MermaidEdgeArrow.Forward,
+            )
+        }
+
+        val rankById: Map<String, Int> = calculateRanks(MermaidDiagram(direction = diagram.direction, nodes = nodes, edges = edges))
+        val orderByRank = mutableMapOf<Int, Int>()
+        val positionedNodes = nodes.values.associate { node ->
+            val rank = rankById[node.id] ?: 0
+            val order = orderByRank.getOrPut(rank) { 0 }
+            orderByRank[rank] = order + 1
+            node.id to PositionedMermaidNode(
+                node = node,
+                rank = rank,
+                order = order,
+                x = if (diagram.direction == MermaidDirection.LeftRight) rank.toFloat() * 200f else order.toFloat() * 200f,
+                y = if (diagram.direction == MermaidDirection.LeftRight) order.toFloat() * 120f else rank.toFloat() * 120f,
+            )
+        }
+
+        return MermaidLayout(
+            type = MermaidDiagramType.ErDiagram,
+            direction = diagram.direction,
+            nodes = positionedNodes,
+            edges = edges,
+        )
+    }
+
     private fun layoutSequence(diagram: MermaidDiagram): MermaidLayout {
         val positioned =
             diagram.nodes.values.mapIndexed { index, node ->
