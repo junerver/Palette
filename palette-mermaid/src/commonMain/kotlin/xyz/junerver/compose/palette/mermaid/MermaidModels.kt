@@ -53,6 +53,43 @@ data class MermaidClassRelationship(
     val sourceRange: MermaidSourceRange? = null,
 )
 
+// ── ER Diagram models ──────────────────────────────────────────────
+
+data class ErEntity(
+    val name: String,
+    val attributes: List<ErAttribute> = emptyList(),
+    val sourceRange: MermaidSourceRange? = null,
+)
+
+data class ErAttribute(
+    val name: String,
+    val type: String,
+    val comment: String? = null,
+    val isPrimaryKey: Boolean = false,
+)
+
+enum class ErRelationshipKind {
+    OneToOne,
+    OneToManyZeroOrMore,
+    OneToManyOneOrMore,
+    ManyToManyZeroOrMore,
+    ManyToManyOneOrMore,
+    ManyToOneZeroOrMore,
+    ManyToOneOneOrMore,
+    NonIdentifyingOneToOne,
+    NonIdentifyingOneToMany,
+    NonIdentifyingManyToOne,
+    NonIdentifyingManyToMany,
+}
+
+data class ErRelationship(
+    val from: String,
+    val to: String,
+    val kind: ErRelationshipKind,
+    val label: String? = null,
+    val sourceRange: MermaidSourceRange? = null,
+)
+
 data class MermaidDiagram(
     val direction: MermaidDirection,
     val nodes: Map<String, MermaidNode>,
@@ -77,6 +114,8 @@ data class MermaidDiagram(
     val flowchartClicks: List<MermaidFlowchartClick> = emptyList(),
     val classDefinitions: List<MermaidClassDefinition> = emptyList(),
     val classRelationships: List<MermaidClassRelationship> = emptyList(),
+    val erEntities: List<ErEntity> = emptyList(),
+    val erRelationships: List<ErRelationship> = emptyList(),
 )
 
 data class MermaidNode(
@@ -135,6 +174,7 @@ enum class MermaidDiagramType {
     Flowchart,
     Sequence,
     ClassDiagram,
+    ErDiagram,
 }
 
 enum class MermaidDirection {
