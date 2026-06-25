@@ -4,6 +4,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
+import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
 class MermaidParserTest {
@@ -697,5 +698,45 @@ class MermaidParserTest {
         val proc = diagram.stateDefinitions.first { it.id == "proc" }
         assertEquals("Processing", proc.label)
         assertTrue(diagram.stateTransitions.any { it.from == "idle" && it.to == "proc" && it.event == "start" })
+    }
+
+    @Test
+    fun parsesPieDiagram() {
+        val diagram =
+            MermaidParser.parse(
+                """
+                pie title Pets
+                    "Dogs" : 386
+                    "Cats" : 85
+                    "Rats" : 15
+                """.trimIndent(),
+            )
+
+        assertEquals(MermaidDiagramType.PieDiagram, diagram.type)
+        assertEquals("Pets", diagram.title)
+        assertEquals(3, diagram.pieSlices.size)
+        val dogs = diagram.pieSlices.first { it.label == "Dogs" }
+        assertEquals(386.0, dogs.value)
+        val cats = diagram.pieSlices.first { it.label == "Cats" }
+        assertEquals(85.0, cats.value)
+    }
+
+    @Test
+    fun parsesPieDiagramWithShowDataAndNoTitle() {
+        val diagram =
+            MermaidParser.parse(
+                """
+                pie showData
+                    A : 1
+                    B : 3
+                """.trimIndent(),
+            )
+
+        assertEquals(MermaidDiagramType.PieDiagram, diagram.type)
+        assertNull(diagram.title)
+        assertTrue(diagram.pieShowData)
+        assertEquals(2, diagram.pieSlices.size)
+        assertEquals(1.0, diagram.pieSlices.first { it.label == "A" }.value)
+        assertEquals(3.0, diagram.pieSlices.first { it.label == "B" }.value)
     }
 }

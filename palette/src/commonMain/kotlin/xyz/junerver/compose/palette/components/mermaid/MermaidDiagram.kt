@@ -5,6 +5,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.absoluteOffset
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -53,6 +54,7 @@ import xyz.junerver.compose.palette.mermaid.MermaidNodeShape
 import xyz.junerver.compose.palette.mermaid.MermaidNote
 import xyz.junerver.compose.palette.mermaid.MermaidNotePosition
 import xyz.junerver.compose.palette.mermaid.MermaidParser
+import xyz.junerver.compose.palette.mermaid.PieSlice
 import xyz.junerver.compose.palette.mermaid.StateDefinition
 import kotlin.math.abs
 import kotlin.math.max
@@ -389,6 +391,15 @@ fun PMermaidDiagram(
                 colors = colors,
                 layout = resolvedLayout,
                 stateDefinitions = parsedDiagram?.stateDefinitions.orEmpty(),
+            )
+
+        MermaidDiagramType.PieDiagram ->
+            PieDiagramMermaidDiagram(
+                modifier = modifier,
+                colors = colors,
+                title = parsedDiagram?.title,
+                slices = parsedDiagram?.pieSlices.orEmpty(),
+                showData = parsedDiagram?.pieShowData ?: false,
             )
     }
 }
@@ -1658,4 +1669,128 @@ private fun StateEndDoubleCircle(
         // Inner filled dot — the classic "bullseye" terminal state.
         drawCircle(color = fillColor, radius = px / 4.5f)
     }
+}
+
+// ── Pie chart rendering ───────────────────────────────────────────────
+
+@Composable
+private fun PieDiagramMermaidDiagram(
+    modifier: Modifier,
+    colors: MermaidColors,
+    title: String?,
+    slices: List<PieSlice>,
+    showData: Boolean,
+) {
+    if (slices.isEmpty()) {
+        Box(modifier = modifier, contentAlignment = Alignment.Center) {
+            Text("Empty pie chart", color = colors.nodeContentColor, style = PaletteTheme.typography.body)
+        }
+        return
+    }
+
+    val total = slices.sumOf { it.value }.coerceAtLeast(1.0)
+    val diameter = 240.dp
+    val padding = 16.dp
+    val titleHeight: Dp = if (title != null) 32.dp else 0.dp
+    val legendWidth = 180.dp
+    val width = diameter + legendWidth + padding * 3
+    val pieHeight = diameter + titleHeight + padding * 2
+    val legendHeight = (slices.size * 28).dp + padding * 2
+    val height = if (pieHeight >= legendHeight) pieHeight else legendHeight
+
+    // A reusable palette of slice colors derived from the global theme tokens, cycled when
+    // there are more slices than colors.
+    val sliceColors = rememberSliceColors()
+    val arcCenter = Offset(
+        x = padding.value + diameter.value / 2f,
+        y = titleHeight.value + padding.value + diameter.value / 2f,
+    )
+
+    Box(modifier = modifier.width(width).height(height)) {
+        Canvas(modifier = Modifier.matchParentSize()) {
+            val radius = diameter.toPx() / 2f
+            val centerPx = Offset(arcCenter.x.dp.toPx(), arcCenter.y.dp.toPx())
+            var startAngle = -90f // start at 12 o'clock, like mermaid
+            slices.forEachIndexed { index, slice ->
+                val sweep = (slice.value / total * 360f).toFloat()
+                val color = sliceColors[index % sliceColors.size]
+                drawArc(
+                    color = color,
+                    startAngle = startAngle,
+                    sweepAngle = sweep,
+                    useCenter = true,
+                    topLeft = Offset(centerPx.x - radius, centerPx.y - radius),
+                    size = androidx.compose.ui.geometry.Size(diameter.toPx(), diameter.toPx()),
+                )
+                // Slice separator stroke.
+                drawArc(
+                    color = colors.nodeContainerColor,
+                    startAngle = startAngle,
+                    sweepAngle = sweep,
+                    useCenter = true,
+                    topLeft = Offset(centerPx.x - radius, centerPx.y - radius),
+                    size = androidx.compose.ui.geometry.Size(diameter.toPx(), diameter.toPx()),
+                    style = Stroke(width = 2.dp.toPx()),
+                )
+                startAngle += sweep
+            }
+        }
+
+        if (title != null) {
+            Text(
+                text = title,
+                color = colors.nodeContentColor,
+                style = PaletteTheme.typography.body,
+                modifier = Modifier
+                    .absoluteOffset(x = padding, y = padding)
+                    .width(diameter + legendWidth),
+                textAlign = TextAlign.Center,
+            )
+        }
+
+        // Legend on the right.
+        Column(
+            modifier = Modifier
+                .absoluteOffset(x = padding + diameter + padding, y = titleHeight + padding)
+                .width(legendWidth),
+        ) {
+            slices.forEachIndexed { index, slice ->
+                val color = sliceColors[index % sliceColors.size]
+                val percentage = "%.1f%%".format(slice.value / total * 100)
+                val label = if (showData) {
+                    "${slice.label} : ${slice.value} ($percentage)"
+                } else {
+                    "${slice.label} ($percentage)"
+                }
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Box(
+                        modifier = Modifier
+                            .size(12.dp)
+                            .background(color),
+                    )
+                    Text(
+                        text = label,
+                        color = colors.nodeContentColor,
+                        style = PaletteTheme.typography.label,
+                        modifier = Modifier.padding(start = 8.dp),
+                    )
+                }
+            }
+        }
+    }
+}
+
+/**
+ * A deterministic cycle of slice colors derived from the global theme so pie charts stay
+ * on-brand and adapt to light/dark mode.
+ */
+@Composable
+private fun rememberSliceColors(): List<Color> {
+    val c = PaletteTheme.colors
+    // Base palette from existing semantic tokens, extended with alpha variants so charts
+    // with many slices still get distinct colors without introducing new top-level tokens.
+    val base = listOf(c.primary, c.success, c.warning, c.error)
+        .filter { it != Color.Unspecified }
+        .ifEmpty { listOf(c.textPrimary) }
+    return base + base.map { it.copy(alpha = 0.65f) } + base.map { it.copy(alpha = 0.40f) }
 }

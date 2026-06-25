@@ -1,5 +1,13 @@
 package xyz.junerver.compose.palette.mermaid
 
+// ── Pie Chart models ──────────────────────────────────────────────────
+
+/** A single slice of a pie chart: a label and its numeric value. */
+data class PieSlice(
+    val label: String,
+    val value: Double,
+)
+
 // ── Class Diagram models ──────────────────────────────────────────────
 
 enum class MermaidClassMemberKind {
@@ -150,6 +158,8 @@ data class MermaidDiagram(
     val stateDefinitions: List<StateDefinition> = emptyList(),
     val stateTransitions: List<StateTransition> = emptyList(),
     val stateNotes: List<StateNote> = emptyList(),
+    val pieSlices: List<PieSlice> = emptyList(),
+    val pieShowData: Boolean = false,
 )
 
 data class MermaidNode(
@@ -210,6 +220,7 @@ enum class MermaidDiagramType {
     ClassDiagram,
     ErDiagram,
     StateDiagram,
+    PieDiagram,
 }
 
 enum class MermaidDirection {

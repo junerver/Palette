@@ -6,6 +6,7 @@ object MermaidLayoutEngine {
         if (diagram.type == MermaidDiagramType.ClassDiagram) return layoutClassDiagram(diagram)
         if (diagram.type == MermaidDiagramType.ErDiagram) return layoutErDiagram(diagram)
         if (diagram.type == MermaidDiagramType.StateDiagram) return layoutStateDiagram(diagram)
+        if (diagram.type == MermaidDiagramType.PieDiagram) return layoutPieDiagram(diagram)
 
         val rankById = calculateRanks(diagram)
         val orderByRank = mutableMapOf<Int, Int>()
@@ -355,4 +356,17 @@ object MermaidLayoutEngine {
     private const val StateRankHeight = 110f
     // Horizontal arc step for fanning out multi-edge endpoint pairs.
     private const val StateEdgeOffsetStep = 40f
+
+    /**
+     * Pie charts are pure geometry (slices → sweep angles); there is no node/edge layout.
+     * Return an empty layout — the renderer computes slice geometry directly from the
+     * diagram's `pieSlices`.
+     */
+    private fun layoutPieDiagram(diagram: MermaidDiagram): MermaidLayout =
+        MermaidLayout(
+            type = MermaidDiagramType.PieDiagram,
+            direction = diagram.direction,
+            nodes = emptyMap(),
+            edges = emptyList(),
+        )
 }

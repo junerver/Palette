@@ -3,6 +3,7 @@ package xyz.junerver.compose.palette.mermaid
 import xyz.junerver.compose.palette.mermaid.parsers.ClassDiagramParser
 import xyz.junerver.compose.palette.mermaid.parsers.ErDiagramParser
 import xyz.junerver.compose.palette.mermaid.parsers.FlowchartParser
+import xyz.junerver.compose.palette.mermaid.parsers.PieParser
 import xyz.junerver.compose.palette.mermaid.parsers.SequenceParser
 import xyz.junerver.compose.palette.mermaid.parsers.StateDiagramParser
 
@@ -13,7 +14,7 @@ object MermaidParser {
      * anything else falls through to the flowchart path below.
      */
     private val registeredParsers: Map<String, MermaidDiagramParser> =
-        listOf(StateDiagramParser, ErDiagramParser, ClassDiagramParser, SequenceParser)
+        listOf(StateDiagramParser, ErDiagramParser, ClassDiagramParser, SequenceParser, PieParser)
             .flatMap { parser -> (parser.aliases + parser.keyword).map { it.lowercase() to parser } }
             .toMap()
 
@@ -23,21 +24,24 @@ object MermaidParser {
             .map { it.trim() }
             .filter { it.isNotEmpty() && !it.startsWith("%%") }
 
-        // Dispatcher: route to a dedicated parser for each diagram family. Adding a new
-        // diagram type is a "register a parser" operation; this monolithic function no
-        // longer grows per-type logic. Flowchart doubles as the default fallback.
-        val header = lines.firstOrNull()?.lowercase()
-        val firstWord = header?.substringBefore(' ')
+        // Dispatcher: route to a dedicated parser for each diagram family. The header's
+        // first keyword decides the family (e.g. "pie title X" -> pie). Adding a new
+        // diagram type is a "register a parser" operation; this function stays a thin
+        // dispatcher. Flowchart doubles as the default fallback.
+        val firstWord = lines.firstOrNull()?.substringBefore(' ')?.lowercase()
         val handler =
             if (firstWord in setOf("flowchart", "graph")) {
                 FlowchartParser
             } else {
-                registeredParsers[header]
+                firstWord?.let { registeredParsers[it] }
             }
         return when (handler) {
             null -> FlowchartParser.parse(lines).toMermaidDiagram() // headerless fallback
             FlowchartParser -> FlowchartParser.parse(lines).toMermaidDiagram() // keeps the header
-            else -> handler!!.parse(lines.drop(1)).toMermaidDiagram()
+            else -> {
+                val body = if (handler!!.consumesHeaderLine) lines else lines.drop(1)
+                handler.parse(body).toMermaidDiagram()
+            }
         }
     }
 }

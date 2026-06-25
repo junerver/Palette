@@ -17,6 +17,14 @@ internal interface MermaidDiagramParser {
     val aliases: List<String>
         get() = emptyList()
 
+    /**
+     * When `true`, the dispatcher hands this parser the *entire* source (header line
+     * included) instead of dropping the first line. Use for diagrams whose header carries
+     * inline arguments on the same line (e.g. `pie title X`, `gantt title Y`).
+     */
+    val consumesHeaderLine: Boolean
+        get() = false
+
     /** Direction implied by this diagram family before any `direction` line overrides it. */
     val defaultDirection: MermaidDirection
 
@@ -89,6 +97,15 @@ internal sealed interface ParseResult {
     ) : ParseResult {
         override val diagramType = MermaidDiagramType.StateDiagram
     }
+
+    data class PieDiagram(
+        override val direction: MermaidDirection,
+        val title: String?,
+        val slices: List<PieSlice>,
+        val showData: Boolean,
+    ) : ParseResult {
+        override val diagramType = MermaidDiagramType.PieDiagram
+    }
 }
 
 /**
@@ -153,5 +170,15 @@ internal fun ParseResult.toMermaidDiagram(): MermaidDiagram =
             stateDefinitions = stateDefinitions,
             stateTransitions = stateTransitions,
             stateNotes = stateNotes,
+        )
+
+        is ParseResult.PieDiagram -> MermaidDiagram(
+            direction = direction,
+            nodes = emptyMap(),
+            edges = emptyList(),
+            type = diagramType,
+            title = title,
+            pieSlices = slices,
+            pieShowData = showData,
         )
     }

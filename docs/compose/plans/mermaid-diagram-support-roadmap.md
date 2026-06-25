@@ -105,12 +105,14 @@
 | 2026-06-25 | ClassDiagram | — | 初版 |
 | 2026-06-25 | ErDiagram | — | 初版（含 crow's foot） |
 | 2026-06-25 | StateDiagram | — | 初版（含 BFS 分层） |
+| 2026-06-25 | PieDiagram | — | 新增（扇形+图例+showData） |
 
 ---
 
 ## 待办（按期推进）
 
-- [ ] 第一期：Pie / Gantt / GitGraph
+- [x] 第一期-1：Pie Chart ✅（2026-06-25）
+- [ ] 第一期：Gantt / GitGraph
 - [ ] 第二期：Mindmap / Timeline / Quadrant / XYChart
 - [ ] 第三期：Requirement / C4 / Block
 - [ ] 第四期：Journey / Sankey / Packet / Architecture
