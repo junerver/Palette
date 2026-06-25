@@ -34,6 +34,11 @@ object MermaidParser {
         var currentClassAnnotation: String? = null
         var currentClassName: String? = null
 
+        val erEntities = mutableListOf<ErEntity>()
+        val erRelationships = mutableListOf<ErRelationship>()
+        var currentErEntity: String? = null
+        var currentErAttributes = mutableListOf<ErAttribute>()
+
         source
             .lines()
             .map { it.trim() }
@@ -47,6 +52,12 @@ object MermaidParser {
 
                 if (line.equals("classDiagram", ignoreCase = true)) {
                     type = MermaidDiagramType.ClassDiagram
+                    direction = MermaidDirection.TopDown
+                    return@forEachIndexed
+                }
+
+                if (line.equals("erDiagram", ignoreCase = true)) {
+                    type = MermaidDiagramType.ErDiagram
                     direction = MermaidDirection.TopDown
                     return@forEachIndexed
                 }
@@ -377,6 +388,72 @@ object MermaidParser {
                     }
                 }
 
+                // ER Diagram parsing
+                if (type == MermaidDiagramType.ErDiagram) {
+                    fun flushCurrentErEntity() {
+                        if (currentErEntity != null) {
+                            erEntities.add(ErEntity(
+                                name = currentErEntity!!,
+                                attributes = currentErAttributes.toList(),
+                            ))
+                            currentErEntity = null
+                            currentErAttributes = mutableListOf()
+                        }
+                    }
+
+                    // Close brace ends current entity block
+                    if (line == "}" && currentErEntity != null) {
+                        flushCurrentErEntity()
+                        return@forEachIndexed
+                    }
+
+                    // Open brace continues entity block
+                    if (line == "{" && currentErEntity != null) {
+                        return@forEachIndexed
+                    }
+
+                    // Attribute line inside entity block
+                    if (currentErEntity != null) {
+                        val attr = parseErAttribute(line)
+                        if (attr != null) {
+                            currentErAttributes.add(attr)
+                        }
+                        return@forEachIndexed
+                    }
+
+                    // Relationship: ENTITY1 <notation> ENTITY2 : label
+                    // Must check before entity start to avoid treating first entity name as standalone
+                    val erRel = parseErRelationship(line)
+                    if (erRel != null) {
+                        erRelationships.add(erRel)
+                        return@forEachIndexed
+                    }
+
+                    // Entity with inline braces: ENTITY_NAME { ... }
+                    val inlineEntityMatch = Regex("""^(\S+)\s*\{(.+)\}\s*$""").matchEntire(line)
+                    if (inlineEntityMatch != null) {
+                        val entityName = inlineEntityMatch.groupValues[1]
+                        val body = inlineEntityMatch.groupValues[2].trim()
+                        val attrs = mutableListOf<ErAttribute>()
+                        if (body.isNotEmpty()) {
+                            body.lines().forEach { part ->
+                                val attr = parseErAttribute(part.trim())
+                                if (attr != null) attrs.add(attr)
+                            }
+                        }
+                        erEntities.add(ErEntity(name = entityName, attributes = attrs))
+                        return@forEachIndexed
+                    }
+
+                    // Entity block start: ENTITY_NAME { or ENTITY_NAME
+                    val entityBlockMatch = Regex("""^(\S+)\s*\{?\s*$""").matchEntire(line)
+                    if (entityBlockMatch != null) {
+                        currentErEntity = entityBlockMatch.groupValues[1]
+                        currentErAttributes = mutableListOf()
+                        return@forEachIndexed
+                    }
+                }
+
                 // Flowchart metadata
                 if (type == MermaidDiagramType.Flowchart) {
                     val classDef = parseFlowchartClassDef(line)
@@ -492,6 +569,8 @@ object MermaidParser {
             flowchartClicks = flowchartClicks,
             classDefinitions = classDefinitions,
             classRelationships = classRelationships,
+            erEntities = erEntities,
+            erRelationships = erRelationships,
         )
     }
 
@@ -890,6 +969,70 @@ object MermaidParser {
             )
         }
         return null
+    }
+
+    private fun parseErAttribute(line: String): ErAttribute? {
+        val trimmed = line.trim()
+        if (trimmed.isEmpty() || trimmed == "{" || trimmed == "}") return null
+        // Format: type name "comment" or type name PK or type name
+        val match = Regex("""^(\S+)\s+(\S+)(?:\s+"([^"]*)")?(?:\s+(PK|FK))?\s*$""").matchEntire(trimmed) ?: return null
+        val type = match.groupValues[1]
+        val name = match.groupValues[2]
+        val comment = match.groupValues[3].ifEmpty { null }
+        val isPrimaryKey = match.groupValues[4] == "PK"
+        return ErAttribute(
+            name = name,
+            type = type,
+            comment = comment,
+            isPrimaryKey = isPrimaryKey,
+        )
+    }
+
+    private fun parseErRelationship(line: String): ErRelationship? {
+        // Pattern: ENTITY1 <notation> ENTITY2 : label
+        // Try solid line notations first: ||--|| ||--o{ ||--|{ }o--o{ }|--|{ }o--|| }|--||
+        val solidMatch = Regex(
+            """^(\S+)\s+(\}?\|?\|?[o|]?--\|?[o|]?\|?\{?)\s+(\S+)(?:\s*:\s*(.+))?$"""
+        ).matchEntire(line)
+        if (solidMatch != null) return matchErRel(solidMatch)
+        // Try dotted line notations: ||..|| ||..o{ ||..|{ }o..o{ }|..|{ }o..|| }|..||
+        val dottedMatch = Regex(
+            """^(\S+)\s+(\}?\|?\|?[o|]?\.\.\|?[o|]?\|?\{?)\s+(\S+)(?:\s*:\s*(.+))?$"""
+        ).matchEntire(line)
+        if (dottedMatch != null) return matchErRel(dottedMatch)
+        return null
+    }
+
+    private fun matchErRel(match: MatchResult): ErRelationship? {
+        val from = match.groupValues[1]
+        val notation = match.groupValues[2]
+        val to = match.groupValues[3]
+        val label = match.groupValues[4].ifEmpty { null }
+
+        val kind = when (notation) {
+            "||--||" -> ErRelationshipKind.OneToOne
+            "||--o{" -> ErRelationshipKind.OneToManyZeroOrMore
+            "||--|{" -> ErRelationshipKind.OneToManyOneOrMore
+            "}o--o{" -> ErRelationshipKind.ManyToManyZeroOrMore
+            "}|--|{" -> ErRelationshipKind.ManyToManyOneOrMore
+            "}o--||" -> ErRelationshipKind.ManyToOneZeroOrMore
+            "}|--||" -> ErRelationshipKind.ManyToOneOneOrMore
+            "||..||" -> ErRelationshipKind.NonIdentifyingOneToOne
+            "||..o{" -> ErRelationshipKind.NonIdentifyingOneToMany
+            "||..|{" -> ErRelationshipKind.NonIdentifyingOneToMany
+            "}o..o{" -> ErRelationshipKind.NonIdentifyingManyToMany
+            "}|..|{" -> ErRelationshipKind.NonIdentifyingManyToMany
+            "}o..||" -> ErRelationshipKind.NonIdentifyingManyToOne
+            "}|..||" -> ErRelationshipKind.NonIdentifyingManyToOne
+            else -> return null
+        }
+
+        return ErRelationship(
+            from = from,
+            to = to,
+            kind = kind,
+            label = label?.trim(),
+        )
     }
 
     private val StandaloneNodeRegex =
