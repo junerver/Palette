@@ -28,6 +28,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import xyz.junerver.compose.hooks.useCreation
 import xyz.junerver.compose.palette.core.theme.PaletteTheme
+import xyz.junerver.compose.palette.mermaid.ErEntity
 import xyz.junerver.compose.palette.mermaid.MermaidClassDefinition
 import xyz.junerver.compose.palette.mermaid.MermaidClassMemberKind
 import xyz.junerver.compose.palette.mermaid.MermaidClassVisibility
@@ -359,6 +360,14 @@ fun PMermaidDiagram(
                 colors = colors,
                 layout = resolvedLayout,
                 classDefinitions = parsedDiagram?.classDefinitions.orEmpty(),
+            )
+
+        MermaidDiagramType.ErDiagram ->
+            ErDiagramMermaidDiagram(
+                modifier = modifier,
+                colors = colors,
+                layout = resolvedLayout,
+                erEntities = parsedDiagram?.erEntities.orEmpty(),
             )
     }
 }
@@ -835,6 +844,107 @@ private fun ClassDiagramMermaidDiagram(
         }
 
         if (classDefinitions.isEmpty()) {
+            Text(
+                text = "Empty diagram",
+                color = Color.Unspecified,
+                style = PaletteTheme.typography.body,
+                modifier = Modifier.align(Alignment.Center),
+            )
+        }
+    }
+}
+
+@Composable
+private fun ErDiagramMermaidDiagram(
+    modifier: Modifier,
+    colors: MermaidColors,
+    layout: MermaidLayout,
+    erEntities: List<ErEntity>,
+) {
+    val nodeWidth = 180.dp
+    val attributeHeight = 20.dp
+    val headerHeight = 32.dp
+    val padding = 8.dp
+
+    val nodeRight = (layout.nodes.values.maxOfOrNull { it.x } ?: 0f) + 204f
+    val nodeBottom = (layout.nodes.values.maxOfOrNull { it.y } ?: 0f) + 120f
+    val width = nodeRight.dp
+    val height = nodeBottom.dp
+
+    Box(
+        modifier = modifier.width(width).height(height),
+    ) {
+        Canvas(modifier = Modifier.matchParentSize()) {
+            layout.edges.forEach { edge ->
+                val from = layout.nodes[edge.from] ?: return@forEach
+                val to = layout.nodes[edge.to] ?: return@forEach
+                val startX = from.x.dp.toPx() + nodeWidth.toPx() / 2f
+                val startY = from.y.dp.toPx() + 44f
+                val endX = to.x.dp.toPx() + nodeWidth.toPx() / 2f
+                val endY = to.y.dp.toPx()
+                val pathEffect = if (edge.style == MermaidEdgeStyle.Dotted) {
+                    PathEffect.dashPathEffect(floatArrayOf(6f, 6f))
+                } else {
+                    null
+                }
+                drawLine(
+                    color = colors.edgeColor,
+                    start = Offset(startX, startY),
+                    end = Offset(endX, endY),
+                    strokeWidth = 2.dp.toPx(),
+                    cap = StrokeCap.Round,
+                    pathEffect = pathEffect,
+                )
+            }
+        }
+
+        erEntities.forEach { entity ->
+            val positioned = layout.nodes[entity.name] ?: return@forEach
+            val attributeCount = entity.attributes.size
+            val nodeHeight = headerHeight + attributeHeight * attributeCount + padding * 2
+
+            Box(
+                modifier = Modifier
+                    .absoluteOffset(x = positioned.x.dp, y = positioned.y.dp)
+                    .width(nodeWidth)
+                    .height(nodeHeight)
+                    .background(colors.nodeContainerColor, RoundedCornerShape(4.dp))
+                    .border(1.dp, colors.nodeBorderColor, RoundedCornerShape(4.dp)),
+            ) {
+                Column {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(headerHeight)
+                            .background(colors.nodeContainerColor.copy(alpha = 0.5f))
+                            .padding(horizontal = 8.dp),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Text(
+                            text = entity.name,
+                            color = colors.nodeContentColor,
+                            style = PaletteTheme.typography.body,
+                        )
+                    }
+
+                    entity.attributes.forEach { attr ->
+                        val prefix = if (attr.isPrimaryKey) "PK" else "FK"
+                        val attrText = "$prefix ${attr.type} ${attr.name}"
+                        Text(
+                            text = attrText,
+                            color = colors.nodeContentColor,
+                            style = PaletteTheme.typography.label,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(attributeHeight)
+                                .padding(horizontal = 8.dp),
+                        )
+                    }
+                }
+            }
+        }
+
+        if (erEntities.isEmpty()) {
             Text(
                 text = "Empty diagram",
                 color = Color.Unspecified,
