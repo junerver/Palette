@@ -485,6 +485,37 @@ class MermaidParserTest {
     }
 
     @Test
+    fun parsesErDiagramEntitiesAndRelationships() {
+        val diagram = MermaidParser.parse(
+            """
+            erDiagram
+                CUSTOMER {
+                    string name
+                    string custNumber
+                }
+                ORDER {
+                    int orderNumber
+                }
+                CUSTOMER ||--o{ ORDER : places
+            """.trimIndent()
+        )
+
+        assertEquals(MermaidDiagramType.ErDiagram, diagram.type)
+        assertEquals(2, diagram.erEntities.size)
+        assertEquals(1, diagram.erRelationships.size)
+
+        val customer = diagram.erEntities.first { it.name == "CUSTOMER" }
+        assertEquals(2, customer.attributes.size)
+        assertTrue(customer.attributes.any { it.name == "name" && it.type == "string" })
+
+        val rel = diagram.erRelationships.single()
+        assertEquals("CUSTOMER", rel.from)
+        assertEquals("ORDER", rel.to)
+        assertEquals(ErRelationshipKind.OneToManyZeroOrMore, rel.kind)
+        assertEquals("places", rel.label)
+    }
+
+    @Test
     fun laysOutClassDiagramNodes() {
         val diagram = MermaidParser.parse(
             """
