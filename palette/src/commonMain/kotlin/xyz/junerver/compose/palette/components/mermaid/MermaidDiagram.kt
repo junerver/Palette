@@ -42,6 +42,7 @@ import xyz.junerver.compose.palette.mermaid.MermaidNodeShape
 import xyz.junerver.compose.palette.mermaid.MermaidNote
 import xyz.junerver.compose.palette.mermaid.MermaidNotePosition
 import xyz.junerver.compose.palette.mermaid.MermaidParser
+import xyz.junerver.compose.palette.mermaid.StateDefinition
 import kotlin.math.abs
 import kotlin.math.max
 import kotlin.math.sqrt
@@ -368,6 +369,14 @@ fun PMermaidDiagram(
                 colors = colors,
                 layout = resolvedLayout,
                 erEntities = parsedDiagram?.erEntities.orEmpty(),
+            )
+
+        MermaidDiagramType.StateDiagram ->
+            StateDiagramMermaidDiagram(
+                modifier = modifier,
+                colors = colors,
+                layout = resolvedLayout,
+                stateDefinitions = parsedDiagram?.stateDefinitions.orEmpty(),
             )
     }
 }
@@ -771,7 +780,24 @@ private fun ClassDiagramMermaidDiagram(
                     cap = StrokeCap.Round,
                     pathEffect = pathEffect,
                 )
+                val arrowSize = 8.dp.toPx()
+                val dx = endX - startX; val dy = endY - startY
+                val len = sqrt(dx * dx + dy * dy)
+                if (len > 0f) {
+                    val ux = dx / len; val uy = dy / len; val px = -uy; val py = ux
+                    drawLine(color = colors.edgeColor, start = Offset(endX - ux * arrowSize + px * arrowSize * 0.4f, endY - uy * arrowSize + py * arrowSize * 0.4f), end = Offset(endX, endY), strokeWidth = 2.dp.toPx(), cap = StrokeCap.Round)
+                    drawLine(color = colors.edgeColor, start = Offset(endX - ux * arrowSize - px * arrowSize * 0.4f, endY - uy * arrowSize - py * arrowSize * 0.4f), end = Offset(endX, endY), strokeWidth = 2.dp.toPx(), cap = StrokeCap.Round)
+                }
             }
+        }
+
+        layout.edges.forEach { edge ->
+            val lbl = edge.label
+            if (lbl.isNullOrEmpty()) return@forEach
+            val from = layout.nodes[edge.from] ?: return@forEach
+            val to = layout.nodes[edge.to] ?: return@forEach
+            Text(text = lbl, color = colors.nodeContentColor, style = PaletteTheme.typography.label,
+                modifier = Modifier.absoluteOffset(x = ((from.x + to.x) / 2f + 90f).dp, y = ((from.y + to.y) / 2f + 10f).dp))
         }
 
         classDefinitions.forEach { cls ->
@@ -895,7 +921,24 @@ private fun ErDiagramMermaidDiagram(
                     cap = StrokeCap.Round,
                     pathEffect = pathEffect,
                 )
+                val arrowSize = 8.dp.toPx()
+                val dx = endX - startX; val dy = endY - startY
+                val len = sqrt(dx * dx + dy * dy)
+                if (len > 0f) {
+                    val ux = dx / len; val uy = dy / len; val px = -uy; val py = ux
+                    drawLine(color = colors.edgeColor, start = Offset(endX - ux * arrowSize + px * arrowSize * 0.4f, endY - uy * arrowSize + py * arrowSize * 0.4f), end = Offset(endX, endY), strokeWidth = 2.dp.toPx(), cap = StrokeCap.Round)
+                    drawLine(color = colors.edgeColor, start = Offset(endX - ux * arrowSize - px * arrowSize * 0.4f, endY - uy * arrowSize - py * arrowSize * 0.4f), end = Offset(endX, endY), strokeWidth = 2.dp.toPx(), cap = StrokeCap.Round)
+                }
             }
+        }
+
+        layout.edges.forEach { edge ->
+            val lbl = edge.label
+            if (lbl.isNullOrEmpty()) return@forEach
+            val from = layout.nodes[edge.from] ?: return@forEach
+            val to = layout.nodes[edge.to] ?: return@forEach
+            Text(text = lbl, color = colors.nodeContentColor, style = PaletteTheme.typography.label,
+                modifier = Modifier.absoluteOffset(x = ((from.x + to.x) / 2f + 90f).dp, y = ((from.y + to.y) / 2f + 10f).dp))
         }
 
         erEntities.forEach { entity ->
@@ -945,6 +988,120 @@ private fun ErDiagramMermaidDiagram(
         }
 
         if (erEntities.isEmpty()) {
+            Text(
+                text = "Empty diagram",
+                color = Color.Unspecified,
+                style = PaletteTheme.typography.body,
+                modifier = Modifier.align(Alignment.Center),
+            )
+        }
+    }
+}
+
+@Composable
+private fun StateDiagramMermaidDiagram(
+    modifier: Modifier,
+    colors: MermaidColors,
+    layout: MermaidLayout,
+    stateDefinitions: List<StateDefinition>,
+) {
+    val nodeWidth = 140.dp
+    val nodeHeight = 44.dp
+    val circleSize = 20.dp
+    val stateMap = stateDefinitions.associateBy { it.id }
+
+    val nodeRight = (layout.nodes.values.maxOfOrNull { it.x } ?: 0f) + 164f
+    val nodeBottom = (layout.nodes.values.maxOfOrNull { it.y } ?: 0f) + 72f
+    val width = nodeRight.dp
+    val height = nodeBottom.dp
+
+    Box(
+        modifier = modifier.width(width).height(height),
+    ) {
+        Canvas(modifier = Modifier.matchParentSize()) {
+            layout.edges.forEach { edge ->
+                val from = layout.nodes[edge.from] ?: return@forEach
+                val to = layout.nodes[edge.to] ?: return@forEach
+                val fromState = stateMap[edge.from]
+                val toState = stateMap[edge.to]
+                val isFromCircle = fromState?.isStart == true || fromState?.isEnd == true
+                val isToCircle = toState?.isStart == true || toState?.isEnd == true
+
+                val startX = from.x.dp.toPx() + if (isFromCircle) circleSize.toPx() / 2f else nodeWidth.toPx() / 2f
+                val startY = from.y.dp.toPx() + if (isFromCircle) circleSize.toPx() else nodeHeight.toPx()
+                val endX = to.x.dp.toPx() + if (isToCircle) circleSize.toPx() / 2f else nodeWidth.toPx() / 2f
+                val endY = to.y.dp.toPx()
+
+                drawLine(
+                    color = colors.edgeColor,
+                    start = Offset(startX, startY),
+                    end = Offset(endX, endY),
+                    strokeWidth = 2.dp.toPx(),
+                    cap = StrokeCap.Round,
+                )
+                val arrowSize = 8.dp.toPx()
+                val dx = endX - startX; val dy = endY - startY
+                val len = sqrt(dx * dx + dy * dy)
+                if (len > 0f) {
+                    val ux = dx / len; val uy = dy / len; val px = -uy; val py = ux
+                    drawLine(color = colors.edgeColor, start = Offset(endX - ux * arrowSize + px * arrowSize * 0.4f, endY - uy * arrowSize + py * arrowSize * 0.4f), end = Offset(endX, endY), strokeWidth = 2.dp.toPx(), cap = StrokeCap.Round)
+                    drawLine(color = colors.edgeColor, start = Offset(endX - ux * arrowSize - px * arrowSize * 0.4f, endY - uy * arrowSize - py * arrowSize * 0.4f), end = Offset(endX, endY), strokeWidth = 2.dp.toPx(), cap = StrokeCap.Round)
+                }
+            }
+        }
+
+        layout.edges.forEach { edge ->
+            val lbl = edge.label
+            if (lbl.isNullOrEmpty()) return@forEach
+            val from = layout.nodes[edge.from] ?: return@forEach
+            val to = layout.nodes[edge.to] ?: return@forEach
+            Text(text = lbl, color = colors.nodeContentColor, style = PaletteTheme.typography.label,
+                modifier = Modifier.absoluteOffset(x = ((from.x + to.x) / 2f + 70f).dp, y = ((from.y + to.y) / 2f + 10f).dp))
+        }
+
+        stateDefinitions.forEach { state ->
+            val positioned = layout.nodes[state.id] ?: return@forEach
+            val isCircle = state.isStart || state.isEnd
+
+            if (isCircle) {
+                Box(
+                    modifier = Modifier
+                        .absoluteOffset(x = positioned.x.dp, y = positioned.y.dp)
+                        .size(circleSize)
+                        .background(colors.nodeContainerColor, CircleShape)
+                        .border(1.dp, colors.nodeBorderColor, CircleShape),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    if (!state.isStart && !state.isEnd) {
+                        Text(
+                            text = state.label ?: state.id,
+                            color = colors.nodeContentColor,
+                            style = PaletteTheme.typography.label,
+                            textAlign = TextAlign.Center,
+                        )
+                    }
+                }
+            } else {
+                Box(
+                    modifier = Modifier
+                        .absoluteOffset(x = positioned.x.dp, y = positioned.y.dp)
+                        .width(nodeWidth)
+                        .height(nodeHeight)
+                        .background(colors.nodeContainerColor, RoundedCornerShape(MermaidDefaults.cornerRadius()))
+                        .border(1.dp, colors.nodeBorderColor, RoundedCornerShape(MermaidDefaults.cornerRadius())),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Text(
+                        text = state.label ?: state.id,
+                        color = colors.nodeContentColor,
+                        style = PaletteTheme.typography.label,
+                        textAlign = TextAlign.Center,
+                    )
+                }
+            }
+        }
+
+        if (stateDefinitions.isEmpty()) {
             Text(
                 text = "Empty diagram",
                 color = Color.Unspecified,
