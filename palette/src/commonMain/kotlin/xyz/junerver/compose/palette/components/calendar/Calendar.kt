@@ -225,12 +225,14 @@ private fun CalendarDayCell(
     }
 
     val circleModifier = when {
-        isSelected -> Modifier
-            .size(selectedCircleSize)
-            .background(selectedColor, CircleShape)
-        isToday -> Modifier
-            .size(selectedCircleSize)
-            .border(todayBorderWidth, todayBorderColor, CircleShape)
+        isSelected ->
+            Modifier
+                .size(selectedCircleSize)
+                .background(selectedColor, CircleShape)
+        isToday ->
+            Modifier
+                .size(selectedCircleSize)
+                .border(todayBorderWidth, todayBorderColor, CircleShape)
         else -> Modifier.size(selectedCircleSize)
     }
 

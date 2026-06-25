@@ -596,7 +596,7 @@ object MarkdownParser {
         when (block) {
             is MarkdownHeading -> {
                 val baseSlug = block.inlines.toPlainText().toHeadingSlug()
-                val count = headingIdCounts.getOrDefault(baseSlug, 0)
+                val count = headingIdCounts[baseSlug] ?: 0
                 headingIdCounts[baseSlug] = count + 1
                 val id = if (count == 0) baseSlug else "\$baseSlug-\${count + 1}"
                 MarkdownRenderBlock.Heading(

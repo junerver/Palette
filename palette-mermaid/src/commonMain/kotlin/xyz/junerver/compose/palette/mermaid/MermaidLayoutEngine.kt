@@ -78,18 +78,18 @@ object MermaidLayoutEngine {
             )
         }
 
-        val rankById = calculateRanks(MermaidDiagram(direction = diagram.direction, nodes = nodes, edges = edges))
+        val rankById: Map<String, Int> = calculateRanks(MermaidDiagram(direction = diagram.direction, nodes = nodes, edges = edges))
         val orderByRank = mutableMapOf<Int, Int>()
         val positionedNodes = nodes.values.associate { node ->
-            val rank = rankById.getOrDefault(node.id, 0)
+            val rank = rankById[node.id] ?: 0
             val order = orderByRank.getOrPut(rank) { 0 }
             orderByRank[rank] = order + 1
             node.id to PositionedMermaidNode(
                 node = node,
                 rank = rank,
                 order = order,
-                x = if (diagram.direction == MermaidDirection.LeftRight) rank * 200f else order * 200f,
-                y = if (diagram.direction == MermaidDirection.LeftRight) order * 120f else rank * 120f,
+                x = if (diagram.direction == MermaidDirection.LeftRight) rank.toFloat() * 200f else order.toFloat() * 200f,
+                y = if (diagram.direction == MermaidDirection.LeftRight) order.toFloat() * 120f else rank.toFloat() * 120f,
             )
         }
 

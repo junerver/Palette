@@ -469,6 +469,4 @@ class MarkdownUiTest {
         rule.waitForIdle()
         assertEquals(false, checked, "After 2nd click")
     }
-
-
 }
