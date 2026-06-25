@@ -90,6 +90,36 @@ data class ErRelationship(
     val sourceRange: MermaidSourceRange? = null,
 )
 
+// ── State Diagram models ──────────────────────────────────────────────
+
+data class StateDefinition(
+    val id: String,
+    val label: String? = null,
+    val isStart: Boolean = false,
+    val isEnd: Boolean = false,
+    val isFork: Boolean = false,
+    val isJoin: Boolean = false,
+    val children: List<StateDefinition> = emptyList(),
+    val sourceRange: MermaidSourceRange? = null,
+)
+
+data class StateTransition(
+    val from: String,
+    val to: String,
+    val event: String? = null,
+    val sourceRange: MermaidSourceRange? = null,
+)
+
+data class StateNote(
+    val stateId: String,
+    val text: String,
+    val position: StateNotePosition = StateNotePosition.Right,
+)
+
+enum class StateNotePosition {
+    Left, Right,
+}
+
 data class MermaidDiagram(
     val direction: MermaidDirection,
     val nodes: Map<String, MermaidNode>,
@@ -116,6 +146,9 @@ data class MermaidDiagram(
     val classRelationships: List<MermaidClassRelationship> = emptyList(),
     val erEntities: List<ErEntity> = emptyList(),
     val erRelationships: List<ErRelationship> = emptyList(),
+    val stateDefinitions: List<StateDefinition> = emptyList(),
+    val stateTransitions: List<StateTransition> = emptyList(),
+    val stateNotes: List<StateNote> = emptyList(),
 )
 
 data class MermaidNode(
@@ -175,6 +208,7 @@ enum class MermaidDiagramType {
     Sequence,
     ClassDiagram,
     ErDiagram,
+    StateDiagram,
 }
 
 enum class MermaidDirection {
