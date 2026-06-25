@@ -111,10 +111,16 @@ palette-code 已覆盖 17 种语言（Kotlin/Java/JS/TS/JSON/CSS/Python/HTML/XML
 | （历史） | 17 语言手写 lexer | Kotlin/Java/JS/TS/JSON/CSS/Python/HTML/XML/YAML/TOML/INI/GraphQL/Diff/Markdown/Dockerfile/SQL |
 | （历史） | 主题映射 | CodeTokenType → Color（PaletteTheme 派生） |
 | （历史） | 诊断 + 注册表 | PaletteCodeDiagnostic + registerLanguage |
+| 2026-06-26 | 第一期 1.1 Grammar 模型 | GrammarToken(pattern/lookbehind/greedy/alias/inside)、Grammar、GrammarTokenValue，对齐 Prism types.d.ts |
+| 2026-06-26 | 第一期 1.2 tokenize 引擎 | GrammarTokenizer.tokenize，TDD 覆盖 pattern/lookbehind/greedy/inside/alias/empty 边界 |
+| 2026-06-26 | 第一期 1.3 扩展 CodeTokenType | 追加 18 种 Prism 标准 token（Boolean/Char/Regex/Symbol/Url/Selector/Tag/AttrName/AttrValue/Doctype/Entity/Prolog/Cdata/Atrule/Bold/Italic/Important），渲染层补颜色映射 |
+| 2026-06-26 | 第一期 1.4 GrammarRegistry | highlight() grammar 优先 fallback lexer；GrammarHighlighter 桥接行式接口；GrammarTokenTypeMapping |
+| 2026-06-26 | 第一期 1.5 JSON 样板 grammar | 声明式 JSON grammar，分类与原 JsonLexer 一致，零回归验证引擎 |
 
 ## 待办
 
-- [ ] 第一期：grammar 引擎核心（模型/tokenize/token 扩展/registry/2 样板）
-- [ ] 第二期：高频语言迁移 + 字体样式维度
+- [x] 第一期：grammar 引擎核心（模型/tokenize/token 扩展/registry/JSON 样板）✅
+  - Markdown grammar 已实现但暂留 lexer，二期对齐测试后接入
+- [ ] 第二期：高频语言迁移 + 字体样式维度（Markdown grammar 接入、YAML/TOML/CSS/HTML/Python/SQL/KotlinLike 迁移、bold/italic 维度）
 - [ ] 第三期：扩展语言覆盖（C/C++/C#/Go/Rust/PHP/Ruby/Swift/Scala/SCSS/JSX）
 - [ ] 第四期：高级能力（行号增强/语言检测/增量/hook）

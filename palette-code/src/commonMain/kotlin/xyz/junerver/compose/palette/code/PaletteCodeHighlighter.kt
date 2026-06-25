@@ -61,6 +61,41 @@ enum class CodeTokenType {
     ClassName,
     /** Package or namespace qualifier */
     Namespace,
+    // ── Prism StandardTokenName alignment (additive; appended to preserve ordinal order) ──
+    /** `true`/`false` literals, distinct from Keyword (Prism `boolean`). */
+    Boolean,
+    /** Single character literal, e.g. `'a'` (Prism `char`). */
+    Char,
+    /** Regular expression literal, e.g. `/\d+/` (Prism `regex`). */
+    Regex,
+    /** Symbolic operator or atom, e.g. Lisp/Ruby/Erlang atoms (Prism `symbol`). */
+    Symbol,
+    /** URL / link literal (Prism `url`). */
+    Url,
+    /** CSS selector (Prism `selector`). */
+    Selector,
+    /** HTML/XML tag name (Prism `tag`). */
+    Tag,
+    /** HTML/XML attribute name (Prism `attr-name`). */
+    AttrName,
+    /** HTML/XML attribute value (Prism `attr-value`). */
+    AttrValue,
+    /** `<!DOCTYPE ...>` declaration (Prism `doctype`). */
+    Doctype,
+    /** HTML entity, e.g. `&amp;` (Prism `entity`). */
+    Entity,
+    /** XML prolog, e.g. `<?xml ...?>` (Prism `prolog`). */
+    Prolog,
+    /** CDATA section, e.g. `<![CDATA[...]]>` (Prism `cdata`). */
+    Cdata,
+    /** HTML/SVG attribute, e.g. `class="..."` (Prism `atrule`). */
+    Atrule,
+    /** Bold marker, rendered with weight (Prism `bold`). */
+    Bold,
+    /** Italic marker, rendered with slant (Prism `italic`). */
+    Italic,
+    /** Important / emphasized, e.g. Markdown `!!text!!` (Prism `important`). */
+    Important,
 }
 
 object PaletteCodeHighlighter {
@@ -144,8 +179,14 @@ object PaletteCodeHighlighter {
         return HighlightedCode(language = effectiveLanguage, tokens = tokens, diagnostics = diagnostics)
     }
 
-    private fun String.builtInHighlighterOrNull(): PaletteCodeLanguageHighlighter? =
-        when (this) {
+    private fun String.builtInHighlighterOrNull(): PaletteCodeLanguageHighlighter? {
+        // Declarative grammars take precedence over hand-written lexers. This lets new and
+        // migrating languages be defined as a grammar object while the rest keep their lexers
+        // during the incremental migration to the grammar engine.
+        xyz.junerver.compose.palette.code.grammar.GrammarRegistry
+            .highlighterOrNull(this)
+            ?.let { return it }
+        return when (this) {
             "kt", "kts", "kotlin" ->
                 PaletteCodeLanguageHighlighter { lines ->
                     KotlinLikeLexer(
@@ -174,6 +215,7 @@ object PaletteCodeHighlighter {
             "sql", "mysql", "postgresql", "postgres" -> PaletteCodeLanguageHighlighter { lines -> SqlLexer().highlight(lines) }
             else -> null
         }
+    }
 
     private fun List<String>.toPlainCodeTokens(): List<List<CodeToken>> =
         map { line -> listOf(CodeToken(CodeTokenType.Plain, line)) }

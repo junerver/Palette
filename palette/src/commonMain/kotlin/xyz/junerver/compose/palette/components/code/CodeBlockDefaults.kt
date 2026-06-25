@@ -46,6 +46,25 @@ data class CodeBlockColors(
             CodeTokenType.Builtin -> functionColor
             CodeTokenType.ClassName -> typeColor
             CodeTokenType.Namespace -> typeColor
+            // Prism-aligned additions map onto existing semantic colors by default; theme
+            // tokens can be added later if a distinct color is warranted.
+            CodeTokenType.Boolean -> keywordColor
+            CodeTokenType.Char -> stringColor
+            CodeTokenType.Regex -> stringColor
+            CodeTokenType.Symbol -> annotationColor
+            CodeTokenType.Url -> annotationColor
+            CodeTokenType.Selector -> typeColor
+            CodeTokenType.Tag -> typeColor
+            CodeTokenType.AttrName -> annotationColor
+            CodeTokenType.AttrValue -> stringColor
+            CodeTokenType.Doctype -> commentColor
+            CodeTokenType.Entity -> annotationColor
+            CodeTokenType.Prolog -> commentColor
+            CodeTokenType.Cdata -> commentColor
+            CodeTokenType.Atrule -> annotationColor
+            CodeTokenType.Bold -> contentColor
+            CodeTokenType.Italic -> contentColor
+            CodeTokenType.Important -> keywordColor
         }
 }
 
