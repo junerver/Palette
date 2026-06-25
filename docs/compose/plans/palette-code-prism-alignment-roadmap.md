@@ -116,11 +116,17 @@ palette-code 已覆盖 17 种语言（Kotlin/Java/JS/TS/JSON/CSS/Python/HTML/XML
 | 2026-06-26 | 第一期 1.3 扩展 CodeTokenType | 追加 18 种 Prism 标准 token（Boolean/Char/Regex/Symbol/Url/Selector/Tag/AttrName/AttrValue/Doctype/Entity/Prolog/Cdata/Atrule/Bold/Italic/Important），渲染层补颜色映射 |
 | 2026-06-26 | 第一期 1.4 GrammarRegistry | highlight() grammar 优先 fallback lexer；GrammarHighlighter 桥接行式接口；GrammarTokenTypeMapping |
 | 2026-06-26 | 第一期 1.5 JSON 样板 grammar | 声明式 JSON grammar，分类与原 JsonLexer 一致，零回归验证引擎 |
+| 2026-06-26 | 第二期：字体样式维度 | Bold/Italic/Important token 在渲染层产生 fontWeight/fontStyle，对齐 Prism 主题表现 |
 
 ## 待办
 
 - [x] 第一期：grammar 引擎核心（模型/tokenize/token 扩展/registry/JSON 样板）✅
-  - Markdown grammar 已实现但暂留 lexer，二期对齐测试后接入
-- [ ] 第二期：高频语言迁移 + 字体样式维度（Markdown grammar 接入、YAML/TOML/CSS/HTML/Python/SQL/KotlinLike 迁移、bold/italic 维度）
+- [ ] 第二期：高频语言迁移 + 字体样式维度
+  - [x] 字体样式维度（Bold/Italic/Important 渲染）✅
+  - [ ] Markdown grammar 接入：需先给 grammar 引擎增加"动态语言嵌入"能力（fenced code 递归调用其他语言高亮器），这是 lexer 的核心特性，grammar 的 `inside` 是固定嵌套无法动态调度
+  - [ ] YAML/TOML/INI 迁移（最简单，无嵌入）
+  - [ ] CSS/HTML/XML 迁移（验证 `inside` 嵌套）
+  - [ ] Python/SQL 迁移
+  - [ ] KotlinLike（Kotlin/Java/JS/TS）迁移
 - [ ] 第三期：扩展语言覆盖（C/C++/C#/Go/Rust/PHP/Ruby/Swift/Scala/SCSS/JSX）
 - [ ] 第四期：高级能力（行号增强/语言检测/增量/hook）

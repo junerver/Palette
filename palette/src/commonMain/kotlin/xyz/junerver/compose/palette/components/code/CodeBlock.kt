@@ -31,6 +31,7 @@ import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -38,6 +39,7 @@ import kotlinx.coroutines.delay
 import xyz.junerver.compose.hooks.useCreation
 import xyz.junerver.compose.hooks.useState
 import xyz.junerver.compose.palette.code.CodeToken
+import xyz.junerver.compose.palette.code.CodeTokenType
 import xyz.junerver.compose.palette.code.HighlightedCode
 import xyz.junerver.compose.palette.code.PaletteCodeHighlighter
 import xyz.junerver.compose.palette.core.theme.PaletteTheme
@@ -184,7 +186,17 @@ fun PCodeBlock(
 private fun List<CodeToken>.toAnnotatedString(colors: CodeBlockColors): AnnotatedString =
     buildAnnotatedString {
         forEach { token ->
-            pushStyle(SpanStyle(color = colors.colorFor(token.type)))
+            // Prism's bold/italic/important tokens carry a font-style dimension beyond color;
+            // map them so emphasized text actually renders bold/italic.
+            val spanStyle = when (token.type) {
+                CodeTokenType.Bold, CodeTokenType.Important ->
+                    SpanStyle(color = colors.colorFor(token.type), fontWeight = FontWeight.Bold)
+                CodeTokenType.Italic ->
+                    SpanStyle(color = colors.colorFor(token.type), fontStyle = FontStyle.Italic)
+                else ->
+                    SpanStyle(color = colors.colorFor(token.type))
+            }
+            pushStyle(spanStyle)
             append(token.text)
             pop()
         }
