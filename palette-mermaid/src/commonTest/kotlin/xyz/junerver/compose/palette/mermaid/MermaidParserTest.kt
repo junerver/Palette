@@ -449,6 +449,42 @@ class MermaidParserTest {
     }
 
     @Test
+    fun parsesClassDiagramWithAbstractAndStaticMembers() {
+        val diagram = MermaidParser.parse(
+            """
+            classDiagram
+                class AbstractShape {
+                    <<abstract>>
+                    *calculate() double
+                    ${'$'}double PI
+                }
+            """.trimIndent()
+        )
+
+        val cls = diagram.classDefinitions.single()
+        assertEquals("abstract", cls.annotation)
+        assertTrue(cls.members.any { it.isAbstract && it.name == "calculate" })
+        assertTrue(cls.members.any { it.isStatic && it.name == "PI" })
+    }
+
+    @Test
+    fun parsesClassDiagramWithCardinality() {
+        val diagram = MermaidParser.parse(
+            """
+            classDiagram
+                class Customer
+                class Order
+                Customer "1" --> "*" Order : places
+            """.trimIndent()
+        )
+
+        val rel = diagram.classRelationships.single()
+        assertEquals("1", rel.fromCardinality)
+        assertEquals("*", rel.toCardinality)
+        assertEquals("places", rel.label)
+    }
+
+    @Test
     fun laysOutClassDiagramNodes() {
         val diagram = MermaidParser.parse(
             """
