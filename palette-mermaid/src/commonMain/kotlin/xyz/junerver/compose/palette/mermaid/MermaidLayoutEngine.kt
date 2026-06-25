@@ -8,6 +8,7 @@ object MermaidLayoutEngine {
         if (diagram.type == MermaidDiagramType.StateDiagram) return layoutStateDiagram(diagram)
         if (diagram.type == MermaidDiagramType.PieDiagram) return layoutPieDiagram(diagram)
         if (diagram.type == MermaidDiagramType.GanttDiagram) return layoutGanttDiagram(diagram)
+        if (diagram.type == MermaidDiagramType.GitGraphDiagram) return layoutGitGraphDiagram(diagram)
 
         val rankById = calculateRanks(diagram)
         val orderByRank = mutableMapOf<Int, Int>()
@@ -379,6 +380,19 @@ object MermaidLayoutEngine {
     private fun layoutGanttDiagram(diagram: MermaidDiagram): MermaidLayout =
         MermaidLayout(
             type = MermaidDiagramType.GanttDiagram,
+            direction = diagram.direction,
+            nodes = emptyMap(),
+            edges = emptyList(),
+        )
+
+    /**
+     * GitGraph renders as a branch-per-row layout (branches stacked vertically, commits along
+     * the horizontal timeline, merge edges connecting them). The renderer computes positions
+     * directly from commits/branches, so the layout returns an empty node set.
+     */
+    private fun layoutGitGraphDiagram(diagram: MermaidDiagram): MermaidLayout =
+        MermaidLayout(
+            type = MermaidDiagramType.GitGraphDiagram,
             direction = diagram.direction,
             nodes = emptyMap(),
             edges = emptyList(),

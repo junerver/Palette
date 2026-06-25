@@ -779,4 +779,41 @@ class MermaidParserTest {
         assertTrue(critical.isCritical)
         assertEquals(GanttTaskStatus.Active, critical.status)
     }
+
+    @Test
+    fun parsesGitGraphDiagram() {
+        val diagram =
+            MermaidParser.parse(
+                """
+                gitGraph
+                   commit id: "A"
+                   commit
+                   branch develop
+                   checkout develop
+                   commit id: "B" tag: "v1"
+                   checkout main
+                   commit type: HIGHLIGHT
+                   merge develop
+                """.trimIndent(),
+            )
+
+        assertEquals(MermaidDiagramType.GitGraphDiagram, diagram.type)
+        // Branches: main + develop.
+        assertEquals(listOf("main", "develop"), diagram.gitBranches.map { it.name })
+        // Commits in timeline order: A, (main), B (develop), highlight (main), merge.
+        assertEquals(5, diagram.gitCommits.size)
+        val a = diagram.gitCommits.first { it.id == "A" }
+        assertEquals("main", a.branch)
+        assertEquals(GitCommitType.Normal, a.type)
+        val b = diagram.gitCommits.first { it.id == "B" }
+        assertEquals("develop", b.branch)
+        assertEquals("v1", b.tag)
+        val highlight = diagram.gitCommits.first { it.type == GitCommitType.Highlight }
+        assertEquals("main", highlight.branch)
+        // Merge produces a merge commit on main and a GitMerge record.
+        val merge = diagram.gitMerges.single()
+        assertEquals("develop", merge.from)
+        assertEquals("main", merge.into)
+        assertTrue(diagram.gitCommits.any { it.isMerge && it.branch == "main" })
+    }
 }

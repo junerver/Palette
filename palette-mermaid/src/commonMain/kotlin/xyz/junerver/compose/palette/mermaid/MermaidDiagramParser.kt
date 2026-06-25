@@ -114,6 +114,15 @@ internal sealed interface ParseResult {
     ) : ParseResult {
         override val diagramType = MermaidDiagramType.GanttDiagram
     }
+
+    data class GitGraphDiagram(
+        override val direction: MermaidDirection,
+        val branches: List<GitBranch>,
+        val commits: List<GitCommit>,
+        val merges: List<GitMerge>,
+    ) : ParseResult {
+        override val diagramType = MermaidDiagramType.GitGraphDiagram
+    }
 }
 
 /**
@@ -198,5 +207,15 @@ internal fun ParseResult.toMermaidDiagram(): MermaidDiagram =
             title = config.title,
             ganttConfig = config,
             ganttSections = sections,
+        )
+
+        is ParseResult.GitGraphDiagram -> MermaidDiagram(
+            direction = direction,
+            nodes = emptyMap(),
+            edges = emptyList(),
+            type = diagramType,
+            gitBranches = branches,
+            gitCommits = commits,
+            gitMerges = merges,
         )
     }

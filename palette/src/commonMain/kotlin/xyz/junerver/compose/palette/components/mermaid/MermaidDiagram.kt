@@ -45,6 +45,10 @@ import xyz.junerver.compose.palette.mermaid.GanttConfig
 import xyz.junerver.compose.palette.mermaid.GanttSection
 import xyz.junerver.compose.palette.mermaid.GanttTask
 import xyz.junerver.compose.palette.mermaid.GanttTaskStatus
+import xyz.junerver.compose.palette.mermaid.GitBranch
+import xyz.junerver.compose.palette.mermaid.GitCommit
+import xyz.junerver.compose.palette.mermaid.GitCommitType
+import xyz.junerver.compose.palette.mermaid.GitMerge
 import xyz.junerver.compose.palette.mermaid.MermaidClassDefinition
 import xyz.junerver.compose.palette.mermaid.MermaidClassMemberKind
 import xyz.junerver.compose.palette.mermaid.MermaidClassRelationType
@@ -413,6 +417,15 @@ fun PMermaidDiagram(
                 colors = colors,
                 config = parsedDiagram?.ganttConfig,
                 sections = parsedDiagram?.ganttSections.orEmpty(),
+            )
+
+        MermaidDiagramType.GitGraphDiagram ->
+            GitGraphDiagramMermaidDiagram(
+                modifier = modifier,
+                colors = colors,
+                branches = parsedDiagram?.gitBranches.orEmpty(),
+                commits = parsedDiagram?.gitCommits.orEmpty(),
+                merges = parsedDiagram?.gitMerges.orEmpty(),
             )
     }
 }
@@ -1950,6 +1963,139 @@ private fun GanttDiagramMermaidDiagram(
                 start = Offset(padding.value + labelColumn.value, axisY),
                 end = Offset(padding.value + labelColumn.value + timelineWidth, axisY),
                 strokeWidth = 1.dp.toPx(),
+            )
+        }
+    }
+}
+
+// ── GitGraph rendering ────────────────────────────────────────────────
+
+@Composable
+private fun GitGraphDiagramMermaidDiagram(
+    modifier: Modifier,
+    colors: MermaidColors,
+    branches: List<GitBranch>,
+    commits: List<GitCommit>,
+    merges: List<GitMerge>,
+) {
+    if (commits.isEmpty()) {
+        Box(modifier = modifier, contentAlignment = Alignment.Center) {
+            Text("Empty git graph", color = colors.nodeContentColor, style = PaletteTheme.typography.body)
+        }
+        return
+    }
+
+    val padding = 24.dp
+    val branchLabelWidth = 90.dp
+    val commitStep = 48.dp
+    val rowHeight = 56.dp
+    val commitRadius = 8.dp
+
+    val maxSeq = commits.maxOf { it.seq }
+    val branchRow = branches.withIndex().associate { (i, b) -> b.name to i }
+    val width = (branchLabelWidth.value + (maxSeq + 1) * commitStep.value + padding.value * 2).dp
+    val height = (branches.size * rowHeight.value + padding.value * 2 + 24f).dp
+
+    val c = PaletteTheme.colors
+    val branchColors = rememberSliceColors()
+
+    Box(modifier = modifier.width(width).height(height)) {
+        Canvas(modifier = Modifier.matchParentSize()) {
+            // Branch lanes: horizontal lines spanning the timeline.
+            branches.forEachIndexed { rowIndex, branch ->
+                val y = padding.value + rowIndex * rowHeight.value + rowHeight.value / 2f
+                val color = branchColors[rowIndex % branchColors.size]
+                val startX = padding.value + branchLabelWidth.value
+                val endX = padding.value + branchLabelWidth.value + maxSeq * commitStep.value
+                drawLine(
+                    color = color,
+                    start = Offset(startX, y),
+                    end = Offset(endX, y),
+                    strokeWidth = 2.dp.toPx(),
+                    cap = StrokeCap.Round,
+                )
+            }
+
+            // Merge edges: connect the source branch's last commit to the merge commit.
+            merges.forEach { merge ->
+                val mergeCommit = commits.first { it.id == merge.mergeCommitId }
+                val fromCommit = commits.filter { it.branch == merge.from }.lastOrNull()
+                if (fromCommit == null) return@forEach
+                val fromY = padding.value + branchRow.getValue(merge.from) * rowHeight.value + rowHeight.value / 2f
+                val toY = padding.value + branchRow.getValue(merge.into) * rowHeight.value + rowHeight.value / 2f
+                val fromX = padding.value + branchLabelWidth.value + fromCommit.seq * commitStep.value
+                val toX = padding.value + branchLabelWidth.value + mergeCommit.seq * commitStep.value
+                drawLine(
+                    color = colors.edgeColor,
+                    start = Offset(fromX, fromY),
+                    end = Offset(toX, toY),
+                    strokeWidth = 1.5.dp.toPx(),
+                    cap = StrokeCap.Round,
+                )
+            }
+
+            // Commits as dots on their branch lane.
+            commits.forEach { commit ->
+                val rowIndex = branchRow.getValue(commit.branch)
+                val x = padding.value + branchLabelWidth.value + commit.seq * commitStep.value
+                val y = padding.value + rowIndex * rowHeight.value + rowHeight.value / 2f
+                val color = branchColors[rowIndex % branchColors.size]
+                when (commit.type) {
+                    GitCommitType.Normal -> {
+                        if (commit.isMerge) {
+                            // Merge commit: outer ring + inner filled dot.
+                            drawCircle(color = color, radius = commitRadius.toPx(), center = Offset(x, y), style = Stroke(width = 2.dp.toPx()))
+                            drawCircle(color = color, radius = commitRadius.toPx() / 2f, center = Offset(x, y))
+                        } else {
+                            drawCircle(color = color, radius = commitRadius.toPx(), center = Offset(x, y))
+                        }
+                    }
+                    GitCommitType.Highlight -> {
+                        // Highlight: filled rectangle.
+                        val s = commitRadius.toPx()
+                        drawRect(
+                            color = color,
+                            topLeft = Offset(x - s, y - s),
+                            size = androidx.compose.ui.geometry.Size(s * 2, s * 2),
+                        )
+                    }
+                    GitCommitType.Reverse -> {
+                        // Reverse: circle with a cross.
+                        drawCircle(color = color, radius = commitRadius.toPx(), center = Offset(x, y), style = Stroke(width = 2.dp.toPx()))
+                        val s = commitRadius.toPx() * 0.6f
+                        drawLine(color = color, start = Offset(x - s, y - s), end = Offset(x + s, y + s), strokeWidth = 1.5.dp.toPx())
+                        drawLine(color = color, start = Offset(x + s, y - s), end = Offset(x - s, y + s), strokeWidth = 1.5.dp.toPx())
+                    }
+                }
+            }
+        }
+
+        // Branch labels on the left.
+        branches.forEachIndexed { rowIndex, branch ->
+            val color = branchColors[rowIndex % branchColors.size]
+            Text(
+                text = branch.name,
+                color = color,
+                style = PaletteTheme.typography.label.copy(fontWeight = FontWeight.Bold),
+                modifier = Modifier.absoluteOffset(x = padding, y = padding + (rowIndex * rowHeight.value).dp),
+            )
+        }
+
+        // Commit id/tag labels under commits.
+        commits.forEach { commit ->
+            val rowIndex = branchRow.getValue(commit.branch)
+            val x = padding.value + branchLabelWidth.value + commit.seq * commitStep.value
+            val y = padding.value + rowIndex * rowHeight.value
+            val label = commit.tag ?: commit.id
+            Text(
+                text = label,
+                color = colors.nodeContentColor,
+                style = PaletteTheme.typography.label,
+                modifier = Modifier
+                    .absoluteOffset(x = (x - 14f).dp, y = (y + rowHeight.value - 4f).dp)
+                    .width(60.dp),
+                textAlign = TextAlign.Center,
+                maxLines = 1,
             )
         }
     }

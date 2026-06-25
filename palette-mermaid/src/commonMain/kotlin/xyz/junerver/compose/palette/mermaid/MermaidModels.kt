@@ -57,6 +57,42 @@ data class GanttConfig(
     val excludes: List<String> = emptyList(),
 )
 
+// ── GitGraph models ───────────────────────────────────────────────────
+
+/** Visual emphasis of a git commit, mirroring mermaid's commit `type:` attribute. */
+enum class GitCommitType {
+    /** Default — solid circle. */
+    Normal,
+    /** Reverse commit — crossed circle. */
+    Reverse,
+    /** Highlighted — filled rectangle. */
+    Highlight,
+}
+
+/** A single git commit. [seq] is its order on the timeline (0-based, left to right). */
+data class GitCommit(
+    val id: String,
+    val seq: Int,
+    val branch: String,
+    val type: GitCommitType,
+    val tag: String? = null,
+    /** True for the auto-created merge commit; rendered as a double circle. */
+    val isMerge: Boolean = false,
+)
+
+/** A git branch with the commits that live on it (in timeline order). */
+data class GitBranch(
+    val name: String,
+    val commits: List<GitCommit>,
+)
+
+/** A merge: `merge X` joins branch [from] into [into] at the merge commit. */
+data class GitMerge(
+    val from: String,
+    val into: String,
+    val mergeCommitId: String,
+)
+
 // ── Class Diagram models ──────────────────────────────────────────────
 
 enum class MermaidClassMemberKind {
@@ -211,6 +247,9 @@ data class MermaidDiagram(
     val pieShowData: Boolean = false,
     val ganttConfig: GanttConfig? = null,
     val ganttSections: List<GanttSection> = emptyList(),
+    val gitBranches: List<GitBranch> = emptyList(),
+    val gitCommits: List<GitCommit> = emptyList(),
+    val gitMerges: List<GitMerge> = emptyList(),
 )
 
 data class MermaidNode(
@@ -273,6 +312,7 @@ enum class MermaidDiagramType {
     StateDiagram,
     PieDiagram,
     GanttDiagram,
+    GitGraphDiagram,
 }
 
 enum class MermaidDirection {

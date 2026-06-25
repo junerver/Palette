@@ -107,6 +107,7 @@
 | 2026-06-25 | StateDiagram | — | 初版（含 BFS 分层） |
 | 2026-06-25 | PieDiagram | — | 新增（扇形+图例+showData） |
 | 2026-06-25 | GanttDiagram | — | 新增（核心版：section/task/status/duration/after，日期解析待后续） |
+| 2026-06-26 | GitGraphDiagram | — | 新增（commit/branch/checkout/merge + id/tag/type，cherry-pick 待后续） |
 
 ---
 
@@ -114,7 +115,7 @@
 
 - [x] 第一期-1：Pie Chart ✅（2026-06-25）
 - [x] 第一期-2：Gantt ✅（2026-06-25，核心版：section/task/status/duration/after 依赖，日期解析待后续）
-- [ ] 第一期：GitGraph
+- [x] 第一期-3：GitGraph ✅（2026-06-26，commit/branch/checkout/merge + id/tag/type，cherry-pick 待后续）
 - [ ] 第二期：Mindmap / Timeline / Quadrant / XYChart
 - [ ] 第三期：Requirement / C4 / Block
 - [ ] 第四期：Journey / Sankey / Packet / Architecture

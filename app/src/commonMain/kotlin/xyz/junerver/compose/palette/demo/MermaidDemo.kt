@@ -79,6 +79,12 @@ fun MermaidDemo() {
         DemoSection(title = text.ganttTitle) {
             PMermaidDiagram(source = text.ganttSource)
         }
+
+        Spacer(modifier = Modifier.height(24.dp))
+
+        DemoSection(title = text.gitGraphTitle) {
+            PMermaidDiagram(source = text.gitGraphSource)
+        }
     }
 }
 
@@ -89,7 +95,7 @@ private fun mermaidDemoText(): MermaidDemoText =
         Language.ZH_CN ->
             MermaidDemoText(
                 title = "Mermaid",
-                subtitle = "Mermaid 图表渲染，支持流程图、时序图、类图、ER 图、状态图、饼图和甘特图。",
+                subtitle = "Mermaid 图表渲染，支持流程图、时序图、类图、ER 图、状态图、饼图、甘特图和 Git 图。",
                 flowchartTitle = "流程图 (Flowchart)",
                 flowchartSource =
                     """
@@ -195,12 +201,25 @@ private fun mermaidDemoText(): MermaidDemoText =
                             测试   :crit, active, 3d
                             修复   :2d
                     """.trimIndent(),
+                gitGraphTitle = "Git 图 (GitGraph)",
+                gitGraphSource =
+                    """
+                    gitGraph
+                       commit id: "初始化"
+                       commit
+                       branch develop
+                       checkout develop
+                       commit id: "开发" tag: "v0.1"
+                       checkout main
+                       merge develop
+                       commit type: HIGHLIGHT
+                    """.trimIndent(),
             )
 
         Language.EN_US ->
             MermaidDemoText(
                 title = "Mermaid",
-                subtitle = "Mermaid diagram rendering, supporting flowcharts, sequence diagrams, class diagrams, ER diagrams, state diagrams, pie charts, and gantt charts.",
+                subtitle = "Mermaid diagram rendering, supporting flowcharts, sequence diagrams, class diagrams, ER diagrams, state diagrams, pie charts, gantt charts, and git graphs.",
                 flowchartTitle = "Flowchart",
                 flowchartSource =
                     """
@@ -306,6 +325,19 @@ private fun mermaidDemoText(): MermaidDemoText =
                             Test   :crit, active, 3d
                             Fix    :2d
                     """.trimIndent(),
+                gitGraphTitle = "GitGraph",
+                gitGraphSource =
+                    """
+                    gitGraph
+                       commit id: "init"
+                       commit
+                       branch develop
+                       checkout develop
+                       commit id: "feature" tag: "v0.1"
+                       checkout main
+                       merge develop
+                       commit type: HIGHLIGHT
+                    """.trimIndent(),
             )
     }
 
@@ -326,4 +358,6 @@ private data class MermaidDemoText(
     val pieSource: String,
     val ganttTitle: String,
     val ganttSource: String,
+    val gitGraphTitle: String,
+    val gitGraphSource: String,
 )
