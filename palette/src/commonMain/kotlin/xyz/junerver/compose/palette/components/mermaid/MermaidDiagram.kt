@@ -22,15 +22,26 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.graphics.drawscope.Fill
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.font.FontStyle
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.withStyle
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import xyz.junerver.compose.hooks.useCreation
 import xyz.junerver.compose.palette.core.theme.PaletteTheme
 import xyz.junerver.compose.palette.mermaid.ErEntity
+import xyz.junerver.compose.palette.mermaid.ErRelationship
+import xyz.junerver.compose.palette.mermaid.ErRelationshipKind
 import xyz.junerver.compose.palette.mermaid.MermaidClassDefinition
 import xyz.junerver.compose.palette.mermaid.MermaidClassMemberKind
+import xyz.junerver.compose.palette.mermaid.MermaidClassRelationType
 import xyz.junerver.compose.palette.mermaid.MermaidClassVisibility
 import xyz.junerver.compose.palette.mermaid.MermaidDirection
 import xyz.junerver.compose.palette.mermaid.MermaidDiagramType
@@ -369,6 +380,7 @@ fun PMermaidDiagram(
                 colors = colors,
                 layout = resolvedLayout,
                 erEntities = parsedDiagram?.erEntities.orEmpty(),
+                erRelationships = parsedDiagram?.erRelationships.orEmpty(),
             )
 
         MermaidDiagramType.StateDiagram ->
@@ -443,41 +455,87 @@ private fun FlowchartMermaidDiagram(
                         nodeWidth = nodeWidth.toPx(),
                         nodeHeight = nodeHeight.toPx(),
                     )
-                drawLine(
-                    color = edgeColor,
-                    start = endpoints.start,
-                    end = endpoints.end,
-                    strokeWidth = edgeStrokeWidth,
-                    cap = StrokeCap.Round,
-                    pathEffect =
-                        if (edge.style == MermaidEdgeStyle.Dotted) {
-                            PathEffect.dashPathEffect(floatArrayOf(4f, 5f))
-                        } else {
-                            null
-                        },
-                )
-                drawMermaidEdgeEndMarker(
-                    color = edgeColor,
-                    start = endpoints.start,
-                    end = endpoints.end,
-                    arrow = edge.arrow,
-                    strokeWidth = edgeStrokeWidth,
-                )
-                drawMermaidEdgeEndMarker(
-                    color = edgeColor,
-                    start = endpoints.end,
-                    end = endpoints.start,
-                    arrow = edge.startArrow,
-                    strokeWidth = edgeStrokeWidth,
-                )
-                if (edge.arrow == MermaidEdgeArrow.Bidirectional) {
+                val pathEffect =
+                    if (edge.style == MermaidEdgeStyle.Dotted) {
+                        PathEffect.dashPathEffect(floatArrayOf(4f, 5f))
+                    } else {
+                        null
+                    }
+                val offset = layout.stateEdgeOffsets[index] ?: 0f
+                // Edges that share their endpoint pair (or double back) bow sideways by
+                // `offset` so they separate instead of overlapping into a single line.
+                if (offset != 0f) {
+                    val s = endpoints.start
+                    val e = endpoints.end
+                    val perpX = -(e.y - s.y)
+                    val perpY = e.x - s.x
+                    val perpLen = sqrt(perpX * perpX + perpY * perpY).coerceAtLeast(1f)
+                    val bow = offset.dp.toPx()
+                    val ctrl = Offset(
+                        (s.x + e.x) / 2f + perpX / perpLen * bow,
+                        (s.y + e.y) / 2f + perpY / perpLen * bow,
+                    )
+                    val path = Path().apply {
+                        moveTo(s.x, s.y)
+                        quadraticTo(ctrl.x, ctrl.y, e.x, e.y)
+                    }
+                    drawPath(path = path, color = edgeColor, style = Stroke(width = edgeStrokeWidth, cap = StrokeCap.Round, pathEffect = pathEffect))
+                    // Arrowhead follows the curve's final tangent (control point -> end).
+                    drawMermaidEdgeEndMarker(
+                        color = edgeColor,
+                        start = ctrl,
+                        end = e,
+                        arrow = edge.arrow,
+                        strokeWidth = edgeStrokeWidth,
+                    )
+                    drawMermaidEdgeEndMarker(
+                        color = edgeColor,
+                        start = ctrl,
+                        end = s,
+                        arrow = edge.startArrow,
+                        strokeWidth = edgeStrokeWidth,
+                    )
+                    if (edge.arrow == MermaidEdgeArrow.Bidirectional) {
+                        drawMermaidEdgeEndMarker(
+                            color = edgeColor,
+                            start = ctrl,
+                            end = s,
+                            arrow = MermaidEdgeArrow.Forward,
+                            strokeWidth = edgeStrokeWidth,
+                        )
+                    }
+                } else {
+                    drawLine(
+                        color = edgeColor,
+                        start = endpoints.start,
+                        end = endpoints.end,
+                        strokeWidth = edgeStrokeWidth,
+                        cap = StrokeCap.Round,
+                        pathEffect = pathEffect,
+                    )
+                    drawMermaidEdgeEndMarker(
+                        color = edgeColor,
+                        start = endpoints.start,
+                        end = endpoints.end,
+                        arrow = edge.arrow,
+                        strokeWidth = edgeStrokeWidth,
+                    )
                     drawMermaidEdgeEndMarker(
                         color = edgeColor,
                         start = endpoints.end,
                         end = endpoints.start,
-                        arrow = MermaidEdgeArrow.Forward,
+                        arrow = edge.startArrow,
                         strokeWidth = edgeStrokeWidth,
                     )
+                    if (edge.arrow == MermaidEdgeArrow.Bidirectional) {
+                        drawMermaidEdgeEndMarker(
+                            color = edgeColor,
+                            start = endpoints.end,
+                            end = endpoints.start,
+                            arrow = MermaidEdgeArrow.Forward,
+                            strokeWidth = edgeStrokeWidth,
+                        )
+                    }
                 }
             }
         }
@@ -623,8 +681,7 @@ private fun SequenceMermaidDiagram(
                 val y = messageStartYPx + edge.sequenceIndex * messageGapPx
                 val startX = from.x.dp.toPx() + nodeWidthPx / 2f
                 val endX = to.x.dp.toPx() + nodeWidthPx / 2f
-                val start = Offset(startX, y)
-                val end = Offset(endX, y)
+                val strokeWidth = if (edge.style == MermaidEdgeStyle.Thick) 3.dp.toPx() else 2.dp.toPx()
                 val pathEffect =
                     if (edge.style == MermaidEdgeStyle.Dotted) {
                         PathEffect.dashPathEffect(floatArrayOf(4f, 5f))
@@ -632,11 +689,37 @@ private fun SequenceMermaidDiagram(
                         null
                     }
 
+                if (edge.from == edge.to) {
+                    // Self-message: a U-shaped arc leaving the participant's right side,
+                    // looping out, and returning with an arrowhead on the same lifeline.
+                    val loop = 22.dp.toPx()
+                    val top = y
+                    val bottom = y + messageGapPx * 0.7f
+                    val rightX = startX + loop
+                    val path = Path().apply {
+                        moveTo(startX, top)
+                        cubicTo(startX + loop, top, rightX, top, rightX, (top + bottom) / 2f)
+                        cubicTo(rightX, bottom, startX + loop, bottom, startX, bottom)
+                    }
+                    drawPath(path = path, color = colors.edgeColor, style = Stroke(width = strokeWidth, cap = StrokeCap.Round, pathEffect = pathEffect))
+                    // Arrowhead points back up into the lifeline at the bottom of the loop.
+                    drawMermaidEdgeEndMarker(
+                        color = colors.edgeColor,
+                        start = Offset(startX + loop / 2f, bottom),
+                        end = Offset(startX, bottom),
+                        arrow = edge.arrow,
+                        strokeWidth = strokeWidth,
+                    )
+                    return@forEachIndexed
+                }
+
+                val start = Offset(startX, y)
+                val end = Offset(endX, y)
                 drawLine(
                     color = colors.edgeColor,
                     start = start,
                     end = end,
-                    strokeWidth = if (edge.style == MermaidEdgeStyle.Thick) 3.dp.toPx() else 2.dp.toPx(),
+                    strokeWidth = strokeWidth,
                     cap = StrokeCap.Round,
                     pathEffect = pathEffect,
                 )
@@ -645,14 +728,14 @@ private fun SequenceMermaidDiagram(
                     start = start,
                     end = end,
                     arrow = edge.arrow,
-                    strokeWidth = if (edge.style == MermaidEdgeStyle.Thick) 3.dp.toPx() else 2.dp.toPx(),
+                    strokeWidth = strokeWidth,
                 )
                 drawMermaidEdgeEndMarker(
                     color = colors.edgeColor,
                     start = end,
                     end = start,
                     arrow = edge.startArrow,
-                    strokeWidth = if (edge.style == MermaidEdgeStyle.Thick) 3.dp.toPx() else 2.dp.toPx(),
+                    strokeWidth = strokeWidth,
                 )
                 if (edge.arrow == MermaidEdgeArrow.Bidirectional) {
                     drawMermaidEdgeEndMarker(
@@ -660,7 +743,7 @@ private fun SequenceMermaidDiagram(
                         start = end,
                         end = start,
                         arrow = MermaidEdgeArrow.Forward,
-                        strokeWidth = if (edge.style == MermaidEdgeStyle.Thick) 3.dp.toPx() else 2.dp.toPx(),
+                        strokeWidth = strokeWidth,
                     )
                 }
             }
@@ -760,9 +843,10 @@ private fun ClassDiagramMermaidDiagram(
         modifier = modifier.width(width).height(height),
     ) {
         Canvas(modifier = Modifier.matchParentSize()) {
-            layout.edges.forEach { edge ->
-                val from = layout.nodes[edge.from] ?: return@forEach
-                val to = layout.nodes[edge.to] ?: return@forEach
+            val strokeWidth = 2.dp.toPx()
+            layout.edges.forEachIndexed { index, edge ->
+                val from = layout.nodes[edge.from] ?: return@forEachIndexed
+                val to = layout.nodes[edge.to] ?: return@forEachIndexed
                 val startX = from.x.dp.toPx() + nodeWidth.toPx() / 2f
                 val startY = from.y.dp.toPx() + (nodeHeights[edge.from] ?: headerHeight + padding * 2).toPx()
                 val endX = to.x.dp.toPx() + nodeWidth.toPx() / 2f
@@ -772,21 +856,48 @@ private fun ClassDiagramMermaidDiagram(
                 } else {
                     null
                 }
+                // Unit vector along the edge (from -> to) and its perpendicular.
+                val dx = endX - startX; val dy = endY - startY
+                val len = sqrt(dx * dx + dy * dy)
+                if (len <= 0f) return@forEachIndexed
+                val ux = dx / len; val uy = dy / len
+                val px = -uy; val py = ux
+
+                val relType = layout.classRelationTypes[index]
+                // How far the line should stop short of the node edge to make room for the marker.
+                val marker = 10.dp.toPx()
+                val lineEnd = when (relType) {
+                    MermaidClassRelationType.Inheritance, MermaidClassRelationType.Realization -> endY - marker * 1.4f
+                    else -> endY
+                }
                 drawLine(
                     color = colors.edgeColor,
                     start = Offset(startX, startY),
-                    end = Offset(endX, endY),
-                    strokeWidth = 2.dp.toPx(),
+                    end = Offset(endX, lineEnd),
+                    strokeWidth = strokeWidth,
                     cap = StrokeCap.Round,
                     pathEffect = pathEffect,
                 )
-                val arrowSize = 8.dp.toPx()
-                val dx = endX - startX; val dy = endY - startY
-                val len = sqrt(dx * dx + dy * dy)
-                if (len > 0f) {
-                    val ux = dx / len; val uy = dy / len; val px = -uy; val py = ux
-                    drawLine(color = colors.edgeColor, start = Offset(endX - ux * arrowSize + px * arrowSize * 0.4f, endY - uy * arrowSize + py * arrowSize * 0.4f), end = Offset(endX, endY), strokeWidth = 2.dp.toPx(), cap = StrokeCap.Round)
-                    drawLine(color = colors.edgeColor, start = Offset(endX - ux * arrowSize - px * arrowSize * 0.4f, endY - uy * arrowSize - py * arrowSize * 0.4f), end = Offset(endX, endY), strokeWidth = 2.dp.toPx(), cap = StrokeCap.Round)
+
+                // UML end markers, keyed by relationship type.
+                when (relType) {
+                    MermaidClassRelationType.Inheritance, MermaidClassRelationType.Realization -> {
+                        // Hollow triangle at the parent (to) end.
+                        drawClassMarker(colors.edgeColor, Offset(endX, endY), ux, uy, px, py, marker, filled = false, kind = ClassMarkerKind.Triangle)
+                    }
+                    MermaidClassRelationType.Composition -> {
+                        // Filled diamond at the whole (from) end.
+                        drawClassMarker(colors.edgeColor, Offset(startX, startY), -ux, -uy, px, py, marker, filled = true, kind = ClassMarkerKind.Diamond)
+                    }
+                    MermaidClassRelationType.Aggregation -> {
+                        // Hollow diamond at the whole (from) end.
+                        drawClassMarker(colors.edgeColor, Offset(startX, startY), -ux, -uy, px, py, marker, filled = false, kind = ClassMarkerKind.Diamond)
+                    }
+                    MermaidClassRelationType.Dependency, MermaidClassRelationType.Association -> {
+                        // Open V arrow at the to end.
+                        drawClassMarker(colors.edgeColor, Offset(endX, endY), ux, uy, px, py, marker, filled = false, kind = ClassMarkerKind.Arrow)
+                    }
+                    else -> Unit // Link / DependencyLink: plain line, no marker.
                 }
             }
         }
@@ -886,14 +997,23 @@ private fun ErDiagramMermaidDiagram(
     colors: MermaidColors,
     layout: MermaidLayout,
     erEntities: List<ErEntity>,
+    erRelationships: List<ErRelationship>,
 ) {
     val nodeWidth = 180.dp
-    val attributeHeight = 20.dp
+    val attributeHeight = 22.dp
     val headerHeight = 32.dp
-    val padding = 8.dp
+    val padding = 6.dp
+    val cornerRadius = 6.dp
 
-    val nodeRight = (layout.nodes.values.maxOfOrNull { it.x } ?: 0f) + 204f
-    val nodeBottom = (layout.nodes.values.maxOfOrNull { it.y } ?: 0f) + 120f
+    // Pre-compute each entity height so edges anchor on the real bottom/top edges.
+    val entityHeights = erEntities.associate { entity ->
+        val h = headerHeight + attributeHeight * entity.attributes.size.coerceAtLeast(1) + padding * 2
+        entity.name to h
+    }
+    fun heightOf(id: String): Dp = entityHeights[id] ?: (headerHeight + padding * 2)
+
+    val nodeRight = (layout.nodes.values.maxOfOrNull { it.x } ?: 0f) + nodeWidth.value + 24f
+    val nodeBottom = layout.nodes.entries.map { (_, n) -> n.y + heightOf(n.node.id).value + 24f }.maxOrNull() ?: 48f
     val width = nodeRight.dp
     val height = nodeBottom.dp
 
@@ -901,14 +1021,16 @@ private fun ErDiagramMermaidDiagram(
         modifier = modifier.width(width).height(height),
     ) {
         Canvas(modifier = Modifier.matchParentSize()) {
-            layout.edges.forEach { edge ->
-                val from = layout.nodes[edge.from] ?: return@forEach
-                val to = layout.nodes[edge.to] ?: return@forEach
-                val startX = from.x.dp.toPx() + nodeWidth.toPx() / 2f
-                val startY = from.y.dp.toPx() + 44f
-                val endX = to.x.dp.toPx() + nodeWidth.toPx() / 2f
+            val widthPx = nodeWidth.toPx()
+            erRelationships.forEach { rel ->
+                val from = layout.nodes[rel.from] ?: return@forEach
+                val to = layout.nodes[rel.to] ?: return@forEach
+                val isDotted = rel.kind.name.startsWith("NonIdentifying")
+                val startX = from.x.dp.toPx() + widthPx / 2f
+                val startY = from.y.dp.toPx() + heightOf(from.node.id).toPx()
+                val endX = to.x.dp.toPx() + widthPx / 2f
                 val endY = to.y.dp.toPx()
-                val pathEffect = if (edge.style == MermaidEdgeStyle.Dotted) {
+                val pathEffect = if (isDotted) {
                     PathEffect.dashPathEffect(floatArrayOf(6f, 6f))
                 } else {
                     null
@@ -917,51 +1039,61 @@ private fun ErDiagramMermaidDiagram(
                     color = colors.edgeColor,
                     start = Offset(startX, startY),
                     end = Offset(endX, endY),
-                    strokeWidth = 2.dp.toPx(),
+                    strokeWidth = 1.5.dp.toPx(),
                     cap = StrokeCap.Round,
                     pathEffect = pathEffect,
                 )
-                val arrowSize = 8.dp.toPx()
-                val dx = endX - startX; val dy = endY - startY
-                val len = sqrt(dx * dx + dy * dy)
-                if (len > 0f) {
-                    val ux = dx / len; val uy = dy / len; val px = -uy; val py = ux
-                    drawLine(color = colors.edgeColor, start = Offset(endX - ux * arrowSize + px * arrowSize * 0.4f, endY - uy * arrowSize + py * arrowSize * 0.4f), end = Offset(endX, endY), strokeWidth = 2.dp.toPx(), cap = StrokeCap.Round)
-                    drawLine(color = colors.edgeColor, start = Offset(endX - ux * arrowSize - px * arrowSize * 0.4f, endY - uy * arrowSize - py * arrowSize * 0.4f), end = Offset(endX, endY), strokeWidth = 2.dp.toPx(), cap = StrokeCap.Round)
-                }
+                val (fromMarker, toMarker) = rel.kind.crowsFootMarkers()
+                drawErEndpointMarker(colors.edgeColor, Offset(startX, startY), Offset(endX, endY), fromMarker)
+                drawErEndpointMarker(colors.edgeColor, Offset(endX, endY), Offset(startX, startY), toMarker)
             }
         }
 
-        layout.edges.forEach { edge ->
-            val lbl = edge.label
-            if (lbl.isNullOrEmpty()) return@forEach
-            val from = layout.nodes[edge.from] ?: return@forEach
-            val to = layout.nodes[edge.to] ?: return@forEach
-            Text(text = lbl, color = colors.nodeContentColor, style = PaletteTheme.typography.label,
-                modifier = Modifier.absoluteOffset(x = ((from.x + to.x) / 2f + 90f).dp, y = ((from.y + to.y) / 2f + 10f).dp))
+        // Relationship labels sit at the line midpoint.
+        erRelationships.forEach { rel ->
+            val lbl = rel.label ?: return@forEach
+            val from = layout.nodes[rel.from] ?: return@forEach
+            val to = layout.nodes[rel.to] ?: return@forEach
+            val fromHeight = heightOf(from.node.id).value
+            val midX = ((from.x + to.x) / 2f + nodeWidth.value / 2f)
+            val midY = ((from.y + fromHeight + to.y) / 2f)
+            Text(
+                text = lbl,
+                color = colors.nodeContentColor,
+                style = PaletteTheme.typography.label,
+                modifier = Modifier
+                    .absoluteOffset(x = midX.dp, y = (midY - 10f).dp)
+                    .background(colors.nodeContainerColor, RoundedCornerShape(4.dp))
+                    .padding(horizontal = 4.dp, vertical = 1.dp),
+            )
         }
 
         erEntities.forEach { entity ->
             val positioned = layout.nodes[entity.name] ?: return@forEach
-            val attributeCount = entity.attributes.size
-            val nodeHeight = headerHeight + attributeHeight * attributeCount + padding * 2
+            val nodeHeight = heightOf(entity.name)
+            val pkColor = if (colors.primaryKeyColor == Color.Unspecified) colors.nodeBorderColor else colors.primaryKeyColor
+            val fkColor = if (colors.foreignKeyColor == Color.Unspecified) colors.nodeBorderColor else colors.foreignKeyColor
 
             Box(
                 modifier = Modifier
                     .absoluteOffset(x = positioned.x.dp, y = positioned.y.dp)
                     .width(nodeWidth)
                     .height(nodeHeight)
-                    .background(colors.nodeContainerColor, RoundedCornerShape(4.dp))
-                    .border(1.dp, colors.nodeBorderColor, RoundedCornerShape(4.dp)),
+                    .background(colors.nodeContainerColor, RoundedCornerShape(cornerRadius))
+                    .border(1.dp, colors.nodeBorderColor, RoundedCornerShape(cornerRadius)),
             ) {
                 Column {
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(headerHeight)
-                            .background(colors.nodeContainerColor.copy(alpha = 0.5f))
+                            .background(
+                                if (colors.entityHeaderColor == Color.Unspecified) colors.nodeContainerColor.copy(alpha = 0.5f)
+                                else colors.entityHeaderColor,
+                                RoundedCornerShape(topStart = cornerRadius, topEnd = cornerRadius),
+                            )
                             .padding(horizontal = 8.dp),
-                        contentAlignment = Alignment.Center,
+                        contentAlignment = Alignment.CenterStart,
                     ) {
                         Text(
                             text = entity.name,
@@ -970,11 +1102,29 @@ private fun ErDiagramMermaidDiagram(
                         )
                     }
 
-                    entity.attributes.forEach { attr ->
-                        val prefix = if (attr.isPrimaryKey) "PK" else "FK"
-                        val attrText = "$prefix ${attr.type} ${attr.name}"
+                    entity.attributes.takeIf { it.isNotEmpty() }?.forEach { attr ->
+                        val prefix = when {
+                            attr.isPrimaryKey -> "PK"
+                            attr.isForeignKey -> "FK"
+                            else -> null
+                        }
+                        val keyColor = when {
+                            attr.isPrimaryKey -> pkColor
+                            attr.isForeignKey -> fkColor
+                            else -> colors.nodeContentColor
+                        }
+                        val body = "${attr.type} ${attr.name}"
+                        val annotated = buildAnnotatedString {
+                            if (prefix != null) {
+                                withStyle(SpanStyle(color = keyColor, fontWeight = FontWeight.Bold)) {
+                                    append(prefix)
+                                    append(' ')
+                                }
+                            }
+                            append(body)
+                        }
                         Text(
-                            text = attrText,
+                            text = annotated,
                             color = colors.nodeContentColor,
                             style = PaletteTheme.typography.label,
                             modifier = Modifier
@@ -1007,11 +1157,16 @@ private fun StateDiagramMermaidDiagram(
 ) {
     val nodeWidth = 140.dp
     val nodeHeight = 44.dp
-    val circleSize = 20.dp
+    val circleSize = 24.dp
     val stateMap = stateDefinitions.associateBy { it.id }
 
-    val nodeRight = (layout.nodes.values.maxOfOrNull { it.x } ?: 0f) + 164f
-    val nodeBottom = (layout.nodes.values.maxOfOrNull { it.y } ?: 0f) + 72f
+    fun isCircle(id: String): Boolean {
+        val s = stateMap[id]
+        return s?.isStart == true || s?.isEnd == true
+    }
+
+    val nodeRight = (layout.nodes.values.maxOfOrNull { it.x + nodeWidth.value } ?: nodeWidth.value) + 24f
+    val nodeBottom = (layout.nodes.values.maxOfOrNull { it.y + nodeHeight.value } ?: nodeHeight.value) + 24f
     val width = nodeRight.dp
     val height = nodeBottom.dp
 
@@ -1019,70 +1174,100 @@ private fun StateDiagramMermaidDiagram(
         modifier = modifier.width(width).height(height),
     ) {
         Canvas(modifier = Modifier.matchParentSize()) {
-            layout.edges.forEach { edge ->
-                val from = layout.nodes[edge.from] ?: return@forEach
-                val to = layout.nodes[edge.to] ?: return@forEach
-                val fromState = stateMap[edge.from]
-                val toState = stateMap[edge.to]
-                val isFromCircle = fromState?.isStart == true || fromState?.isEnd == true
-                val isToCircle = toState?.isStart == true || toState?.isEnd == true
+            val strokeWidth = 1.5.dp.toPx()
+            val circlePx = circleSize.toPx()
+            val boxWPx = nodeWidth.toPx()
+            val boxHPx = nodeHeight.toPx()
+            fun centerXPx(id: String, x: Float): Float =
+                x + if (isCircle(id)) circlePx / 2f else boxWPx / 2f
 
-                val startX = from.x.dp.toPx() + if (isFromCircle) circleSize.toPx() / 2f else nodeWidth.toPx() / 2f
-                val startY = from.y.dp.toPx() + if (isFromCircle) circleSize.toPx() else nodeHeight.toPx()
-                val endX = to.x.dp.toPx() + if (isToCircle) circleSize.toPx() / 2f else nodeWidth.toPx() / 2f
+            fun bottomPx(id: String, y: Float): Float =
+                y + if (isCircle(id)) circlePx else boxHPx
+
+            layout.edges.forEachIndexed { index, edge ->
+                val from = layout.nodes[edge.from] ?: return@forEachIndexed
+                val to = layout.nodes[edge.to] ?: return@forEachIndexed
+
+                val startX = centerXPx(edge.from, from.x.dp.toPx())
+                val startY = bottomPx(edge.from, from.y.dp.toPx())
+                val endX = centerXPx(edge.to, to.x.dp.toPx())
                 val endY = to.y.dp.toPx()
+                val offsetX = layout.stateEdgeOffsets[index]?.dp?.toPx() ?: 0f
 
-                drawLine(
-                    color = colors.edgeColor,
-                    start = Offset(startX, startY),
-                    end = Offset(endX, endY),
-                    strokeWidth = 2.dp.toPx(),
-                    cap = StrokeCap.Round,
-                )
-                val arrowSize = 8.dp.toPx()
-                val dx = endX - startX; val dy = endY - startY
-                val len = sqrt(dx * dx + dy * dy)
-                if (len > 0f) {
-                    val ux = dx / len; val uy = dy / len; val px = -uy; val py = ux
-                    drawLine(color = colors.edgeColor, start = Offset(endX - ux * arrowSize + px * arrowSize * 0.4f, endY - uy * arrowSize + py * arrowSize * 0.4f), end = Offset(endX, endY), strokeWidth = 2.dp.toPx(), cap = StrokeCap.Round)
-                    drawLine(color = colors.edgeColor, start = Offset(endX - ux * arrowSize - px * arrowSize * 0.4f, endY - uy * arrowSize - py * arrowSize * 0.4f), end = Offset(endX, endY), strokeWidth = 2.dp.toPx(), cap = StrokeCap.Round)
+                // Cubic Bézier whose control points sit at the vertical midpoint, shifted
+                // sideways by `offsetX`. With offset 0 the edge is a gentle S-curve; non-zero
+                // offsets bow forward/backward links apart so they no longer overlap.
+                val midY = (startY + endY) / 2f
+                val path = Path().apply {
+                    moveTo(startX, startY)
+                    cubicTo(startX + offsetX, midY, endX + offsetX, midY, endX, endY)
                 }
+                drawPath(path = path, color = colors.edgeColor, style = Stroke(width = strokeWidth, cap = StrokeCap.Round))
+
+                // Arrowhead follows the curve's final tangent (from the last control point
+                // toward the tip), so up-going back-edges point up and down-going ones point down.
+                drawMermaidEdgeEndMarker(
+                    color = colors.edgeColor,
+                    start = Offset(endX + offsetX, midY),
+                    end = Offset(endX, endY),
+                    arrow = MermaidEdgeArrow.Forward,
+                    strokeWidth = strokeWidth,
+                )
             }
         }
 
-        layout.edges.forEach { edge ->
+        layout.edges.forEachIndexed { index, edge ->
             val lbl = edge.label
-            if (lbl.isNullOrEmpty()) return@forEach
-            val from = layout.nodes[edge.from] ?: return@forEach
-            val to = layout.nodes[edge.to] ?: return@forEach
-            Text(text = lbl, color = colors.nodeContentColor, style = PaletteTheme.typography.label,
-                modifier = Modifier.absoluteOffset(x = ((from.x + to.x) / 2f + 70f).dp, y = ((from.y + to.y) / 2f + 10f).dp))
+            if (lbl.isNullOrEmpty()) return@forEachIndexed
+            val from = layout.nodes[edge.from] ?: return@forEachIndexed
+            val to = layout.nodes[edge.to] ?: return@forEachIndexed
+            val halfWidth = nodeWidth.value / 2f
+            val fromCx = from.x + halfWidth
+            val toCx = to.x + halfWidth
+            val midX = (fromCx + toCx) / 2f
+            val midY = (from.y + nodeHeight.value + to.y) / 2f
+            // Follow this edge's arc so labels of a bidirectional link sit on opposite sides.
+            val offset = layout.stateEdgeOffsets[index] ?: 0f
+            Text(
+                text = lbl,
+                color = colors.nodeContentColor,
+                style = PaletteTheme.typography.label.copy(fontStyle = FontStyle.Italic),
+                textAlign = TextAlign.Center,
+                modifier = Modifier
+                    .absoluteOffset(x = (midX - 40f + offset).dp, y = (midY - 18f).dp)
+                    .width(80.dp)
+                    .padding(horizontal = 2.dp),
+            )
         }
 
         stateDefinitions.forEach { state ->
             val positioned = layout.nodes[state.id] ?: return@forEach
-            val isCircle = state.isStart || state.isEnd
 
-            if (isCircle) {
-                Box(
+            when {
+                state.isStart -> StateStartDot(
+                    x = positioned.x.dp,
+                    y = positioned.y.dp,
+                    size = circleSize,
+                    color = colors.edgeColor,
+                )
+
+                state.isEnd -> StateEndDoubleCircle(
+                    x = positioned.x.dp,
+                    y = positioned.y.dp,
+                    size = circleSize,
+                    borderColor = colors.edgeColor,
+                    fillColor = colors.edgeColor,
+                )
+
+                state.isFork || state.isJoin -> Box(
                     modifier = Modifier
                         .absoluteOffset(x = positioned.x.dp, y = positioned.y.dp)
-                        .size(circleSize)
-                        .background(colors.nodeContainerColor, CircleShape)
-                        .border(1.dp, colors.nodeBorderColor, CircleShape),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    if (!state.isStart && !state.isEnd) {
-                        Text(
-                            text = state.label ?: state.id,
-                            color = colors.nodeContentColor,
-                            style = PaletteTheme.typography.label,
-                            textAlign = TextAlign.Center,
-                        )
-                    }
-                }
-            } else {
-                Box(
+                        .size(width = nodeWidth, height = (nodeHeight / 2))
+                        .background(colors.edgeColor)
+                        .border(1.dp, colors.nodeBorderColor),
+                )
+
+                else -> Box(
                     modifier = Modifier
                         .absoluteOffset(x = positioned.x.dp, y = positioned.y.dp)
                         .width(nodeWidth)
@@ -1281,4 +1466,196 @@ private fun androidx.compose.ui.graphics.drawscope.DrawScope.drawMermaidArrowHea
         strokeWidth = strokeWidth,
         cap = StrokeCap.Round,
     )
+}
+
+// ── ER crow's foot notation ───────────────────────────────────────────
+
+internal enum class ErCardinalityPart {
+    One,   // vertical bar "|"
+    Zero,  // circle "o"
+    Many,  // crow's foot "{"
+}
+
+internal fun ErRelationshipKind.crowsFootMarkers(): Pair<Set<ErCardinalityPart>, Set<ErCardinalityPart>> =
+    when (this) {
+        ErRelationshipKind.OneToOne -> setOf(ErCardinalityPart.One) to setOf(ErCardinalityPart.One)
+        ErRelationshipKind.OneToManyZeroOrMore ->
+            setOf(ErCardinalityPart.One) to setOf(ErCardinalityPart.Many, ErCardinalityPart.Zero)
+        ErRelationshipKind.OneToManyOneOrMore ->
+            setOf(ErCardinalityPart.One) to setOf(ErCardinalityPart.Many, ErCardinalityPart.One)
+        ErRelationshipKind.ManyToManyZeroOrMore ->
+            setOf(ErCardinalityPart.Many, ErCardinalityPart.Zero) to setOf(ErCardinalityPart.Many, ErCardinalityPart.Zero)
+        ErRelationshipKind.ManyToManyOneOrMore ->
+            setOf(ErCardinalityPart.Many, ErCardinalityPart.One) to setOf(ErCardinalityPart.Many, ErCardinalityPart.One)
+        ErRelationshipKind.ManyToOneZeroOrMore ->
+            setOf(ErCardinalityPart.Many, ErCardinalityPart.Zero) to setOf(ErCardinalityPart.One)
+        ErRelationshipKind.ManyToOneOneOrMore ->
+            setOf(ErCardinalityPart.Many, ErCardinalityPart.One) to setOf(ErCardinalityPart.One)
+        // Non-identifying variants share the same cardinality markers (rendered with a dotted line).
+        ErRelationshipKind.NonIdentifyingOneToOne -> setOf(ErCardinalityPart.One) to setOf(ErCardinalityPart.One)
+        ErRelationshipKind.NonIdentifyingOneToMany ->
+            setOf(ErCardinalityPart.One) to setOf(ErCardinalityPart.Many, ErCardinalityPart.Zero)
+        ErRelationshipKind.NonIdentifyingManyToOne ->
+            setOf(ErCardinalityPart.Many, ErCardinalityPart.Zero) to setOf(ErCardinalityPart.One)
+        ErRelationshipKind.NonIdentifyingManyToMany ->
+            setOf(ErCardinalityPart.Many, ErCardinalityPart.Zero) to setOf(ErCardinalityPart.Many, ErCardinalityPart.Zero)
+    }
+
+private fun androidx.compose.ui.graphics.drawscope.DrawScope.drawErEndpointMarker(
+    color: Color,
+    point: Offset,
+    other: Offset,
+    parts: Set<ErCardinalityPart>,
+) {
+    if (parts.isEmpty()) return
+    val dx = other.x - point.x
+    val dy = other.y - point.y
+    val length = sqrt(dx * dx + dy * dy)
+    if (length == 0f) return
+    val ux = dx / length
+    val uy = dy / length
+    val px = -uy
+    val py = ux
+    val strokeWidth = 1.5.dp.toPx()
+    val gap = 6.dp.toPx()
+    val radius = 3.dp.toPx()
+    val foot = 7.dp.toPx()
+
+    // Parts are stacked along the line from the node edge toward `other`.
+    parts.forEachIndexed { index, _ ->
+        val along = gap * (index + 1)
+        val center = Offset(point.x + ux * along, point.y + uy * along)
+        // Each index renders one of the markers (One/Zero/Many).
+        val part = parts.elementAt(index)
+        when (part) {
+            ErCardinalityPart.One -> {
+                val half = 6.dp.toPx()
+                drawLine(
+                    color = color,
+                    start = Offset(center.x + px * half, center.y + py * half),
+                    end = Offset(center.x - px * half, center.y - py * half),
+                    strokeWidth = strokeWidth,
+                    cap = StrokeCap.Round,
+                )
+            }
+            ErCardinalityPart.Zero -> {
+                drawCircle(
+                    color = color,
+                    radius = radius,
+                    center = center,
+                    style = Stroke(width = strokeWidth),
+                )
+            }
+            ErCardinalityPart.Many -> {
+                val tip = Offset(center.x + ux * foot, center.y + uy * foot)
+                drawLine(color = color, start = Offset(center.x + px * foot, center.y + py * foot), end = tip, strokeWidth = strokeWidth, cap = StrokeCap.Round)
+                drawLine(color = color, start = Offset(center.x - px * foot, center.y - py * foot), end = tip, strokeWidth = strokeWidth, cap = StrokeCap.Round)
+            }
+        }
+    }
+}
+
+// ── Class diagram UML markers ─────────────────────────────────────────
+
+internal enum class ClassMarkerKind {
+    Triangle, // inheritance / realization (hollow triangle at the parent end)
+    Diamond,  // composition (filled) / aggregation (hollow) at the whole end
+    Arrow,    // dependency / association (open V arrow)
+}
+
+private fun androidx.compose.ui.graphics.drawscope.DrawScope.drawClassMarker(
+    color: Color,
+    tip: Offset,
+    ux: Float,
+    uy: Float,
+    px: Float,
+    py: Float,
+    size: Float,
+    filled: Boolean,
+    kind: ClassMarkerKind,
+) {
+    val stroke = Stroke(width = 2.dp.toPx(), cap = StrokeCap.Round)
+    when (kind) {
+        ClassMarkerKind.Triangle -> {
+            // Tip touches the node; base sits `1.4*size` back along the edge.
+            val back = 1.4f * size
+            val half = 0.7f * size
+            val base = Offset(tip.x - ux * back, tip.y - uy * back)
+            val left = Offset(base.x + px * half, base.y + py * half)
+            val right = Offset(base.x - px * half, base.y - py * half)
+            val path = Path().apply {
+                moveTo(tip.x, tip.y)
+                lineTo(left.x, left.y)
+                lineTo(right.x, right.y)
+                close()
+            }
+            drawPath(path = path, color = color, style = if (filled) Fill else stroke)
+        }
+        ClassMarkerKind.Diamond -> {
+            // Long axis along the edge; one vertex at `tip` (node edge), extending outward.
+            val lenOut = 1.6f * size
+            val half = 0.55f * size
+            val outer = Offset(tip.x - ux * lenOut, tip.y - uy * lenOut)
+            val midBack = Offset(tip.x - ux * (lenOut / 2f), tip.y - uy * (lenOut / 2f))
+            val left = Offset(midBack.x + px * half, midBack.y + py * half)
+            val right = Offset(midBack.x - px * half, midBack.y - py * half)
+            val path = Path().apply {
+                moveTo(tip.x, tip.y)
+                lineTo(left.x, left.y)
+                lineTo(outer.x, outer.y)
+                lineTo(right.x, right.y)
+                close()
+            }
+            drawPath(path = path, color = color, style = if (filled) Fill else stroke)
+        }
+        ClassMarkerKind.Arrow -> {
+            val half = 0.55f * size
+            val back = Offset(tip.x - ux * size, tip.y - uy * size)
+            drawLine(color = color, start = Offset(back.x + px * half, back.y + py * half), end = tip, strokeWidth = 2.dp.toPx(), cap = StrokeCap.Round)
+            drawLine(color = color, start = Offset(back.x - px * half, back.y - py * half), end = tip, strokeWidth = 2.dp.toPx(), cap = StrokeCap.Round)
+        }
+    }
+}
+
+// ── State diagram terminal markers ────────────────────────────────────
+
+@Composable
+private fun StateStartDot(
+    x: Dp,
+    y: Dp,
+    size: Dp,
+    color: Color,
+) {
+    Canvas(
+        modifier = Modifier
+            .absoluteOffset(x = x, y = y)
+            .size(size),
+    ) {
+        drawCircle(color = color, radius = size.toPx() / 2f)
+    }
+}
+
+@Composable
+private fun StateEndDoubleCircle(
+    x: Dp,
+    y: Dp,
+    size: Dp,
+    borderColor: Color,
+    fillColor: Color,
+) {
+    Canvas(
+        modifier = Modifier
+            .absoluteOffset(x = x, y = y)
+            .size(size),
+    ) {
+        val px = size.toPx()
+        // Outer ring.
+        drawCircle(
+            color = borderColor,
+            radius = px / 2f,
+            style = Stroke(width = 1.5.dp.toPx()),
+        )
+        // Inner filled dot — the classic "bullseye" terminal state.
+        drawCircle(color = fillColor, radius = px / 4.5f)
+    }
 }

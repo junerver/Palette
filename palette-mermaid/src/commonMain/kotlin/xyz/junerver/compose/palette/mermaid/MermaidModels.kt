@@ -66,6 +66,7 @@ data class ErAttribute(
     val type: String,
     val comment: String? = null,
     val isPrimaryKey: Boolean = false,
+    val isForeignKey: Boolean = false,
 )
 
 enum class ErRelationshipKind {
@@ -248,6 +249,18 @@ data class MermaidLayout(
     val flowchartClassAssignments: List<MermaidFlowchartClassAssignment> = emptyList(),
     val flowchartNodeStyles: List<MermaidFlowchartNodeStyle> = emptyList(),
     val flowchartLinkStyles: List<MermaidFlowchartLinkStyle> = emptyList(),
+    /**
+     * State diagram only: horizontal curvature offset per edge index. Edges sharing the
+     * same endpoint pair get incrementing offsets so forward/backward links fan out into
+     * separate arcs instead of overlapping into one line.
+     */
+    val stateEdgeOffsets: Map<Int, Float> = emptyMap(),
+    /**
+     * Class diagram only: the UML relationship type per edge index, so the renderer can
+     * draw the correct end marker (hollow triangle for inheritance, filled/hollow diamond
+     * for composition/aggregation, open arrow for dependency).
+     */
+    val classRelationTypes: Map<Int, MermaidClassRelationType> = emptyMap(),
 )
 
 data class PositionedMermaidNode(

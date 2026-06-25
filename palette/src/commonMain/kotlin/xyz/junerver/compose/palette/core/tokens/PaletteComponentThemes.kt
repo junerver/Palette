@@ -2289,6 +2289,9 @@ data class PaletteUtilityTokens(
     val mermaidNodeContentColor: Color,
     val mermaidEdgeColor: Color,
     val mermaidNodeCornerRadius: Dp,
+    val mermaidEntityHeaderColor: Color,
+    val mermaidPrimaryKeyColor: Color,
+    val mermaidForeignKeyColor: Color,
 ) {
     companion object {
         fun default(
@@ -2337,6 +2340,9 @@ data class PaletteUtilityTokens(
             mermaidNodeContentColor = colors.textPrimary,
             mermaidEdgeColor = colors.textSecondary,
             mermaidNodeCornerRadius = control.medium.cornerRadius,
+            mermaidEntityHeaderColor = colors.bgHover,
+            mermaidPrimaryKeyColor = colors.primary,
+            mermaidForeignKeyColor = colors.info,
         )
     }
 }

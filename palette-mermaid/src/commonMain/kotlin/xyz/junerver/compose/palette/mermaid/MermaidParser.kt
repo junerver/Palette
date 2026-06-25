@@ -39,6 +39,12 @@ object MermaidParser {
         var currentErEntity: String? = null
         var currentErAttributes = mutableListOf<ErAttribute>()
 
+        val stateDefinitions = mutableListOf<StateDefinition>()
+        val stateTransitions = mutableListOf<StateTransition>()
+        val stateNotes = mutableListOf<StateNote>()
+        var currentStateComposite: String? = null
+        var currentStateChildren = mutableListOf<StateDefinition>()
+
         source
             .lines()
             .map { it.trim() }
@@ -62,14 +68,20 @@ object MermaidParser {
                     return@forEachIndexed
                 }
 
+                if (line.equals("stateDiagram", ignoreCase = true) || line.equals("stateDiagram-v2", ignoreCase = true)) {
+                    type = MermaidDiagramType.StateDiagram
+                    direction = MermaidDirection.TopDown
+                    return@forEachIndexed
+                }
+
                 val participant = parseSequenceParticipant(line)
-                if (participant != null) {
+                if (participant != null && type == MermaidDiagramType.Sequence) {
                     if (participant.id !in nodes) nodes[participant.id] = participant
                     return@forEachIndexed
                 }
 
                 val sequenceNote = parseSequenceNote(line, sequenceIndex)
-                if (sequenceNote != null) {
+                if (sequenceNote != null && type == MermaidDiagramType.Sequence) {
                     sequenceNote.participants.forEach { participant ->
                         if (participant !in nodes) {
                             nodes[participant] = MermaidNode(participant, participant, MermaidNodeShape.Rectangle)
@@ -81,7 +93,7 @@ object MermaidParser {
                 }
 
                 val sequenceMessage = parseSequenceMessage(line)
-                if (sequenceMessage != null) {
+                if (sequenceMessage != null && type == MermaidDiagramType.Sequence) {
                     if (sequenceMessage.from.id !in nodes) nodes[sequenceMessage.from.id] = sequenceMessage.from
                     if (sequenceMessage.to.id !in nodes) nodes[sequenceMessage.to.id] = sequenceMessage.to
                     edges +=
@@ -454,6 +466,122 @@ object MermaidParser {
                     }
                 }
 
+                // State Diagram parsing
+                if (type == MermaidDiagramType.StateDiagram) {
+                    fun flushCurrentStateComposite() {
+                        if (currentStateComposite != null) {
+                            stateDefinitions.add(StateDefinition(
+                                id = currentStateComposite!!,
+                                children = currentStateChildren.toList(),
+                            ))
+                            currentStateComposite = null
+                            currentStateChildren = mutableListOf()
+                        }
+                    }
+
+                    // Close brace ends composite state
+                    if (line == "}" && currentStateComposite != null) {
+                        flushCurrentStateComposite()
+                        return@forEachIndexed
+                    }
+
+                    // Open brace continues composite state
+                    if (line == "{" && currentStateComposite != null) {
+                        return@forEachIndexed
+                    }
+
+                    // Inside composite state
+                    if (currentStateComposite != null) {
+                        val stateId = line.trim()
+                        if (stateId.isNotEmpty() && !stateId.startsWith("[*")) {
+                            currentStateChildren.add(StateDefinition(id = stateId))
+                        }
+                        return@forEachIndexed
+                    }
+
+                    // Transition: state1 --> state2 [: event]
+                    val transitionMatch = Regex("""^(\S+)\s*-->\s*(\S+)(?:\s*:\s*(.+))?$""").matchEntire(line)
+                    if (transitionMatch != null) {
+                        val from = transitionMatch.groupValues[1]
+                        val to = transitionMatch.groupValues[2]
+                        val event = transitionMatch.groupValues[3].ifEmpty { null }
+
+                        // Handle [*] as start/end state
+                        val fromId = if (from == "[*]") "start" else from
+                        val toId = if (to == "[*]") "end" else to
+
+                        // Add start/end state definitions if not already added
+                        if (from == "[*]" && stateDefinitions.none { it.id == "start" }) {
+                            stateDefinitions.add(StateDefinition(id = "start", isStart = true))
+                        }
+                        if (to == "[*]" && stateDefinitions.none { it.id == "end" }) {
+                            stateDefinitions.add(StateDefinition(id = "end", isEnd = true))
+                        }
+
+                        // Add regular state definitions if not already added
+                        if (from != "[*]" && stateDefinitions.none { it.id == fromId }) {
+                            stateDefinitions.add(StateDefinition(id = fromId))
+                        }
+                        if (to != "[*]" && stateDefinitions.none { it.id == toId }) {
+                            stateDefinitions.add(StateDefinition(id = toId))
+                        }
+
+                        stateTransitions.add(StateTransition(from = fromId, to = toId, event = event))
+                        return@forEachIndexed
+                    }
+
+                    // State with label: state "label" as state_id
+                    val stateLabelMatch = Regex("""^state\s+"([^"]+)"\s+as\s+(\S+)$""").matchEntire(line)
+                    if (stateLabelMatch != null) {
+                        val label = stateLabelMatch.groupValues[1]
+                        val id = stateLabelMatch.groupValues[2]
+                        stateDefinitions.add(StateDefinition(id = id, label = label))
+                        return@forEachIndexed
+                    }
+
+                    // Composite state: state state_name {
+                    val compositeMatch = Regex("""^state\s+(\S+)\s*\{$""").matchEntire(line)
+                    if (compositeMatch != null) {
+                        flushCurrentStateComposite()
+                        currentStateComposite = compositeMatch.groupValues[1]
+                        currentStateChildren = mutableListOf()
+                        return@forEachIndexed
+                    }
+
+                    // Fork/Join: state state_name <<fork>> or <<join>>
+                    val forkJoinMatch = Regex("""^state\s+(\S+)\s*<<(fork|join)>>$""").matchEntire(line)
+                    if (forkJoinMatch != null) {
+                        val id = forkJoinMatch.groupValues[1]
+                        val kind = forkJoinMatch.groupValues[2]
+                        stateDefinitions.add(StateDefinition(
+                            id = id,
+                            isFork = kind == "fork",
+                            isJoin = kind == "join",
+                        ))
+                        return@forEachIndexed
+                    }
+
+                    // Note: note right/left of state_id : text
+                    val noteMatch = Regex("""^note\s+(right|left)\s+of\s+(\S+)\s*:\s*(.+)$""").matchEntire(line)
+                    if (noteMatch != null) {
+                        val position = if (noteMatch.groupValues[1] == "left") StateNotePosition.Left else StateNotePosition.Right
+                        val stateId = noteMatch.groupValues[2]
+                        val text = noteMatch.groupValues[3]
+                        stateNotes.add(StateNote(stateId = stateId, text = text, position = position))
+                        return@forEachIndexed
+                    }
+
+                    // Simple state declaration: state_id (if not already defined)
+                    val simpleStateMatch = Regex("""^(\S+)$""").matchEntire(line)
+                    if (simpleStateMatch != null) {
+                        val id = simpleStateMatch.groupValues[1]
+                        if (id != "stateDiagram" && id != "stateDiagram-v2" && stateDefinitions.none { it.id == id }) {
+                            stateDefinitions.add(StateDefinition(id = id))
+                        }
+                        return@forEachIndexed
+                    }
+                }
+
                 // Flowchart metadata
                 if (type == MermaidDiagramType.Flowchart) {
                     val classDef = parseFlowchartClassDef(line)
@@ -571,6 +699,9 @@ object MermaidParser {
             classRelationships = classRelationships,
             erEntities = erEntities,
             erRelationships = erRelationships,
+            stateDefinitions = stateDefinitions,
+            stateTransitions = stateTransitions,
+            stateNotes = stateNotes,
         )
     }
 
@@ -974,17 +1105,18 @@ object MermaidParser {
     private fun parseErAttribute(line: String): ErAttribute? {
         val trimmed = line.trim()
         if (trimmed.isEmpty() || trimmed == "{" || trimmed == "}") return null
-        // Format: type name "comment" or type name PK or type name
+        // Format: type name "comment" or type name PK/FK or type name
         val match = Regex("""^(\S+)\s+(\S+)(?:\s+"([^"]*)")?(?:\s+(PK|FK))?\s*$""").matchEntire(trimmed) ?: return null
         val type = match.groupValues[1]
         val name = match.groupValues[2]
         val comment = match.groupValues[3].ifEmpty { null }
-        val isPrimaryKey = match.groupValues[4] == "PK"
+        val keyMarker = match.groupValues[4]
         return ErAttribute(
             name = name,
             type = type,
             comment = comment,
-            isPrimaryKey = isPrimaryKey,
+            isPrimaryKey = keyMarker == "PK",
+            isForeignKey = keyMarker == "FK",
         )
     }
 

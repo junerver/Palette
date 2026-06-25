@@ -2,6 +2,8 @@ package xyz.junerver.compose.palette.mermaid
 
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 
 class MermaidParserTest {
@@ -516,6 +518,35 @@ class MermaidParserTest {
     }
 
     @Test
+    fun parsesErDiagramAttributeKeys() {
+        val diagram = MermaidParser.parse(
+            """
+            erDiagram
+                CUSTOMER {
+                    int id PK
+                    string name
+                    int orderId FK
+                }
+                ORDER {
+                    int id PK
+                }
+                CUSTOMER ||--o{ ORDER : places
+            """.trimIndent()
+        )
+
+        val customer = diagram.erEntities.first { it.name == "CUSTOMER" }
+        val idAttr = customer.attributes.first { it.name == "id" }
+        assertTrue(idAttr.isPrimaryKey)
+        assertFalse(idAttr.isForeignKey)
+        val nameAttr = customer.attributes.first { it.name == "name" }
+        assertFalse(nameAttr.isPrimaryKey)
+        assertFalse(nameAttr.isForeignKey)
+        val orderAttr = customer.attributes.first { it.name == "orderId" }
+        assertTrue(orderAttr.isForeignKey)
+        assertFalse(orderAttr.isPrimaryKey)
+    }
+
+    @Test
     fun laysOutClassDiagramNodes() {
         val diagram = MermaidParser.parse(
             """
@@ -538,5 +569,133 @@ class MermaidParserTest {
         assertEquals(0, layout.nodes.getValue("A").rank)
         assertEquals(1, layout.nodes.getValue("B").rank)
         assertEquals(1, layout.nodes.getValue("C").rank)
+    }
+
+    @Test
+    fun laysOutStateDiagramWithCorrectRanksThroughCycles() {
+        // A state diagram with cycles (Success/Error loop back to Idle/Loading).
+        // Topological sort deadlocks on the cycle and piles everything on rank 0;
+        // a breadth-first layering from `start` is required instead.
+        val diagram = MermaidParser.parse(
+            """
+            stateDiagram-v2
+                [*] --> Idle
+                Idle --> Loading : fetch data
+                Loading --> Success : ok
+                Loading --> Error : fail
+                Success --> Idle : reset
+                Error --> Idle : cancel
+                Success --> [*]
+            """.trimIndent()
+        )
+
+        val layout = MermaidLayoutEngine.layout(diagram)
+        val ranks = layout.nodes.mapValues { it.value.rank }
+        val maxRank = ranks.values.max()
+
+        // Each state lands on the rank implied by its shortest path from `start`.
+        // This is the crux: cycles must not collapse the layout into a single row.
+        assertEquals(0, ranks.getValue("start"))
+        assertEquals(1, ranks.getValue("Idle"))
+        assertEquals(2, ranks.getValue("Loading"))
+        assertEquals(3, ranks.getValue("Success"))
+        assertEquals(3, ranks.getValue("Error"))
+        // end is forced to the lowest rank.
+        assertEquals(maxRank, ranks.getValue("end"))
+
+        // Same-rank states (Success/Error) are centered horizontally and never overlap.
+        val nodeWidth = 140f
+        val byRank = layout.nodes.values.groupBy { it.rank }
+        val rowCenters = byRank.values.map { nodes ->
+            val minCenter = nodes.minOf { it.x + nodeWidth / 2f }
+            val maxCenter = nodes.maxOf { it.x + nodeWidth / 2f }
+            (minCenter + maxCenter) / 2f
+        }
+        byRank.forEach { (_, nodes) ->
+            if (nodes.size > 1) {
+                val sorted = nodes.map { it.x }.sorted()
+                sorted.zipWithNext().forEach { (left, right) ->
+                    assertTrue(right - left >= nodeWidth, "Same-rank nodes overlap: $left -> $right")
+                }
+            }
+        }
+        assertEquals(rowCenters.min(), rowCenters.max(), 0.001f)
+    }
+
+    @Test
+    fun laysOutStateDiagramFansOutBidirectionalEdges() {
+        // Loading <-> Error form a two-way link ("failed" down, "retry" up).
+        // Both must not collapse onto a single overlapping line.
+        val diagram = MermaidParser.parse(
+            """
+            stateDiagram-v2
+                [*] --> Idle
+                Idle --> Loading : fetch data
+                Loading --> Success : success
+                Loading --> Error : failed
+                Error --> Loading : retry
+                Success --> [*]
+            """.trimIndent()
+        )
+
+        val layout = MermaidLayoutEngine.layout(diagram)
+
+        // Locate the two edges of the Loading<->Error link.
+        val failedIndex = layout.edges.indexOfFirst { it.from == "Loading" && it.to == "Error" }
+        val retryIndex = layout.edges.indexOfFirst { it.from == "Error" && it.to == "Loading" }
+        assertTrue(failedIndex >= 0, "Expected failed edge")
+        assertTrue(retryIndex >= 0, "Expected retry edge")
+
+        val failedOffset = layout.stateEdgeOffsets[failedIndex]
+        val retryOffset = layout.stateEdgeOffsets[retryIndex]
+        assertNotNull(failedOffset, "failed edge must have a curvature offset")
+        assertNotNull(retryOffset, "retry edge must have a curvature offset")
+        // The two directions of the same link bow in opposite directions so the arcs
+        // separate visually instead of overlapping into a single line.
+        assertTrue(failedOffset != 0f || retryOffset != 0f, "bidirectional edges must fan out")
+        assertTrue(failedOffset * retryOffset <= 0f, "opposite directions must bow opposite ways")
+    }
+
+    @Test
+    fun parsesStateDiagramTransitions() {
+        val diagram = MermaidParser.parse(
+            """
+            stateDiagram-v2
+                [*] --> Still
+                Still --> [*]
+                Still --> Moving
+                Moving --> Still
+                Moving --> Crash
+                Crash --> [*]
+            """.trimIndent()
+        )
+
+        assertEquals(MermaidDiagramType.StateDiagram, diagram.type)
+        assertTrue(diagram.stateDefinitions.any { it.isStart }, "Expected start state")
+        assertTrue(diagram.stateDefinitions.any { it.isEnd }, "Expected end state")
+        assertTrue(diagram.stateDefinitions.any { it.id == "Still" }, "Expected Still state")
+        assertTrue(diagram.stateDefinitions.any { it.id == "Moving" }, "Expected Moving state")
+        assertTrue(diagram.stateDefinitions.any { it.id == "Crash" }, "Expected Crash state")
+        assertTrue(diagram.stateTransitions.any { it.from == "start" && it.to == "Still" }, "Expected start->Still transition")
+        assertTrue(diagram.stateTransitions.any { it.from == "Still" && it.to == "end" }, "Expected Still->end transition")
+    }
+
+    @Test
+    fun parsesStateDiagramWithLabels() {
+        val diagram = MermaidParser.parse(
+            """
+            stateDiagram-v2
+                state "Idle" as idle
+                state "Processing" as proc
+                idle --> proc : start
+            """.trimIndent()
+        )
+
+        assertEquals(MermaidDiagramType.StateDiagram, diagram.type)
+        val idle = diagram.stateDefinitions.first { it.id == "idle" }
+        assertEquals("Idle", idle.label)
+        val proc = diagram.stateDefinitions.first { it.id == "proc" }
+        assertEquals("Processing", proc.label)
+        assertTrue(diagram.stateTransitions.any { it.from == "idle" && it.to == "proc" && it.event == "start" })
     }
 }

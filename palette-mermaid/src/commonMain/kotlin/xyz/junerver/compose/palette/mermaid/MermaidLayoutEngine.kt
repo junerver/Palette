@@ -5,6 +5,7 @@ object MermaidLayoutEngine {
         if (diagram.type == MermaidDiagramType.Sequence) return layoutSequence(diagram)
         if (diagram.type == MermaidDiagramType.ClassDiagram) return layoutClassDiagram(diagram)
         if (diagram.type == MermaidDiagramType.ErDiagram) return layoutErDiagram(diagram)
+        if (diagram.type == MermaidDiagramType.StateDiagram) return layoutStateDiagram(diagram)
 
         val rankById = calculateRanks(diagram)
         val orderByRank = mutableMapOf<Int, Int>()
@@ -46,6 +47,9 @@ object MermaidLayoutEngine {
             flowchartClassAssignments = diagram.flowchartClassAssignments,
             flowchartNodeStyles = diagram.flowchartNodeStyles,
             flowchartLinkStyles = diagram.flowchartLinkStyles,
+            // Reuse the curvature-offset map to fan out multi-edge endpoint pairs and back
+            // edges so they no longer collapse onto a single overlapping line.
+            stateEdgeOffsets = calculateStateEdgeOffsets(diagram.edges),
         )
     }
 
@@ -64,18 +68,18 @@ object MermaidLayoutEngine {
             if (rel.to !in nodes) nodes[rel.to] = MermaidNode(id = rel.to, label = rel.to, shape = MermaidNodeShape.Rectangle)
         }
 
-        // Build edges from relationships
-        val edges = diagram.classRelationships.map { rel ->
+        // Build edges from relationships. Preserve the relation type so the renderer can
+        // draw the correct UML marker; the marker placement is decided at draw time.
+        val relationTypes = mutableMapOf<Int, MermaidClassRelationType>()
+        val edges = diagram.classRelationships.mapIndexed { index, rel ->
+            relationTypes[index] = rel.type
             MermaidEdge(
                 from = rel.from,
                 to = rel.to,
                 label = rel.label,
                 style = if (rel.type == MermaidClassRelationType.Dependency || rel.type == MermaidClassRelationType.Realization || rel.type == MermaidClassRelationType.DependencyLink) MermaidEdgeStyle.Dotted else MermaidEdgeStyle.Solid,
-                arrow = when (rel.type) {
-                    MermaidClassRelationType.Inheritance, MermaidClassRelationType.Realization -> MermaidEdgeArrow.None
-                    MermaidClassRelationType.Link, MermaidClassRelationType.DependencyLink -> MermaidEdgeArrow.None
-                    else -> MermaidEdgeArrow.Forward
-                },
+                // No generic arrowhead — UML markers are drawn explicitly from the relation type.
+                arrow = MermaidEdgeArrow.None,
             )
         }
 
@@ -99,6 +103,7 @@ object MermaidLayoutEngine {
             direction = diagram.direction,
             nodes = positionedNodes,
             edges = edges,
+            classRelationTypes = relationTypes,
         )
     }
 
@@ -143,6 +148,92 @@ object MermaidLayoutEngine {
             nodes = positionedNodes,
             edges = edges,
         )
+    }
+
+    private fun layoutStateDiagram(diagram: MermaidDiagram): MermaidLayout {
+        val nodes = linkedMapOf<String, MermaidNode>()
+        diagram.stateDefinitions.forEach { state ->
+            val shape = when {
+                state.isStart || state.isEnd -> MermaidNodeShape.Circle
+                state.isFork || state.isJoin -> MermaidNodeShape.Rectangle
+                else -> MermaidNodeShape.Rounded
+            }
+            nodes[state.id] = MermaidNode(id = state.id, label = state.label ?: state.id, shape = shape)
+        }
+
+        val edges = diagram.stateTransitions.map { transition ->
+            MermaidEdge(
+                from = transition.from,
+                to = transition.to,
+                label = transition.event,
+                style = MermaidEdgeStyle.Solid,
+                arrow = MermaidEdgeArrow.Forward,
+            )
+        }
+
+        // State diagrams are cyclic; topological layering deadlocks on the loops and
+        // collapses the graph into one row. Layer by shortest-path BFS from `start`
+        // instead — back-edges hit already-visited targets and are skipped naturally.
+        var rankById = calculateStateRanks(nodes.keys, edges)
+        // Force the terminal "end" node to the lowest rank so it never sits beside
+        // other states — matching mermaid's terminal placement at the bottom.
+        if ("end" in nodes) {
+            val maxRank = rankById.values.maxOrNull() ?: 0
+            rankById = rankById.mapValues { (id, rank) ->
+                if (id == "end") maxRank + 1 else rank
+            }
+        }
+
+        // Center each rank horizontally: all rows share the same midpoint.
+        val nodesByRank = nodes.values.groupBy { rankById[it.id] ?: 0 }
+        val maxNodesInRank = nodesByRank.values.maxOfOrNull { it.size } ?: 1
+        val horizontalStep = StateNodeBoxWidth + StateNodeGap
+        val positionedNodes = linkedMapOf<String, PositionedMermaidNode>()
+        nodesByRank.forEach { (rank, rankNodes) ->
+            val count = rankNodes.size
+            // Block left edge so the row is centered relative to the widest row.
+            val rowLeft = ((maxNodesInRank - count) * horizontalStep) / 2f
+            rankNodes.forEachIndexed { index, node ->
+                positionedNodes[node.id] = PositionedMermaidNode(
+                    node = node,
+                    rank = rank,
+                    order = index,
+                    x = rowLeft + index * horizontalStep,
+                    y = rank.toFloat() * StateRankHeight,
+                )
+            }
+        }
+
+        return MermaidLayout(
+            type = MermaidDiagramType.StateDiagram,
+            direction = diagram.direction,
+            nodes = positionedNodes,
+            edges = edges,
+            stateEdgeOffsets = calculateStateEdgeOffsets(edges),
+        )
+    }
+
+    /**
+     * Spread edges that share both endpoints into separate arcs. Edges connecting the
+     * same pair of states (e.g. `Loading --> Error` and `Error --> Loading`) would
+     * otherwise render on top of each other. Within each endpoint-pair group, edges are
+     * assigned alternating offsets `0, +k, -k, +2k, -2k...`, so the two directions of a
+     * bidirectional link bow in opposite directions and fan out visually.
+     */
+    private fun calculateStateEdgeOffsets(edges: List<MermaidEdge>): Map<Int, Float> {
+        val offsets = mutableMapOf<Int, Float>()
+        val groupOrder = mutableMapOf<String, Int>()
+        edges.forEachIndexed { index, edge ->
+            if (edge.from == edge.to) return@forEachIndexed // self-loop: handled by renderer
+            val key = if (edge.from < edge.to) "${edge.from}#${edge.to}" else "${edge.to}#${edge.from}"
+            val order = groupOrder.getOrPut(key) { 0 }
+            groupOrder[key] = order + 1
+            // order 0 => centered (0f); subsequent edges alternate +k / -k with growing magnitude.
+            val magnitude = ((order + 1) / 2).toFloat() * StateEdgeOffsetStep
+            val sign = if (order % 2 == 1) 1f else -1f
+            offsets[index] = if (order == 0) 0f else sign * magnitude
+        }
+        return offsets
     }
 
     private fun layoutSequence(diagram: MermaidDiagram): MermaidLayout {
@@ -215,9 +306,53 @@ object MermaidLayoutEngine {
         return rank
     }
 
+    /**
+     * Layer cyclic state diagrams by shortest-path BFS from the `start` node.
+     *
+     * Unlike [calculateRanks] (a topological Kahn sort), this never deadlocks on
+     * back-edges: a target that already has a smaller rank is simply skipped, which
+     * is exactly the desired behaviour for loops like `Success --> Idle`.
+     * Orphan states (unreachable from start) keep rank 0 and are placed at the top.
+     */
+    private fun calculateStateRanks(
+        nodeIds: Set<String>,
+        edges: List<MermaidEdge>,
+    ): Map<String, Int> {
+        val outgoing = nodeIds.associateWith { mutableListOf<String>() }.toMutableMap()
+        edges.forEach { edge ->
+            outgoing[edge.from]?.add(edge.to)
+        }
+        val rank = nodeIds.associateWith { 0 }.toMutableMap()
+        if ("start" !in nodeIds) return rank
+
+        val queue = ArrayDeque<String>()
+        queue.add("start")
+        val visited = mutableSetOf("start")
+        while (queue.isNotEmpty()) {
+            val id = queue.removeFirst()
+            val nextRank = rank.getValue(id) + 1
+            outgoing.getValue(id).forEach { target ->
+                if (target !in visited) {
+                    visited.add(target)
+                    rank[target] = nextRank
+                    queue.add(target)
+                }
+            }
+        }
+        return rank
+    }
+
     private const val FlowchartNodeWidth = 132f
     private const val FlowchartNodeHeight = 44f
     private const val SubgraphHorizontalPadding = 24f
     private const val SubgraphTopPadding = 32f
     private const val SubgraphBottomPadding = 20f
+
+    // State diagram layout constants. Box width matches the rendered state node;
+    // gap + rank height give the breathing room seen in mermaid.live output.
+    private const val StateNodeBoxWidth = 140f
+    private const val StateNodeGap = 60f
+    private const val StateRankHeight = 110f
+    // Horizontal arc step for fanning out multi-edge endpoint pairs.
+    private const val StateEdgeOffsetStep = 40f
 }

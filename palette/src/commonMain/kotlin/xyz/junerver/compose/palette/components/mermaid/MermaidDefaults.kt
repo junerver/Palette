@@ -12,6 +12,9 @@ data class MermaidColors(
     val nodeBorderColor: Color,
     val nodeContentColor: Color,
     val edgeColor: Color,
+    val entityHeaderColor: Color = Color.Unspecified,
+    val primaryKeyColor: Color = Color.Unspecified,
+    val foreignKeyColor: Color = Color.Unspecified,
 )
 
 object MermaidDefaults {
@@ -23,6 +26,9 @@ object MermaidDefaults {
             nodeBorderColor = tokens.mermaidNodeBorderColor,
             nodeContentColor = tokens.mermaidNodeContentColor,
             edgeColor = tokens.mermaidEdgeColor,
+            entityHeaderColor = tokens.mermaidEntityHeaderColor,
+            primaryKeyColor = tokens.mermaidPrimaryKeyColor,
+            foreignKeyColor = tokens.mermaidForeignKeyColor,
         )
     }
 
