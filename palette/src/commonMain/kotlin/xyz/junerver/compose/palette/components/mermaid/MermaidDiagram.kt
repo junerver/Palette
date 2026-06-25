@@ -4,7 +4,9 @@ import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.absoluteOffset
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -26,6 +28,9 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import xyz.junerver.compose.hooks.useCreation
 import xyz.junerver.compose.palette.core.theme.PaletteTheme
+import xyz.junerver.compose.palette.mermaid.MermaidClassDefinition
+import xyz.junerver.compose.palette.mermaid.MermaidClassMemberKind
+import xyz.junerver.compose.palette.mermaid.MermaidClassVisibility
 import xyz.junerver.compose.palette.mermaid.MermaidDirection
 import xyz.junerver.compose.palette.mermaid.MermaidDiagramType
 import xyz.junerver.compose.palette.mermaid.MermaidEdgeArrow
@@ -323,9 +328,14 @@ fun PMermaidDiagram(
     colors: MermaidColors = MermaidDefaults.colors(),
     layout: MermaidLayout? = null,
 ) {
-    val resolvedLayout =
+    val (parsedDiagram, resolvedLayout) =
         useCreation(layout, source) {
-            layout ?: MermaidLayoutEngine.layout(MermaidParser.parse(source))
+            if (layout != null) {
+                null to layout
+            } else {
+                val diagram = MermaidParser.parse(source)
+                diagram to MermaidLayoutEngine.layout(diagram)
+            }
         }.current
 
     when (resolvedLayout.type) {
@@ -344,10 +354,11 @@ fun PMermaidDiagram(
             )
 
         MermaidDiagramType.ClassDiagram ->
-            FlowchartMermaidDiagram(
+            ClassDiagramMermaidDiagram(
                 modifier = modifier,
                 colors = colors,
                 layout = resolvedLayout,
+                classDefinitions = parsedDiagram?.classDefinitions.orEmpty(),
             )
     }
 }
@@ -696,6 +707,129 @@ private fun SequenceMermaidDiagram(
         }
 
         if (layout.nodes.isEmpty()) {
+            Text(
+                text = "Empty diagram",
+                color = Color.Unspecified,
+                style = PaletteTheme.typography.body,
+                modifier = Modifier.align(Alignment.Center),
+            )
+        }
+    }
+}
+
+@Composable
+private fun ClassDiagramMermaidDiagram(
+    modifier: Modifier,
+    colors: MermaidColors,
+    layout: MermaidLayout,
+    classDefinitions: List<MermaidClassDefinition>,
+) {
+    val nodeWidth = 180.dp
+    val memberHeight = 20.dp
+    val headerHeight = 32.dp
+    val padding = 8.dp
+
+    val nodeRight = (layout.nodes.values.maxOfOrNull { it.x } ?: 0f) + 204f
+    val nodeBottom = (layout.nodes.values.maxOfOrNull { it.y } ?: 0f) + 120f
+    val width = nodeRight.dp
+    val height = nodeBottom.dp
+
+    Box(
+        modifier = modifier.width(width).height(height),
+    ) {
+        Canvas(modifier = Modifier.matchParentSize()) {
+            layout.edges.forEach { edge ->
+                val from = layout.nodes[edge.from] ?: return@forEach
+                val to = layout.nodes[edge.to] ?: return@forEach
+                val startX = from.x.dp.toPx() + nodeWidth.toPx() / 2f
+                val startY = from.y.dp.toPx() + 44f
+                val endX = to.x.dp.toPx() + nodeWidth.toPx() / 2f
+                val endY = to.y.dp.toPx()
+                val pathEffect = if (edge.style == MermaidEdgeStyle.Dotted) {
+                    PathEffect.dashPathEffect(floatArrayOf(6f, 6f))
+                } else {
+                    null
+                }
+                drawLine(
+                    color = colors.edgeColor,
+                    start = Offset(startX, startY),
+                    end = Offset(endX, endY),
+                    strokeWidth = 2f,
+                    pathEffect = pathEffect,
+                )
+            }
+        }
+
+        classDefinitions.forEach { cls ->
+            val positioned = layout.nodes[cls.id] ?: return@forEach
+            val memberCount = cls.members.size
+            val nodeHeight = headerHeight + memberHeight * memberCount + padding * 2
+
+            Box(
+                modifier = Modifier
+                    .absoluteOffset(x = positioned.x.dp, y = positioned.y.dp)
+                    .width(nodeWidth)
+                    .height(nodeHeight)
+                    .background(colors.nodeContainerColor, RoundedCornerShape(4.dp))
+                    .border(1.dp, colors.nodeBorderColor, RoundedCornerShape(4.dp)),
+            ) {
+                Column {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(headerHeight)
+                            .background(colors.nodeContainerColor.copy(alpha = 0.5f))
+                            .padding(horizontal = 8.dp),
+                        contentAlignment = Alignment.CenterStart,
+                    ) {
+                        Column {
+                            if (cls.annotation != null) {
+                                Text(
+                                    text = "<<${cls.annotation}>>",
+                                    color = colors.nodeContentColor.copy(alpha = 0.7f),
+                                    style = PaletteTheme.typography.label,
+                                )
+                            }
+                            Text(
+                                text = cls.label,
+                                color = colors.nodeContentColor,
+                                style = PaletteTheme.typography.body,
+                            )
+                        }
+                    }
+
+                    cls.members.forEach { member ->
+                        val visibility = when (member.visibility) {
+                            MermaidClassVisibility.Public -> "+"
+                            MermaidClassVisibility.Private -> "-"
+                            MermaidClassVisibility.Protected -> "#"
+                            MermaidClassVisibility.Package -> "~"
+                        }
+                        val prefix = buildString {
+                            append(visibility)
+                            if (member.isAbstract) append("*")
+                            if (member.isStatic) append("$")
+                        }
+                        val memberText = if (member.kind == MermaidClassMemberKind.Method) {
+                            "$prefix${member.name}()${member.type?.let { ": $it" } ?: ""}"
+                        } else {
+                            "$prefix${member.name}${member.type?.let { ": $it" } ?: ""}"
+                        }
+                        Text(
+                            text = memberText,
+                            color = colors.nodeContentColor,
+                            style = PaletteTheme.typography.label,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(memberHeight)
+                                .padding(horizontal = 8.dp),
+                        )
+                    }
+                }
+            }
+        }
+
+        if (classDefinitions.isEmpty()) {
             Text(
                 text = "Empty diagram",
                 color = Color.Unspecified,
