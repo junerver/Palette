@@ -726,13 +726,17 @@ private fun ClassDiagramMermaidDiagram(
 ) {
     val nodeWidth = 180.dp
     val memberHeight = 20.dp
-    val headerHeight = 32.dp
+    val headerHeight = 48.dp
     val padding = 8.dp
 
     val nodeRight = (layout.nodes.values.maxOfOrNull { it.x } ?: 0f) + 204f
     val nodeBottom = (layout.nodes.values.maxOfOrNull { it.y } ?: 0f) + 120f
     val width = nodeRight.dp
     val height = nodeBottom.dp
+
+    val nodeHeights = classDefinitions.associate { cls ->
+        cls.id to (headerHeight + memberHeight * cls.members.size + padding * 2)
+    }
 
     Box(
         modifier = modifier.width(width).height(height),
@@ -742,7 +746,7 @@ private fun ClassDiagramMermaidDiagram(
                 val from = layout.nodes[edge.from] ?: return@forEach
                 val to = layout.nodes[edge.to] ?: return@forEach
                 val startX = from.x.dp.toPx() + nodeWidth.toPx() / 2f
-                val startY = from.y.dp.toPx() + 44f
+                val startY = from.y.dp.toPx() + (nodeHeights[edge.from] ?: headerHeight + padding * 2).toPx()
                 val endX = to.x.dp.toPx() + nodeWidth.toPx() / 2f
                 val endY = to.y.dp.toPx()
                 val pathEffect = if (edge.style == MermaidEdgeStyle.Dotted) {
@@ -754,7 +758,8 @@ private fun ClassDiagramMermaidDiagram(
                     color = colors.edgeColor,
                     start = Offset(startX, startY),
                     end = Offset(endX, endY),
-                    strokeWidth = 2f,
+                    strokeWidth = 2.dp.toPx(),
+                    cap = StrokeCap.Round,
                     pathEffect = pathEffect,
                 )
             }
