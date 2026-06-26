@@ -81,6 +81,11 @@ internal object GrammarTokenizer {
                 // Fixed nested grammar (Prism `inside`).
                 rule.inside != null && tokenText.isNotEmpty() ->
                     tokenize(tokenText, rule.inside!!)
+                // Pre-tokenized embedding: the hook returns tokens directly (e.g. when the
+                // embedded language must run through the full highlighter incl. lexer fallback).
+                // Highest precedence so a hook that wants total control wins.
+                rule.embeddedTokens != null && tokenText.isNotEmpty() ->
+                    rule.embeddedTokens!!.invoke(tokenText) ?: emptyList()
                 // Dynamic embedding: resolve a grammar per-match and re-tokenize. Used for
                 // constructs where the embedded language varies (Markdown fenced code, HTML
                 // <style>/<script>), which a static `inside` can't express.

@@ -43,6 +43,11 @@ data class GrammarTokenValue(
  *   fenced-code rule inspects the `` ```kotlin `` info string to pick the Kotlin grammar, or an
  *   HTML `<style>`/`<script>` rule picks css/js. This is the engine feature that lets grammar
  *   replace the hand-written embed dispatch in HtmlLexer/MarkdownLexer.
+ * @property embeddedTokens the most general embedding hook: returns a pre-tokenized token list
+ *   for the matched text directly, bypassing recursive re-tokenization. Used when the embedded
+ *   language has no registered [Grammar] and must run through the full
+ *   [xyz.junerver.compose.palette.code.PaletteCodeHighlighter] (which falls back to a lexer) —
+ *   e.g. Markdown fenced code whose info string is `kotlin`, a lexer-backed language.
  */
 data class GrammarToken(
     val pattern: Regex,
@@ -51,6 +56,7 @@ data class GrammarToken(
     val alias: List<String> = emptyList(),
     val inside: Grammar? = null,
     val languageResolver: ((matchText: String) -> Grammar?)? = null,
+    val embeddedTokens: ((matchText: String) -> List<GrammarTokenValue>?)? = null,
 )
 
 /**

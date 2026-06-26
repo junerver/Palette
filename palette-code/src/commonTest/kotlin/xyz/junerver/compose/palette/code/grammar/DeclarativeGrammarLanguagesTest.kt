@@ -4,6 +4,7 @@ import xyz.junerver.compose.palette.code.grammar.languages.CssGrammar
 import xyz.junerver.compose.palette.code.grammar.languages.HtmlGrammar
 import xyz.junerver.compose.palette.code.grammar.languages.IniGrammar
 import xyz.junerver.compose.palette.code.grammar.languages.KotlinLikeGrammar
+import xyz.junerver.compose.palette.code.grammar.languages.MarkdownGrammar
 import xyz.junerver.compose.palette.code.grammar.languages.SqlGrammar
 import xyz.junerver.compose.palette.code.grammar.languages.TomlGrammar
 import kotlin.test.Test
@@ -129,6 +130,40 @@ class DeclarativeGrammarLanguagesTest {
         assertTrue(tokens.any { it.text == "42" && it.type.name == "number" })
         // `x` is not a keyword/builtin/capitalised-type in this grammar → plain text.
         assertTrue(tokens.any { it.text.contains("x") && it.type.name == "plain" })
+    }
+
+    // ── Markdown ──────────────────────────────────────────────────────────
+
+    @Test
+    fun markdownGrammar_classifiesHeadingAndListMarkers() {
+        val tokens = GrammarTokenizer.tokenize("## Title\n- item", MarkdownGrammar)
+        assertTrue(tokens.any { it.text == "##" && it.type.name == "keyword" })
+        assertTrue(tokens.any { it.text == "-" && it.type.name == "operator" })
+    }
+
+    @Test
+    fun markdownGrammar_classifiesTaskCheckboxAndInlineCode() {
+        val tokens = GrammarTokenizer.tokenize("- [x] done `code`", MarkdownGrammar)
+        assertTrue(tokens.any { it.text == "[x]" && it.type.name == "annotation" })
+        assertTrue(tokens.any { it.text == "`code`" && it.type.name == "string" })
+    }
+
+    @Test
+    fun markdownGrammar_classifiesLinkTextAndUrl() {
+        val tokens = GrammarTokenizer.tokenize("[docs](https://example.com/docs)", MarkdownGrammar)
+        assertTrue(tokens.any { it.text == "docs" && it.type.name == "type" })
+        assertTrue(tokens.any { it.text == "https://example.com/docs" && it.type.name == "string" })
+    }
+
+    @Test
+    fun markdownGrammar_embedsFencedCodeBodyAndClassifiesInfoString() {
+        // fenced body `kotlin` runs through the full highlighter (lexer fallback), so `val`
+        // becomes a keyword; the fence delimiter and info string classify as annotation/type.
+        val src = "```kotlin\nval component = \"PMarkdownViewer\"\n```"
+        val tokens = GrammarTokenizer.tokenize(src, MarkdownGrammar)
+        assertTrue(tokens.any { it.text == "```" && it.type.name == "annotation" })
+        assertTrue(tokens.any { it.text == "kotlin" && it.type.name == "type" })
+        assertTrue(tokens.any { it.text == "val" && it.type.name == "keyword" })
     }
 
     // ── SQL ───────────────────────────────────────────────────────────────

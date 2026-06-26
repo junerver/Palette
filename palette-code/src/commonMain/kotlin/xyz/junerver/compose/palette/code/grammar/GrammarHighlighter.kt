@@ -86,4 +86,12 @@ internal object GrammarTokenTypeMapping {
     )
 
     fun toCodeTokenType(type: TokenType): CodeTokenType = map[type.name] ?: CodeTokenType.Plain
+
+    /** Reverse lookup: best Prism-style type name for a [CodeTokenType]. Used when a lexer's
+     *  output is fed back into the grammar engine (e.g. Markdown fenced-code embedding via
+     *  [PaletteCodeHighlighter], which may resolve to a lexer-backed language). */
+    private val reverse: Map<CodeTokenType, String> =
+        map.entries.associate { (name, codeType) -> codeType to name }
+
+    fun toTokenTypeName(codeType: CodeTokenType): String = reverse[codeType] ?: "plain"
 }

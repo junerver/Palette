@@ -134,6 +134,31 @@ class GrammarTokenizerTest {
         assertTrue(tokens.any { it.text == "abc" && it.type == TokenType("keyword") })
     }
 
+    @Test
+    fun embeddedTokensHookProvidesPreTokenizedMatch() {
+        // The most general embedding hook: returns a pre-tokenized token list for the matched
+        // text, bypassing recursive re-tokenization. Used when the embedded language must run
+        // through the full highlighter (e.g. a lexer-backed language). Here a fake "raw" rule
+        // emits two fixed tokens for whatever it matches.
+        val grammar = grammarOf(
+            "raw" to GrammarToken(
+                pattern = Regex("RAW[^R]*RAW"),
+                embeddedTokens = { match ->
+                    listOf(
+                        GrammarTokenValue(TokenType("keyword"), match.substring(0, 3)),
+                        GrammarTokenValue(TokenType("string"), match.substring(3, match.length - 3)),
+                        GrammarTokenValue(TokenType("keyword"), match.substring(match.length - 3)),
+                    )
+                },
+            ),
+        )
+        val tokens = GrammarTokenizer.tokenize("RAW body RAW", grammar)
+        // No raw-typed wrapper token; the hook's tokens replace the whole match.
+        assertTrue(tokens.none { it.type == TokenType("raw") })
+        assertTrue(tokens.any { it.text == "RAW" && it.type == TokenType("keyword") })
+        assertTrue(tokens.any { it.text == " body " && it.type == TokenType("string") })
+    }
+
     private fun grammarOf(vararg pairs: Pair<String, GrammarToken>) = Grammar(pairs.toMap())
 
     private fun token(pattern: Regex) = GrammarToken(pattern = pattern)

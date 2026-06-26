@@ -122,6 +122,8 @@ palette-code 已覆盖 17 种语言（Kotlin/Java/JS/TS/JSON/CSS/Python/HTML/XML
 | 2026-06-27 | 第二期：动态语言嵌入引擎能力 | GrammarToken 新增 `languageResolver` 回调 + GrammarRegistry.grammarOrNull；tokenizer 命中后按回调返回的 grammar 重新分词，解锁 HTML/Markdown 的动态嵌入（替代 lexer 的 embeddedHighlighter 回调）|
 | 2026-06-27 | 第二期：HTML/XML/SVG grammar 迁移 + KotlinLike(JS) | HtmlGrammar（tag via inside、style→css/script→js 经 languageResolver 动态嵌入）；KotlinLikeGrammar 作为 javascript/js 注册供嵌入；零回归 |
 | 2026-06-27 | 第二期：SQL grammar 迁移 | 声明式 SqlGrammar 替代 SqlLexer；keyword/type 大小写不敏感、function 识别（关键字优先于 function，OVER 保持 keyword）、$tag$…$tag$ 用反向引用 `\1` 处理跨行 dollar-quote、`/* */`/`--`/反引号各归其类，零回归 |
+| 2026-06-27 | 第二期：embeddedTokens 引擎能力 | GrammarToken 新增 `embeddedTokens` 回调——返回预分词 token 列表，绕过递归分词；用于嵌入语言需走完整 highlighter（含 lexer fallback）的场景 |
+| 2026-06-27 | 第二期：Markdown grammar 迁移 | 声明式 MarkdownGrammar 替代 MarkdownLexer；heading/list/task/inline-code/link 各归其类；fenced-code 经 `embeddedTokens` 委托 PaletteCodeHighlighter（grammar 优先 + lexer 兜底），支持嵌入 lexer-backed 语言如 kotlin，零回归 |
 
 ## 待办
 
@@ -130,11 +132,11 @@ palette-code 已覆盖 17 种语言（Kotlin/Java/JS/TS/JSON/CSS/Python/HTML/XML
   - [x] 字体样式维度（Bold/Italic/Important 渲染）✅
   - [x] TOML/INI/properties 迁移（最简单，无嵌入）✅
   - [x] CSS 迁移 ✅
-  - [x] 动态语言嵌入引擎能力（languageResolver）✅
+  - [x] 动态语言嵌入引擎能力（languageResolver + embeddedTokens）✅
   - [x] HTML/XML/SVG 迁移（含 style/script 嵌入，验证 `inside` + 动态嵌入）✅
   - [x] KotlinLike(JS 子集) grammar（供 HTML 嵌入）✅
   - [x] SQL 迁移（dollar-quote 反向引用、关键字优先于函数）✅
-  - [ ] Markdown grammar 接入：动态嵌入能力已具备，但 fenced-code 嵌入需调度**完整 highlighter**（含 lexer fallback，如 kotlin 仍在 lexer），languageResolver 仅返回 Grammar，暂阻塞
+  - [x] Markdown 迁移（fenced-code 经 embeddedTokens 嵌入，支持 lexer-backed 语言）✅
   - [ ] Python 迁移：f-string 精确分词（`f"Hello, "`+`{`+`name`+`}`+`"`）+ 三引号跨行，lexer 有专门状态机，纯 grammar 风险高，暂缓
   - [ ] KotlinLike 完整迁移（kotlin/java/typescript，需覆盖字符串模板状态 + 三引号字符串）
   - [ ] YAML 迁移（block scalar 状态机，需 grammar 引擎支持跨行状态或保留 lexer）
