@@ -1,12 +1,14 @@
 package xyz.junerver.compose.palette.code.grammar
 
+import xyz.junerver.compose.palette.code.grammar.languages.IniGrammar
 import xyz.junerver.compose.palette.code.grammar.languages.JsonGrammar
+import xyz.junerver.compose.palette.code.grammar.languages.TomlGrammar
 // MarkdownGrammar is intentionally not registered yet (see comment below).
 
 /**
  * Registry of declarative grammars, keyed by lowercased language id (incl. aliases).
  *
- Used by [xyz.junerver.compose.palette.code.PaletteCodeHighlighter] as a first-choice
+ * Used by [xyz.junerver.compose.palette.code.PaletteCodeHighlighter] as a first-choice
  * highlighter: when a language has a registered grammar, a [GrammarHighlighter] wraps it;
  * otherwise the lookup falls back to the hand-written lexer path. This lets grammars and
  * lexers coexist while languages migrate incrementally.
@@ -14,6 +16,9 @@ import xyz.junerver.compose.palette.code.grammar.languages.JsonGrammar
 internal object GrammarRegistry {
     private val grammars: Map<String, Grammar> = buildMap {
         putAll(aliases("json", listOf("json"), JsonGrammar))
+        putAll(aliases("toml", listOf("toml"), TomlGrammar))
+        // INI + .properties share one grammar (same lexer historically served both).
+        putAll(aliases("ini", listOf("ini", "properties", "props", "conf"), IniGrammar))
         // Markdown grammar exists and the engine handles it, but it stays on the hand-written
         // MarkdownLexer for now until its token classification is aligned with the existing
         // tests (Phase 2 lexer-migration task). Add it back once the classification matches.

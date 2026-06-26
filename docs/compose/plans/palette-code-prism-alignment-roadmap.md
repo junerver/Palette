@@ -117,16 +117,19 @@ palette-code 已覆盖 17 种语言（Kotlin/Java/JS/TS/JSON/CSS/Python/HTML/XML
 | 2026-06-26 | 第一期 1.4 GrammarRegistry | highlight() grammar 优先 fallback lexer；GrammarHighlighter 桥接行式接口；GrammarTokenTypeMapping |
 | 2026-06-26 | 第一期 1.5 JSON 样板 grammar | 声明式 JSON grammar，分类与原 JsonLexer 一致，零回归验证引擎 |
 | 2026-06-26 | 第二期：字体样式维度 | Bold/Italic/Important token 在渲染层产生 fontWeight/fontStyle，对齐 Prism 主题表现 |
+| 2026-06-26 | 第二期：TOML grammar 迁移 | 声明式 TomGrammar 替代 TomlLexer；表名→type、键→keyword、多行字符串 `(?s)` 跨行、`inside` 递归分类括号与名字，零回归 |
+| 2026-06-26 | 第二期：INI/properties grammar 迁移 | 声明式 IniGrammar 替代 IniPropertiesLexer；section→type、键→keyword、`${VAR}`→annotation、`=`/`:`/空格分隔符→operator，零回归 |
 
 ## 待办
 
 - [x] 第一期：grammar 引擎核心（模型/tokenize/token 扩展/registry/JSON 样板）✅
 - [ ] 第二期：高频语言迁移 + 字体样式维度
   - [x] 字体样式维度（Bold/Italic/Important 渲染）✅
+  - [x] TOML/INI/properties 迁移（最简单，无嵌入）✅
   - [ ] Markdown grammar 接入：需先给 grammar 引擎增加"动态语言嵌入"能力（fenced code 递归调用其他语言高亮器），这是 lexer 的核心特性，grammar 的 `inside` 是固定嵌套无法动态调度
-  - [ ] YAML/TOML/INI 迁移（最简单，无嵌入）
   - [ ] CSS/HTML/XML 迁移（验证 `inside` 嵌套）
   - [ ] Python/SQL 迁移
   - [ ] KotlinLike（Kotlin/Java/JS/TS）迁移
+  - [ ] YAML 迁移（block scalar 状态机，需 grammar 引擎支持跨行状态或保留 lexer）
 - [ ] 第三期：扩展语言覆盖（C/C++/C#/Go/Rust/PHP/Ruby/Swift/Scala/SCSS/JSX）
 - [ ] 第四期：高级能力（行号增强/语言检测/增量/hook）
