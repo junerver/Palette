@@ -204,8 +204,8 @@ object MermaidLayoutEngine {
                 node = node,
                 rank = rank,
                 order = order,
-                x = if (diagram.direction == MermaidDirection.LeftRight) rank.toFloat() * 200f else order.toFloat() * 200f,
-                y = if (diagram.direction == MermaidDirection.LeftRight) order.toFloat() * 120f else rank.toFloat() * 120f,
+                x = if (diagram.direction == MermaidDirection.LeftRight) rank.toFloat() * 240f else order.toFloat() * 240f,
+                y = if (diagram.direction == MermaidDirection.LeftRight) order.toFloat() * 180f else rank.toFloat() * 180f,
             )
         }
 
@@ -633,4 +633,121 @@ object MermaidLayoutEngine {
     private const val MindmapLeafGap = 16f
     private const val MindmapSubtreeGap = 24f
     private const val MindmapColumnWidth = 180f
+}
+
+/**
+ * Anchors for one class-diagram edge: the start point (child's top edge), the end point
+ * (parent's bottom edge, already offset by fan-out when several children share a parent),
+ * and the UML marker direction vectors at each end.
+ *
+ * Coordinate convention matches the layout engine + renderer: node (x, y) is the TOP-LEFT
+ * corner, x grows rightward, y grows downward. `u*` is the unit vector *along* the marker
+ * (pointing from the tip into the marker body); `p*` is the perpendicular (across the base).
+ * `drawClassMarker` consumes them as `back = tip - u*size`, `left/right = base ± p*half`.
+ */
+data class ClassEdgeAnchors(
+    val startX: Float,
+    val startY: Float,
+    val endX: Float,
+    val endY: Float,
+    /** Marker direction at the child-side anchor (unused for the standard relations). */
+    val startUx: Float,
+    val startUy: Float,
+    val startPx: Float,
+    val startPy: Float,
+    /** Marker direction at the parent-side anchor — where every UML marker lives. */
+    val endUx: Float,
+    val endUy: Float,
+    val endPx: Float,
+    val endPy: Float,
+)
+
+/**
+ * Which end of the edge carries the UML marker, per the mermaid/UML convention.
+ *
+ *  - `Parent` (the `from`/whole node, on top): inheritance triangle, realization triangle,
+ *    composition diamond, aggregation diamond. The marker points DOWN toward the child.
+ *  - `Child` (the `to` node, on the bottom): association arrow, dependency arrow. The arrow
+ *    head sits on the target and points DOWN into it.
+ */
+enum class ClassMarkerSide { Parent, Child }
+
+/**
+ * Pure edge-anchor geometry for class diagrams. Extracted from the renderer so the UML
+ * contract is unit-testable instead of being duplicated inline.
+ *
+ * Geometry rules (see mermaid.live):
+ *  - `from` (parent / whole) is always ABOVE `to` (child / part) in the TD layout, because
+ *    `calculateRanks` assigns the lower rank to `from`. The connector goes child-top → parent-bottom.
+ *  - Both anchors use the SAME downward body vector `u=(0,-1)` so `drawClassMarker`'s
+ *    `back = tip - u*size` lands below the tip (in the gap, or inside the child for arrows).
+ *  - Fan-out: when `fanCount` siblings attach to one parent, their parent anchors spread evenly
+ *    across `[0, nodeWidth]` at offsets `(fanIndex+1)/(fanCount+1)`, so two siblings anchor at
+ *    1/3 and 2/3 instead of both stacking on the center. The child-side anchor stays centered.
+ */
+object ClassEdgeGeometry {
+
+    /** Which end carries the marker for a given relation type. */
+    fun markerSide(rel: MermaidClassRelationType): ClassMarkerSide = when (rel) {
+        MermaidClassRelationType.Inheritance,
+        MermaidClassRelationType.Realization,
+        MermaidClassRelationType.Composition,
+        MermaidClassRelationType.Aggregation,
+        -> ClassMarkerSide.Parent
+
+        // Association `A --> B` and dependency `A ..> B`: arrowhead on the target (child).
+        MermaidClassRelationType.Association,
+        MermaidClassRelationType.Dependency,
+        -> ClassMarkerSide.Child
+
+        // Plain links carry no marker.
+        MermaidClassRelationType.Link,
+        MermaidClassRelationType.DependencyLink,
+        -> ClassMarkerSide.Parent
+    }
+
+    fun anchorsFor(
+        child: PositionedMermaidNode,
+        parent: PositionedMermaidNode,
+        childWidth: Float,
+        childHeight: Float,
+        parentHeight: Float,
+        fanIndex: Int,
+        fanCount: Int,
+        nodeWidth: Float,
+        relationType: MermaidClassRelationType,
+    ): ClassEdgeAnchors {
+        // Start anchor: child's TOP edge, horizontally centered on the child.
+        val startX = child.x + childWidth / 2f
+        val startY = child.y
+
+        // End anchor: parent's BOTTOM edge, fanned out across the parent's width when siblings exist.
+        val fanFraction = if (fanCount <= 1) 0.5f else (fanIndex + 1f) / (fanCount + 1f)
+        val endX = parent.x + nodeWidth * fanFraction
+        val endY = parent.y + parentHeight
+
+        // Perpendicular vector across the marker base: horizontal, so p=(1,0).
+        val px = 1f
+        val py = 0f
+
+        // Body vector always points DOWNWARD (toward the child / into the gap):
+        // `back = tip - (0,-1)*size = tip + (0,size)` lands below the tip.
+        val markerUx = 0f
+        val markerUy = -1f
+
+        return when (markerSide(relationType)) {
+            ClassMarkerSide.Parent -> ClassEdgeAnchors(
+                startX = startX, startY = startY,
+                endX = endX, endY = endY,
+                startUx = 0f, startUy = 0f, startPx = px, startPy = py,
+                endUx = markerUx, endUy = markerUy, endPx = px, endPy = py,
+            )
+            ClassMarkerSide.Child -> ClassEdgeAnchors(
+                startX = startX, startY = startY,
+                endX = endX, endY = endY,
+                startUx = markerUx, startUy = markerUy, startPx = px, startPy = py,
+                endUx = 0f, endUy = 0f, endPx = px, endPy = py,
+            )
+        }
+    }
 }

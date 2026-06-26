@@ -38,11 +38,21 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import kotlinx.datetime.DateTimeUnit
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.daysUntil
+import kotlinx.datetime.minus
+import kotlinx.datetime.plus
+import kotlinx.datetime.todayIn
 import xyz.junerver.compose.hooks.useCreation
 import xyz.junerver.compose.palette.core.theme.PaletteTheme
 import xyz.junerver.compose.palette.mermaid.ErEntity
 import xyz.junerver.compose.palette.mermaid.ErRelationship
 import xyz.junerver.compose.palette.mermaid.ErRelationshipKind
+import xyz.junerver.compose.palette.mermaid.ClassEdgeAnchors
+import xyz.junerver.compose.palette.mermaid.ClassEdgeGeometry
+import xyz.junerver.compose.palette.mermaid.ClassMarkerSide
 import xyz.junerver.compose.palette.mermaid.GanttConfig
 import xyz.junerver.compose.palette.mermaid.GanttSection
 import xyz.junerver.compose.palette.mermaid.GanttTask
@@ -58,6 +68,7 @@ import xyz.junerver.compose.palette.mermaid.MermaidClassVisibility
 import xyz.junerver.compose.palette.mermaid.MermaidDirection
 import xyz.junerver.compose.palette.mermaid.MermaidDiagramType
 import xyz.junerver.compose.palette.mermaid.MermaidEdgeArrow
+import xyz.junerver.compose.palette.mermaid.MermaidEdge
 import xyz.junerver.compose.palette.mermaid.MermaidEdgeStyle
 import xyz.junerver.compose.palette.mermaid.MermaidLayout
 import xyz.junerver.compose.palette.mermaid.MermaidLayoutEngine
@@ -548,81 +559,62 @@ private fun FlowchartMermaidDiagram(
                     } else {
                         null
                     }
-                val offset = layout.stateEdgeOffsets[index] ?: 0f
-                // Edges that share their endpoint pair (or double back) bow sideways by
-                // `offset` so they separate instead of overlapping into a single line.
-                if (offset != 0f) {
-                    val s = endpoints.start
-                    val e = endpoints.end
-                    val perpX = -(e.y - s.y)
-                    val perpY = e.x - s.x
-                    val perpLen = sqrt(perpX * perpX + perpY * perpY).coerceAtLeast(1f)
-                    val bow = offset.dp.toPx()
-                    val ctrl = Offset(
-                        (s.x + e.x) / 2f + perpX / perpLen * bow,
-                        (s.y + e.y) / 2f + perpY / perpLen * bow,
-                    )
-                    val path = Path().apply {
-                        moveTo(s.x, s.y)
-                        quadraticTo(ctrl.x, ctrl.y, e.x, e.y)
-                    }
-                    drawPath(path = path, color = edgeColor, style = Stroke(width = edgeStrokeWidth, cap = StrokeCap.Round, pathEffect = pathEffect))
-                    // Arrowhead follows the curve's final tangent (control point -> end).
-                    drawMermaidEdgeEndMarker(
-                        color = edgeColor,
-                        start = ctrl,
-                        end = e,
-                        arrow = edge.arrow,
-                        strokeWidth = edgeStrokeWidth,
-                    )
-                    drawMermaidEdgeEndMarker(
-                        color = edgeColor,
-                        start = ctrl,
-                        end = s,
-                        arrow = edge.startArrow,
-                        strokeWidth = edgeStrokeWidth,
-                    )
-                    if (edge.arrow == MermaidEdgeArrow.Bidirectional) {
-                        drawMermaidEdgeEndMarker(
-                            color = edgeColor,
-                            start = ctrl,
-                            end = s,
-                            arrow = MermaidEdgeArrow.Forward,
-                            strokeWidth = edgeStrokeWidth,
-                        )
-                    }
+                // All flowchart edges render as cubic Bézier curves — same style dagre and
+                // mermaid.live use, and the same style our state diagram uses. Control points
+                // sit on the edge midpoint of the primary axis (so the curve is a gentle S),
+                // with the perpendicular axis held at each endpoint's coordinate.
+                //
+                // `offset` (stateEdgeOffsets) fans out edges that share an endpoint pair:
+                // with offset 0 the curve is a soft S; non-zero offsets bow forward/backward
+                // links sideways so they no longer overlap into a single line.
+                val s = endpoints.start
+                val e = endpoints.end
+                val bow = (layout.stateEdgeOffsets[index] ?: 0f).dp.toPx()
+                val isHorizontalFlow = layout.direction == MermaidDirection.LeftRight || layout.direction == MermaidDirection.RightLeft
+                val ctrl1: Offset
+                val ctrl2: Offset
+                if (isHorizontalFlow) {
+                    // Primary axis is x: pull both control points to the horizontal midpoint,
+                    // keep each end's y (plus a perpendicular bow on x).
+                    val midX = (s.x + e.x) / 2f
+                    ctrl1 = Offset(midX + bow, s.y)
+                    ctrl2 = Offset(midX + bow, e.y)
                 } else {
-                    drawLine(
-                        color = edgeColor,
-                        start = endpoints.start,
-                        end = endpoints.end,
-                        strokeWidth = edgeStrokeWidth,
-                        cap = StrokeCap.Round,
-                        pathEffect = pathEffect,
-                    )
+                    // Primary axis is y (TD/BT): pull both control points to the vertical
+                    // midpoint, keep each end's x (plus a perpendicular bow on y).
+                    val midY = (s.y + e.y) / 2f
+                    ctrl1 = Offset(s.x, midY + bow)
+                    ctrl2 = Offset(e.x, midY + bow)
+                }
+                val path = Path().apply {
+                    moveTo(s.x, s.y)
+                    cubicTo(ctrl1.x, ctrl1.y, ctrl2.x, ctrl2.y, e.x, e.y)
+                }
+                drawPath(path = path, color = edgeColor, style = Stroke(width = edgeStrokeWidth, cap = StrokeCap.Round, pathEffect = pathEffect))
+                // Arrowheads follow the curve's tangents so they stay tangent to the arc
+                // (ctrl2 -> end for the main arrow, ctrl1 -> start for the source arrow).
+                drawMermaidEdgeEndMarker(
+                    color = edgeColor,
+                    start = ctrl2,
+                    end = e,
+                    arrow = edge.arrow,
+                    strokeWidth = edgeStrokeWidth,
+                )
+                drawMermaidEdgeEndMarker(
+                    color = edgeColor,
+                    start = ctrl1,
+                    end = s,
+                    arrow = edge.startArrow,
+                    strokeWidth = edgeStrokeWidth,
+                )
+                if (edge.arrow == MermaidEdgeArrow.Bidirectional) {
                     drawMermaidEdgeEndMarker(
                         color = edgeColor,
-                        start = endpoints.start,
-                        end = endpoints.end,
-                        arrow = edge.arrow,
+                        start = ctrl1,
+                        end = s,
+                        arrow = MermaidEdgeArrow.Forward,
                         strokeWidth = edgeStrokeWidth,
                     )
-                    drawMermaidEdgeEndMarker(
-                        color = edgeColor,
-                        start = endpoints.end,
-                        end = endpoints.start,
-                        arrow = edge.startArrow,
-                        strokeWidth = edgeStrokeWidth,
-                    )
-                    if (edge.arrow == MermaidEdgeArrow.Bidirectional) {
-                        drawMermaidEdgeEndMarker(
-                            color = edgeColor,
-                            start = endpoints.end,
-                            end = endpoints.start,
-                            arrow = MermaidEdgeArrow.Forward,
-                            strokeWidth = edgeStrokeWidth,
-                        )
-                    }
                 }
             }
         }
@@ -949,75 +941,102 @@ private fun ClassDiagramMermaidDiagram(
     val headerHeight = 48.dp
     val padding = 8.dp
 
-    val nodeRight = (layout.nodes.values.maxOfOrNull { it.x } ?: 0f) + 204f
-    val nodeBottom = (layout.nodes.values.maxOfOrNull { it.y } ?: 0f) + 120f
-    val width = nodeRight.dp
-    val height = nodeBottom.dp
+    val defaultNodeHeight = headerHeight + padding * 2
 
     val nodeHeights = classDefinitions.associate { cls ->
         cls.id to (headerHeight + memberHeight * cls.members.size + padding * 2)
+    }
+    fun heightOf(id: String): Dp = nodeHeights[id] ?: defaultNodeHeight
+
+    val nodeRight = (layout.nodes.values.maxOfOrNull { it.x } ?: 0f) + nodeWidth.value + 24f
+    val nodeBottom = layout.nodes.entries.maxOfOrNull { (_, n) -> n.y + heightOf(n.node.id).value + 24f } ?: 48f
+    val width = nodeRight.dp
+    val height = nodeBottom.dp
+
+    // Fan-out: when several children inherit from / associate to one parent, their parent-side
+    // anchors must spread across the parent's bottom edge instead of stacking on the center.
+    // `edge.from` is the parent (mermaid `Parent <|-- Child`). Group siblings, then assign each
+    // edge a (index, count) pair the geometry helper fans out with.
+    val parentFanGroups: Map<String, List<Int>> = layout.edges.withIndex()
+        .groupBy { it.value.from }
+        .mapValues { (_, list) -> list.map { it.index } }
+    val edgeFanIndex = HashMap<Int, Int>()
+    val edgeFanCount = HashMap<Int, Int>()
+    parentFanGroups.values.forEach { indices ->
+        indices.forEachIndexed { pos, edgeIdx ->
+            edgeFanIndex[edgeIdx] = pos
+            edgeFanCount[edgeIdx] = indices.size
+        }
+    }
+
+    /**
+     * Edge anchors in pixels for a class-diagram edge: child's top-center → parent's bottom
+     * edge (already fanned out), plus the marker direction vectors. Delegates to
+     * [ClassEdgeGeometry] so the UML contract is unit-tested, not duplicated inline.
+     */
+    fun anchorsForEdge(index: Int, edge: MermaidEdge, relType: MermaidClassRelationType): ClassEdgeAnchors? {
+        val parent = layout.nodes[edge.from] ?: return null
+        val child = layout.nodes[edge.to] ?: return null
+        return ClassEdgeGeometry.anchorsFor(
+            child = child,
+            parent = parent,
+            childWidth = nodeWidth.value,
+            childHeight = heightOf(edge.to).value,
+            parentHeight = heightOf(edge.from).value,
+            fanIndex = edgeFanIndex[index] ?: 0,
+            fanCount = edgeFanCount[index] ?: 1,
+            nodeWidth = nodeWidth.value,
+            relationType = relType,
+        )
     }
 
     Box(
         modifier = modifier.width(width).height(height),
     ) {
+        // Pass 1: draw Bezier curves (behind everything).
+        // Edge direction: child top → parent bottom (child→parent). In mermaid `A <|-- B`,
+        // from=A (parent), to=B (child); we draw from the child's top edge up to the parent's
+        // bottom edge, with the parent anchor fanned out across siblings.
         Canvas(modifier = Modifier.matchParentSize()) {
             val strokeWidth = 2.dp.toPx()
+            val marker = 10.dp.toPx()
             layout.edges.forEachIndexed { index, edge ->
-                val from = layout.nodes[edge.from] ?: return@forEachIndexed
-                val to = layout.nodes[edge.to] ?: return@forEachIndexed
-                val startX = from.x.dp.toPx() + nodeWidth.toPx() / 2f
-                val startY = from.y.dp.toPx() + (nodeHeights[edge.from] ?: headerHeight + padding * 2).toPx()
-                val endX = to.x.dp.toPx() + nodeWidth.toPx() / 2f
-                val endY = to.y.dp.toPx()
+                val relType = layout.classRelationTypes[index] ?: return@forEachIndexed
+                val anchors = anchorsForEdge(index, edge, relType) ?: return@forEachIndexed
                 val pathEffect = if (edge.style == MermaidEdgeStyle.Dotted) {
                     PathEffect.dashPathEffect(floatArrayOf(6f, 6f))
                 } else {
                     null
                 }
-                // Unit vector along the edge (from -> to) and its perpendicular.
-                val dx = endX - startX; val dy = endY - startY
-                val len = sqrt(dx * dx + dy * dy)
-                if (len <= 0f) return@forEachIndexed
-                val ux = dx / len; val uy = dy / len
-                val px = -uy; val py = ux
 
-                val relType = layout.classRelationTypes[index]
-                // How far the line should stop short of the node edge to make room for the marker.
-                val marker = 10.dp.toPx()
-                val lineEnd = when (relType) {
-                    MermaidClassRelationType.Inheritance, MermaidClassRelationType.Realization -> endY - marker * 1.4f
-                    else -> endY
+                // Start = child top-center (px); end = parent bottom edge, fanned out (px).
+                val startX = anchors.startX.dp.toPx()
+                val startY = anchors.startY.dp.toPx()
+                val endX = anchors.endX.dp.toPx()
+                val endY = anchors.endY.dp.toPx()
+
+                // Pull the curve back at the marker end so it meets the marker base, not its tip.
+                // Marker shape length: diamonds are a touch longer than triangles/arrows.
+                val shorten = when (relType) {
+                    MermaidClassRelationType.Composition, MermaidClassRelationType.Aggregation -> 1.6f
+                    else -> 1.4f
                 }
-                drawLine(
+                val side = ClassEdgeGeometry.markerSide(relType)
+                // Marker body points down (u=(0,-1)); `tip - u*size` lands below — shorten toward child.
+                val drawEndY = if (side == ClassMarkerSide.Parent) endY - anchors.endUy * marker * shorten else endY
+                val drawStartY = if (side == ClassMarkerSide.Child) startY - anchors.startUy * marker * shorten else startY
+
+                // Cubic Bézier: vertical control points give a smooth S-curve between the two edges.
+                val shortMidY = (drawStartY + drawEndY) / 2f
+                val shortPath = Path().apply {
+                    moveTo(startX, drawStartY)
+                    cubicTo(startX, shortMidY, endX, shortMidY, endX, drawEndY)
+                }
+                drawPath(
+                    path = shortPath,
                     color = colors.edgeColor,
-                    start = Offset(startX, startY),
-                    end = Offset(endX, lineEnd),
-                    strokeWidth = strokeWidth,
-                    cap = StrokeCap.Round,
-                    pathEffect = pathEffect,
+                    style = Stroke(width = strokeWidth, cap = StrokeCap.Round, pathEffect = pathEffect),
                 )
-
-                // UML end markers, keyed by relationship type.
-                when (relType) {
-                    MermaidClassRelationType.Inheritance, MermaidClassRelationType.Realization -> {
-                        // Hollow triangle at the parent (to) end.
-                        drawClassMarker(colors.edgeColor, Offset(endX, endY), ux, uy, px, py, marker, filled = false, kind = ClassMarkerKind.Triangle)
-                    }
-                    MermaidClassRelationType.Composition -> {
-                        // Filled diamond at the whole (from) end.
-                        drawClassMarker(colors.edgeColor, Offset(startX, startY), -ux, -uy, px, py, marker, filled = true, kind = ClassMarkerKind.Diamond)
-                    }
-                    MermaidClassRelationType.Aggregation -> {
-                        // Hollow diamond at the whole (from) end.
-                        drawClassMarker(colors.edgeColor, Offset(startX, startY), -ux, -uy, px, py, marker, filled = false, kind = ClassMarkerKind.Diamond)
-                    }
-                    MermaidClassRelationType.Dependency, MermaidClassRelationType.Association -> {
-                        // Open V arrow at the to end.
-                        drawClassMarker(colors.edgeColor, Offset(endX, endY), ux, uy, px, py, marker, filled = false, kind = ClassMarkerKind.Arrow)
-                    }
-                    else -> Unit // Link / DependencyLink: plain line, no marker.
-                }
             }
         }
 
@@ -1095,6 +1114,58 @@ private fun ClassDiagramMermaidDiagram(
                                 .padding(horizontal = 8.dp),
                         )
                     }
+                }
+            }
+        }
+
+        // Pass 2: draw UML markers ON TOP of node boxes (so they're never hidden by backgrounds).
+        // The marker sits on whichever end [ClassEdgeGeometry.markerSide] picks, body pointing
+        // DOWN: inheritance/realization/composition/aggregation → parent's bottom edge;
+        // association/dependency → child's top edge.
+        Canvas(modifier = Modifier.matchParentSize()) {
+            layout.edges.forEachIndexed { index, edge ->
+                val relType = layout.classRelationTypes[index] ?: return@forEachIndexed
+                val anchors = anchorsForEdge(index, edge, relType) ?: return@forEachIndexed
+                val marker = 10.dp.toPx()
+                val side = ClassEdgeGeometry.markerSide(relType)
+
+                // tip + u/p vectors (anchors hold dp-valued floats; convert via .dp.toPx()).
+                val tipX: Float
+                val tipY: Float
+                val ux: Float
+                val uy: Float
+                val px: Float
+                val py: Float
+                if (side == ClassMarkerSide.Parent) {
+                    tipX = anchors.endX; tipY = anchors.endY
+                    ux = anchors.endUx; uy = anchors.endUy
+                    px = anchors.endPx; py = anchors.endPy
+                } else {
+                    tipX = anchors.startX; tipY = anchors.startY
+                    ux = anchors.startUx; uy = anchors.startUy
+                    px = anchors.startPx; py = anchors.startPy
+                }
+                val tipXpx = tipX.dp.toPx()
+                val tipYpx = tipY.dp.toPx()
+
+                when (relType) {
+                    MermaidClassRelationType.Inheritance, MermaidClassRelationType.Realization -> {
+                        // Hollow triangle, apex on the parent edge, base hanging down into the gap.
+                        drawClassMarker(colors.edgeColor, Offset(tipXpx, tipYpx), ux, uy, px, py, marker, filled = false, kind = ClassMarkerKind.Triangle)
+                    }
+                    MermaidClassRelationType.Composition -> {
+                        // Filled diamond at the whole (parent).
+                        drawClassMarker(colors.edgeColor, Offset(tipXpx, tipYpx), ux, uy, px, py, marker, filled = true, kind = ClassMarkerKind.Diamond)
+                    }
+                    MermaidClassRelationType.Aggregation -> {
+                        // Hollow diamond at the whole (parent).
+                        drawClassMarker(colors.edgeColor, Offset(tipXpx, tipYpx), ux, uy, px, py, marker, filled = false, kind = ClassMarkerKind.Diamond)
+                    }
+                    MermaidClassRelationType.Dependency, MermaidClassRelationType.Association -> {
+                        // Open V arrow at the target (child), pointing down into it.
+                        drawClassMarker(colors.edgeColor, Offset(tipXpx, tipYpx), ux, uy, px, py, marker, filled = false, kind = ClassMarkerKind.Arrow)
+                    }
+                    else -> Unit
                 }
             }
         }
@@ -1986,13 +2057,94 @@ private fun rememberSliceColors(): List<Color> {
 
 // ── Gantt chart rendering ─────────────────────────────────────────────
 
-/** A task resolved to a horizontal span (start/end as fractions of the timeline width). */
+/**
+ * A task resolved to a real date span on the global timeline. [start] and [end] are calendar
+ * dates; the renderer maps them to pixels via the timeline's day-offset and pixels-per-day.
+ */
 private data class PositionedGanttTask(
     val task: GanttTask,
-    val start: Float,
-    val end: Float,
-    val row: Int,
+    val start: LocalDate,
+    val end: LocalDate,
 )
+
+/** A vertical band of the timeline used to draw alternating-column shading behind bars. */
+private data class GanttTickColumn(
+    val date: LocalDate,
+    /** Pixel x (relative to timeline origin) where this column's left edge sits. */
+    val x: Float,
+    val width: Float,
+)
+
+/**
+ * Parse a mermaid gantt date token into a [LocalDate]. Mermaid's canonical `dateFormat
+ * YYYY-MM-DD` is ISO-8601, so `LocalDate.parse` handles it directly; non-ISO / unrecognised
+ * tokens fall back to null and the caller resolves them as durations or dependency offsets.
+ */
+private fun parseGanttDate(token: String?): LocalDate? {
+    if (token.isNullOrBlank()) return null
+    // `after` deps are resolved by the caller (they reference another task's end), not here.
+    if (token.equals("after", ignoreCase = true)) return null
+    return runCatching { LocalDate.parse(token.trim()) }.getOrNull()
+}
+
+/**
+ * Format a [LocalDate] for the time-axis label per mermaid's `axisFormat` (`strftime`-style
+ * placeholders). Supported tokens: `%Y` (4-digit year), `%m` (zero-padded month), `%d`
+ * (zero-padded day), `%b` (short English month name), `%B` (full English month name). An
+ * absent or unrecognised format falls back to ISO (`date.toString()`).
+ */
+private fun formatGanttAxisLabel(date: LocalDate, axisFormat: String?): String {
+    val fmt = axisFormat?.takeIf { it.isNotBlank() } ?: return date.toString()
+    if (!fmt.contains('%')) return date.toString()
+    val monthsShort = listOf("Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec")
+    val monthsLong = listOf(
+        "January", "February", "March", "April", "May", "June",
+        "July", "August", "September", "October", "November", "December",
+    )
+    val sb = StringBuilder()
+    var i = 0
+    while (i < fmt.length) {
+        val ch = fmt[i]
+        if (ch == '%' && i + 1 < fmt.length) {
+            when (fmt[i + 1]) {
+                'Y' -> sb.append(date.year)
+                'm' -> sb.append(date.monthNumber.toString().padStart(2, '0'))
+                'd' -> sb.append(date.dayOfMonth.toString().padStart(2, '0'))
+                'b' -> sb.append(monthsShort.getOrElse(date.monthNumber - 1) { date.monthNumber.toString() })
+                'B' -> sb.append(monthsLong.getOrElse(date.monthNumber - 1) { date.monthNumber.toString() })
+                else -> { sb.append('%').append(fmt[i + 1]) }
+            }
+            i += 2
+        } else {
+            sb.append(ch)
+            i += 1
+        }
+    }
+    return sb.toString()
+}
+
+/**
+ * Decide the axis tick step (in days) from the timeline's total span so labels stay legible
+ * without crowding. Short charts tick daily, week-scale charts weekly, long charts monthly.
+ */
+private fun ganttTickStepDays(totalDays: Int): Int = when {
+    totalDays <= 14 -> 1 // day-by-day
+    totalDays <= 90 -> 7 // weekly
+    totalDays <= 730 -> 30 // ~monthly
+    else -> 90 // quarterly
+}
+
+/** Pixels per day, scaled so wide timelines still fit a reasonable width. */
+private fun ganttPixelsPerDay(totalDays: Int): Float = when {
+    totalDays <= 14 -> 22f
+    totalDays <= 60 -> 11f
+    totalDays <= 365 -> 5f
+    else -> 2.5f
+}
+
+/** Index positioned tasks by identity for O(1) lookup during section rendering. */
+private fun positionedByTask(positioned: List<PositionedGanttTask>): Map<GanttTask, PositionedGanttTask> =
+    positioned.associateBy { it.task }
 
 @Composable
 private fun GanttDiagramMermaidDiagram(
@@ -2009,54 +2161,153 @@ private fun GanttDiagramMermaidDiagram(
         return
     }
 
-    // Resolve each task's span on a synthetic timeline (0..N "slots"), where durations map
-    // to width and `after` deps push the start to the dependency's end.
-    val taskEndOffsets = mutableMapOf<String, Float>()
+    // ── Pass 1: resolve each task to a real (start,end) date span ──────────────────
+    // Mermaid semantics: a task's start is its declared date, or the end of an `after`
+    // dependency; its end is start + duration (or a declared end date). Tasks with no date
+    // and no dep fall back to chaining after the previous task in their section, matching
+    // mermaid.live's implicit "next" behaviour.
+    val taskEndDate = mutableMapOf<String, LocalDate>()
     val positioned = mutableListOf<PositionedGanttTask>()
-    var cursor = 0f
-    var row = 0
-    val pixelsPerDay = 3f
-    val minTaskWidth = 24f
+    // A GLOBAL chain cursor: a task with no explicit date and no `after` dep chains after the
+    // previous task's end (even across section boundaries) — this is mermaid.live's actual
+    // semantics. The very first such task falls back to "today" (mermaid's default start date).
+    var chainCursor: LocalDate? = null
 
     sections.forEach { section ->
         section.tasks.forEach { task ->
-            val depEnd = task.dependsOn.mapNotNull { taskEndOffsets[it] }.maxOrNull() ?: 0f
-            val start = maxOf(cursor, depEnd)
-            val duration = task.durationDays?.toFloat() ?: 10f
-            val width = (duration * pixelsPerDay).coerceAtLeast(if (task.isMilestone) 4f else minTaskWidth)
-            val end = start + width
-            task.id?.let { taskEndOffsets[it] = end }
-            positioned.add(PositionedGanttTask(task = task, start = start, end = end, row = row))
-            cursor = end
-            row += 1
+            // Start: explicit date > `after` dep > global chain cursor > today.
+            val explicitStart = parseGanttDate(task.startToken)
+            val depEnd = task.dependsOn.mapNotNull { taskEndDate[it] }.maxOrNull()
+            val start: LocalDate = when {
+                explicitStart != null -> explicitStart
+                depEnd != null -> depEnd
+                else -> chainCursor ?: kotlin.time.Clock.System.todayIn(TimeZone.currentSystemDefault())
+            }
+            // End: declared end date > start + duration; milestones are zero-width (start==end).
+            val durationDays = task.durationDays
+            val explicitEnd = parseGanttDate(task.endToken?.takeIf { durationDays == null })
+            val end: LocalDate = when {
+                task.isMilestone -> start
+                explicitEnd != null -> explicitEnd
+                durationDays != null -> start.plus(durationDays.toLong(), DateTimeUnit.DAY)
+                else -> start.plus(1, DateTimeUnit.DAY)
+            }
+            // Ensure end >= start so degenerate tokens never produce negative-width bars.
+            val safeEnd = if (end >= start) end else start.plus(1, DateTimeUnit.DAY)
+            task.id?.let { taskEndDate[it] = safeEnd }
+            positioned.add(PositionedGanttTask(task = task, start = start, end = safeEnd))
+            chainCursor = safeEnd
         }
-        // Section break: a blank row separates sections visually.
-        row += 1
     }
 
-    val timelineWidth = (positioned.maxOfOrNull { it.end } ?: 0f) + pixelsPerDay * 5
+    // ── Timeline bounds & scale ────────────────────────────────────────────────────
+    val timelineMin = positioned.minOf { it.start }
+    val timelineMax = positioned.maxOf { it.end }
+    val totalDays = timelineMin.daysUntil(timelineMax).coerceAtLeast(1)
+    val pixelsPerDay = ganttPixelsPerDay(totalDays)
+    val tickStep = ganttTickStepDays(totalDays)
+    val timelineWidth = totalDays * pixelsPerDay + pixelsPerDay // +1 day of trailing padding
+
+    // Layout constants (geometric — kept as dp like the other diagram renderers).
     val labelColumn = 140.dp
     val padding = 16.dp
     val rowHeight = 24.dp
-    val sectionHeight = 28.dp
+    val sectionHeaderHeight = 28.dp
+    val sectionGap = 8.dp
+    val axisHeight = 28.dp
     val titleHeight: Dp = if (config?.title != null) 32.dp else 0.dp
-    val axisHeight = 24.dp
 
-    // Total rows: section headers + tasks + a trailing gap per section.
+    // Pre-compute the pixel x for a date relative to the timeline's left edge.
+    fun dateToX(date: LocalDate): Float = timelineMin.daysUntil(date).coerceAtLeast(0) * pixelsPerDay
+
+    // Build the tick columns (for both axis labels and vertical grid + zebra shading).
+    val tickColumns = buildList {
+        var d = timelineMin
+        while (d <= timelineMax) {
+            val x = dateToX(d)
+            val next = d.plus(tickStep, DateTimeUnit.DAY)
+            val nextClamped = if (next > timelineMax) timelineMax.plus(1, DateTimeUnit.DAY) else next
+            val w = (timelineMin.daysUntil(nextClamped) * pixelsPerDay - x).coerceAtLeast(1f)
+            add(GanttTickColumn(date = d, x = x, width = w))
+            d = next
+        }
+    }
+
+    // Total canvas height: section headers + task rows + inter-section gaps.
     val sectionCount = sections.count { it.name.isNotEmpty() }
-    val totalRows = allTasks.size + sectionCount + sections.size
+    val bodyHeight = titleHeight + axisHeight +
+        (rowHeight * allTasks.size) +
+        (sectionHeaderHeight * sectionCount) +
+        (sectionGap * sections.size) +
+        padding * 2
     val width = labelColumn + timelineWidth.dp + padding * 2
-    val height = titleHeight + axisHeight + (totalRows * rowHeight.value).dp + padding * 2
-
     val c = PaletteTheme.colors
     val statusColor = mapOf(
         GanttTaskStatus.Done to c.success,
         GanttTaskStatus.Active to c.warning,
         GanttTaskStatus.Todo to c.primary,
     )
+    // Grid/shading tokens (all derived from top-level PaletteColors, no hard-coded hues).
+    val gridColor = c.divider
+    val axisLabelColor = c.hint
+    val altShadeColor = c.bgHover
+    val sectionHeaderBg = colors.entityHeaderColor.let { if (it == Color.Unspecified) c.bgHover else it }
 
-    Box(modifier = modifier.width(width).height(height)) {
-        // Title.
+    // Y offset where the timeline grid origin sits (top of axis labels).
+    val gridOriginY = padding.value + titleHeight.value
+    // Y offset where the task body starts (below the axis).
+    val bodyOriginY = gridOriginY + axisHeight.value
+    // Total vertical span the grid lines must cover (axis + all rows).
+    val gridSpanY = bodyHeight.value - gridOriginY - padding.value
+
+    Box(modifier = modifier.width(width).height(bodyHeight)) {
+        // ── Grid + zebra shading + axis (drawn behind everything) ─────────────────
+        Canvas(modifier = Modifier.matchParentSize()) {
+            val timelineX0 = padding.value + labelColumn.value
+            // Alternating-column shading spanning the full task body, like mermaid.live.
+            tickColumns.forEachIndexed { i, col ->
+                if (i % 2 == 1) {
+                    drawRect(
+                        color = altShadeColor,
+                        topLeft = Offset(timelineX0 + col.x, gridOriginY),
+                        size = androidx.compose.ui.geometry.Size(col.width, gridSpanY),
+                    )
+                }
+            }
+            // Vertical grid lines at each tick, spanning the whole task body.
+            tickColumns.forEach { col ->
+                drawLine(
+                    color = gridColor,
+                    start = Offset(timelineX0 + col.x, gridOriginY),
+                    end = Offset(timelineX0 + col.x, gridOriginY + gridSpanY),
+                    strokeWidth = 1.dp.toPx(),
+                )
+            }
+            // Main horizontal axis line at the top of the task body.
+            drawLine(
+                color = gridColor,
+                start = Offset(timelineX0, bodyOriginY),
+                end = Offset(timelineX0 + timelineWidth, bodyOriginY),
+                strokeWidth = 1.dp.toPx(),
+            )
+        }
+
+        // ── Axis date labels (Composables, so they get real text shaping) ────────
+        tickColumns.forEach { col ->
+            val label = formatGanttAxisLabel(col.date, config?.axisFormat)
+            Text(
+                text = label,
+                color = axisLabelColor,
+                style = PaletteTheme.typography.label,
+                maxLines = 1,
+                modifier = Modifier.absoluteOffset(
+                    x = (padding.value + labelColumn.value + col.x + 2f).dp,
+                    y = (gridOriginY + 4f).dp,
+                ),
+            )
+        }
+
+        // ── Title ────────────────────────────────────────────────────────────────
         val titleText = config?.title
         if (titleText != null) {
             Text(
@@ -2067,23 +2318,30 @@ private fun GanttDiagramMermaidDiagram(
             )
         }
 
-        // Rows: section headers + task bars.
+        // ── Section groups + task bars ───────────────────────────────────────────
+        val byTask = positionedByTask(positioned)
         Column(
-            modifier = Modifier.absoluteOffset(x = padding, y = padding + titleHeight + axisHeight),
+            modifier = Modifier.absoluteOffset(x = padding, y = bodyOriginY.dp),
         ) {
-            var drawRow = 0
             sections.forEach { section ->
                 if (section.name.isNotEmpty()) {
-                    Text(
-                        text = section.name,
-                        color = colors.nodeContentColor,
-                        style = PaletteTheme.typography.label.copy(fontWeight = FontWeight.Bold),
-                        modifier = Modifier.height(sectionHeight).fillMaxWidth(),
-                    )
-                    drawRow += 1
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(sectionHeaderHeight)
+                            .background(sectionHeaderBg, RoundedCornerShape(4.dp))
+                            .padding(horizontal = 8.dp, vertical = 4.dp),
+                        contentAlignment = Alignment.CenterStart,
+                    ) {
+                        Text(
+                            text = section.name,
+                            color = colors.nodeContentColor,
+                            style = PaletteTheme.typography.label.copy(fontWeight = FontWeight.Bold),
+                        )
+                    }
                 }
                 section.tasks.forEach { task ->
-                    val pos = positioned.first { it.task === task }
+                    val pos = byTask[task] ?: return@forEach
                     Row(
                         modifier = Modifier.height(rowHeight).fillMaxWidth(),
                         verticalAlignment = Alignment.CenterVertically,
@@ -2095,16 +2353,18 @@ private fun GanttDiagramMermaidDiagram(
                             modifier = Modifier.width(labelColumn),
                             maxLines = 1,
                         )
+                        // The bar lives inside the timeline region; offset by its date span.
+                        val barX = dateToX(pos.start)
+                        val barWidth = (dateToX(pos.end) - barX)
+                            .coerceAtLeast(if (task.isMilestone) 8f else 4f)
+                        val barColor = (if (task.isCritical) c.error else statusColor[task.status] ?: c.primary)
+                            .let { if (it == Color.Unspecified) colors.edgeColor else it }
                         Box(
                             modifier = Modifier
-                                .absoluteOffset(x = pos.start.dp, y = 0.dp)
-                                .width((pos.end - pos.start).dp)
+                                .absoluteOffset(x = barX.dp, y = 0.dp)
+                                .width(barWidth.dp)
                                 .height(rowHeight - 6.dp)
-                                .background(
-                                    color = (if (task.isCritical) c.error else statusColor[task.status] ?: c.primary)
-                                        .let { if (it == Color.Unspecified) colors.edgeColor else it },
-                                    RoundedCornerShape(3.dp),
-                                ),
+                                .background(barColor, RoundedCornerShape(3.dp)),
                             contentAlignment = Alignment.Center,
                         ) {
                             if (task.isMilestone) {
@@ -2112,21 +2372,9 @@ private fun GanttDiagramMermaidDiagram(
                             }
                         }
                     }
-                    drawRow += 1
                 }
-                Spacer(modifier = Modifier.height(4.dp))
+                Spacer(modifier = Modifier.height(sectionGap))
             }
-        }
-
-        // Timeline axis line at top.
-        Canvas(modifier = Modifier.matchParentSize()) {
-            val axisY = (padding.value + titleHeight.value + axisHeight.value / 2f) * 1f
-            drawLine(
-                color = colors.edgeColor,
-                start = Offset(padding.value + labelColumn.value, axisY),
-                end = Offset(padding.value + labelColumn.value + timelineWidth, axisY),
-                strokeWidth = 1.dp.toPx(),
-            )
         }
     }
 }
