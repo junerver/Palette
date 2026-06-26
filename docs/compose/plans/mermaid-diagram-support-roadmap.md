@@ -16,6 +16,13 @@
 | ClassDiagram | ✅ 已支持 | UML 语义箭头（继承/组合/聚合） |
 | ErDiagram | ✅ 已支持 | crow's foot、PK/FK 标记 |
 | StateDiagram | ✅ 已支持 | BFS 分层、双向边扇形 |
+| PieChart | ✅ 已支持 | 扇形 + 图例 |
+| GanttChart | ✅ 已支持 | section/task/status/依赖 |
+| GitGraph | ✅ 已支持 | commit/branch/merge |
+| Mindmap | ✅ 已支持 | 缩进树 + tidy-tree + S 曲线 |
+| Timeline | ✅ 已支持 | section + 续行多事件 + 左→右时间轴 |
+| QuadrantChart | ✅ 已支持 | 四象限 + 点（含 color/radius 样式 + classDef） |
+| XYChart | ✅ 已支持 | bar/line 双系列 + 数值/分类轴（`xychart` 与 `xychart-beta` 双关键词） |
 
 架构基础（2026-06 重构）：`MermaidDiagramParser` 注册制 + `ParseResult` 密封类型，
 新增图例 = 新建一个 parser + 注册，无需改动现有代码。
@@ -118,6 +125,9 @@
 - [x] 第一期-2：Gantt ✅（2026-06-25，核心版：section/task/status/duration/after 依赖，日期解析待后续）
 - [x] 第一期-3：GitGraph ✅（2026-06-26，commit/branch/checkout/merge + id/tag/type，cherry-pick 待后续）
 - [x] 第二期-1：Mindmap ✅（2026-06-26，缩进树解析 + tidy-tree 布局 + S 曲线连接；timeline/quadrant/xychart 待后续）
-- [ ] 第二期剩余：Timeline / Quadrant / XYChart
+- [x] 第二期-2：Timeline ✅（2026-06-27，section 上下文 + `:` 续行多事件 + inline 链式事件，左→右水平时间轴）
+- [x] 第二期-3：QuadrantChart ✅（2026-06-27，x/y 轴 `-->` 双端标签 + 四象限文本 + 点 `[x,y]` clamp 到 [0,1] + inline `color`/`radius` 样式 + `classDef` 类样式）
+- [x] 第二期-4：XYChart ✅（2026-06-27，`xychart`/`xychart-beta` 双关键词 + 数值轴(`min-->max`)/分类轴(`[...]`) + bar/line 多系列 + 自动 y 轴范围）
+- [x] 第二期全部完成 🎉（2026-06-27）
 - [ ] 第三期：Requirement / C4 / Block
 - [ ] 第四期：Journey / Sankey / Packet / Architecture

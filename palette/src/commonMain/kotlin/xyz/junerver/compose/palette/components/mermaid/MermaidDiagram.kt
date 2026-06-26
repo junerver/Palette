@@ -2787,7 +2787,7 @@ private fun QuadrantChartMermaidDiagram(
     quadrantLabels: List<String>,
     points: List<QuadrantPoint>,
 ) {
-    if (points.isEmpty() && quadrantLabels.isEmpty()) {
+    if (points.isEmpty() && quadrantLabels.all { it.isBlank() }) {
         Box(modifier = modifier, contentAlignment = Alignment.Center) {
             Text("Empty quadrant chart", color = colors.nodeContentColor, style = PaletteTheme.typography.body)
         }

@@ -91,6 +91,24 @@ fun MermaidDemo() {
         DemoSection(title = text.mindmapTitle) {
             PMermaidDiagram(source = text.mindmapSource)
         }
+
+        Spacer(modifier = Modifier.height(24.dp))
+
+        DemoSection(title = text.timelineTitle) {
+            PMermaidDiagram(source = text.timelineSource)
+        }
+
+        Spacer(modifier = Modifier.height(24.dp))
+
+        DemoSection(title = text.quadrantTitle) {
+            PMermaidDiagram(source = text.quadrantSource)
+        }
+
+        Spacer(modifier = Modifier.height(24.dp))
+
+        DemoSection(title = text.xychartTitle) {
+            PMermaidDiagram(source = text.xychartSource)
+        }
     }
 }
 
@@ -237,6 +255,46 @@ private fun mermaidDemoText(): MermaidDemoText =
                           Desktop
                           iOS
                     """.trimIndent(),
+                timelineTitle = "时间线 (Timeline)",
+                timelineSource =
+                    """
+                    timeline
+                        title Palette 发展历程
+                        section 2024
+                            Q1 : 项目立项
+                            Q2 : 核心组件 : 主题系统
+                        section 2025
+                            Q1 : Mermaid 支持
+                            Q2 : 类图 : 思维导图
+                        section 2026
+                            Q1 : 时间线 : 象限图 : XY 图表
+                    """.trimIndent(),
+                quadrantTitle = "四象限图 (Quadrant Chart)",
+                quadrantSource =
+                    """
+                    quadrantChart
+                        title 功能优先级评估
+                        x-axis 投入低 --> 投入高
+                        y-axis 价值低 --> 价值高
+                        quadrant-1 立即执行
+                        quadrant-2 值得投资
+                        quadrant-3 暂缓
+                        quadrant-4 重新评估
+                        登录页: [0.2, 0.85]
+                        暗色模式: [0.4, 0.7]
+                        图表导出: [0.8, 0.5]
+                        动画系统: [0.75, 0.3] color: #ff3300, radius: 10
+                    """.trimIndent(),
+                xychartTitle = "XY 图表 (XYChart)",
+                xychartSource =
+                    """
+                    xychart-beta
+                        title "季度下载量"
+                        x-axis [Q1, Q2, Q3, Q4]
+                        y-axis 下载量(万) 0 --> 500
+                        bar [120, 180, 240, 310]
+                        line [100, 150, 210, 290]
+                    """.trimIndent(),
             )
 
         Language.EN_US ->
@@ -378,6 +436,46 @@ private fun mermaidDemoText(): MermaidDemoText =
                           Desktop
                           iOS
                     """.trimIndent(),
+                timelineTitle = "Timeline",
+                timelineSource =
+                    """
+                    timeline
+                        title Palette Roadmap
+                        section 2024
+                            Q1 : Project kickoff
+                            Q2 : Core components : Theme system
+                        section 2025
+                            Q1 : Mermaid support
+                            Q2 : Class diagrams : Mindmaps
+                        section 2026
+                            Q1 : Timeline : Quadrant chart : XY chart
+                    """.trimIndent(),
+                quadrantTitle = "Quadrant Chart",
+                quadrantSource =
+                    """
+                    quadrantChart
+                        title Feature prioritization
+                        x-axis Low effort --> High effort
+                        y-axis Low value --> High value
+                        quadrant-1 Do now
+                        quadrant-2 Invest
+                        quadrant-3 Hold
+                        quadrant-4 Reconsider
+                        Login page: [0.2, 0.85]
+                        Dark mode: [0.4, 0.7]
+                        Chart export: [0.8, 0.5]
+                        Animations: [0.75, 0.3] color: #ff3300, radius: 10
+                    """.trimIndent(),
+                xychartTitle = "XY Chart",
+                xychartSource =
+                    """
+                    xychart-beta
+                        title "Quarterly downloads"
+                        x-axis [Q1, Q2, Q3, Q4]
+                        y-axis Downloads(k) 0 --> 500
+                        bar [120, 180, 240, 310]
+                        line [100, 150, 210, 290]
+                    """.trimIndent(),
             )
     }
 
@@ -402,4 +500,10 @@ private data class MermaidDemoText(
     val gitGraphSource: String,
     val mindmapTitle: String,
     val mindmapSource: String,
+    val timelineTitle: String,
+    val timelineSource: String,
+    val quadrantTitle: String,
+    val quadrantSource: String,
+    val xychartTitle: String,
+    val xychartSource: String,
 )
