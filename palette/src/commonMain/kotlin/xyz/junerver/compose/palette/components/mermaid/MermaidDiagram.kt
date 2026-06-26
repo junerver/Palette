@@ -23,6 +23,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.Shape
@@ -79,7 +80,12 @@ import xyz.junerver.compose.palette.mermaid.MermaidParser
 import xyz.junerver.compose.palette.mermaid.MindmapNode
 import xyz.junerver.compose.palette.mermaid.MindmapNodeShape
 import xyz.junerver.compose.palette.mermaid.PieSlice
+import xyz.junerver.compose.palette.mermaid.QuadrantAxis
+import xyz.junerver.compose.palette.mermaid.QuadrantPoint
 import xyz.junerver.compose.palette.mermaid.StateDefinition
+import xyz.junerver.compose.palette.mermaid.TimelinePeriod
+import xyz.junerver.compose.palette.mermaid.XySeries
+import xyz.junerver.compose.palette.mermaid.XySeriesKind
 import kotlin.math.abs
 import kotlin.math.max
 import kotlin.math.sqrt
@@ -469,6 +475,38 @@ fun PMermaidDiagram(
                 modifier = modifier,
                 colors = colors,
                 layout = resolvedLayout,
+            )
+
+        MermaidDiagramType.Timeline ->
+            TimelineDiagramMermaidDiagram(
+                modifier = modifier,
+                colors = colors,
+                title = parsedDiagram?.title,
+                periods = parsedDiagram?.timelinePeriods.orEmpty(),
+            )
+
+        MermaidDiagramType.QuadrantChart ->
+            QuadrantChartMermaidDiagram(
+                modifier = modifier,
+                colors = colors,
+                title = parsedDiagram?.quadrantTitle,
+                xAxis = parsedDiagram?.quadrantXAxis,
+                yAxis = parsedDiagram?.quadrantYAxis,
+                quadrantLabels = parsedDiagram?.quadrantLabels.orEmpty(),
+                points = parsedDiagram?.quadrantPoints.orEmpty(),
+            )
+
+        MermaidDiagramType.XYChart ->
+            XYChartMermaidDiagram(
+                modifier = modifier,
+                colors = colors,
+                title = parsedDiagram?.xyTitle,
+                xAxisTitle = parsedDiagram?.xyXAxisTitle,
+                xAxisRange = parsedDiagram?.xyXAxisRange,
+                xCategories = parsedDiagram?.xyXCategories.orEmpty(),
+                yAxisTitle = parsedDiagram?.xyYAxisTitle,
+                yAxisRange = parsedDiagram?.xyYAxisRange,
+                series = parsedDiagram?.xySeries.orEmpty(),
             )
     }
 }
@@ -2595,3 +2633,432 @@ private fun MindmapDiagramMermaidDiagram(
         }
     }
 }
+
+// ── Timeline ─────────────────────────────────────────────────────────
+
+/**
+ * Timeline renderer: a horizontal time axis with one marker per period. Each period's events
+ * stack vertically below its marker; section changes introduce a labeled divider. Mirrors
+ * mermaid.live's left→right flow. Colors derive from `PaletteTheme.colors` (no new tokens).
+ */
+@Composable
+private fun TimelineDiagramMermaidDiagram(
+    modifier: Modifier,
+    colors: MermaidColors,
+    title: String?,
+    periods: List<TimelinePeriod>,
+) {
+    if (periods.isEmpty()) {
+        Box(modifier = modifier, contentAlignment = Alignment.Center) {
+            Text("Empty timeline", color = colors.nodeContentColor, style = PaletteTheme.typography.body)
+        }
+        return
+    }
+
+    val c = PaletteTheme.colors
+    val titleHeight = if (title != null) 32.dp else 0.dp
+    val periodWidth = 160.dp
+    val markerRadius = 8.dp
+    val axisY = 60.dp // vertical position of the horizontal axis line (below title)
+    val eventLineHeight = 18.dp
+    val maxEvents = periods.maxOf { it.events.size }.coerceAtLeast(1)
+    val eventsBlockHeight = (maxEvents * 20).dp
+    val sectionHeaderHeight = 24.dp
+
+    // Count section breaks to size the vertical canvas.
+    val sectionBreaks = periods.zipWithNext().count { (a, b) -> a.section != b.section }
+
+    val width = periodWidth * periods.size
+    val height = titleHeight + axisY + eventsBlockHeight + (sectionHeaderHeight * sectionBreaks) + 16.dp
+
+    val axisColor = c.primary
+    val markerColor = c.primary
+    val periodLabelColor = c.textPrimary
+    val eventColor = c.textSecondary
+    val dividerColor = c.divider
+    val sectionColor = c.hint
+
+    Box(modifier = modifier.width(width).height(height)) {
+        // Title.
+        if (title != null) {
+            Text(
+                text = title,
+                color = colors.nodeContentColor,
+                style = PaletteTheme.typography.body.copy(fontWeight = FontWeight.Bold),
+                modifier = Modifier.absoluteOffset(x = 0.dp, y = 0.dp),
+            )
+        }
+
+        // Geometry pass: axis line, markers, section dividers.
+        Canvas(modifier = Modifier.matchParentSize()) {
+            val axisYpx = (titleHeight + axisY).toPx()
+            val periodWpx = periodWidth.toPx()
+            val markerR = markerRadius.toPx()
+            // Horizontal axis line.
+            drawLine(
+                color = axisColor,
+                start = Offset(0f, axisYpx),
+                end = Offset(size.width, axisYpx),
+                strokeWidth = 2.dp.toPx(),
+            )
+            var sectionCursor = 0
+            var prevSection: String? = null
+            periods.forEachIndexed { i, period ->
+                val cx = periodWpx * i + periodWpx / 2f
+                // Section divider when the section changes.
+                if (prevSection != null && prevSection != period.section) {
+                    val dividerX = periodWpx * i
+                    drawLine(
+                        color = dividerColor,
+                        start = Offset(dividerX, titleHeight.toPx()),
+                        end = Offset(dividerX, size.height),
+                        strokeWidth = 1.dp.toPx(),
+                    )
+                    sectionCursor++
+                }
+                prevSection = period.section
+                // Marker dot on the axis.
+                drawCircle(color = markerColor, radius = markerR, center = Offset(cx, axisYpx))
+                drawCircle(
+                    color = colors.nodeContainerColor,
+                    radius = markerR * 0.5f,
+                    center = Offset(cx, axisYpx),
+                )
+            }
+        }
+
+        // Labels stacked above the Canvas so text shaping is native.
+        periods.forEachIndexed { i, period ->
+            val periodLeft = periodWidth * i // left edge of this period's slot (Dp)
+            // Period label above the axis.
+            Text(
+                text = period.time,
+                color = periodLabelColor,
+                style = PaletteTheme.typography.label.copy(fontWeight = FontWeight.Bold),
+                textAlign = TextAlign.Center,
+                modifier = Modifier.absoluteOffset(x = periodLeft, y = titleHeight + 8.dp)
+                    .width(periodWidth),
+            )
+            // Events stacked below the axis.
+            period.events.forEachIndexed { ei, event ->
+                Text(
+                    text = event,
+                    color = eventColor,
+                    style = PaletteTheme.typography.label,
+                    textAlign = TextAlign.Center,
+                    maxLines = 2,
+                    modifier = Modifier
+                        .absoluteOffset(x = periodLeft, y = titleHeight + axisY + 8.dp + (20.dp * ei))
+                        .width(periodWidth),
+                )
+            }
+        }
+
+        // Section labels at the top of each section's first period.
+        val drawnSections = mutableSetOf<String>()
+        periods.forEachIndexed { i, period ->
+            if (period.section.isNotEmpty() && drawnSections.add(period.section)) {
+                Text(
+                    text = period.section,
+                    color = sectionColor,
+                    style = PaletteTheme.typography.label.copy(fontStyle = FontStyle.Italic),
+                    modifier = Modifier.absoluteOffset(x = periodWidth * i, y = titleHeight + axisY + eventsBlockHeight + 4.dp),
+                )
+            }
+        }
+    }
+}
+
+// ── Quadrant chart ───────────────────────────────────────────────────
+
+/**
+ * Quadrant chart renderer: a square split by two mid-lines into four quadrants, with points
+ * plotted from their normalized [0,1] coords. Quadrant labels sit at the four corners; axis
+ * labels hug the edges. Point colors cycle through `rememberSliceColors()` unless a point
+ * carries an inline/class color.
+ */
+@Composable
+private fun QuadrantChartMermaidDiagram(
+    modifier: Modifier,
+    colors: MermaidColors,
+    title: String?,
+    xAxis: QuadrantAxis?,
+    yAxis: QuadrantAxis?,
+    quadrantLabels: List<String>,
+    points: List<QuadrantPoint>,
+) {
+    if (points.isEmpty() && quadrantLabels.isEmpty()) {
+        Box(modifier = modifier, contentAlignment = Alignment.Center) {
+            Text("Empty quadrant chart", color = colors.nodeContentColor, style = PaletteTheme.typography.body)
+        }
+        return
+    }
+
+    val c = PaletteTheme.colors
+    val titleHeight = if (title != null) 32.dp else 0.dp
+    val sidePad = 64.dp // room for axis labels around the square
+    val squareSize = 320.dp
+    val pointColors = rememberSliceColors()
+
+    val width = squareSize + sidePad * 2
+    val height = titleHeight + squareSize + sidePad * 2
+
+    val axisLineColor = c.divider
+    val labelColor = c.textPrimary
+    val axisLabelColor = c.hint
+
+    Box(modifier = modifier.width(width).height(height)) {
+        // Title.
+        if (title != null) {
+            Text(
+                text = title,
+                color = colors.nodeContentColor,
+                style = PaletteTheme.typography.body.copy(fontWeight = FontWeight.Bold),
+                modifier = Modifier.absoluteOffset(x = sidePad, y = 0.dp),
+            )
+        }
+
+        val originX = sidePad
+        val originY = titleHeight + sidePad
+
+        Canvas(modifier = Modifier.matchParentSize()) {
+            val sizePx = squareSize.toPx()
+            // Two mid-lines splitting the square into four quadrants.
+            drawLine(
+                color = axisLineColor,
+                start = Offset(originX.toPx(), originY.toPx() + sizePx / 2f),
+                end = Offset(originX.toPx() + sizePx, originY.toPx() + sizePx / 2f),
+                strokeWidth = 1.5.dp.toPx(),
+            )
+            drawLine(
+                color = axisLineColor,
+                start = Offset(originX.toPx() + sizePx / 2f, originY.toPx()),
+                end = Offset(originX.toPx() + sizePx / 2f, originY.toPx() + sizePx),
+                strokeWidth = 1.5.dp.toPx(),
+            )
+            // Plot points. x grows rightward, y grows upward (so invert y).
+            points.forEachIndexed { i, p ->
+                val px = originX.toPx() + p.x * sizePx
+                val py = originY.toPx() + (1f - p.y) * sizePx
+                val color = p.color?.let { Color(it.toLong()) } ?: pointColors[i % pointColors.size]
+                val r = (p.radius?.dp ?: 6.dp).toPx()
+                drawCircle(color = color, radius = r, center = Offset(px, py))
+            }
+        }
+
+        // Quadrant corner labels (1=top-right, 2=top-left, 3=bottom-left, 4=bottom-right).
+        fun label(idx: Int): String? = quadrantLabels.getOrNull(idx)?.takeIf { it.isNotEmpty() }
+        val squareEnd = originX + squareSize
+        label(0)?.let { // quadrant-1 top-right
+            Text(it, color = labelColor, style = PaletteTheme.typography.label,
+                modifier = Modifier.absoluteOffset(x = originX + squareSize * 0.55f, y = originY + 8.dp))
+        }
+        label(1)?.let { // quadrant-2 top-left
+            Text(it, color = labelColor, style = PaletteTheme.typography.label,
+                modifier = Modifier.absoluteOffset(x = originX + 8.dp, y = originY + 8.dp))
+        }
+        label(2)?.let { // quadrant-3 bottom-left
+            Text(it, color = labelColor, style = PaletteTheme.typography.label,
+                modifier = Modifier.absoluteOffset(x = originX + 8.dp, y = originY + squareSize - 24.dp))
+        }
+        label(3)?.let { // quadrant-4 bottom-right
+            Text(it, color = labelColor, style = PaletteTheme.typography.label,
+                modifier = Modifier.absoluteOffset(x = originX + squareSize * 0.55f, y = originY + squareSize - 24.dp))
+        }
+
+        // Axis labels: x low/high on the bottom edge, y low/high rotated on the left edge.
+        xAxis?.let { axis ->
+            Text(axis.lowLabel, color = axisLabelColor, style = PaletteTheme.typography.label,
+                modifier = Modifier.absoluteOffset(x = originX, y = originY + squareSize + 4.dp))
+            Text(axis.highLabel, color = axisLabelColor, style = PaletteTheme.typography.label,
+                modifier = Modifier.absoluteOffset(x = squareEnd - 60.dp, y = originY + squareSize + 4.dp))
+        }
+        yAxis?.let { axis ->
+            Text(axis.lowLabel, color = axisLabelColor, style = PaletteTheme.typography.label,
+                modifier = Modifier.absoluteOffset(x = 8.dp, y = originY + squareSize - 16.dp))
+            Text(axis.highLabel, color = axisLabelColor, style = PaletteTheme.typography.label,
+                modifier = Modifier.absoluteOffset(x = 8.dp, y = originY))
+        }
+
+        // Point labels (small, above each point).
+        points.forEach { p ->
+            val px = originX + squareSize * p.x
+            val py = originY + squareSize * (1f - p.y)
+            Text(p.label, color = labelColor, style = PaletteTheme.typography.label,
+                modifier = Modifier.absoluteOffset(x = px - 20.dp, y = py - 22.dp))
+        }
+    }
+}
+
+// ── XYChart ──────────────────────────────────────────────────────────
+
+/**
+ * XYChart renderer: a coordinate plane with an optional title, x/y axes, and one or more bar or
+ * line series. The y-axis range is the explicit `yAxisRange` if given, otherwise derived from
+ * the series min/max. Bars sit side-by-side per category; lines connect category positions.
+ * Series colors cycle through `rememberSliceColors()`.
+ */
+@Composable
+private fun XYChartMermaidDiagram(
+    modifier: Modifier,
+    colors: MermaidColors,
+    title: String?,
+    xAxisTitle: String?,
+    xAxisRange: Pair<Float, Float>?,
+    xCategories: List<String>,
+    yAxisTitle: String?,
+    yAxisRange: Pair<Float, Float>?,
+    series: List<XySeries>,
+) {
+    if (series.isEmpty()) {
+        Box(modifier = modifier, contentAlignment = Alignment.Center) {
+            Text("Empty xy chart", color = colors.nodeContentColor, style = PaletteTheme.typography.body)
+        }
+        return
+    }
+
+    val c = PaletteTheme.colors
+    val titleHeight = if (title != null) 32.dp else 0.dp
+    val leftPad = 56.dp // room for y-axis tick labels
+    val bottomPad = 48.dp // room for x-axis tick labels + title
+    val topPad = 16.dp
+    val rightPad = 16.dp
+    val chartWidth = 360.dp
+    val chartHeight = 240.dp
+
+    val width = leftPad + chartWidth + rightPad
+    val height = titleHeight + topPad + chartHeight + bottomPad
+
+    // Category count = explicit categories, else the longest series, else the numeric x range span.
+    val catCount = xCategories.size.coerceAtLeast(series.maxOf { it.values.size }).coerceAtLeast(1)
+    val categories = if (xCategories.isNotEmpty()) xCategories else (0 until catCount).map { (it + 1).toString() }
+
+    // y range: explicit > derived from series.
+    val allValues = series.flatMap { it.values }
+    val derivedMax = if (allValues.isEmpty()) 1f else allValues.max()
+    val derivedMin = if (allValues.isEmpty()) 0f else allValues.min()
+    val (yMin, yMax) = yAxisRange ?: (if (derivedMin >= 0f) 0f else derivedMin) to derivedMax.coerceAtLeast(derivedMin + 1f)
+    val ySpan = (yMax - yMin).coerceAtLeast(1f)
+
+    val plotColors = rememberSliceColors()
+    val axisColor = c.divider
+    val tickColor = c.hint
+    val axisTitleColor = c.textPrimary
+
+    Box(modifier = modifier.width(width).height(height)) {
+        // Title.
+        if (title != null) {
+            Text(
+                text = title,
+                color = colors.nodeContentColor,
+                style = PaletteTheme.typography.body.copy(fontWeight = FontWeight.Bold),
+                modifier = Modifier.absoluteOffset(x = leftPad, y = 0.dp),
+            )
+        }
+
+        val plotLeft = leftPad
+        val plotTop = titleHeight + topPad
+        val plotBottom = titleHeight + topPad + chartHeight
+
+        Canvas(modifier = Modifier.matchParentSize()) {
+            val leftPx = plotLeft.toPx()
+            val topPx = plotTop.toPx()
+            val bottomPx = plotBottom.toPx()
+            val widthPx = chartWidth.toPx()
+            val heightPx = chartHeight.toPx()
+
+            // Horizontal gridlines + y-axis tick labels positions (4 ticks).
+            val ticks = 4
+            for (i in 0..ticks) {
+                val frac = i / ticks.toFloat()
+                val y = bottomPx - frac * heightPx
+                drawLine(
+                    color = axisColor,
+                    start = Offset(leftPx, y),
+                    end = Offset(leftPx + widthPx, y),
+                    strokeWidth = 1.dp.toPx(),
+                )
+            }
+            // y-axis (left) and x-axis (bottom) baseline.
+            drawLine(color = axisColor, start = Offset(leftPx, topPx), end = Offset(leftPx, bottomPx), strokeWidth = 1.5.dp.toPx())
+            drawLine(color = axisColor, start = Offset(leftPx, bottomPx), end = Offset(leftPx + widthPx, bottomPx), strokeWidth = 1.5.dp.toPx())
+
+            val slotW = widthPx / catCount
+            val barCount = series.count { it.kind == XySeriesKind.Bar }
+            var barIdx = 0
+
+            series.forEachIndexed { sIdx, s ->
+                val color = plotColors[sIdx % plotColors.size]
+                when (s.kind) {
+                    XySeriesKind.Bar -> {
+                        val barW = (slotW * 0.6f / barCount.coerceAtLeast(1)).coerceAtLeast(2f)
+                        s.values.forEachIndexed { vi, v ->
+                            val slotCenter = leftPx + slotW * (vi + 0.5f)
+                            val offset = (barIdx - (barCount - 1) / 2f) * barW
+                            val xLeft = slotCenter + offset - barW / 2f
+                            val norm = ((v - yMin) / ySpan).coerceIn(0f, 1f)
+                            val barH = norm * heightPx
+                            drawRect(
+                                color = color,
+                                topLeft = Offset(xLeft, bottomPx - barH),
+                                size = Size(barW, barH),
+                            )
+                        }
+                        barIdx++
+                    }
+                    XySeriesKind.Line -> {
+                        val path = Path()
+                        s.values.forEachIndexed { vi, v ->
+                            val x = leftPx + slotW * (vi + 0.5f)
+                            val norm = ((v - yMin) / ySpan).coerceIn(0f, 1f)
+                            val y = bottomPx - norm * heightPx
+                            if (vi == 0) path.moveTo(x, y) else path.lineTo(x, y)
+                            // Marker dot at each data point.
+                            drawCircle(color = color, radius = 3.dp.toPx(), center = Offset(x, y))
+                        }
+                        drawPath(path = path, color = color, style = Stroke(width = 2.dp.toPx(), cap = StrokeCap.Round))
+                    }
+                }
+            }
+        }
+
+        // x-axis tick labels (category names).
+        categories.forEachIndexed { i, cat ->
+            val slotCenter = plotLeft + chartWidth * (i + 0.5f) / catCount
+            Text(
+                text = cat,
+                color = tickColor,
+                style = PaletteTheme.typography.label,
+                textAlign = TextAlign.Center,
+                modifier = Modifier.absoluteOffset(x = slotCenter - 30.dp, y = plotBottom + 8.dp).width(60.dp),
+            )
+        }
+        // y-axis tick labels.
+        val ticks = 4
+        for (i in 0..ticks) {
+            val frac = i / ticks.toFloat()
+            val value = yMin + frac * ySpan
+            val y = plotBottom - chartHeight * frac
+            Text(
+                text = formatTick(value),
+                color = tickColor,
+                style = PaletteTheme.typography.label,
+                textAlign = TextAlign.End,
+                modifier = Modifier.absoluteOffset(x = 0.dp, y = y - 8.dp).width(leftPad - 6.dp),
+            )
+        }
+        // Axis titles.
+        xAxisTitle?.let {
+            Text(it, color = axisTitleColor, style = PaletteTheme.typography.label.copy(fontWeight = FontWeight.Bold),
+                modifier = Modifier.absoluteOffset(x = plotLeft, y = plotBottom + 28.dp))
+        }
+        yAxisTitle?.let {
+            Text(it, color = axisTitleColor, style = PaletteTheme.typography.label.copy(fontWeight = FontWeight.Bold),
+                modifier = Modifier.absoluteOffset(x = 0.dp, y = plotTop - 4.dp))
+        }
+    }
+}
+
+/** Compact formatting for axis tick values (no trailing ".0" on whole numbers). */
+private fun formatTick(value: Float): String =
+    if (value % 1f == 0f) value.toInt().toString() else value.toString()

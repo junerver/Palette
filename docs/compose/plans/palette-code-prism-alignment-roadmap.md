@@ -118,7 +118,9 @@ palette-code 已覆盖 17 种语言（Kotlin/Java/JS/TS/JSON/CSS/Python/HTML/XML
 | 2026-06-26 | 第一期 1.5 JSON 样板 grammar | 声明式 JSON grammar，分类与原 JsonLexer 一致，零回归验证引擎 |
 | 2026-06-26 | 第二期：字体样式维度 | Bold/Italic/Important token 在渲染层产生 fontWeight/fontStyle，对齐 Prism 主题表现 |
 | 2026-06-26 | 第二期：TOML grammar 迁移 | 声明式 TomGrammar 替代 TomlLexer；表名→type、键→keyword、多行字符串 `(?s)` 跨行、`inside` 递归分类括号与名字，零回归 |
-| 2026-06-26 | 第二期：INI/properties grammar 迁移 | 声明式 IniGrammar 替代 IniPropertiesLexer；section→type、键→keyword、`${VAR}`→annotation、`=`/`:`/空格分隔符→operator，零回归 |
+| 2026-06-27 | 第二期：CSS grammar 迁移 | 声明式 CssGrammar 替代 CssLexer；@at→annotation、.class/#id→type、#hex→number、属性/值关键字→keyword，块注释 `(?s)` 跨行，零回归 |
+| 2026-06-27 | 第二期：动态语言嵌入引擎能力 | GrammarToken 新增 `languageResolver` 回调 + GrammarRegistry.grammarOrNull；tokenizer 命中后按回调返回的 grammar 重新分词，解锁 HTML/Markdown 的动态嵌入（替代 lexer 的 embeddedHighlighter 回调）|
+| 2026-06-27 | 第二期：HTML/XML/SVG grammar 迁移 + KotlinLike(JS) | HtmlGrammar（tag via inside、style→css/script→js 经 languageResolver 动态嵌入）；KotlinLikeGrammar 作为 javascript/js 注册供嵌入；零回归 |
 
 ## 待办
 
@@ -126,10 +128,13 @@ palette-code 已覆盖 17 种语言（Kotlin/Java/JS/TS/JSON/CSS/Python/HTML/XML
 - [ ] 第二期：高频语言迁移 + 字体样式维度
   - [x] 字体样式维度（Bold/Italic/Important 渲染）✅
   - [x] TOML/INI/properties 迁移（最简单，无嵌入）✅
-  - [ ] Markdown grammar 接入：需先给 grammar 引擎增加"动态语言嵌入"能力（fenced code 递归调用其他语言高亮器），这是 lexer 的核心特性，grammar 的 `inside` 是固定嵌套无法动态调度
-  - [ ] CSS/HTML/XML 迁移（验证 `inside` 嵌套）
+  - [x] CSS 迁移 ✅
+  - [x] 动态语言嵌入引擎能力（languageResolver）✅
+  - [x] HTML/XML/SVG 迁移（含 style/script 嵌入，验证 `inside` + 动态嵌入）✅
+  - [x] KotlinLike(JS 子集) grammar（供 HTML 嵌入）✅
+  - [ ] Markdown grammar 接入：动态嵌入能力已具备，需完成 fenced-code 规则（按 info string 调度 GrammarRegistry）
+  - [ ] KotlinLike 完整迁移（kotlin/java/typescript，需覆盖字符串模板状态 + 三引号字符串）
   - [ ] Python/SQL 迁移
-  - [ ] KotlinLike（Kotlin/Java/JS/TS）迁移
   - [ ] YAML 迁移（block scalar 状态机，需 grammar 引擎支持跨行状态或保留 lexer）
 - [ ] 第三期：扩展语言覆盖（C/C++/C#/Go/Rust/PHP/Ruby/Swift/Scala/SCSS/JSX）
 - [ ] 第四期：高级能力（行号增强/语言检测/增量/hook）

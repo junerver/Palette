@@ -10,6 +10,9 @@ object MermaidLayoutEngine {
         if (diagram.type == MermaidDiagramType.GanttDiagram) return layoutGanttDiagram(diagram)
         if (diagram.type == MermaidDiagramType.GitGraphDiagram) return layoutGitGraphDiagram(diagram)
         if (diagram.type == MermaidDiagramType.MindmapDiagram) return layoutMindmapDiagram(diagram)
+        if (diagram.type == MermaidDiagramType.Timeline) return layoutTimelineDiagram(diagram)
+        if (diagram.type == MermaidDiagramType.QuadrantChart) return layoutQuadrantDiagram(diagram)
+        if (diagram.type == MermaidDiagramType.XYChart) return layoutXyDiagram(diagram)
         if (diagram.type == MermaidDiagramType.Flowchart) return layoutFlowchartDiagram(diagram)
 
         // Unreachable for known diagram types (all handled above); kept as a safe fallback
@@ -525,6 +528,44 @@ object MermaidLayoutEngine {
     private fun layoutGitGraphDiagram(diagram: MermaidDiagram): MermaidLayout =
         MermaidLayout(
             type = MermaidDiagramType.GitGraphDiagram,
+            direction = diagram.direction,
+            nodes = emptyMap(),
+            edges = emptyList(),
+        )
+
+    /**
+     * Timeline is pure geometry (a left→right time axis with periods and stacked events). The
+     * renderer positions everything from the diagram's `timelinePeriods`, so the layout returns
+     * an empty node set.
+     */
+    private fun layoutTimelineDiagram(diagram: MermaidDiagram): MermaidLayout =
+        MermaidLayout(
+            type = MermaidDiagramType.Timeline,
+            direction = diagram.direction,
+            nodes = emptyMap(),
+            edges = emptyList(),
+        )
+
+    /**
+     * Quadrant chart is pure geometry (a square split into four quadrants with plotted points).
+     * The renderer maps each point's normalized [0,1] coords onto the canvas, so no layout work.
+     */
+    private fun layoutQuadrantDiagram(diagram: MermaidDiagram): MermaidLayout =
+        MermaidLayout(
+            type = MermaidDiagramType.QuadrantChart,
+            direction = diagram.direction,
+            nodes = emptyMap(),
+            edges = emptyList(),
+        )
+
+    /**
+     * XYChart is pure geometry (a coordinate plane with bar/line series). The renderer derives
+     * the y-axis range from the series (or uses `xyYAxisRange`) and plots bars/lines, so no
+     * layout work.
+     */
+    private fun layoutXyDiagram(diagram: MermaidDiagram): MermaidLayout =
+        MermaidLayout(
+            type = MermaidDiagramType.XYChart,
             direction = diagram.direction,
             nodes = emptyMap(),
             edges = emptyList(),

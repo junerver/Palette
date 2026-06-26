@@ -107,6 +107,33 @@ class GrammarTokenizerTest {
         assertEquals(TokenType.Plain, tokens[0].type)
     }
 
+    @Test
+    fun languageResolverDynamicallyEmbedsAGrammarPerMatch() {
+        // Simulates a Markdown/HTML-style embed: the outer rule matches a fenced region and the
+        // resolver inspects the match text to decide which inner grammar to apply. Here a
+        // "```num```" fence embeds a number-only grammar; "```word```" embeds a word grammar.
+        val numberGrammar = grammarOf("number" to token(Regex("""\d+""")))
+        val wordGrammar = grammarOf("keyword" to token(Regex("""[a-z]+""")))
+        val grammar = grammarOf(
+            "fence" to GrammarToken(
+                pattern = Regex("""```[\s\S]*?```"""),
+                languageResolver = { match ->
+                    when {
+                        match.startsWith("```num") -> numberGrammar
+                        match.startsWith("```word") -> wordGrammar
+                        else -> null
+                    }
+                },
+            ),
+        )
+
+        val tokens = GrammarTokenizer.tokenize("```num 123``` ```word abc```", grammar)
+        // The fence wrapper is replaced by its inner tokens (no "fence"-typed token emitted).
+        assertTrue(tokens.none { it.type == TokenType("fence") })
+        assertTrue(tokens.any { it.text == "123" && it.type == TokenType("number") })
+        assertTrue(tokens.any { it.text == "abc" && it.type == TokenType("keyword") })
+    }
+
     private fun grammarOf(vararg pairs: Pair<String, GrammarToken>) = Grammar(pairs.toMap())
 
     private fun token(pattern: Regex) = GrammarToken(pattern = pattern)

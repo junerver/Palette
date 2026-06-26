@@ -122,6 +122,53 @@ data class MindmapNode(
     val parentId: String?,
 )
 
+// ── Timeline models ──────────────────────────────────────────────────
+
+/**
+ * One time period in a mermaid timeline. [section] is the owning section name (empty string when
+ * no `section` directive precedes it). [events] holds the one-or-more events for that period
+ * (mermaid allows `period : ev1 : ev2` inline chaining and `:` continuation lines).
+ */
+data class TimelinePeriod(
+    val section: String,
+    val time: String,
+    val events: List<String>,
+)
+
+// ── Quadrant chart models ────────────────────────────────────────────
+
+/** A quadrant axis: [lowLabel] at the origin, [highLabel] at the far end. */
+data class QuadrantAxis(
+    val lowLabel: String,
+    val highLabel: String,
+)
+
+/**
+ * A plotted point on a quadrant chart. [x]/[y] are normalized to `[0,1]` (0 = low, 1 = high);
+ * the parser clamps out-of-range values. [color]/[radius] come from inline `color:`/`radius:`
+ * styling or a `classDef`; null means "use the renderer default".
+ */
+data class QuadrantPoint(
+    val label: String,
+    val x: Float,
+    val y: Float,
+    val color: UInt? = null,
+    val radius: Float? = null,
+)
+
+// ── XYChart models ───────────────────────────────────────────────────
+
+enum class XySeriesKind { Bar, Line }
+
+/**
+ * One data series of an xychart. [values] align positionally with the x-axis categories (or
+ * sequential indices when the axis is numeric).
+ */
+data class XySeries(
+    val kind: XySeriesKind,
+    val values: List<Float>,
+)
+
 // ── Class Diagram models ──────────────────────────────────────────────
 
 enum class MermaidClassMemberKind {
@@ -280,6 +327,19 @@ data class MermaidDiagram(
     val gitCommits: List<GitCommit> = emptyList(),
     val gitMerges: List<GitMerge> = emptyList(),
     val mindmapNodes: List<MindmapNode> = emptyList(),
+    val timelinePeriods: List<TimelinePeriod> = emptyList(),
+    val quadrantTitle: String? = null,
+    val quadrantXAxis: QuadrantAxis? = null,
+    val quadrantYAxis: QuadrantAxis? = null,
+    val quadrantLabels: List<String> = emptyList(),
+    val quadrantPoints: List<QuadrantPoint> = emptyList(),
+    val xyTitle: String? = null,
+    val xyXAxisTitle: String? = null,
+    val xyXAxisRange: Pair<Float, Float>? = null,
+    val xyXCategories: List<String> = emptyList(),
+    val xyYAxisTitle: String? = null,
+    val xyYAxisRange: Pair<Float, Float>? = null,
+    val xySeries: List<XySeries> = emptyList(),
 )
 
 data class MermaidNode(
@@ -344,6 +404,9 @@ enum class MermaidDiagramType {
     GanttDiagram,
     GitGraphDiagram,
     MindmapDiagram,
+    Timeline,
+    QuadrantChart,
+    XYChart,
 }
 
 enum class MermaidDirection {

@@ -77,10 +77,17 @@ internal object GrammarTokenizer {
 
             if (lookbehindPrefix.isNotEmpty()) out.add(lookbehindPrefix)
 
-            val innerTokens = if (rule.inside != null && tokenText.isNotEmpty()) {
-                tokenize(tokenText, rule.inside!!)
-            } else {
-                emptyList()
+            val innerTokens = when {
+                // Fixed nested grammar (Prism `inside`).
+                rule.inside != null && tokenText.isNotEmpty() ->
+                    tokenize(tokenText, rule.inside!!)
+                // Dynamic embedding: resolve a grammar per-match and re-tokenize. Used for
+                // constructs where the embedded language varies (Markdown fenced code, HTML
+                // <style>/<script>), which a static `inside` can't express.
+                rule.languageResolver != null && tokenText.isNotEmpty() ->
+                    rule.languageResolver!!.invoke(tokenText)?.let { tokenize(tokenText, it) }
+                        ?: emptyList()
+                else -> emptyList()
             }
 
             if (innerTokens.isEmpty()) {

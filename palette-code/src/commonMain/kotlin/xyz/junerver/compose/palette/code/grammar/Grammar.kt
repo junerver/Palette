@@ -37,6 +37,12 @@ data class GrammarTokenValue(
  * @property alias extra type names attached to every produced token of this rule (Prism `alias`).
  * @property inside an optional nested [Grammar] used to recursively tokenize the matched text
  *   (Prism `inside`). Enables language embedding (e.g. CSS inside HTML `<style>`).
+ * @property languageResolver an optional dynamic-embedding hook: when [inside] is null and this
+ *   is set, the matched text is re-tokenized with the [Grammar] this resolver returns. Unlike
+ *   [inside] (a fixed grammar), the resolver decides the grammar per-match — e.g. a Markdown
+ *   fenced-code rule inspects the `` ```kotlin `` info string to pick the Kotlin grammar, or an
+ *   HTML `<style>`/`<script>` rule picks css/js. This is the engine feature that lets grammar
+ *   replace the hand-written embed dispatch in HtmlLexer/MarkdownLexer.
  */
 data class GrammarToken(
     val pattern: Regex,
@@ -44,6 +50,7 @@ data class GrammarToken(
     val greedy: Boolean = false,
     val alias: List<String> = emptyList(),
     val inside: Grammar? = null,
+    val languageResolver: ((matchText: String) -> Grammar?)? = null,
 )
 
 /**

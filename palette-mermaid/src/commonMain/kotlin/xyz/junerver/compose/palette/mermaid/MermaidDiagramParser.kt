@@ -138,6 +138,38 @@ internal sealed interface ParseResult {
     ) : ParseResult {
         override val diagramType = MermaidDiagramType.MindmapDiagram
     }
+
+    data class TimelineDiagram(
+        override val direction: MermaidDirection,
+        val title: String?,
+        val periods: List<TimelinePeriod>,
+    ) : ParseResult {
+        override val diagramType = MermaidDiagramType.Timeline
+    }
+
+    data class QuadrantChartDiagram(
+        override val direction: MermaidDirection,
+        val title: String?,
+        val xAxis: QuadrantAxis?,
+        val yAxis: QuadrantAxis?,
+        val quadrantLabels: List<String>,
+        val points: List<QuadrantPoint>,
+    ) : ParseResult {
+        override val diagramType = MermaidDiagramType.QuadrantChart
+    }
+
+    data class XYChartDiagram(
+        override val direction: MermaidDirection,
+        val title: String?,
+        val xAxisTitle: String?,
+        val xAxisRange: Pair<Float, Float>?,
+        val xCategories: List<String>,
+        val yAxisTitle: String?,
+        val yAxisRange: Pair<Float, Float>?,
+        val series: List<XySeries>,
+    ) : ParseResult {
+        override val diagramType = MermaidDiagramType.XYChart
+    }
 }
 
 /**
@@ -240,5 +272,40 @@ internal fun ParseResult.toMermaidDiagram(): MermaidDiagram =
             edges = emptyList(),
             type = diagramType,
             mindmapNodes = nodes,
+        )
+
+        is ParseResult.TimelineDiagram -> MermaidDiagram(
+            direction = direction,
+            nodes = emptyMap(),
+            edges = emptyList(),
+            type = diagramType,
+            title = title,
+            timelinePeriods = periods,
+        )
+
+        is ParseResult.QuadrantChartDiagram -> MermaidDiagram(
+            direction = direction,
+            nodes = emptyMap(),
+            edges = emptyList(),
+            type = diagramType,
+            quadrantTitle = title,
+            quadrantXAxis = xAxis,
+            quadrantYAxis = yAxis,
+            quadrantLabels = quadrantLabels,
+            quadrantPoints = points,
+        )
+
+        is ParseResult.XYChartDiagram -> MermaidDiagram(
+            direction = direction,
+            nodes = emptyMap(),
+            edges = emptyList(),
+            type = diagramType,
+            xyTitle = title,
+            xyXAxisTitle = xAxisTitle,
+            xyXAxisRange = xAxisRange,
+            xyXCategories = xCategories,
+            xyYAxisTitle = yAxisTitle,
+            xyYAxisRange = yAxisRange,
+            xySeries = series,
         )
     }

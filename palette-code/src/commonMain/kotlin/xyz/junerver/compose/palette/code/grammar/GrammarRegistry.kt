@@ -1,7 +1,10 @@
 package xyz.junerver.compose.palette.code.grammar
 
+import xyz.junerver.compose.palette.code.grammar.languages.CssGrammar
+import xyz.junerver.compose.palette.code.grammar.languages.HtmlGrammar
 import xyz.junerver.compose.palette.code.grammar.languages.IniGrammar
 import xyz.junerver.compose.palette.code.grammar.languages.JsonGrammar
+import xyz.junerver.compose.palette.code.grammar.languages.KotlinLikeGrammar
 import xyz.junerver.compose.palette.code.grammar.languages.TomlGrammar
 // MarkdownGrammar is intentionally not registered yet (see comment below).
 
@@ -17,6 +20,13 @@ internal object GrammarRegistry {
     private val grammars: Map<String, Grammar> = buildMap {
         putAll(aliases("json", listOf("json"), JsonGrammar))
         putAll(aliases("toml", listOf("toml"), TomlGrammar))
+        putAll(aliases("css", listOf("css"), CssGrammar))
+        // Kotlin-like grammar serves JavaScript (HTML <script> embedding) for now; Kotlin/Java/
+        // TypeScript stay on the hand-written lexer until the grammar covers their stateful
+        // string/template constructs.
+        putAll(aliases("javascript", listOf("javascript", "js"), KotlinLikeGrammar))
+        // HTML/XML/SVG share one markup grammar; embedding resolvers look css/js up above.
+        putAll(aliases("html", listOf("html", "xml", "svg"), HtmlGrammar))
         // INI + .properties share one grammar (same lexer historically served both).
         putAll(aliases("ini", listOf("ini", "properties", "props", "conf"), IniGrammar))
         // Markdown grammar exists and the engine handles it, but it stays on the hand-written
@@ -29,6 +39,13 @@ internal object GrammarRegistry {
         val grammar = grammars[language.lowercase()] ?: return null
         return GrammarHighlighter(grammar)
     }
+
+    /**
+     * Returns the registered [Grammar] for [language], or null. Used by dynamic-embedding
+     * resolvers (e.g. the HTML grammar's `<style>`/`<script>` rule) to look up the embedded
+     * language's grammar at tokenize time.
+     */
+    fun grammarOrNull(language: String): Grammar? = grammars[language.lowercase()]
 
     private fun aliases(
         primary: String,
