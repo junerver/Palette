@@ -4,6 +4,7 @@ import xyz.junerver.compose.palette.code.grammar.languages.CssGrammar
 import xyz.junerver.compose.palette.code.grammar.languages.HtmlGrammar
 import xyz.junerver.compose.palette.code.grammar.languages.IniGrammar
 import xyz.junerver.compose.palette.code.grammar.languages.KotlinLikeGrammar
+import xyz.junerver.compose.palette.code.grammar.languages.SqlGrammar
 import xyz.junerver.compose.palette.code.grammar.languages.TomlGrammar
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -128,6 +129,37 @@ class DeclarativeGrammarLanguagesTest {
         assertTrue(tokens.any { it.text == "42" && it.type.name == "number" })
         // `x` is not a keyword/builtin/capitalised-type in this grammar → plain text.
         assertTrue(tokens.any { it.text.contains("x") && it.type.name == "plain" })
+    }
+
+    // ── SQL ───────────────────────────────────────────────────────────────
+
+    @Test
+    fun sqlGrammar_classifiesKeywordsTypesAndFunctionsCaseInsensitively() {
+        val tokens = GrammarTokenizer.tokenize("select count(*) AS total from Integer", SqlGrammar)
+        assertTrue(tokens.any { it.text == "select" && it.type.name == "keyword" })
+        assertTrue(tokens.any { it.text == "count" && it.type.name == "function" })
+        assertTrue(tokens.any { it.text == "AS" && it.type.name == "keyword" })
+        assertTrue(tokens.any { it.text == "Integer" && it.type.name == "type" })
+    }
+
+    @Test
+    fun sqlGrammar_keywordBeforeFunctionSoOverStaysKeyword() {
+        // OVER is a keyword but also followed by `(`; the keyword rule wins → keyword, not fn.
+        val tokens = GrammarTokenizer.tokenize("OVER (", SqlGrammar)
+        assertTrue(tokens.any { it.text == "OVER" && it.type.name == "keyword" })
+    }
+
+    @Test
+    fun sqlGrammar_backtickIdentifierIsAnnotation() {
+        assertEquals("annotation", GrammarTokenizer.tokenize("`user`", SqlGrammar).first().type.name)
+    }
+
+    @Test
+    fun sqlGrammar_dollarQuotedStringMatchesRepeatedTagAcrossLines() {
+        // The backreference (\1) forces the closing $body$ to repeat the opening tag.
+        val body = "SELECT " + "$" + "body" + "$\nline one\nline two\n" + "$" + "body" + "$ AS x"
+        val tokens = GrammarTokenizer.tokenize(body, SqlGrammar)
+        assertTrue(tokens.any { it.type.name == "string" && it.text.contains("line one") })
     }
 
     // ── INI / properties ──────────────────────────────────────────────────

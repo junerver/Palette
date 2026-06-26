@@ -5,6 +5,7 @@ import xyz.junerver.compose.palette.code.grammar.languages.HtmlGrammar
 import xyz.junerver.compose.palette.code.grammar.languages.IniGrammar
 import xyz.junerver.compose.palette.code.grammar.languages.JsonGrammar
 import xyz.junerver.compose.palette.code.grammar.languages.KotlinLikeGrammar
+import xyz.junerver.compose.palette.code.grammar.languages.SqlGrammar
 import xyz.junerver.compose.palette.code.grammar.languages.TomlGrammar
 // MarkdownGrammar is intentionally not registered yet (see comment below).
 
@@ -27,6 +28,9 @@ internal object GrammarRegistry {
         putAll(aliases("javascript", listOf("javascript", "js"), KotlinLikeGrammar))
         // HTML/XML/SVG share one markup grammar; embedding resolvers look css/js up above.
         putAll(aliases("html", listOf("html", "xml", "svg"), HtmlGrammar))
+        // SQL dialects share one grammar; dollar-quoted strings use a backreference so the
+        // $tag$…$tag$ pair always matches (handles Postgres function bodies).
+        putAll(aliases("sql", listOf("sql", "mysql", "postgresql", "postgres", "sqlite"), SqlGrammar))
         // INI + .properties share one grammar (same lexer historically served both).
         putAll(aliases("ini", listOf("ini", "properties", "props", "conf"), IniGrammar))
         // Markdown grammar exists and the engine handles it, but it stays on the hand-written
