@@ -1,0 +1,15 @@
+## This file must *NOT* be checked into Version Control Systems,
+# as it contains information specific to your local configuration.
+#
+# Location of the android SDK. This is only used by Gradle.
+# For customization when using a Version Control System, please read the
+# header note.
+sdk.dir=/mnt/d/dev/Android/Sdk
+
+# Network proxy settings for local development
+# Note: Comment these out if encountering TLS handshake issues with Google Maven
+#systemProp.http.proxyHost=192.168.172.110
+#systemProp.http.proxyPort=7890
+#systemProp.https.proxyHost=192.168.172.110
+#systemProp.https.proxyPort=7890
+#systemProp.http.nonProxyHosts=localhost|127.*|[::1]

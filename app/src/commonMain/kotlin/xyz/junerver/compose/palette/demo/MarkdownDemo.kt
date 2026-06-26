@@ -70,7 +70,7 @@ private fun markdownDemoText(): MarkdownDemoText =
         Language.ZH_CN ->
             MarkdownDemoText(
                 title = "Markdown",
-                subtitle = "Markdown 查看器、编辑器、代码高亮和 Mermaid flowchart 渲染。",
+                subtitle = "Markdown 查看器、编辑器、代码高亮。",
                 viewerTitle = "查看器",
                 editorTitle = "编辑器",
                 editorPlaceholder = "输入 Markdown",
@@ -84,7 +84,6 @@ private fun markdownDemoText(): MarkdownDemoText =
                     Markdown 渲染器会把 fenced code 分派到对应基础能力：
 
                     - `kotlin` / `yaml` / `toml` / `sql` / `diff` 等代码块使用 Palette 代码高亮逻辑
-                    - `mermaid` 代码块使用 Mermaid flowchart 解析与布局逻辑
 
                     > 引用块会保留强调、链接和 `inline code` 等行内样式。
 
@@ -108,7 +107,6 @@ private fun markdownDemoText(): MarkdownDemoText =
                     | 能力 | 状态 | 入口 |
                     | :--- | :---: | ---: |
                     | 代码高亮 | ready | `PCodeBlock` |
-                    | Mermaid | ready | `PMermaidDiagram` |
                     | 图片 | placeholder | ![Palette icon](https://example.com/palette.png) |
                     | 表格竖线 | a\|b | `x|y` |
                     | 空单元格 |  | 保留列 |
@@ -192,34 +190,6 @@ private fun markdownDemoText(): MarkdownDemoText =
                     -OldButton()
                     +PButton(text = "Save") {}
                     ```
-
-                    ```mermaid
-                    flowchart LR
-                        subgraph Foundation [基础能力]
-                            Code[Kotlin code]
-                            Mermaid[Mermaid]
-                        end
-                        Markdown[Markdown] --> Code[Kotlin code]
-                        Markdown --> Mermaid[Mermaid]
-                        Code --> Viewer[Viewer]
-                        Mermaid --> Viewer
-                        Code --- Mermaid
-                        Code -- sync --- Mermaid
-                        Mermaid -. stale .- Viewer
-                        Viewer <--> Preview[Preview]
-                        Legend[Standalone node]
-                    ```
-
-                    ```mermaid
-                    sequenceDiagram
-                        participant Editor
-                        participant Parser
-                        participant Viewer
-                        Editor->>Parser: update markdown
-                        Note right of Parser: Build AST and diagrams
-                        Parser-->>Viewer: render model
-                        Note over Editor,Viewer: Preview refresh
-                    ```
                     """.trimIndent(),
                 editorMarkdown =
                     """
@@ -247,7 +217,7 @@ private fun markdownDemoText(): MarkdownDemoText =
         Language.EN_US ->
             MarkdownDemoText(
                 title = "Markdown",
-                subtitle = "Markdown viewer, editor, code highlighting, and Mermaid flowchart rendering.",
+                subtitle = "Markdown viewer, editor, and code highlighting.",
                 viewerTitle = "Viewer",
                 editorTitle = "Editor",
                 editorPlaceholder = "Enter Markdown",
@@ -261,7 +231,6 @@ private fun markdownDemoText(): MarkdownDemoText =
                     The Markdown renderer dispatches fenced blocks to foundation logic:
 
                     - `kotlin` / `yaml` / `toml` / `sql` / `diff` code blocks use Palette code highlighting
-                    - `mermaid` code blocks use Mermaid flowchart parsing and layout
 
                     > Block quotes keep inline emphasis, links, and `inline code` styles.
 
@@ -368,34 +337,6 @@ private fun markdownDemoText(): MarkdownDemoText =
                     @@ -1,2 +1,2 @@
                     -OldButton()
                     +PButton(text = "Save") {}
-                    ```
-
-                    ```mermaid
-                    flowchart LR
-                        subgraph Foundation [Foundation logic]
-                            Code[Kotlin code]
-                            Mermaid[Mermaid]
-                        end
-                        Markdown[Markdown] --> Code[Kotlin code]
-                        Markdown --> Mermaid[Mermaid]
-                        Code --> Viewer[Viewer]
-                        Mermaid --> Viewer
-                        Code --- Mermaid
-                        Code -- sync --- Mermaid
-                        Mermaid -. stale .- Viewer
-                        Viewer <--> Preview[Preview]
-                        Legend[Standalone node]
-                    ```
-
-                    ```mermaid
-                    sequenceDiagram
-                        participant Editor
-                        participant Parser
-                        participant Viewer
-                        Editor->>Parser: update markdown
-                        Note right of Parser: Build AST and diagrams
-                        Parser-->>Viewer: render model
-                        Note over Editor,Viewer: Preview refresh
                     ```
                     """.trimIndent(),
                 editorMarkdown =

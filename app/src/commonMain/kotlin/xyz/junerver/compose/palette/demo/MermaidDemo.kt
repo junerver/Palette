@@ -85,6 +85,12 @@ fun MermaidDemo() {
         DemoSection(title = text.gitGraphTitle) {
             PMermaidDiagram(source = text.gitGraphSource)
         }
+
+        Spacer(modifier = Modifier.height(24.dp))
+
+        DemoSection(title = text.mindmapTitle) {
+            PMermaidDiagram(source = text.mindmapSource)
+        }
     }
 }
 
@@ -95,7 +101,7 @@ private fun mermaidDemoText(): MermaidDemoText =
         Language.ZH_CN ->
             MermaidDemoText(
                 title = "Mermaid",
-                subtitle = "Mermaid 图表渲染，支持流程图、时序图、类图、ER 图、状态图、饼图、甘特图和 Git 图。",
+                subtitle = "Mermaid 图表渲染，支持流程图、时序图、类图、ER 图、状态图、饼图、甘特图、Git 图和思维导图。",
                 flowchartTitle = "流程图 (Flowchart)",
                 flowchartSource =
                     """
@@ -214,12 +220,29 @@ private fun mermaidDemoText(): MermaidDemoText =
                        merge develop
                        commit type: HIGHLIGHT
                     """.trimIndent(),
+                mindmapTitle = "思维导图 (Mindmap)",
+                mindmapSource =
+                    """
+                    mindmap
+                      root((Palette))
+                        组件
+                          基础
+                          表单
+                          布局
+                        主题
+                          明色
+                          暗色
+                        多平台
+                          Android
+                          Desktop
+                          iOS
+                    """.trimIndent(),
             )
 
         Language.EN_US ->
             MermaidDemoText(
                 title = "Mermaid",
-                subtitle = "Mermaid diagram rendering, supporting flowcharts, sequence diagrams, class diagrams, ER diagrams, state diagrams, pie charts, gantt charts, and git graphs.",
+                subtitle = "Mermaid diagram rendering, supporting flowcharts, sequence diagrams, class diagrams, ER diagrams, state diagrams, pie charts, gantt charts, git graphs, and mindmaps.",
                 flowchartTitle = "Flowchart",
                 flowchartSource =
                     """
@@ -338,6 +361,23 @@ private fun mermaidDemoText(): MermaidDemoText =
                        merge develop
                        commit type: HIGHLIGHT
                     """.trimIndent(),
+                mindmapTitle = "Mindmap",
+                mindmapSource =
+                    """
+                    mindmap
+                      root((Palette))
+                        Components
+                          Foundation
+                          Forms
+                          Layout
+                        Theme
+                          Light
+                          Dark
+                        Platforms
+                          Android
+                          Desktop
+                          iOS
+                    """.trimIndent(),
             )
     }
 
@@ -360,4 +400,6 @@ private data class MermaidDemoText(
     val ganttSource: String,
     val gitGraphTitle: String,
     val gitGraphSource: String,
+    val mindmapTitle: String,
+    val mindmapSource: String,
 )

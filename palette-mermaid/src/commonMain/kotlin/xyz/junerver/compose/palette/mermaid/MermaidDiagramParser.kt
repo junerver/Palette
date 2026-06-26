@@ -25,6 +25,14 @@ internal interface MermaidDiagramParser {
     val consumesHeaderLine: Boolean
         get() = false
 
+    /**
+     * When `true`, the dispatcher passes lines with their leading whitespace intact
+     * instead of trimmed. Diagrams whose structure depends on indentation (e.g. mindmap)
+     * opt in here; all other parsers keep receiving trimmed lines.
+     */
+    val preservesIndentation: Boolean
+        get() = false
+
     /** Direction implied by this diagram family before any `direction` line overrides it. */
     val defaultDirection: MermaidDirection
 
@@ -123,6 +131,13 @@ internal sealed interface ParseResult {
     ) : ParseResult {
         override val diagramType = MermaidDiagramType.GitGraphDiagram
     }
+
+    data class MindmapDiagram(
+        override val direction: MermaidDirection,
+        val nodes: List<MindmapNode>,
+    ) : ParseResult {
+        override val diagramType = MermaidDiagramType.MindmapDiagram
+    }
 }
 
 /**
@@ -217,5 +232,13 @@ internal fun ParseResult.toMermaidDiagram(): MermaidDiagram =
             gitBranches = branches,
             gitCommits = commits,
             gitMerges = merges,
+        )
+
+        is ParseResult.MindmapDiagram -> MermaidDiagram(
+            direction = direction,
+            nodes = emptyMap(),
+            edges = emptyList(),
+            type = diagramType,
+            mindmapNodes = nodes,
         )
     }

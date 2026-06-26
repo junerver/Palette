@@ -5,6 +5,7 @@ import xyz.junerver.compose.palette.mermaid.parsers.ErDiagramParser
 import xyz.junerver.compose.palette.mermaid.parsers.FlowchartParser
 import xyz.junerver.compose.palette.mermaid.parsers.GanttParser
 import xyz.junerver.compose.palette.mermaid.parsers.GitGraphParser
+import xyz.junerver.compose.palette.mermaid.parsers.MindmapParser
 import xyz.junerver.compose.palette.mermaid.parsers.PieParser
 import xyz.junerver.compose.palette.mermaid.parsers.SequenceParser
 import xyz.junerver.compose.palette.mermaid.parsers.StateDiagramParser
@@ -16,7 +17,7 @@ object MermaidParser {
      * anything else falls through to the flowchart path below.
      */
     private val registeredParsers: Map<String, MermaidDiagramParser> =
-        listOf(StateDiagramParser, ErDiagramParser, ClassDiagramParser, SequenceParser, PieParser, GanttParser, GitGraphParser)
+        listOf(StateDiagramParser, ErDiagramParser, ClassDiagramParser, SequenceParser, PieParser, GanttParser, GitGraphParser, MindmapParser)
             .flatMap { parser -> (parser.aliases + parser.keyword).map { it.lowercase() to parser } }
             .toMap()
 
@@ -41,7 +42,17 @@ object MermaidParser {
             null -> FlowchartParser.parse(lines).toMermaidDiagram() // headerless fallback
             FlowchartParser -> FlowchartParser.parse(lines).toMermaidDiagram() // keeps the header
             else -> {
-                val body = if (handler!!.consumesHeaderLine) lines else lines.drop(1)
+                // Indentation-sensitive diagrams (e.g. mindmap) receive raw lines so depth is
+                // preserved; every other parser keeps the trimmed, blank/comment-stripped view.
+                val body =
+                    if (handler!!.preservesIndentation) {
+                        source.lines()
+                            .filter { it.isNotBlank() && !it.trimStart().startsWith("%%") }
+                    } else if (handler.consumesHeaderLine) {
+                        lines
+                    } else {
+                        lines.drop(1)
+                    }
                 handler.parse(body).toMermaidDiagram()
             }
         }

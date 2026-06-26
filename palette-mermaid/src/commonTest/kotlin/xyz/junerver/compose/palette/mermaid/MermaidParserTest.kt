@@ -101,6 +101,100 @@ class MermaidParserTest {
     }
 
     @Test
+    fun laysOutFlowchartSubgraphsDisjointByPrimaryOwnership() {
+        // Three sequential subgraphs whose members cross boundaries (B appears in 输入 via
+        // A-->B and in 处理 via B-->C; D/E appear in both 处理 and 输出). Each node must end up
+        // owned by exactly one subgraph box — the one that first claims it — so the boxes are
+        // disjoint and their outlines never cut through a shared node.
+        val layout =
+            MermaidLayoutEngine.layout(
+                MermaidParser.parse(
+                    """
+                    flowchart TD
+                        subgraph s1 [输入]
+                            A[Markdown] --> B[Parser]
+                        end
+                        subgraph s2 [处理]
+                            B --> C{Judge}
+                            C --> D[Code]
+                            C --> E[Parse]
+                        end
+                        subgraph s3 [输出]
+                            D --> F[Viewer]
+                            E --> F
+                            F --> G[Preview]
+                        end
+                    """.trimIndent(),
+                ),
+            )
+
+        // A node belongs to a box when its center sits inside the box rectangle.
+        fun ownerOf(nodeId: String): String? {
+            val n = layout.nodes.getValue(nodeId)
+            val cx = n.x + 66f
+            val cy = n.y + 22f
+            return layout.subgraphs.firstOrNull { sg -> cx in sg.x..(sg.x + sg.width) && cy in sg.y..(sg.y + sg.height) }?.subgraph?.label
+        }
+
+        // First-declaration wins: A/B owned by s1 (输入), C/D/E by s2 (处理), F/G by s3 (输出).
+        assertEquals("输入", ownerOf("A"))
+        assertEquals("输入", ownerOf("B"))
+        assertEquals("处理", ownerOf("C"))
+        assertEquals("处理", ownerOf("D"))
+        assertEquals("处理", ownerOf("E"))
+        assertEquals("输出", ownerOf("F"))
+        assertEquals("输出", ownerOf("G"))
+    }
+
+    @Test
+    fun laysOutFlowchartCentersNodesWithinEachRank() {
+        // One root fanning out to two leaves: the single root (rank 0) must sit horizontally
+        // centered relative to the two-leaf rank so the diagram reads balanced, mirroring
+        // mermaid.live's per-rank centering rather than left-stacking.
+        val layout =
+            MermaidLayoutEngine.layout(
+                MermaidParser.parse(
+                    """
+                    flowchart TD
+                        A --> B
+                        A --> C
+                    """.trimIndent(),
+                ),
+            )
+
+        val a = layout.nodes.getValue("A")
+        val b = layout.nodes.getValue("B")
+        val c = layout.nodes.getValue("C")
+        // B and C share a rank; A's horizontal center should match the midpoint of B and C.
+        val aCenter = a.x + 66f
+        val rankMid = ((b.x + c.x) / 2f) + 66f
+        assertEquals(rankMid, aCenter, 1f)
+    }
+
+    @Test
+    fun laysOutFlowchartFanInAlignsMergeTarget() {
+        // Two sources converging on one target: the merge target (rank 1) should center on
+        // the midpoint of its two predecessors (rank 0), the crossing-reduced outcome.
+        val layout =
+            MermaidLayoutEngine.layout(
+                MermaidParser.parse(
+                    """
+                    flowchart TD
+                        A --> C
+                        B --> C
+                    """.trimIndent(),
+                ),
+            )
+
+        val a = layout.nodes.getValue("A")
+        val b = layout.nodes.getValue("B")
+        val c = layout.nodes.getValue("C")
+        val cCenter = c.x + 66f
+        val sourceMid = ((a.x + b.x) / 2f) + 66f
+        assertEquals(sourceMid, cCenter, 1f)
+    }
+
+    @Test
     fun parsesPipeLabelsAndCommonArrowStyles() {
         val diagram =
             MermaidParser.parse(
@@ -815,5 +909,97 @@ class MermaidParserTest {
         assertEquals("develop", merge.from)
         assertEquals("main", merge.into)
         assertTrue(diagram.gitCommits.any { it.isMerge && it.branch == "main" })
+    }
+
+    @Test
+    fun parsesMindmapDiagram() {
+        val diagram =
+            MermaidParser.parse(
+                """
+                mindmap
+                  root((mindmap))
+                    Origins
+                      Long history
+                    Research
+                      On effectiveness
+                    Tools
+                      Mermaid
+                """.trimIndent(),
+            )
+
+        assertEquals(MermaidDiagramType.MindmapDiagram, diagram.type)
+        // Root + 3 first-level (Origins/Research/Tools) + 3 second-level (Long history/On effectiveness/Mermaid) = 7 nodes.
+        assertEquals(7, diagram.mindmapNodes.size)
+        val root = diagram.mindmapNodes.first { it.depth == 0 }
+        assertEquals("mindmap", root.label)
+        assertEquals(MindmapNodeShape.Circle, root.shape)
+        assertNull(root.parentId)
+        // Origins and Research and Tools are depth-1 children of root.
+        val origins = diagram.mindmapNodes.first { it.label == "Origins" }
+        assertEquals(1, origins.depth)
+        assertEquals(root.id, origins.parentId)
+        // Long history is depth-2 child of Origins.
+        val longHistory = diagram.mindmapNodes.first { it.label == "Long history" }
+        assertEquals(2, longHistory.depth)
+        assertEquals(origins.id, longHistory.parentId)
+    }
+
+    @Test
+    fun parsesMindmapShapes() {
+        val diagram =
+            MermaidParser.parse(
+                """
+                mindmap
+                  root((Root))
+                    sq[I am square]
+                    rd(I am rounded)
+                    hex{{I am hexagon}}
+                    plain
+                """.trimIndent(),
+            )
+
+        assertEquals(MindmapNodeShape.Square, diagram.mindmapNodes.first { it.label == "I am square" }.shape)
+        assertEquals(MindmapNodeShape.Rounded, diagram.mindmapNodes.first { it.label == "I am rounded" }.shape)
+        assertEquals(MindmapNodeShape.Hexagon, diagram.mindmapNodes.first { it.label == "I am hexagon" }.shape)
+        assertEquals(MindmapNodeShape.Default, diagram.mindmapNodes.first { it.label == "plain" }.shape)
+    }
+
+    @Test
+    fun laysOutMindmapTreeByDepth() {
+        val diagram =
+            MermaidParser.parse(
+                """
+                mindmap
+                  root((root))
+                    a
+                      a1
+                      a2
+                    b
+                """.trimIndent(),
+            )
+        val layout = MermaidLayoutEngine.layout(diagram)
+
+        assertEquals(MermaidDiagramType.MindmapDiagram, layout.type)
+        // Each depth gets its own horizontal column.
+        val rootX = layout.nodes.getValue("m1").x
+        val aX = layout.nodes.getValue("m2").x
+        val a1X = layout.nodes.getValue("m3").x
+        assertEquals(true, aX > rootX)
+        assertEquals(true, a1X > aX)
+        // Parent (a) is centered between its two leaves a1/a2.
+        val aY = layout.nodes.getValue("m2").y
+        val a1Y = layout.nodes.getValue("m3").y
+        val a2Y = layout.nodes.getValue("m4").y
+        assertEquals(true, a1Y < aY && aY < a2Y)
+        // Each parent→child pair produces a connector edge.
+        assertEquals(4, layout.edges.size)
+    }
+
+    @Test
+    fun laysOutEmptyMindmapWithoutCrashing() {
+        val diagram = MermaidParser.parse("mindmap\n")
+        val layout = MermaidLayoutEngine.layout(diagram)
+        assertEquals(0, layout.nodes.size)
+        assertEquals(0, layout.edges.size)
     }
 }

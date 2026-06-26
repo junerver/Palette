@@ -20,6 +20,8 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.drawWithContent
+import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.PathEffect
@@ -63,6 +65,8 @@ import xyz.junerver.compose.palette.mermaid.MermaidNodeShape
 import xyz.junerver.compose.palette.mermaid.MermaidNote
 import xyz.junerver.compose.palette.mermaid.MermaidNotePosition
 import xyz.junerver.compose.palette.mermaid.MermaidParser
+import xyz.junerver.compose.palette.mermaid.MindmapNode
+import xyz.junerver.compose.palette.mermaid.MindmapNodeShape
 import xyz.junerver.compose.palette.mermaid.PieSlice
 import xyz.junerver.compose.palette.mermaid.StateDefinition
 import kotlin.math.abs
@@ -285,11 +289,31 @@ internal fun calculateFlowchartEdgeEndpoints(
     toY: Float,
     nodeWidth: Float,
     nodeHeight: Float,
-): MermaidEdgeEndpoints =
-    when (direction) {
+    fromShape: MermaidNodeShape = MermaidNodeShape.Rectangle,
+    toShape: MermaidNodeShape = MermaidNodeShape.Rectangle,
+): MermaidEdgeEndpoints {
+    // Diamond fan-out: when a decision node branches to two children laid out left/right of
+    // its center, mermaid.live starts the connectors at the diamond's lower-edge midpoints
+    // (¼ and ¾ across), not its bottom vertex. We pick the side by comparing the target's
+    // horizontal center to the source's — left target → left midpoint, right target → right
+    // midpoint, directly-below target → bottom vertex.
+    val diamondDownStart: Offset? =
+        if (direction == MermaidDirection.TopDown && fromShape == MermaidNodeShape.Diamond) {
+            val sourceCenterX = fromX + nodeWidth / 2f
+            val targetCenterX = toX + nodeWidth / 2f
+            when {
+                targetCenterX < sourceCenterX - 1f -> Offset(fromX + nodeWidth / 4f, fromY + nodeHeight * 0.75f)
+                targetCenterX > sourceCenterX + 1f -> Offset(fromX + nodeWidth * 0.75f, fromY + nodeHeight * 0.75f)
+                else -> null // directly below → keep the bottom vertex
+            }
+        } else {
+            null
+        }
+
+    return when (direction) {
         MermaidDirection.TopDown ->
             MermaidEdgeEndpoints(
-                start = Offset(fromX + nodeWidth / 2f, fromY + nodeHeight),
+                start = diamondDownStart ?: Offset(fromX + nodeWidth / 2f, fromY + nodeHeight),
                 end = Offset(toX + nodeWidth / 2f, toY),
             )
 
@@ -311,6 +335,7 @@ internal fun calculateFlowchartEdgeEndpoints(
                 end = Offset(toX + nodeWidth, toY + nodeHeight / 2f),
             )
     }
+}
 
 internal fun calculateMermaidArrowHead(
     start: Offset,
@@ -427,6 +452,13 @@ fun PMermaidDiagram(
                 commits = parsedDiagram?.gitCommits.orEmpty(),
                 merges = parsedDiagram?.gitMerges.orEmpty(),
             )
+
+        MermaidDiagramType.MindmapDiagram ->
+            MindmapDiagramMermaidDiagram(
+                modifier = modifier,
+                colors = colors,
+                layout = resolvedLayout,
+            )
     }
 }
 
@@ -455,13 +487,29 @@ private fun FlowchartMermaidDiagram(
                 .height(height),
     ) {
         layout.subgraphs.forEach { subgraph ->
+            // mermaid.live draws clusters as dashed outlines around their members. A
+            // dashed border needs a Canvas/DrawScope (Modifier.border only does solid),
+            // so the box uses a faint fill + a dashed-stroke rectangle drawn behind it.
             Box(
                 modifier =
                     Modifier
                         .absoluteOffset(x = subgraph.x.dp, y = subgraph.y.dp)
                         .size(width = subgraph.width.dp, height = subgraph.height.dp)
-                        .background(colors.nodeContainerColor.copy(alpha = 0.32f), RoundedCornerShape(8.dp))
-                        .border(1.dp, colors.nodeBorderColor.copy(alpha = 0.56f), RoundedCornerShape(8.dp))
+                        .background(colors.nodeContainerColor.copy(alpha = 0.18f), RoundedCornerShape(8.dp))
+                        .drawWithContent {
+                            drawContent()
+                            val outline = colors.nodeBorderColor.copy(alpha = 0.7f)
+                            drawRoundRect(
+                                color = outline,
+                                topLeft = Offset(0.5f, 0.5f),
+                                size = androidx.compose.ui.geometry.Size(size.width - 1f, size.height - 1f),
+                                cornerRadius = CornerRadius(8.dp.toPx(), 8.dp.toPx()),
+                                style = Stroke(
+                                    width = 1.dp.toPx(),
+                                    pathEffect = PathEffect.dashPathEffect(floatArrayOf(6f, 5f)),
+                                ),
+                            )
+                        }
                         .padding(horizontal = 10.dp, vertical = 6.dp),
                 contentAlignment = Alignment.TopStart,
             ) {
@@ -491,6 +539,8 @@ private fun FlowchartMermaidDiagram(
                         toY = to.y,
                         nodeWidth = nodeWidth.toPx(),
                         nodeHeight = nodeHeight.toPx(),
+                        fromShape = from.node.shape,
+                        toShape = to.node.shape,
                     )
                 val pathEffect =
                     if (edge.style == MermaidEdgeStyle.Dotted) {
@@ -577,29 +627,6 @@ private fun FlowchartMermaidDiagram(
             }
         }
 
-        layout.edges.forEachIndexed { index, edge ->
-            if (!edge.visible) return@forEachIndexed
-            val label = edge.label ?: return@forEachIndexed
-            val labelPosition = labelPositions[index] ?: return@forEachIndexed
-            val edgeVisualStyle = edgeVisualStyles[index]
-
-            Text(
-                text = label,
-                color = edgeVisualStyle?.color ?: colors.nodeContentColor,
-                style = PaletteTheme.typography.label,
-                modifier =
-                    Modifier
-                        .absoluteOffset(x = labelPosition.x.dp, y = labelPosition.y.dp)
-                        .background(colors.nodeContainerColor, RoundedCornerShape(4.dp))
-                        .border(
-                            width = (edgeVisualStyle?.strokeWidth ?: 1f).dp,
-                            color = edgeVisualStyle?.stroke ?: colors.edgeColor,
-                            shape = RoundedCornerShape(4.dp),
-                        )
-                        .padding(horizontal = 6.dp, vertical = 2.dp),
-            )
-        }
-
         layout.nodes.values.forEach { item ->
             val nodeShape = item.node.shape.toComposeShape()
             val nodeVisualStyle = nodeVisualStyles[item.node.id]
@@ -626,6 +653,31 @@ private fun FlowchartMermaidDiagram(
             }
         }
 
+        // Edge labels are drawn LAST (above nodes) so a label sitting near a node boundary is
+        // never erased by the node's fill — mermaid.live renders labels on top of nodes too.
+        layout.edges.forEachIndexed { index, edge ->
+            if (!edge.visible) return@forEachIndexed
+            val label = edge.label ?: return@forEachIndexed
+            val labelPosition = labelPositions[index] ?: return@forEachIndexed
+            val edgeVisualStyle = edgeVisualStyles[index]
+
+            Text(
+                text = label,
+                color = edgeVisualStyle?.color ?: colors.nodeContentColor,
+                style = PaletteTheme.typography.label,
+                modifier =
+                    Modifier
+                        .absoluteOffset(x = labelPosition.x.dp, y = labelPosition.y.dp)
+                        .background(colors.nodeContainerColor, RoundedCornerShape(4.dp))
+                        .border(
+                            width = (edgeVisualStyle?.strokeWidth ?: 1f).dp,
+                            color = edgeVisualStyle?.stroke ?: colors.edgeColor,
+                            shape = RoundedCornerShape(4.dp),
+                        )
+                        .padding(horizontal = 6.dp, vertical = 2.dp),
+            )
+        }
+
         if (layout.nodes.isEmpty()) {
             Text(
                 text = "Empty diagram",
@@ -642,22 +694,40 @@ private data class MermaidEdgeLabelPosition(
     val y: Float,
 )
 
+// Half of the uniform flowchart node footprint (132×44). Edge-label midpoint math uses node
+// centres, which are these offsets away from the stored top-left coordinates.
+private const val FlowchartLabelNodeHalfWidth = 66f
+private const val FlowchartLabelNodeHalfHeight = 22f
+// Two labels collide only when their anchors are within this horizontal distance. Tuned to
+// the real label width so diverging fan-out labels (~90px apart) are not falsely merged.
+private const val FlowchartLabelCollisionX = 60f
+
 private fun calculateFlowchartEdgeLabelPositions(layout: MermaidLayout): Map<Int, MermaidEdgeLabelPosition> {
     val placed = mutableListOf<MermaidEdgeLabelPosition>()
     val positions = mutableMapOf<Int, MermaidEdgeLabelPosition>()
+    // Label is anchored at its top-left; nudge it so its center sits at the edge midpoint.
+    val labelHalfWidth = 18f
+    val labelHalfHeight = 8f
 
     layout.edges.forEachIndexed { index, edge ->
         if (edge.label == null) return@forEachIndexed
         val from = layout.nodes[edge.from] ?: return@forEachIndexed
         val to = layout.nodes[edge.to] ?: return@forEachIndexed
-        val labelX = ((from.x + to.x) / 2f + 44f).coerceAtLeast(0f)
-        var labelY = ((from.y + to.y) / 2f + 8f).coerceAtLeast(0f)
+        // Use node centres (not top-left corners) so the label sits on the connector's true
+        // midpoint rather than drifting toward whichever node has the smaller x/y.
+        val midX = (from.x + to.x) / 2f + FlowchartLabelNodeHalfWidth
+        var midY = (from.y + to.y) / 2f + FlowchartLabelNodeHalfHeight
+        var labelX = midX - labelHalfWidth
+        var labelY = midY - labelHalfHeight
 
-        while (placed.any { abs(it.x - labelX) < 96f && abs(it.y - labelY) < 24f }) {
+        // Avoid stacking labels on top of each other. The x threshold matches the real label
+        // width (~60px) so diverging fan-out labels (e.g. a diamond branching left/right) —
+        // which sit ~90px apart but never actually overlap — aren't forced down into nodes.
+        while (placed.any { abs(it.x - labelX) < FlowchartLabelCollisionX && abs(it.y - labelY) < 24f }) {
             labelY += 18f
         }
 
-        val position = MermaidEdgeLabelPosition(labelX, labelY)
+        val position = MermaidEdgeLabelPosition(labelX.coerceAtLeast(0f), labelY.coerceAtLeast(0f))
         placed += position
         positions[index] = position
     }
@@ -792,7 +862,14 @@ private fun SequenceMermaidDiagram(
             val to = layout.nodes[edge.to] ?: return@forEachIndexed
             val left = minOf(from.x, to.x)
             val right = maxOf(from.x, to.x)
-            val labelWidth = (right - left).coerceAtLeast(132f)
+            // Keep the label pill narrow (text-sized) so it doesn't blanket the arrow line;
+            // a full-span width would erase the connector entirely.
+            val labelWidth = (right - left).coerceIn(132f, 200f)
+            // Arrow runs horizontally at this y between the two lifeline centres. The label
+            // sits ABOVE the line (so the line stays visible) but is horizontally centred on
+            // the arrow's midpoint — mirroring mermaid.live's alignment.
+            val arrowY = messageStartY + edge.sequenceIndex * messageGap
+            val arrowCenterX = (from.x + to.x) / 2f + 66f
 
             Text(
                 text = label,
@@ -802,12 +879,13 @@ private fun SequenceMermaidDiagram(
                 modifier =
                     Modifier
                         .absoluteOffset(
-                            x = (left + 66f - labelWidth / 2f).coerceAtLeast(0f).dp,
-                            y = (messageStartY + edge.sequenceIndex * messageGap - 30f).coerceAtLeast(48f).dp,
+                            x = (arrowCenterX - labelWidth / 2f).coerceAtLeast(0f).dp,
+                            y = (arrowY - SequenceLabelLift).coerceAtLeast(48f).dp,
                         )
                         .width(labelWidth.dp)
+                        // No border (mermaid.live renders message labels as plain text on the
+                        // line); keep a solid background so the connector is masked behind it.
                         .background(colors.nodeContainerColor, RoundedCornerShape(4.dp))
-                        .border(1.dp, colors.edgeColor, RoundedCornerShape(4.dp))
                         .padding(horizontal = 6.dp, vertical = 2.dp),
             )
         }
@@ -825,23 +903,27 @@ private fun SequenceMermaidDiagram(
 
         layout.nodes.values.forEach { item ->
             val nodeShape = item.node.shape.toComposeShape()
-            Box(
-                modifier =
-                    Modifier
-                        .absoluteOffset(x = item.x.dp, y = item.y.dp)
-                        .size(width = nodeWidth, height = nodeHeight)
-                        .background(colors.nodeContainerColor, nodeShape)
-                        .border(1.dp, colors.nodeBorderColor, nodeShape)
-                        .padding(horizontal = 8.dp),
-                contentAlignment = Alignment.Center,
-            ) {
-                Text(
-                    text = item.node.label,
-                    color = colors.nodeContentColor,
-                    style = PaletteTheme.typography.label,
-                    textAlign = TextAlign.Center,
-                )
-            }
+            // Top participant box (at item.y = 0).
+            SequenceParticipantBox(
+                x = item.x,
+                y = item.y,
+                label = item.node.label,
+                nodeWidth = nodeWidth,
+                nodeHeight = nodeHeight,
+                nodeShape = nodeShape,
+                colors = colors,
+            )
+            // Bottom participant box: mermaid.live repeats each participant at the foot of its
+            // lifeline. Dock it just above the canvas bottom, mirroring the top box.
+            SequenceParticipantBox(
+                x = item.x,
+                y = (height.value - nodeHeight.value - SequenceBottomBoxMargin).coerceAtLeast(item.y),
+                label = item.node.label,
+                nodeWidth = nodeWidth,
+                nodeHeight = nodeHeight,
+                nodeShape = nodeShape,
+                colors = colors,
+            )
         }
 
         if (layout.nodes.isEmpty()) {
@@ -1334,6 +1416,43 @@ private fun StateDiagramMermaidDiagram(
     }
 }
 
+// Vertical margin between the bottom participant box and the canvas floor.
+private const val SequenceBottomBoxMargin = 8f
+// How far an edge label is lifted above its arrow line, so the connector stays visible.
+private const val SequenceLabelLift = 24f
+// Approx half-height of a note pill; used to vertically centre a note on its own row.
+private const val SequenceNoteHalfHeight = 14f
+
+/** A participant box (top or bottom of a lifeline). Shared by both copies so they stay identical. */
+@Composable
+private fun SequenceParticipantBox(
+    x: Float,
+    y: Float,
+    label: String,
+    nodeWidth: Dp,
+    nodeHeight: Dp,
+    nodeShape: Shape,
+    colors: MermaidColors,
+) {
+    Box(
+        modifier =
+            Modifier
+                .absoluteOffset(x = x.dp, y = y.dp)
+                .size(width = nodeWidth, height = nodeHeight)
+                .background(colors.nodeContainerColor, nodeShape)
+                .border(1.dp, colors.nodeBorderColor, nodeShape)
+                .padding(horizontal = 8.dp),
+        contentAlignment = Alignment.Center,
+    ) {
+        Text(
+            text = label,
+            color = colors.nodeContentColor,
+            style = PaletteTheme.typography.label,
+            textAlign = TextAlign.Center,
+        )
+    }
+}
+
 @Composable
 private fun SequenceNote(
     note: MermaidNote,
@@ -1344,7 +1463,14 @@ private fun SequenceNote(
     messageGap: Float,
 ) {
     val frame = note.sequenceNoteFrame(layout = layout, nodeWidth = nodeWidth) ?: return
-    val noteY = messageStartY + note.sequenceIndex * messageGap - 24f
+    // A note occupies its own row (no arrow runs through it), so centre it vertically on that
+    // row instead of lifting it above — matching mermaid.live's inline note placement.
+    val noteY = messageStartY + note.sequenceIndex * messageGap - SequenceNoteHalfHeight
+    // mermaid.live notes have a distinctive folded top-right corner (dog-ear) and a warm fill,
+    // not the plain rectangle used for participants.
+    val noteShape = SequenceNoteShape
+    val noteFill = colors.noteColor.takeIf { it != Color.Unspecified } ?: colors.nodeContainerColor
+    val noteStroke = colors.noteBorderColor.takeIf { it != Color.Unspecified } ?: colors.nodeBorderColor
 
     Text(
         text = note.text,
@@ -1355,11 +1481,28 @@ private fun SequenceNote(
             Modifier
                 .absoluteOffset(x = frame.x.dp, y = noteY.dp)
                 .width(frame.width.dp)
-                .background(colors.nodeContainerColor, RoundedCornerShape(4.dp))
-                .border(1.dp, colors.nodeBorderColor, RoundedCornerShape(4.dp))
-                .padding(horizontal = 8.dp, vertical = 6.dp),
+                .background(noteFill, noteShape)
+                .border(1.dp, noteStroke, noteShape)
+                .padding(horizontal = 8.dp, vertical = 6.dp)
+                // Reserve a little room on the right so text clears the folded corner.
+                .padding(end = 6.dp),
     )
 }
+
+/** A note shape with a folded top-right corner (dog-ear), the mermaid.live note silhouette.
+ *  The fold is a fixed fraction of the box so it scales with the note size. */
+private val SequenceNoteShape: Shape =
+    GenericShape { size, _ ->
+        val w = size.width
+        val h = size.height
+        val fold = minOf(w, h) * 0.22f
+        moveTo(0f, 0f)
+        lineTo(w - fold, 0f)
+        lineTo(w, fold)
+        lineTo(w, h)
+        lineTo(0f, h)
+        close()
+    }
 
 private data class SequenceNoteFrame(
     val x: Float,
@@ -1375,6 +1518,11 @@ private fun MermaidNote.sequenceNoteFrame(
             .mapNotNull { layout.nodes[it] }
             .takeIf { it.isNotEmpty() }
             ?: return null
+    // Lifelines in display order (left→right) so a "right of X" note can find X's neighbour.
+    val lifelines = layout.nodes.values.sortedBy { it.x }
+    val subject = participantPositions.first()
+    val subjectIndex = lifelines.indexOfFirst { it.node.id == subject.node.id }
+
     val noteWidth =
         when (position) {
             MermaidNotePosition.Over -> {
@@ -1385,13 +1533,28 @@ private fun MermaidNote.sequenceNoteFrame(
 
             MermaidNotePosition.LeftOf,
             MermaidNotePosition.RightOf,
-            -> 132f
+            // Narrower than a full node so it fits in the gap between two adjacent lifelines.
+            -> 96f
         }
     val noteX =
         when (position) {
             MermaidNotePosition.Over -> participantPositions.minOf { it.x }
-            MermaidNotePosition.LeftOf -> (participantPositions.first().x - noteWidth - 16f).coerceAtLeast(0f)
-            MermaidNotePosition.RightOf -> participantPositions.first().x + nodeWidth + 16f
+            // Centre the note on the midpoint between the subject lifeline and its nearest
+            // neighbour on the chosen side — mirroring mermaid.live, which parks the note in
+            // that gap. No hard clamp: a centred note may overlap the subject box edge, which
+            // is fine (the note renders above the lifeline connectors).
+            MermaidNotePosition.RightOf -> {
+                val neighbour = lifelines.getOrNull(subjectIndex + 1)
+                val subjectCenter = subject.x + nodeWidth / 2f
+                val rightBound = neighbour?.let { it.x + nodeWidth / 2f } ?: (subject.x + nodeWidth)
+                (subjectCenter + rightBound) / 2f - noteWidth / 2f
+            }
+            MermaidNotePosition.LeftOf -> {
+                val neighbour = lifelines.getOrNull(subjectIndex - 1)
+                val subjectCenter = subject.x + nodeWidth / 2f
+                val leftBound = neighbour?.let { it.x + nodeWidth / 2f } ?: 0f
+                ((leftBound + subjectCenter) / 2f - noteWidth / 2f).coerceAtLeast(0f)
+            }
         }
     return SequenceNoteFrame(x = noteX, width = noteWidth)
 }
@@ -2097,6 +2260,90 @@ private fun GitGraphDiagramMermaidDiagram(
                 textAlign = TextAlign.Center,
                 maxLines = 1,
             )
+        }
+    }
+}
+
+// ── Mindmap rendering ─────────────────────────────────────────────────
+// The layout stores each node's (x, y) as its center. Connectors run from a parent's
+// right edge to its child's left edge (the tree grows left→right), drawn as soft cubic
+// curves so branches stay visually distinct from the straight flowchart edges.
+
+@Composable
+private fun MindmapDiagramMermaidDiagram(
+    modifier: Modifier,
+    colors: MermaidColors,
+    layout: MermaidLayout,
+) {
+    if (layout.nodes.isEmpty()) {
+        Box(modifier = modifier, contentAlignment = Alignment.Center) {
+            Text("Empty mindmap", color = colors.nodeContentColor, style = PaletteTheme.typography.body)
+        }
+        return
+    }
+
+    val nodeWidth = 132.dp
+    val nodeHeight = 44.dp
+    val cornerRadius = MermaidDefaults.cornerRadius()
+    val maxCenterX = layout.nodes.values.maxOf { it.x }
+    val maxCenterY = layout.nodes.values.maxOf { it.y }
+    // Total canvas: room for the deepest node's right half + horizontal/vertical padding.
+    val width = (maxCenterX + nodeWidth.value / 2f + 24f).dp
+    val height = (maxCenterY + nodeHeight.value / 2f + 24f).dp
+
+    Box(modifier = modifier.width(width).height(height)) {
+        Canvas(modifier = Modifier.matchParentSize()) {
+            val halfW = nodeWidth.toPx() / 2f
+            val halfH = nodeHeight.toPx() / 2f
+            layout.edges.forEach { edge ->
+                val from = layout.nodes[edge.from] ?: return@forEach
+                val to = layout.nodes[edge.to] ?: return@forEach
+                val start = Offset(from.x + halfW, from.y)
+                val end = Offset(to.x - halfW, to.y)
+                // Cubic with control points pulled horizontally — a gentle S-curve connector.
+                val ctrl1 = Offset(start.x + (end.x - start.x) * 0.5f, start.y)
+                val ctrl2 = Offset(start.x + (end.x - start.x) * 0.5f, end.y)
+                val path = Path().apply {
+                    moveTo(start.x, start.y)
+                    cubicTo(ctrl1.x, ctrl1.y, ctrl2.x, ctrl2.y, end.x, end.y)
+                }
+                drawPath(
+                    path = path,
+                    color = colors.edgeColor,
+                    style = Stroke(width = 1.5.dp.toPx(), cap = StrokeCap.Round),
+                )
+            }
+        }
+
+        layout.nodes.values.forEach { item ->
+            val shape = item.node.shape.toComposeShape()
+            // Circle/bang render as filled dots (mermaid mindmap convention); boxes keep the
+            // container/border look shared with the rest of the diagram family.
+            val isDot = item.node.shape == MermaidNodeShape.Circle
+            Box(
+                modifier = Modifier
+                    .absoluteOffset(x = (item.x - nodeWidth.value / 2f).dp, y = (item.y - nodeHeight.value / 2f).dp)
+                    .size(width = nodeWidth, height = nodeHeight)
+                    .then(
+                        if (isDot) {
+                            Modifier.background(colors.nodeContainerColor, shape)
+                        } else {
+                            Modifier
+                                .background(colors.nodeContainerColor, shape)
+                                .border(1.dp, colors.nodeBorderColor, shape)
+                        },
+                    )
+                    .padding(horizontal = 8.dp),
+                contentAlignment = Alignment.Center,
+            ) {
+                Text(
+                    text = item.node.label,
+                    color = colors.nodeContentColor,
+                    style = PaletteTheme.typography.label,
+                    textAlign = TextAlign.Center,
+                    maxLines = 2,
+                )
+            }
         }
     }
 }

@@ -93,6 +93,35 @@ data class GitMerge(
     val mergeCommitId: String,
 )
 
+// ── Mindmap models ────────────────────────────────────────────────────
+
+/** Shape of a mindmap node, mirroring mermaid's mindmap shape syntax. */
+enum class MindmapNodeShape {
+    /** Default — plain text, no delimiters. */
+    Default,
+    /** `id[text]` — square. */
+    Square,
+    /** `id(text)` — rounded square. */
+    Rounded,
+    /** `id((text))` — circle. */
+    Circle,
+    /** `id{{text}}` — hexagon. */
+    Hexagon,
+    /** `id)text(` — cloud. */
+    Cloud,
+    /** `id))text((` — bang. */
+    Bang,
+}
+
+/** A mindmap node. [depth] is the indentation level (0 = root). [parentId] is null for root. */
+data class MindmapNode(
+    val id: String,
+    val label: String,
+    val shape: MindmapNodeShape,
+    val depth: Int,
+    val parentId: String?,
+)
+
 // ── Class Diagram models ──────────────────────────────────────────────
 
 enum class MermaidClassMemberKind {
@@ -250,6 +279,7 @@ data class MermaidDiagram(
     val gitBranches: List<GitBranch> = emptyList(),
     val gitCommits: List<GitCommit> = emptyList(),
     val gitMerges: List<GitMerge> = emptyList(),
+    val mindmapNodes: List<MindmapNode> = emptyList(),
 )
 
 data class MermaidNode(
@@ -313,6 +343,7 @@ enum class MermaidDiagramType {
     PieDiagram,
     GanttDiagram,
     GitGraphDiagram,
+    MindmapDiagram,
 }
 
 enum class MermaidDirection {

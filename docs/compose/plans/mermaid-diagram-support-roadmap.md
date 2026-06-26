@@ -108,6 +108,7 @@
 | 2026-06-25 | PieDiagram | — | 新增（扇形+图例+showData） |
 | 2026-06-25 | GanttDiagram | — | 新增（核心版：section/task/status/duration/after，日期解析待后续） |
 | 2026-06-26 | GitGraphDiagram | — | 新增（commit/branch/checkout/merge + id/tag/type，cherry-pick 待后续） |
+| 2026-06-26 | MindmapDiagram | — | 新增（缩进树解析：相对缩进层级、6 种形状、parent 解析、tidy-tree 布局、S 曲线连接） |
 
 ---
 
@@ -116,6 +117,7 @@
 - [x] 第一期-1：Pie Chart ✅（2026-06-25）
 - [x] 第一期-2：Gantt ✅（2026-06-25，核心版：section/task/status/duration/after 依赖，日期解析待后续）
 - [x] 第一期-3：GitGraph ✅（2026-06-26，commit/branch/checkout/merge + id/tag/type，cherry-pick 待后续）
-- [ ] 第二期：Mindmap / Timeline / Quadrant / XYChart
+- [x] 第二期-1：Mindmap ✅（2026-06-26，缩进树解析 + tidy-tree 布局 + S 曲线连接；timeline/quadrant/xychart 待后续）
+- [ ] 第二期剩余：Timeline / Quadrant / XYChart
 - [ ] 第三期：Requirement / C4 / Block
 - [ ] 第四期：Journey / Sankey / Packet / Architecture
