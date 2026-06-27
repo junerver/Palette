@@ -6,6 +6,7 @@ import xyz.junerver.compose.palette.code.grammar.languages.IniGrammar
 import xyz.junerver.compose.palette.code.grammar.languages.JavaGrammar
 import xyz.junerver.compose.palette.code.grammar.languages.KotlinLikeGrammar
 import xyz.junerver.compose.palette.code.grammar.languages.MarkdownGrammar
+import xyz.junerver.compose.palette.code.grammar.languages.PythonGrammar
 import xyz.junerver.compose.palette.code.grammar.languages.SqlGrammar
 import xyz.junerver.compose.palette.code.grammar.languages.TomlGrammar
 import xyz.junerver.compose.palette.code.grammar.languages.TypeScriptGrammar
@@ -231,6 +232,36 @@ class DeclarativeGrammarLanguagesTest {
     fun iniGrammar_classifiesCommentFromHashOrSemicolon() {
         assertEquals("comment", GrammarTokenizer.tokenize("# note", IniGrammar).first().type.name)
         assertEquals("comment", GrammarTokenizer.tokenize("; note", IniGrammar).first().type.name)
+    }
+
+    // ── Python ───────────────────────────────────────────────────────────
+
+    @Test
+    fun pythonGrammar_classifiesDecoratorKeywordTypeFunction() {
+        val tokens = GrammarTokenizer.tokenize("@dataclass\ndef greet(name: str) -> str:", PythonGrammar)
+        assertTrue(tokens.any { it.text == "@dataclass" && it.type.name == "annotation" })
+        assertTrue(tokens.any { it.text == "def" && it.type.name == "keyword" })
+        assertTrue(tokens.any { it.text == "greet" && it.type.name == "function" })
+        assertTrue(tokens.any { it.text == "str" && it.type.name == "type" })
+    }
+
+    @Test
+    fun pythonGrammar_fStringSplitsInterpolation() {
+        // Build `f"Hello, {name}"` without a `$` (real Python interpolation).
+        val src = "f\"Hello, " + "{" + "name" + "}\""
+        val tokens = GrammarTokenizer.tokenize(src, PythonGrammar)
+        // `f"Hello, ` is one string token (prefix + body up to `{`).
+        assertTrue(tokens.any { it.text == "f\"Hello, " && it.type.name == "string" })
+        assertTrue(tokens.any { it.text == "{" && it.type.name == "operator" })
+        assertTrue(tokens.any { it.text == "name" && it.type.name == "annotation" })
+        assertTrue(tokens.any { it.text == "}" && it.type.name == "operator" })
+        // Closing quote is its own string token.
+        assertTrue(tokens.any { it.text == "\"" && it.type.name == "string" })
+    }
+
+    @Test
+    fun pythonGrammar_classifiesComment() {
+        assertEquals("comment", GrammarTokenizer.tokenize("# visible comment", PythonGrammar).first().type.name)
     }
 
     // ── Java ──────────────────────────────────────────────────────────────

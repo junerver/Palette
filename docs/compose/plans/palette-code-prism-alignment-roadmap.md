@@ -125,6 +125,7 @@ palette-code 已覆盖 17 种语言（Kotlin/Java/JS/TS/JSON/CSS/Python/HTML/XML
 | 2026-06-27 | 第二期：embeddedTokens 引擎能力 | GrammarToken 新增 `embeddedTokens` 回调——返回预分词 token 列表，绕过递归分词；用于嵌入语言需走完整 highlighter（含 lexer fallback）的场景 |
 | 2026-06-27 | 第二期：Markdown grammar 迁移 | 声明式 MarkdownGrammar 替代 MarkdownLexer；heading/list/task/inline-code/link 各归其类；fenced-code 经 `embeddedTokens` 委托 PaletteCodeHighlighter（grammar 优先 + lexer 兜底），支持嵌入 lexer-backed 语言如 kotlin，零回归 |
 | 2026-06-27 | 第二期：Java + TypeScript grammar 迁移 | cFamilyGrammar 工厂构建 C 系语法；JavaGrammar/TypeScriptGrammar 替代 KotlinLikeLexer 路径（非嵌套块注释、TS 模板字面量为整体 token、primitive types 分类）；Kotlin 仍留 lexer（嵌套块注释 + `${}` 插值分词无法用纯正则表达），零回归 |
+| 2026-06-27 | 第二期：Python grammar 迁移 | 声明式 PythonGrammar 替代 PythonLexer；f-string 经 `inside` 拆分（`f"text`→string、`{`→op、`name`→annotation、`}`→op、`"`→string）、三引号跨行 `(?s)`、`@decorator`→annotation、# comment，零回归 |
 
 ## 待办
 
@@ -139,7 +140,7 @@ palette-code 已覆盖 17 种语言（Kotlin/Java/JS/TS/JSON/CSS/Python/HTML/XML
   - [x] SQL 迁移（dollar-quote 反向引用、关键字优先于函数）✅
   - [x] Markdown 迁移（fenced-code 经 embeddedTokens 嵌入，支持 lexer-backed 语言）✅
   - [x] Java + TypeScript 迁移（cFamilyGrammar 工厂；Kotlin 因嵌套块注释 + ${} 插值留 lexer）✅
-  - [ ] Python 迁移：f-string 精确分词（`f"Hello, "`+`{`+`name`+`}`+`"`）+ 三引号跨行，lexer 有专门状态机，纯 grammar 风险高，暂缓
+  - [x] Python 迁移（f-string 经 inside 拆分、三引号跨行）✅
   - [ ] Kotlin 迁移：嵌套块注释 `/* /* */ */` 需递归（正则不可表达）+ `${}` 插值分词，需扩展引擎支持跨行状态或保留 lexer
   - [ ] YAML 迁移（block scalar 状态机，需 grammar 引擎支持跨行状态或保留 lexer）
 - [ ] 第三期：扩展语言覆盖（C/C++/C#/Go/Rust/PHP/Ruby/Swift/Scala/SCSS/JSX）

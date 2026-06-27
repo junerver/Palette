@@ -7,6 +7,7 @@ import xyz.junerver.compose.palette.code.grammar.languages.JavaGrammar
 import xyz.junerver.compose.palette.code.grammar.languages.JsonGrammar
 import xyz.junerver.compose.palette.code.grammar.languages.KotlinLikeGrammar
 import xyz.junerver.compose.palette.code.grammar.languages.MarkdownGrammar
+import xyz.junerver.compose.palette.code.grammar.languages.PythonGrammar
 import xyz.junerver.compose.palette.code.grammar.languages.SqlGrammar
 import xyz.junerver.compose.palette.code.grammar.languages.TomlGrammar
 import xyz.junerver.compose.palette.code.grammar.languages.TypeScriptGrammar
@@ -40,6 +41,9 @@ internal object GrammarRegistry {
         // full PaletteCodeHighlighter (grammar-first, lexer fallback) so lexer-backed embedded
         // languages like `kotlin` highlight correctly.
         putAll(aliases("markdown", listOf("markdown", "md"), MarkdownGrammar))
+        // Python: f-strings modelled via `inside` (string/operator/annotation boundaries),
+        // triple-quoted strings via (?s) multi-line regex.
+        putAll(aliases("python", listOf("python", "py"), PythonGrammar))
         // INI + .properties share one grammar (same lexer historically served both).
         putAll(aliases("ini", listOf("ini", "properties", "props", "conf"), IniGrammar))
         // Markdown grammar exists and the engine handles it, but it stays on the hand-written
