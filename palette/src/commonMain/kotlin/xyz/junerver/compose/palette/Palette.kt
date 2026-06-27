@@ -197,6 +197,9 @@ import xyz.junerver.compose.palette.components.code.CodeBlockDefaults as CodeBlo
 import xyz.junerver.compose.palette.components.code.PCodeBlock as PCodeBlockImpl
 import xyz.junerver.compose.palette.components.markdown.MarkdownDefaults as MarkdownDefaultsImpl
 import xyz.junerver.compose.palette.components.markdown.MarkdownEditorMode as MarkdownEditorModeImpl
+import xyz.junerver.compose.palette.components.markdown.MarkdownFormatToolbar as MarkdownFormatToolbarImpl
+import xyz.junerver.compose.palette.components.markdown.MarkdownHeadingLevel as MarkdownHeadingLevelImpl
+import xyz.junerver.compose.palette.components.markdown.MarkdownToolbarAction as MarkdownToolbarActionImpl
 import xyz.junerver.compose.palette.components.markdown.PMarkdownEditor as PMarkdownEditorImpl
 import xyz.junerver.compose.palette.components.markdown.PMarkdownViewer as PMarkdownViewerImpl
 import xyz.junerver.compose.palette.components.mermaid.MermaidColors as MermaidColorsImpl
@@ -825,9 +828,12 @@ typealias MermaidColors = MermaidColorsImpl
 
 // Components - Markdown
 val PMarkdownViewer = ::PMarkdownViewerImpl
-val PMarkdownEditor = ::PMarkdownEditorImpl
+typealias PMarkdownEditor = PMarkdownEditorImpl
 val MarkdownDefaults = MarkdownDefaultsImpl
 typealias MarkdownEditorMode = MarkdownEditorModeImpl
+typealias MarkdownToolbarAction = MarkdownToolbarActionImpl
+typealias MarkdownHeadingLevel = MarkdownHeadingLevelImpl
+val MarkdownFormatToolbar = ::MarkdownFormatToolbarImpl
 
 // Components - Barcode
 val PBarcode = ::PBarcodeImpl

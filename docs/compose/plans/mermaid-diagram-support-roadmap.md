@@ -123,6 +123,16 @@
 | 2026-06-25 | GanttDiagram | — | 新增（核心版：section/task/status/duration/after，日期解析待后续） |
 | 2026-06-26 | GitGraphDiagram | — | 新增（commit/branch/checkout/merge + id/tag/type，cherry-pick 待后续） |
 | 2026-06-26 | MindmapDiagram | — | 新增（缩进树解析：相对缩进层级、6 种形状、parent 解析、tidy-tree 布局、S 曲线连接） |
+| 2026-06-27 | Timeline | — | 新增（section 上下文 + `:` 续行多事件 + inline 链式事件，左→右水平时间轴） |
+| 2026-06-27 | QuadrantChart | — | 新增（x/y 轴 `-->` 双端标签 + 四象限文本 + 点 `[x,y]` clamp + inline color/radius + classDef） |
+| 2026-06-27 | XYChart | — | 新增（`xychart`/`xychart-beta` 双关键词 + 数值轴/分类轴 + bar/line 多系列 + 自动 y 轴范围） |
+| 2026-06-27 | BlockDiagram | — | 新增（columns 网格 + 列跨度 + `block:` 嵌套 + 多形状 + 中箭头标签边） |
+| 2026-06-27 | RequirementDiagram | — | 新增（6 需求类型 + element + 7 关系双向语法 + DAG 拓扑布局） |
+| 2026-06-27 | C4Diagram | — | 新增（5 子关键词 + 宏调用语法 + Boundary 嵌套 + Rel/BiRel/Rel_Back + 声明顺序布局） |
+| 2026-06-27 | Journey | — | 新增（title + section + 任务行 score 1-5 + 满意度条 + 演员列表） |
+| 2026-06-27 | Packet | — | 新增（显式 `start-end` + 相对 `+bits` + 32-bit 行宽换行 + 连续性） |
+| 2026-06-27 | Sankey | — | 新增（CSV 三列 + 贝塞尔带 + 引号转义 + 节点去重） |
+| 2026-06-27 | Architecture | — | 新增（`architecture-beta` + group/service/junction + icon/title/in 嵌套 + L/R/T/B 端口边 + {group} 修饰符） |
 
 ---
 

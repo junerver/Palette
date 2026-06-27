@@ -1,5 +1,7 @@
 package xyz.junerver.compose.palette.code.grammar
 
+import kotlin.jvm.JvmInline
+
 /**
  * A token type label. Matches Prism's `TokenName`: a `StandardTokenName` (e.g. "keyword",
  * "string", "class-name") or any custom string. [Plain] represents un-tokenized text.
