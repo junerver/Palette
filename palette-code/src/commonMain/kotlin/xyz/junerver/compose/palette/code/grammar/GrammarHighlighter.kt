@@ -49,6 +49,9 @@ internal object GrammarTokenTypeMapping {
         "plain" to CodeTokenType.Plain,
         "keyword" to CodeTokenType.Keyword,
         "string" to CodeTokenType.StringLiteral,
+        // Triple-quoted strings are emitted as a separate rule name (Kotlin/Python) but classify
+        // as the same literal type.
+        "triple" to CodeTokenType.StringLiteral,
         "number" to CodeTokenType.NumberLiteral,
         "comment" to CodeTokenType.Comment,
         "function" to CodeTokenType.Function,

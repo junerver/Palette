@@ -3,16 +3,19 @@ package xyz.junerver.compose.palette.components.mermaid
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.absoluteOffset
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.GenericShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -90,6 +93,9 @@ import xyz.junerver.compose.palette.mermaid.C4Boundary
 import xyz.junerver.compose.palette.mermaid.C4Element
 import xyz.junerver.compose.palette.mermaid.C4RelDirection
 import xyz.junerver.compose.palette.mermaid.C4Relationship
+import xyz.junerver.compose.palette.mermaid.JourneySection
+import xyz.junerver.compose.palette.mermaid.PacketField
+import xyz.junerver.compose.palette.mermaid.SankeyFlow
 import xyz.junerver.compose.palette.mermaid.XySeries
 import xyz.junerver.compose.palette.mermaid.XySeriesKind
 import kotlin.math.abs
@@ -538,6 +544,36 @@ fun PMermaidDiagram(
                 elements = parsedDiagram?.c4Elements.orEmpty(),
                 boundaries = parsedDiagram?.c4Boundaries.orEmpty(),
                 title = parsedDiagram?.title,
+            )
+
+        MermaidDiagramType.Journey ->
+            JourneyDiagramMermaidDiagram(
+                modifier = modifier,
+                colors = colors,
+                title = parsedDiagram?.journeyTitle,
+                sections = parsedDiagram?.journeySections.orEmpty(),
+            )
+
+        MermaidDiagramType.Packet ->
+            PacketDiagramMermaidDiagram(
+                modifier = modifier,
+                colors = colors,
+                title = parsedDiagram?.packetTitle,
+                fields = parsedDiagram?.packetFields.orEmpty(),
+            )
+
+        MermaidDiagramType.Sankey ->
+            SankeyDiagramMermaidDiagram(
+                modifier = modifier,
+                colors = colors,
+                flows = parsedDiagram?.sankeyFlows.orEmpty(),
+            )
+
+        MermaidDiagramType.Architecture ->
+            ArchitectureDiagramMermaidDiagram(
+                modifier = modifier,
+                colors = colors,
+                layout = resolvedLayout,
             )
     }
 }
@@ -3384,6 +3420,290 @@ private fun C4DiagramMermaidDiagram(
                         textAlign = TextAlign.Center, maxLines = 2,
                     )
                 }
+            }
+        }
+    }
+}
+
+// ── Journey ──────────────────────────────────────────────────────────
+
+/**
+ * Journey renderer: a vertical stack of sections, each rendered as a header plus one row per
+ * task. Each task row shows its name, a 5-cell satisfaction bar (filled = score), and the actors.
+ * Score color maps 5→success, 3→warning, 1→error.
+ */
+@Composable
+private fun JourneyDiagramMermaidDiagram(
+    modifier: Modifier,
+    colors: MermaidColors,
+    title: String?,
+    sections: List<JourneySection>,
+) {
+    if (sections.isEmpty()) {
+        Box(modifier = modifier, contentAlignment = Alignment.Center) {
+            Text("Empty journey", color = colors.nodeContentColor, style = PaletteTheme.typography.body)
+        }
+        return
+    }
+    val c = PaletteTheme.colors
+    fun scoreColor(score: Int) = when { score >= 4 -> c.success; score >= 3 -> c.warning; else -> c.error }
+
+    Column(modifier = modifier.fillMaxWidth().wrapContentHeight()) {
+        if (title != null) {
+            Text(title, color = colors.nodeContentColor,
+                style = PaletteTheme.typography.body.copy(fontWeight = FontWeight.Bold),
+                modifier = Modifier.padding(bottom = 12.dp))
+        }
+        sections.forEach { section ->
+            Text(section.title, color = c.primary,
+                style = PaletteTheme.typography.body.copy(fontWeight = FontWeight.Bold),
+                modifier = Modifier.padding(vertical = 6.dp).fillMaxWidth()
+                    .background(c.primary.copy(alpha = 0.08f)).padding(horizontal = 8.dp, vertical = 4.dp))
+            section.tasks.forEach { task ->
+                Row(
+                    modifier = Modifier.fillMaxWidth().padding(vertical = 3.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Text(task.name, color = colors.nodeContentColor, style = PaletteTheme.typography.body,
+                        modifier = Modifier.weight(1f))
+                    Row(horizontalArrangement = Arrangement.spacedBy(2.dp)) {
+                        repeat(5) { i ->
+                            Box(
+                                modifier = Modifier.size(width = 18.dp, height = 12.dp)
+                                    .background(
+                                        if (i < task.score) scoreColor(task.score) else c.divider.copy(alpha = 0.3f),
+                                        RoundedCornerShape(2.dp),
+                                    ),
+                            )
+                        }
+                    }
+                    Text(task.actors.joinToString(", "), color = c.textSecondary,
+                        style = PaletteTheme.typography.label, modifier = Modifier.padding(start = 12.dp))
+                }
+            }
+        }
+    }
+}
+
+// ── Packet ───────────────────────────────────────────────────────────
+
+/**
+ * Packet renderer: bit-fields laid out in horizontal rows of `bitsPerRow` (default 32) bits.
+ * Each field's width is proportional to its bit count; fields wrap to a new row when a row fills.
+ */
+@Composable
+private fun PacketDiagramMermaidDiagram(
+    modifier: Modifier,
+    colors: MermaidColors,
+    title: String?,
+    fields: List<PacketField>,
+) {
+    if (fields.isEmpty()) {
+        Box(modifier = modifier, contentAlignment = Alignment.Center) {
+            Text("Empty packet", color = colors.nodeContentColor, style = PaletteTheme.typography.body)
+        }
+        return
+    }
+    val c = PaletteTheme.colors
+    val bitsPerRow = 32
+    val rowWidth = 960.dp
+    val rowHeight = 40.dp
+    val fieldColors = rememberSliceColors()
+
+    // Group fields into rows that sum to `bitsPerRow`.
+    data class RowLayout(val fields: List<Pair<PacketField, Int>>, val totalBits: Int)
+    val rows = mutableListOf<RowLayout>()
+    var current = RowLayout(emptyList(), 0)
+    fields.forEach { field ->
+        var remaining = field.bits
+        while (remaining > 0) {
+            val space = bitsPerRow - current.totalBits
+            if (space <= 0) { rows.add(current); current = RowLayout(emptyList(), 0); continue }
+            val take = minOf(space, remaining)
+            current = RowLayout(current.fields + (field to take), current.totalBits + take)
+            remaining -= take
+            if (current.totalBits == bitsPerRow) { rows.add(current); current = RowLayout(emptyList(), 0) }
+        }
+    }
+    if (current.fields.isNotEmpty()) rows.add(current)
+
+    val titleHeight: Dp = if (title != null) 32.dp else 0.dp
+    val height = titleHeight + rowHeight * rows.size + 8.dp
+
+    Column(modifier = modifier.width(rowWidth).height(height)) {
+        if (title != null) {
+            Text(title, color = colors.nodeContentColor,
+                style = PaletteTheme.typography.body.copy(fontWeight = FontWeight.Bold))
+        }
+        rows.forEach { row ->
+            Row(modifier = Modifier.fillMaxWidth().height(rowHeight)) {
+                row.fields.forEach { (field, _) ->
+                    val frac = (field.bits.coerceAtMost(bitsPerRow)).toFloat() / bitsPerRow
+                    val colorIdx = fields.indexOf(field).coerceAtLeast(0)
+                    Box(
+                        modifier = Modifier
+                            .weight(frac)
+                            .fillMaxHeight()
+                            .background(fieldColors[colorIdx % fieldColors.size].copy(alpha = 0.7f), RoundedCornerShape(2.dp))
+                            .border(1.dp, c.border, RoundedCornerShape(2.dp))
+                            .padding(2.dp),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Text(field.label, color = Color.White, style = PaletteTheme.typography.label,
+                            textAlign = TextAlign.Center, maxLines = 1)
+                    }
+                }
+                if (row.totalBits < bitsPerRow) {
+                    Spacer(modifier = Modifier.weight((bitsPerRow - row.totalBits).toFloat() / bitsPerRow))
+                }
+            }
+        }
+    }
+}
+
+// ── Sankey ───────────────────────────────────────────────────────────
+
+/**
+ * Sankey renderer: source nodes in a left column, target nodes in a right column, connected by
+ * Bézier ribbons whose thickness scales with the flow value.
+ */
+@Composable
+private fun SankeyDiagramMermaidDiagram(
+    modifier: Modifier,
+    colors: MermaidColors,
+    flows: List<SankeyFlow>,
+) {
+    if (flows.isEmpty()) {
+        Box(modifier = modifier, contentAlignment = Alignment.Center) {
+            Text("Empty sankey", color = colors.nodeContentColor, style = PaletteTheme.typography.body)
+        }
+        return
+    }
+    val c = PaletteTheme.colors
+    val palette = rememberSliceColors()
+
+    val sources = flows.groupBy { it.source }.toList()
+    val targets = flows.groupBy { it.target }.toList()
+    val maxSide = maxOf(sources.size, targets.size).coerceAtLeast(1)
+    val totalValue = flows.sumOf { it.value.toDouble() }.coerceAtLeast(1.0)
+
+    val width = 600.dp
+    val columnWidth = 24.dp
+    val leftX = 80.dp
+    val rightX = width - leftX - columnWidth
+    val totalNodeHeight = 360.dp
+    val gap = 8.dp
+    val nodeHeight = ((totalNodeHeight.value - gap.value * (maxSide - 1)) / maxSide).coerceAtLeast(8f).dp
+
+    val sourceSpans = mutableMapOf<String, Pair<Float, Float>>()
+    val targetSpans = mutableMapOf<String, Pair<Float, Float>>()
+    var cursor = 0f
+    sources.forEach { (name, _) ->
+        sourceSpans[name] = cursor to (cursor + nodeHeight.value); cursor += nodeHeight.value + gap.value
+    }
+    cursor = 0f
+    targets.forEach { (name, _) ->
+        targetSpans[name] = cursor to (cursor + nodeHeight.value); cursor += nodeHeight.value + gap.value
+    }
+
+    val height = totalNodeHeight + 16.dp
+
+    Box(modifier = modifier.width(width).height(height)) {
+        Canvas(modifier = Modifier.matchParentSize()) {
+            flows.forEachIndexed { i, flow ->
+                val src = sourceSpans[flow.source] ?: return@forEachIndexed
+                val dst = targetSpans[flow.target] ?: return@forEachIndexed
+                val srcMid = (src.first + src.second) / 2f
+                val dstMid = (dst.first + dst.second) / 2f
+                val ribW = (flow.value / totalValue).toFloat() * totalNodeHeight.toPx() * 0.5f
+                val sx = leftX.toPx() + columnWidth.toPx()
+                val ex = rightX.toPx()
+                val cx = (sx + ex) / 2f
+                val path = Path().apply {
+                    moveTo(sx, srcMid - ribW / 2f)
+                    cubicTo(cx, srcMid - ribW / 2f, cx, dstMid - ribW / 2f, ex, dstMid - ribW / 2f)
+                    lineTo(ex, dstMid + ribW / 2f)
+                    cubicTo(cx, dstMid + ribW / 2f, cx, srcMid + ribW / 2f, sx, srcMid + ribW / 2f)
+                    close()
+                }
+                drawPath(path = path, color = palette[i % palette.size].copy(alpha = 0.45f))
+            }
+            sources.forEachIndexed { i, (name, _) ->
+                val span = sourceSpans[name] ?: return@forEachIndexed
+                drawRect(color = palette[i % palette.size],
+                    topLeft = Offset(leftX.toPx(), span.first.dp.toPx()),
+                    size = Size(columnWidth.toPx(), nodeHeight.toPx()))
+            }
+            targets.forEachIndexed { i, (name, _) ->
+                val span = targetSpans[name] ?: return@forEachIndexed
+                drawRect(color = palette[(sources.size + i) % palette.size],
+                    topLeft = Offset(rightX.toPx(), span.first.dp.toPx()),
+                    size = Size(columnWidth.toPx(), nodeHeight.toPx()))
+            }
+        }
+        sources.forEach { (name, _) ->
+            val span = sourceSpans[name] ?: return@forEach
+            Text(name, color = c.textPrimary, style = PaletteTheme.typography.label,
+                modifier = Modifier.absoluteOffset(x = 0.dp, y = span.first.dp).width(leftX - 4.dp),
+                textAlign = TextAlign.End)
+        }
+        targets.forEach { (name, _) ->
+            val span = targetSpans[name] ?: return@forEach
+            Text(name, color = c.textPrimary, style = PaletteTheme.typography.label,
+                modifier = Modifier.absoluteOffset(x = rightX + columnWidth + 4.dp, y = span.first.dp))
+        }
+    }
+}
+
+// ── Architecture ─────────────────────────────────────────────────────
+
+/**
+ * Architecture renderer: nodes placed in a grid by the layout engine; edges are straight lines
+ * with a forward arrowhead at the destination.
+ */
+@Composable
+private fun ArchitectureDiagramMermaidDiagram(
+    modifier: Modifier,
+    colors: MermaidColors,
+    layout: MermaidLayout,
+) {
+    if (layout.nodes.isEmpty()) {
+        Box(modifier = modifier, contentAlignment = Alignment.Center) {
+            Text("Empty architecture", color = colors.nodeContentColor, style = PaletteTheme.typography.body)
+        }
+        return
+    }
+    val nodeWidth = 120.dp
+    val nodeHeight = 64.dp
+    val pad = 24f
+    val nodeRight = layout.nodes.values.maxOf { it.x } + nodeWidth.value + pad
+    val nodeBottom = layout.nodes.values.maxOf { it.y } + nodeHeight.value + pad
+
+    Box(modifier = modifier.width(nodeRight.dp).height(nodeBottom.dp)) {
+        Canvas(modifier = Modifier.matchParentSize()) {
+            layout.edges.forEach { edge ->
+                val from = layout.nodes[edge.from] ?: return@forEach
+                val to = layout.nodes[edge.to] ?: return@forEach
+                val fx = from.x + nodeWidth.value
+                val fy = from.y + nodeHeight.value / 2f
+                val tx = to.x
+                val ty = to.y + nodeHeight.value / 2f
+                drawLine(color = colors.edgeColor, start = Offset(fx, fy), end = Offset(tx, ty), strokeWidth = 1.5.dp.toPx())
+                drawClassMarker(colors.edgeColor, Offset(tx, ty), -1f, 0f, 0f, 1f, 9.dp.toPx(), filled = false, kind = ClassMarkerKind.Arrow)
+            }
+        }
+        layout.nodes.values.forEach { positioned ->
+            Box(
+                modifier = Modifier
+                    .absoluteOffset(x = positioned.x.dp, y = positioned.y.dp)
+                    .width(nodeWidth).height(nodeHeight)
+                    .background(colors.nodeContainerColor, RoundedCornerShape(6.dp))
+                    .border(1.dp, colors.nodeBorderColor, RoundedCornerShape(6.dp)),
+                contentAlignment = Alignment.Center,
+            ) {
+                Text(positioned.node.label, color = colors.nodeContentColor,
+                    style = PaletteTheme.typography.label.copy(fontWeight = FontWeight.Bold),
+                    textAlign = TextAlign.Center, maxLines = 1)
             }
         }
     }

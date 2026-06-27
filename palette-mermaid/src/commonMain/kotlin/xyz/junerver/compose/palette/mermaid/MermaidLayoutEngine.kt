@@ -16,6 +16,10 @@ object MermaidLayoutEngine {
         if (diagram.type == MermaidDiagramType.RequirementDiagram) return layoutRequirementDiagram(diagram)
         if (diagram.type == MermaidDiagramType.BlockDiagram) return layoutBlockDiagram(diagram)
         if (diagram.type == MermaidDiagramType.C4Diagram) return layoutC4Diagram(diagram)
+        if (diagram.type == MermaidDiagramType.Journey) return layoutEmptyGeometry(diagram, MermaidDiagramType.Journey)
+        if (diagram.type == MermaidDiagramType.Packet) return layoutEmptyGeometry(diagram, MermaidDiagramType.Packet)
+        if (diagram.type == MermaidDiagramType.Sankey) return layoutEmptyGeometry(diagram, MermaidDiagramType.Sankey)
+        if (diagram.type == MermaidDiagramType.Architecture) return layoutArchitectureDiagram(diagram)
         if (diagram.type == MermaidDiagramType.Flowchart) return layoutFlowchartDiagram(diagram)
 
         // Unreachable for known diagram types (all handled above); kept as a safe fallback
@@ -713,6 +717,57 @@ object MermaidLayoutEngine {
 
         return MermaidLayout(
             type = MermaidDiagramType.C4Diagram,
+            direction = diagram.direction,
+            nodes = positioned,
+            edges = edges,
+        )
+    }
+
+    /**
+     * Journey / Packet / Sankey are pure-geometry diagrams whose renderer computes all positions
+     * from the parsed diagram. The layout returns an empty node/edge set (the Pie/Gantt pattern).
+     */
+    private fun layoutEmptyGeometry(diagram: MermaidDiagram, type: MermaidDiagramType): MermaidLayout =
+        MermaidLayout(type = type, direction = diagram.direction, nodes = emptyMap(), edges = emptyList())
+
+    /**
+     * Architecture layout. Services/junctions are placed in a declaration-order grid (3 per row);
+     * groups are positioned as anchors at their first child. Edges map straight to [MermaidEdge].
+     */
+    private fun layoutArchitectureDiagram(diagram: MermaidDiagram): MermaidLayout {
+        val cellW = 180f
+        val cellH = 100f
+        val gap = 16f
+        val perRow = 3
+
+        val positioned = linkedMapOf<String, PositionedMermaidNode>()
+        var col = 0
+        var row = 0
+        diagram.archNodes.forEach { node ->
+            if (node.kind == ArchNodeKind.Group) {
+                // Groups anchor at their first child's position; the renderer expands the box.
+                val firstChild = diagram.archNodes.firstOrNull { it.parentId == node.id }?.let { positioned[it.id] }
+                val (x, y) = firstChild?.let { it.x - gap to it.y - gap } ?: (col * (cellW + gap) to row * (cellH + gap))
+                positioned[node.id] = PositionedMermaidNode(
+                    node = MermaidNode(id = node.id, label = node.title ?: node.id, shape = MermaidNodeShape.Rounded),
+                    rank = row, order = col, x = x, y = y,
+                )
+            } else {
+                if (col >= perRow) { col = 0; row++ }
+                positioned[node.id] = PositionedMermaidNode(
+                    node = MermaidNode(id = node.id, label = node.title ?: node.id, shape = MermaidNodeShape.Rounded),
+                    rank = row, order = col, x = col * (cellW + gap), y = row * (cellH + gap),
+                )
+                col++
+            }
+        }
+
+        val edges = diagram.archEdges.map { e ->
+            MermaidEdge(from = e.from, to = e.to, label = e.label, style = MermaidEdgeStyle.Solid, arrow = MermaidEdgeArrow.Forward)
+        }
+
+        return MermaidLayout(
+            type = MermaidDiagramType.Architecture,
             direction = diagram.direction,
             nodes = positioned,
             edges = edges,

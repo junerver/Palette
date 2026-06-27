@@ -198,6 +198,37 @@ internal sealed interface ParseResult {
     ) : ParseResult {
         override val diagramType = MermaidDiagramType.C4Diagram
     }
+
+    data class JourneyDiagram(
+        override val direction: MermaidDirection,
+        val title: String?,
+        val sections: List<JourneySection>,
+    ) : ParseResult {
+        override val diagramType = MermaidDiagramType.Journey
+    }
+
+    data class PacketDiagram(
+        override val direction: MermaidDirection,
+        val title: String?,
+        val fields: List<PacketField>,
+    ) : ParseResult {
+        override val diagramType = MermaidDiagramType.Packet
+    }
+
+    data class SankeyDiagram(
+        override val direction: MermaidDirection,
+        val flows: List<SankeyFlow>,
+    ) : ParseResult {
+        override val diagramType = MermaidDiagramType.Sankey
+    }
+
+    data class ArchitectureDiagram(
+        override val direction: MermaidDirection,
+        val nodes: List<ArchNode>,
+        val edges: List<ArchEdge>,
+    ) : ParseResult {
+        override val diagramType = MermaidDiagramType.Architecture
+    }
 }
 
 /**
@@ -365,5 +396,40 @@ internal fun ParseResult.toMermaidDiagram(): MermaidDiagram =
             c4Elements = elements,
             c4Boundaries = boundaries,
             c4Relationships = relationships,
+        )
+
+        is ParseResult.JourneyDiagram -> MermaidDiagram(
+            direction = direction,
+            nodes = emptyMap(),
+            edges = emptyList(),
+            type = diagramType,
+            journeyTitle = title,
+            journeySections = sections,
+        )
+
+        is ParseResult.PacketDiagram -> MermaidDiagram(
+            direction = direction,
+            nodes = emptyMap(),
+            edges = emptyList(),
+            type = diagramType,
+            packetTitle = title,
+            packetFields = fields,
+        )
+
+        is ParseResult.SankeyDiagram -> MermaidDiagram(
+            direction = direction,
+            nodes = emptyMap(),
+            edges = emptyList(),
+            type = diagramType,
+            sankeyFlows = flows,
+        )
+
+        is ParseResult.ArchitectureDiagram -> MermaidDiagram(
+            direction = direction,
+            nodes = emptyMap(),
+            edges = emptyList(),
+            type = diagramType,
+            archNodes = nodes,
+            archEdges = edges,
         )
     }

@@ -26,6 +26,10 @@
 | RequirementDiagram | ✅ 已支持 | 6 需求类型 + element + 7 关系（contains/satisfies/verifies/...） + 双向语法 |
 | BlockDiagram | ✅ 已支持 | columns 网格 + 列跨度 + `block:` 嵌套 + 多形状 + 中箭头标签边 |
 | C4Diagram | ✅ 已支持 | 5 子关键词 + Person/System/Container/Component 宏 + Boundary 嵌套 + Rel/BiRel/Rel_Back |
+| Journey | ✅ 已支持 | title + section + 任务行(score 1-5) + 5 格满意度条 + 演员列表 |
+| Packet | ✅ 已支持 | 显式 `start-end` + 相对 `+bits` 字段 + 32-bit 行宽换行 |
+| Sankey | ✅ 已支持 | CSV(source,target,value) + 贝塞尔带 + 引号转义 + 节点去重 |
+| Architecture | ✅ 已支持 | `architecture-beta` + group/service/junction + `(icon)`/`[title]`/`in` 嵌套 + L/R/T/B 端口边 |
 
 架构基础（2026-06 重构）：`MermaidDiagramParser` 注册制 + `ParseResult` 密封类型，
 新增图例 = 新建一个 parser + 注册，无需改动现有代码。
@@ -136,4 +140,8 @@
 - [x] 第三期-2：RequirementDiagram ✅（2026-06-27，6 需求类型 + element + 7 关系双向语法 + DAG 拓扑布局）
 - [x] 第三期-3：C4Diagram ✅（2026-06-27，5 子关键词 + 宏调用语法 + Boundary 嵌套 + Rel/BiRel/Rel_Back + 声明顺序布局）
 - [x] 第三期全部完成 🎉（2026-06-27）
-- [ ] 第四期：Journey / Sankey / Packet / Architecture
+- [x] 第四期-1：Journey ✅（2026-06-27，title + section + 任务行 score 1-5 + 满意度条 + 演员列表）
+- [x] 第四期-2：Packet ✅（2026-06-27，显式 `start-end` + 相对 `+bits` + 32-bit 行宽换行 + 连续性）
+- [x] 第四期-3：Sankey ✅（2026-06-27，CSV 三列 + 贝塞尔带 + 引号转义 + 节点去重）
+- [x] 第四期-4：Architecture ✅（2026-06-27，`architecture-beta` + group/service/junction + icon/title/in 嵌套 + L/R/T/B 端口边 + {group} 修饰符）
+- [x] 第四期全部完成 🎉（2026-06-27）— 路线图全部 19 种图支持完成！

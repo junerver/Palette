@@ -127,6 +127,30 @@ fun MermaidDemo() {
         DemoSection(title = text.c4Title) {
             PMermaidDiagram(source = text.c4Source)
         }
+
+        Spacer(modifier = Modifier.height(24.dp))
+
+        DemoSection(title = text.journeyTitle) {
+            PMermaidDiagram(source = text.journeySource)
+        }
+
+        Spacer(modifier = Modifier.height(24.dp))
+
+        DemoSection(title = text.packetTitle) {
+            PMermaidDiagram(source = text.packetSource)
+        }
+
+        Spacer(modifier = Modifier.height(24.dp))
+
+        DemoSection(title = text.sankeyTitle) {
+            PMermaidDiagram(source = text.sankeySource)
+        }
+
+        Spacer(modifier = Modifier.height(24.dp))
+
+        DemoSection(title = text.architectureTitle) {
+            PMermaidDiagram(source = text.architectureSource)
+        }
     }
 }
 
@@ -366,6 +390,65 @@ private fun mermaidDemoText(): MermaidDemoText =
                         Rel(后端, 邮件, "发送邮件", "SMTP")
                         Rel(后端, 数据库, "读写", "JDBC")
                     """.trimIndent(),
+                journeyTitle = "用户旅程 (Journey)",
+                journeySource =
+                    """
+                    journey
+                        title 我的工作日
+                        section 上午
+                          泡茶: 5: 我
+                          开会: 2: 我, 同事
+                          写代码: 4: 我
+                        section 下午
+                          午餐: 4: 我
+                          审查代码: 3: 我, 同事
+                          下班: 5: 我
+                    """.trimIndent(),
+                packetTitle = "网络包 (Packet)",
+                packetSource =
+                    """
+                    packet
+                    title TCP 头部
+                    0-15: "源端口"
+                    16-31: "目标端口"
+                    32-63: "序列号"
+                    64-95: "确认号"
+                    96-99: "数据偏移"
+                    100-105: "保留"
+                    106: "URG"
+                    107: "ACK"
+                    108: "PSH"
+                    109: "RST"
+                    110: "SYN"
+                    111: "FIN"
+                    112-127: "窗口"
+                    +16: "校验和"
+                    +16: "紧急指针"
+                    """.trimIndent(),
+                sankeyTitle = "桑基图 (Sankey)",
+                sankeySource =
+                    """
+                    sankey
+                    农业废料,生物转化,124.729
+                    生物转化,液体,0.597
+                    生物转化,损失,26.862
+                    生物转化,固体,280.322
+                    生物燃料进口,液体,35
+                    煤炭进口,煤炭,11.606
+                    """.trimIndent(),
+                architectureTitle = "架构图 (Architecture)",
+                architectureSource =
+                    """
+                    architecture-beta
+                        group api(cloud)[API 网关]
+                        service db(database)[数据库] in api
+                        service server(server)[服务器] in api
+                        service cache(disk)[缓存] in api
+                        junction jc
+                        db:L -- R:server
+                        cache:T -- B:server
+                        server:R --> L:jc
+                    """.trimIndent(),
             )
 
         Language.EN_US ->
@@ -600,6 +683,65 @@ private fun mermaidDemoText(): MermaidDemoText =
                         Rel(backend, email, "Sends emails", "SMTP")
                         Rel(backend, database, "Reads/writes", "JDBC")
                     """.trimIndent(),
+                journeyTitle = "User Journey",
+                journeySource =
+                    """
+                    journey
+                        title My working day
+                        section Morning
+                          Make tea: 5: Me
+                          Meeting: 2: Me, Colleague
+                          Write code: 4: Me
+                        section Afternoon
+                          Lunch: 4: Me
+                          Review code: 3: Me, Colleague
+                          Go home: 5: Me
+                    """.trimIndent(),
+                packetTitle = "Packet",
+                packetSource =
+                    """
+                    packet
+                    title TCP Header
+                    0-15: "Source Port"
+                    16-31: "Destination Port"
+                    32-63: "Sequence Number"
+                    64-95: "Acknowledgment Number"
+                    96-99: "Data Offset"
+                    100-105: "Reserved"
+                    106: "URG"
+                    107: "ACK"
+                    108: "PSH"
+                    109: "RST"
+                    110: "SYN"
+                    111: "FIN"
+                    112-127: "Window"
+                    +16: "Checksum"
+                    +16: "Urgent Pointer"
+                    """.trimIndent(),
+                sankeyTitle = "Sankey",
+                sankeySource =
+                    """
+                    sankey
+                    Agricultural waste,Bio-conversion,124.729
+                    Bio-conversion,Liquid,0.597
+                    Bio-conversion,Losses,26.862
+                    Bio-conversion,Solid,280.322
+                    Biofuel imports,Liquid,35
+                    Coal imports,Coal,11.606
+                    """.trimIndent(),
+                architectureTitle = "Architecture",
+                architectureSource =
+                    """
+                    architecture-beta
+                        group api(cloud)[API Gateway]
+                        service db(database)[Database] in api
+                        service server(server)[Server] in api
+                        service cache(disk)[Cache] in api
+                        junction jc
+                        db:L -- R:server
+                        cache:T -- B:server
+                        server:R --> L:jc
+                    """.trimIndent(),
             )
     }
 
@@ -636,4 +778,12 @@ private data class MermaidDemoText(
     val blockSource: String,
     val c4Title: String,
     val c4Source: String,
+    val journeyTitle: String,
+    val journeySource: String,
+    val packetTitle: String,
+    val packetSource: String,
+    val sankeyTitle: String,
+    val sankeySource: String,
+    val architectureTitle: String,
+    val architectureSource: String,
 )

@@ -59,23 +59,45 @@ internal object GrammarTokenizer {
         val out = mutableListOf<Any>()
         var pos = 0
         while (pos <= str.length) {
-            val match = rule.pattern.find(str, pos) ?: break
-            val matchStart = match.range.first
-            val matchEnd = match.range.last + 1
+            // Resolve the next match. A custom [matcher] (non-regular constructs) is tried at
+            // every position; otherwise fall back to the regex.
+            var matchStart = -1
+            var matchEnd = -1
+            if (rule.matcher != null) {
+                // Scan forward to the first position where the matcher returns a span.
+                var scan = pos
+                while (scan < str.length) {
+                    val end = rule.matcher!!.invoke(str, scan)
+                    if (end != null && end > scan) {
+                        matchStart = scan
+                        matchEnd = end
+                        break
+                    }
+                    scan += 1
+                }
+            } else {
+                val match = rule.pattern.find(str, pos)
+                if (match != null) {
+                    matchStart = match.range.first
+                    matchEnd = match.range.last + 1
+                }
+            }
+            if (matchStart < 0) break
 
             // Plain text preceding the match.
             if (matchStart > pos) out.add(str.substring(pos, matchStart))
 
-            val (tokenText, lookbehindPrefix) = if (rule.lookbehind && match.groupValues.size > 1) {
-                // Group 1 is the lookbehind: keep it as preceding plain, token text is the rest.
-                val prefix = match.groupValues[1]
-                val rest = match.value.substring(prefix.length)
-                rest to prefix
+            // Token text: for regex rules with lookbehind, group 1 is a plain prefix kept
+            // separately; for matcher rules there's no grouping so the whole span is the token.
+            val tokenText: String
+            if (rule.matcher == null && rule.lookbehind) {
+                val match = rule.pattern.find(str, matchStart)!!
+                val prefix = match.groupValues.getOrNull(1).orEmpty()
+                if (prefix.isNotEmpty()) out.add(prefix)
+                tokenText = match.value.substring(prefix.length)
             } else {
-                match.value to ""
+                tokenText = str.substring(matchStart, matchEnd)
             }
-
-            if (lookbehindPrefix.isNotEmpty()) out.add(lookbehindPrefix)
 
             val innerTokens = when {
                 // Fixed nested grammar (Prism `inside`).

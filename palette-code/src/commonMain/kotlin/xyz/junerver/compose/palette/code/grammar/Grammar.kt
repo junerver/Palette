@@ -48,6 +48,12 @@ data class GrammarTokenValue(
  *   language has no registered [Grammar] and must run through the full
  *   [xyz.junerver.compose.palette.code.PaletteCodeHighlighter] (which falls back to a lexer) —
  *   e.g. Markdown fenced code whose info string is `kotlin`, a lexer-backed language.
+ * @property matcher an optional custom scanner used when a [pattern] regex can't express the
+ *   construct — i.e. for **non-regular** structures. Given the whole text and a candidate start
+ *   position, it returns the exclusive end index of the token (or null if there's no match
+ *   starting there). The tokenizer tries [matcher] at each position before [pattern]. This lets
+ *   grammars model nested delimiters (Kotlin `/* /* */ */`) and indentation-scoped spans (YAML
+ *   block scalars) that a single-pass regex cannot.
  */
 data class GrammarToken(
     val pattern: Regex,
@@ -57,6 +63,7 @@ data class GrammarToken(
     val inside: Grammar? = null,
     val languageResolver: ((matchText: String) -> Grammar?)? = null,
     val embeddedTokens: ((matchText: String) -> List<GrammarTokenValue>?)? = null,
+    val matcher: ((text: String, start: Int) -> Int?)? = null,
 )
 
 /**

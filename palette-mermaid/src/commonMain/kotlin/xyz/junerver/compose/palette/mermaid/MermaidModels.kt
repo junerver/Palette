@@ -169,6 +169,78 @@ data class XySeries(
     val values: List<Float>,
 )
 
+// ── Journey models ───────────────────────────────────────────────────
+
+/** A user-journey task with a 1–5 satisfaction [score] and the actors that perform it. */
+data class JourneyTask(
+    val name: String,
+    val score: Int,
+    val actors: List<String>,
+)
+
+/** A titled grouping of journey tasks. */
+data class JourneySection(
+    val title: String,
+    val tasks: List<JourneyTask>,
+)
+
+// ── Packet models ────────────────────────────────────────────────────
+
+/**
+ * A network-packet field spanning bits `[startBit, endBit]`. [bits] is the width
+ * (`endBit - startBit + 1`); it's stored explicitly so the renderer can lay out relative
+ * (`+bits`) and absolute forms uniformly.
+ */
+data class PacketField(
+    val label: String,
+    val startBit: Int,
+    val endBit: Int,
+    val bits: Int,
+)
+
+// ── Sankey models ────────────────────────────────────────────────────
+
+/** A sankey flow of weight [value] from [source] to [target]. Nodes are implied by the flows. */
+data class SankeyFlow(
+    val source: String,
+    val target: String,
+    val value: Float,
+)
+
+// ── Architecture models ──────────────────────────────────────────────
+
+enum class ArchNodeKind { Group, Service, Junction }
+
+enum class ArchEdgeKind { Plain, Forward, Back, Bidirectional }
+
+/** A port direction for an architecture edge endpoint (Left/Right/Top/Bottom). */
+enum class ArchDir { L, R, T, B }
+
+/**
+ * An architecture node. [icon] is the `(...)` icon name (e.g. `database`), null for junctions.
+ * [parentId] is the `in <group>` parent; null at the top level.
+ */
+data class ArchNode(
+    val id: String,
+    val kind: ArchNodeKind,
+    val icon: String? = null,
+    val title: String? = null,
+    val parentId: String? = null,
+)
+
+/**
+ * An architecture edge between two nodes. [fromDir]/[toDir] are the L/R/T/B ports.
+ * [label] captures the `-<title>-` labeled-edge variant (null for plain `--`).
+ */
+data class ArchEdge(
+    val from: String,
+    val to: String,
+    val fromDir: ArchDir,
+    val toDir: ArchDir,
+    val kind: ArchEdgeKind,
+    val label: String? = null,
+)
+
 // ── Requirement diagram models ───────────────────────────────────────
 
 /** The 6 requirement kinds plus the generic `element` node. */
@@ -456,6 +528,13 @@ data class MermaidDiagram(
     val c4Elements: List<C4Element> = emptyList(),
     val c4Boundaries: List<C4Boundary> = emptyList(),
     val c4Relationships: List<C4Relationship> = emptyList(),
+    val journeyTitle: String? = null,
+    val journeySections: List<JourneySection> = emptyList(),
+    val packetTitle: String? = null,
+    val packetFields: List<PacketField> = emptyList(),
+    val sankeyFlows: List<SankeyFlow> = emptyList(),
+    val archNodes: List<ArchNode> = emptyList(),
+    val archEdges: List<ArchEdge> = emptyList(),
 )
 
 data class MermaidNode(
@@ -526,6 +605,10 @@ enum class MermaidDiagramType {
     RequirementDiagram,
     BlockDiagram,
     C4Diagram,
+    Journey,
+    Packet,
+    Sankey,
+    Architecture,
 }
 
 enum class MermaidDirection {

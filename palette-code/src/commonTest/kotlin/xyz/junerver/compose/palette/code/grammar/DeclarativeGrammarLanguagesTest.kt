@@ -4,6 +4,7 @@ import xyz.junerver.compose.palette.code.grammar.languages.CssGrammar
 import xyz.junerver.compose.palette.code.grammar.languages.HtmlGrammar
 import xyz.junerver.compose.palette.code.grammar.languages.IniGrammar
 import xyz.junerver.compose.palette.code.grammar.languages.JavaGrammar
+import xyz.junerver.compose.palette.code.grammar.languages.KotlinGrammar
 import xyz.junerver.compose.palette.code.grammar.languages.KotlinLikeGrammar
 import xyz.junerver.compose.palette.code.grammar.languages.MarkdownGrammar
 import xyz.junerver.compose.palette.code.grammar.languages.PythonGrammar
@@ -297,5 +298,34 @@ class DeclarativeGrammarLanguagesTest {
         val src = "`Hello, " + "\${name}" + "`"
         val tokens = GrammarTokenizer.tokenize(src, TypeScriptGrammar)
         assertTrue(tokens.any { it.type.name == "string" && it.text.contains("Hello") })
+    }
+
+    // ── Kotlin ────────────────────────────────────────────────────────────
+
+    @Test
+    fun kotlinGrammar_classifiesNestedBlockCommentAsOneToken() {
+        // Nested `/* /* */ */` — non-regular, modelled by a depth-counting matcher. The whole
+        // span (incl. inner `/* */`) is one comment token.
+        val src = "val x = 1 /* outer /* inner */ still outer */ + 2"
+        val tokens = GrammarTokenizer.tokenize(src, KotlinGrammar)
+        assertTrue(tokens.any { it.type.name == "comment" && it.text.contains("still outer") })
+    }
+
+    @Test
+    fun kotlinGrammar_interpolatedStringSplitsDollarVarAndBraceExpr() {
+        // `\$name` → annotation, `\${ expr }` → operator/annotation/operator; string parts stay string.
+        val src = "\"" + "Hello, " + "\$" + "name " + "\$" + "{user.displayName}\""
+        val tokens = GrammarTokenizer.tokenize(src, KotlinGrammar)
+        assertTrue(tokens.any { it.text == "\"Hello, " && it.type.name == "string" })
+        assertTrue(tokens.any { it.text == "\$name" && it.type.name == "annotation" })
+        assertTrue(tokens.any { it.text == "\${" && it.type.name == "operator" })
+        assertTrue(tokens.any { it.text == "}" && it.type.name == "operator" })
+    }
+
+    @Test
+    fun kotlinGrammar_classifiesCapitalizedFunctionNameBeforeParenAsFunction() {
+        val tokens = GrammarTokenizer.tokenize("fun Greeting() {}", KotlinGrammar)
+        assertTrue(tokens.any { it.text == "fun" && it.type.name == "keyword" })
+        assertTrue(tokens.any { it.text == "Greeting" && it.type.name == "function" })
     }
 }
