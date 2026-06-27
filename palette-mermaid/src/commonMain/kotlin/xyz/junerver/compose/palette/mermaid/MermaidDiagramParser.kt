@@ -170,6 +170,34 @@ internal sealed interface ParseResult {
     ) : ParseResult {
         override val diagramType = MermaidDiagramType.XYChart
     }
+
+    data class RequirementDiagram(
+        override val direction: MermaidDirection,
+        val boxes: List<RequirementBox>,
+        val relationships: List<RequirementRelationship>,
+    ) : ParseResult {
+        override val diagramType = MermaidDiagramType.RequirementDiagram
+    }
+
+    data class BlockDiagram(
+        override val direction: MermaidDirection,
+        val nodes: List<BlockNode>,
+        val edges: List<BlockEdge>,
+        val containers: List<BlockContainer>,
+        val columns: Int,
+    ) : ParseResult {
+        override val diagramType = MermaidDiagramType.BlockDiagram
+    }
+
+    data class C4Diagram(
+        override val direction: MermaidDirection,
+        val title: String?,
+        val elements: List<C4Element>,
+        val boundaries: List<C4Boundary>,
+        val relationships: List<C4Relationship>,
+    ) : ParseResult {
+        override val diagramType = MermaidDiagramType.C4Diagram
+    }
 }
 
 /**
@@ -307,5 +335,35 @@ internal fun ParseResult.toMermaidDiagram(): MermaidDiagram =
             xyYAxisTitle = yAxisTitle,
             xyYAxisRange = yAxisRange,
             xySeries = series,
+        )
+
+        is ParseResult.RequirementDiagram -> MermaidDiagram(
+            direction = direction,
+            nodes = emptyMap(),
+            edges = emptyList(),
+            type = diagramType,
+            requirementBoxes = boxes,
+            requirementRelationships = relationships,
+        )
+
+        is ParseResult.BlockDiagram -> MermaidDiagram(
+            direction = direction,
+            nodes = emptyMap(),
+            edges = emptyList(),
+            type = diagramType,
+            blockNodes = nodes,
+            blockEdges = edges,
+            blockContainers = containers,
+        )
+
+        is ParseResult.C4Diagram -> MermaidDiagram(
+            direction = direction,
+            nodes = emptyMap(),
+            edges = emptyList(),
+            type = diagramType,
+            title = title,
+            c4Elements = elements,
+            c4Boundaries = boundaries,
+            c4Relationships = relationships,
         )
     }

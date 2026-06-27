@@ -13,6 +13,9 @@ object MermaidLayoutEngine {
         if (diagram.type == MermaidDiagramType.Timeline) return layoutTimelineDiagram(diagram)
         if (diagram.type == MermaidDiagramType.QuadrantChart) return layoutQuadrantDiagram(diagram)
         if (diagram.type == MermaidDiagramType.XYChart) return layoutXyDiagram(diagram)
+        if (diagram.type == MermaidDiagramType.RequirementDiagram) return layoutRequirementDiagram(diagram)
+        if (diagram.type == MermaidDiagramType.BlockDiagram) return layoutBlockDiagram(diagram)
+        if (diagram.type == MermaidDiagramType.C4Diagram) return layoutC4Diagram(diagram)
         if (diagram.type == MermaidDiagramType.Flowchart) return layoutFlowchartDiagram(diagram)
 
         // Unreachable for known diagram types (all handled above); kept as a safe fallback
@@ -570,6 +573,151 @@ object MermaidLayoutEngine {
             nodes = emptyMap(),
             edges = emptyList(),
         )
+
+    /**
+     * Requirement diagram layout. Requirements/elements form a DAG of typed relationships, so
+     * this mirrors [layoutClassDiagram]: a Kahn topological sort assigns ranks, nodes are placed
+     * in a rank×order grid, and relationships become [MermaidEdge]s with the kind carried in
+     * [MermaidLayout.requirementRelationTypes] for the renderer's markers.
+     */
+    private fun layoutRequirementDiagram(diagram: MermaidDiagram): MermaidLayout {
+        val nodes = linkedMapOf<String, MermaidNode>()
+        diagram.requirementBoxes.forEach { box ->
+            nodes[box.id] = MermaidNode(id = box.id, label = box.label, shape = MermaidNodeShape.Rounded)
+        }
+        // Ensure any referenced (but undeclared) endpoint still gets a node.
+        diagram.requirementRelationships.forEach { rel ->
+            if (rel.from !in nodes) nodes[rel.from] = MermaidNode(rel.from, rel.from, MermaidNodeShape.Rounded)
+            if (rel.to !in nodes) nodes[rel.to] = MermaidNode(rel.to, rel.to, MermaidNodeShape.Rounded)
+        }
+
+        val relationTypes = mutableMapOf<Int, RequirementRelationKind>()
+        val edges = diagram.requirementRelationships.mapIndexed { index, rel ->
+            relationTypes[index] = rel.kind
+            MermaidEdge(
+                from = rel.from, to = rel.to,
+                label = rel.kind.name.lowercase(),
+                style = MermaidEdgeStyle.Solid, arrow = MermaidEdgeArrow.None, // markers drawn from kind
+            )
+        }
+
+        val rankById = calculateRanks(
+            MermaidDiagram(direction = diagram.direction, nodes = nodes, edges = edges, type = MermaidDiagramType.RequirementDiagram),
+        )
+        val orderByRank = mutableMapOf<Int, Int>()
+        val positioned = nodes.values.associate { node ->
+            val rank = rankById[node.id] ?: 0
+            val order = orderByRank.getOrPut(rank) { 0 }; orderByRank[rank] = order + 1
+            val lr = diagram.direction == MermaidDirection.LeftRight || diagram.direction == MermaidDirection.RightLeft
+            node.id to PositionedMermaidNode(
+                node = node, rank = rank, order = order,
+                x = if (lr) rank * 260f else order * 220f,
+                y = if (lr) order * 140f else rank * 160f,
+            )
+        }
+
+        return MermaidLayout(
+            type = MermaidDiagramType.RequirementDiagram,
+            direction = diagram.direction,
+            nodes = positioned,
+            edges = edges,
+            requirementRelationTypes = relationTypes,
+        )
+    }
+
+    /**
+     * Block diagram layout. Nodes occupy a grid of `columns` per scope; each node takes
+     * [BlockNode.columnSpan] cells. The top-level grid places nodes in row-major order; nested
+     * containers are placed at their grid slot and their children offset within (relative to the
+     * container's top-left). Edges connect positioned nodes.
+     */
+    private fun layoutBlockDiagram(diagram: MermaidDiagram): MermaidLayout {
+        val cellW = 160f
+        val cellH = 90f
+        val gap = 12f
+        val columns = diagram.blockContainers // unused here but kept for clarity
+        val topColumns = (diagram.blockNodes.maxOfOrNull { it.columnSpan } ?: 1).coerceAtLeast(1)
+            .let { maxOf(it, 1) }
+
+        val positioned = linkedMapOf<String, PositionedMermaidNode>()
+        var col = 0
+        var row = 0
+        diagram.blockNodes.forEach { node ->
+            val span = node.columnSpan.coerceAtLeast(1)
+            // Wrap if the node would overflow the current row.
+            if (col + span > topColumns && col > 0) { col = 0; row++ }
+            val x = col * (cellW + gap)
+            val y = row * (cellH + gap)
+            positioned[node.id] = PositionedMermaidNode(
+                node = MermaidNode(id = node.id, label = node.label, shape = node.shape),
+                rank = row, order = col, x = x, y = y,
+            )
+            col += span
+            if (col >= topColumns) { col = 0; row++ }
+        }
+
+        val edges = diagram.blockEdges.map { e ->
+            MermaidEdge(from = e.from, to = e.to, label = e.label, style = e.style, arrow = e.arrow)
+        }
+
+        return MermaidLayout(
+            type = MermaidDiagramType.BlockDiagram,
+            direction = diagram.direction,
+            nodes = positioned,
+            edges = edges,
+        )
+    }
+
+    /**
+     * C4 diagram layout. Elements are placed in declaration order, `c4ShapesPerRow` per row
+     * (4 by default). Boundaries render as dashed containers around their declared children —
+     * here boundaries are positioned as invisible anchors; the renderer draws the boundary box
+     * spanning its children's bounds. Relationships become plain [MermaidEdge]s.
+     */
+    private fun layoutC4Diagram(diagram: MermaidDiagram): MermaidLayout {
+        val cellW = 200f
+        val cellH = 110f
+        val gap = 16f
+        val perRow = 4
+
+        val positioned = linkedMapOf<String, PositionedMermaidNode>()
+        diagram.c4Elements.forEachIndexed { index, element ->
+            val col = index % perRow
+            val row = index / perRow
+            val shape = when {
+                element.kind.name.startsWith("Person") -> MermaidNodeShape.Circle
+                element.kind.name.contains("Db") -> MermaidNodeShape.Database
+                else -> MermaidNodeShape.Rounded
+            }
+            positioned[element.alias] = PositionedMermaidNode(
+                node = MermaidNode(id = element.alias, label = element.label, shape = shape),
+                rank = row, order = col,
+                x = col * (cellW + gap), y = row * (cellH + gap),
+            )
+        }
+        // Place boundaries at their first child's position (renderer expands the box to fit children).
+        diagram.c4Boundaries.forEach { boundary ->
+            val firstChild = boundary.childAliases.firstNotNullOfOrNull { positioned[it] }
+            if (firstChild != null && boundary.alias !in positioned) {
+                positioned[boundary.alias] = PositionedMermaidNode(
+                    node = MermaidNode(id = boundary.alias, label = boundary.label, shape = MermaidNodeShape.Rounded),
+                    rank = firstChild.rank, order = firstChild.order,
+                    x = firstChild.x - gap, y = firstChild.y - gap,
+                )
+            }
+        }
+
+        val edges = diagram.c4Relationships.map { rel ->
+            MermaidEdge(from = rel.from, to = rel.to, label = rel.label, style = MermaidEdgeStyle.Solid, arrow = MermaidEdgeArrow.Forward)
+        }
+
+        return MermaidLayout(
+            type = MermaidDiagramType.C4Diagram,
+            direction = diagram.direction,
+            nodes = positioned,
+            edges = edges,
+        )
+    }
 
     /**
      * Mindmap layout. The mindmap is an indentation-defined tree; layout is a classic

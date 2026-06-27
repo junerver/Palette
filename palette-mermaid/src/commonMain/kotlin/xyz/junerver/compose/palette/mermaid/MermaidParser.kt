@@ -8,10 +8,13 @@ import xyz.junerver.compose.palette.mermaid.parsers.GitGraphParser
 import xyz.junerver.compose.palette.mermaid.parsers.MindmapParser
 import xyz.junerver.compose.palette.mermaid.parsers.PieParser
 import xyz.junerver.compose.palette.mermaid.parsers.QuadrantParser
+import xyz.junerver.compose.palette.mermaid.parsers.RequirementParser
 import xyz.junerver.compose.palette.mermaid.parsers.SequenceParser
 import xyz.junerver.compose.palette.mermaid.parsers.StateDiagramParser
 import xyz.junerver.compose.palette.mermaid.parsers.TimelineParser
 import xyz.junerver.compose.palette.mermaid.parsers.XYChartParser
+import xyz.junerver.compose.palette.mermaid.parsers.BlockParser
+import xyz.junerver.compose.palette.mermaid.parsers.C4Parser
 
 object MermaidParser {
     /**
@@ -20,7 +23,7 @@ object MermaidParser {
      * anything else falls through to the flowchart path below.
      */
     private val registeredParsers: Map<String, MermaidDiagramParser> =
-        listOf(StateDiagramParser, ErDiagramParser, ClassDiagramParser, SequenceParser, PieParser, GanttParser, GitGraphParser, MindmapParser, TimelineParser, QuadrantParser, XYChartParser)
+        listOf(StateDiagramParser, ErDiagramParser, ClassDiagramParser, SequenceParser, PieParser, GanttParser, GitGraphParser, MindmapParser, TimelineParser, QuadrantParser, XYChartParser, RequirementParser, BlockParser, C4Parser)
             .flatMap { parser -> (parser.aliases + parser.keyword).map { it.lowercase() to parser } }
             .toMap()
 

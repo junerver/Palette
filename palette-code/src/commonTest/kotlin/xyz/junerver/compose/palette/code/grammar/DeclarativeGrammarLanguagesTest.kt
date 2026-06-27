@@ -3,10 +3,12 @@ package xyz.junerver.compose.palette.code.grammar
 import xyz.junerver.compose.palette.code.grammar.languages.CssGrammar
 import xyz.junerver.compose.palette.code.grammar.languages.HtmlGrammar
 import xyz.junerver.compose.palette.code.grammar.languages.IniGrammar
+import xyz.junerver.compose.palette.code.grammar.languages.JavaGrammar
 import xyz.junerver.compose.palette.code.grammar.languages.KotlinLikeGrammar
 import xyz.junerver.compose.palette.code.grammar.languages.MarkdownGrammar
 import xyz.junerver.compose.palette.code.grammar.languages.SqlGrammar
 import xyz.junerver.compose.palette.code.grammar.languages.TomlGrammar
+import xyz.junerver.compose.palette.code.grammar.languages.TypeScriptGrammar
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
@@ -229,5 +231,40 @@ class DeclarativeGrammarLanguagesTest {
     fun iniGrammar_classifiesCommentFromHashOrSemicolon() {
         assertEquals("comment", GrammarTokenizer.tokenize("# note", IniGrammar).first().type.name)
         assertEquals("comment", GrammarTokenizer.tokenize("; note", IniGrammar).first().type.name)
+    }
+
+    // ── Java ──────────────────────────────────────────────────────────────
+
+    @Test
+    fun javaGrammar_classifiesModernKeywords() {
+        val tokens = GrammarTokenizer.tokenize("public sealed interface Result permits Success {}", JavaGrammar)
+        assertTrue(tokens.any { it.text == "sealed" && it.type.name == "keyword" })
+        assertTrue(tokens.any { it.text == "permits" && it.type.name == "keyword" })
+    }
+
+    @Test
+    fun javaGrammar_classifiesPrimitiveKeywordAndCapitalizedType() {
+        val tokens = GrammarTokenizer.tokenize("int count = 0; String name;", JavaGrammar)
+        // Primitive `int` is a keyword (matches lexer: keywords checked before primitiveTypes).
+        assertTrue(tokens.any { it.text == "int" && it.type.name == "keyword" })
+        // Capitalized `String` is a type.
+        assertTrue(tokens.any { it.text == "String" && it.type.name == "type" })
+    }
+
+    // ── TypeScript ────────────────────────────────────────────────────────
+
+    @Test
+    fun typescriptGrammar_classifiesKeywordsAndTypesAndFunctions() {
+        val tokens = GrammarTokenizer.tokenize("export function greet(name: string) {}", TypeScriptGrammar)
+        assertTrue(tokens.any { it.text == "export" && it.type.name == "keyword" })
+        assertTrue(tokens.any { it.text == "greet" && it.type.name == "function" })
+        assertTrue(tokens.any { it.text == "string" && it.type.name == "type" })
+    }
+
+    @Test
+    fun typescriptGrammar_treatsTemplateLiteralAsOneString() {
+        val src = "`Hello, " + "\${name}" + "`"
+        val tokens = GrammarTokenizer.tokenize(src, TypeScriptGrammar)
+        assertTrue(tokens.any { it.type.name == "string" && it.text.contains("Hello") })
     }
 }

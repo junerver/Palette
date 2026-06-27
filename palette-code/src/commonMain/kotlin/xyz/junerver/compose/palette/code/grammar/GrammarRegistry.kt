@@ -3,11 +3,13 @@ package xyz.junerver.compose.palette.code.grammar
 import xyz.junerver.compose.palette.code.grammar.languages.CssGrammar
 import xyz.junerver.compose.palette.code.grammar.languages.HtmlGrammar
 import xyz.junerver.compose.palette.code.grammar.languages.IniGrammar
+import xyz.junerver.compose.palette.code.grammar.languages.JavaGrammar
 import xyz.junerver.compose.palette.code.grammar.languages.JsonGrammar
 import xyz.junerver.compose.palette.code.grammar.languages.KotlinLikeGrammar
 import xyz.junerver.compose.palette.code.grammar.languages.MarkdownGrammar
 import xyz.junerver.compose.palette.code.grammar.languages.SqlGrammar
 import xyz.junerver.compose.palette.code.grammar.languages.TomlGrammar
+import xyz.junerver.compose.palette.code.grammar.languages.TypeScriptGrammar
 // MarkdownGrammar is intentionally not registered yet (see comment below).
 
 /**
@@ -23,10 +25,12 @@ internal object GrammarRegistry {
         putAll(aliases("json", listOf("json"), JsonGrammar))
         putAll(aliases("toml", listOf("toml"), TomlGrammar))
         putAll(aliases("css", listOf("css"), CssGrammar))
-        // Kotlin-like grammar serves JavaScript (HTML <script> embedding) for now; Kotlin/Java/
-        // TypeScript stay on the hand-written lexer until the grammar covers their stateful
-        // string/template constructs.
+        // Kotlin-like grammar serves JavaScript (HTML <script> embedding) for now.
         putAll(aliases("javascript", listOf("javascript", "js"), KotlinLikeGrammar))
+        // Java & TypeScript migrate fully (non-nested comments, template literals as one token);
+        // Kotlin stays on the hand-written lexer (nested block comments + ${} interpolation split).
+        putAll(aliases("java", listOf("java"), JavaGrammar))
+        putAll(aliases("typescript", listOf("typescript", "ts"), TypeScriptGrammar))
         // HTML/XML/SVG share one markup grammar; embedding resolvers look css/js up above.
         putAll(aliases("html", listOf("html", "xml", "svg"), HtmlGrammar))
         // SQL dialects share one grammar; dollar-quoted strings use a backreference so the

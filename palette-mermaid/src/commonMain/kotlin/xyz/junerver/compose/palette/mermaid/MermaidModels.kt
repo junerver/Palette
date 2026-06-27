@@ -169,6 +169,114 @@ data class XySeries(
     val values: List<Float>,
 )
 
+// ── Requirement diagram models ───────────────────────────────────────
+
+/** The 6 requirement kinds plus the generic `element` node. */
+enum class RequirementElementType {
+    Requirement, FunctionalRequirement, InterfaceRequirement,
+    PerformanceRequirement, PhysicalRequirement, DesignConstraint, Element,
+}
+
+/** The 7 relationship kinds drawn as labelled arrows between requirements/elements. */
+enum class RequirementRelationKind {
+    Contains, Copies, Derives, Satisfies, Verifies, Refines, Traces,
+}
+
+/**
+ * A requirement or element node. Only `requirement`-type boxes carry risk/verifyMethod;
+ * elements carry type/docRef instead. [text] holds the human-readable requirement text.
+ */
+data class RequirementBox(
+    val id: String,
+    val type: RequirementElementType,
+    val label: String,
+    val text: String = "",
+    val risk: String = "",
+    val verifyMethod: String = "",
+    val docRef: String = "",
+)
+
+/** A labelled, typed relationship `A - <kind> -> B` (or the `<-` reverse form). */
+data class RequirementRelationship(
+    val from: String,
+    val to: String,
+    val kind: RequirementRelationKind,
+    val label: String = "",
+)
+
+// ── Block diagram models ─────────────────────────────────────────────
+
+/**
+ * A block-diagram node. [columnSpan] is the number of grid columns it occupies (1 unless the
+ * `id:N` span suffix is given). [shape] is the node's rendered shape.
+ */
+data class BlockNode(
+    val id: String,
+    val label: String,
+    val shape: MermaidNodeShape = MermaidNodeShape.Rounded,
+    val columnSpan: Int = 1,
+)
+
+/** An edge between two blocks. [style] maps to the mermaid arrow glyph family. */
+data class BlockEdge(
+    val from: String,
+    val to: String,
+    val label: String? = null,
+    val style: MermaidEdgeStyle = MermaidEdgeStyle.Solid,
+    val arrow: MermaidEdgeArrow = MermaidEdgeArrow.Forward,
+)
+
+/**
+ * A nested `block:NAME { ... end }` composite. [columns] is its declared column count (-1 for
+ * `auto`); [childIds] are the ids (nodes or nested blocks) declared inside it, in order.
+ */
+data class BlockContainer(
+    val id: String,
+    val label: String?,
+    val columns: Int,
+    val childIds: List<String>,
+)
+
+// ── C4 diagram models ────────────────────────────────────────────────
+
+/** C4 element kinds, grouped by level. `*_Ext` variants are external/partner systems. */
+enum class C4ElementKind {
+    Person, Person_Ext,
+    System, System_Ext, SystemDb, SystemDb_Ext, SystemQueue, SystemQueue_Ext,
+    Container, Container_Ext, ContainerDb, ContainerDb_Ext, ContainerQueue, ContainerQueue_Ext,
+    Component, Component_Ext, ComponentDb, ComponentDb_Ext, ComponentQueue, ComponentQueue_Ext,
+    Node, Node_L, Node_R, Deployment_Node,
+}
+
+/** Direction of a C4 relationship (explicit via Rel_U/Rel_D/Rel_L/Rel_R, default plain). */
+enum class C4RelDirection { Plain, Up, Down, Left, Right, Back }
+
+/** A C4 element (person/system/container/component/deployment node). */
+data class C4Element(
+    val alias: String,
+    val kind: C4ElementKind,
+    val label: String,
+    val techn: String = "",
+    val descr: String = "",
+)
+
+/** A grouping boundary whose body contains nested elements/boundaries. */
+data class C4Boundary(
+    val alias: String,
+    val label: String,
+    val type: String = "",
+    val childAliases: List<String> = emptyList(),
+)
+
+/** A `Rel(from, to, "label", ?"techn")` relationship between two C4 elements. */
+data class C4Relationship(
+    val from: String,
+    val to: String,
+    val label: String,
+    val techn: String = "",
+    val direction: C4RelDirection = C4RelDirection.Plain,
+)
+
 // ── Class Diagram models ──────────────────────────────────────────────
 
 enum class MermaidClassMemberKind {
@@ -340,6 +448,14 @@ data class MermaidDiagram(
     val xyYAxisTitle: String? = null,
     val xyYAxisRange: Pair<Float, Float>? = null,
     val xySeries: List<XySeries> = emptyList(),
+    val requirementBoxes: List<RequirementBox> = emptyList(),
+    val requirementRelationships: List<RequirementRelationship> = emptyList(),
+    val blockNodes: List<BlockNode> = emptyList(),
+    val blockEdges: List<BlockEdge> = emptyList(),
+    val blockContainers: List<BlockContainer> = emptyList(),
+    val c4Elements: List<C4Element> = emptyList(),
+    val c4Boundaries: List<C4Boundary> = emptyList(),
+    val c4Relationships: List<C4Relationship> = emptyList(),
 )
 
 data class MermaidNode(
@@ -407,6 +523,9 @@ enum class MermaidDiagramType {
     Timeline,
     QuadrantChart,
     XYChart,
+    RequirementDiagram,
+    BlockDiagram,
+    C4Diagram,
 }
 
 enum class MermaidDirection {
@@ -458,6 +577,8 @@ data class MermaidLayout(
      * for composition/aggregation, open arrow for dependency).
      */
     val classRelationTypes: Map<Int, MermaidClassRelationType> = emptyMap(),
+    /** Requirement diagram only: relationship kind per edge index (contains/satisfies/...). */
+    val requirementRelationTypes: Map<Int, RequirementRelationKind> = emptyMap(),
 )
 
 data class PositionedMermaidNode(
