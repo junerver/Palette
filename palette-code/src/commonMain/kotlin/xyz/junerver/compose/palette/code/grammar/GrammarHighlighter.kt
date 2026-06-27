@@ -61,6 +61,8 @@ internal object GrammarTokenTypeMapping {
         "class-name" to CodeTokenType.ClassName,
         "constant" to CodeTokenType.Constant,
         "operator" to CodeTokenType.Operator,
+        // YAML list markers share the operator type but use a distinct rule name (lookbehind).
+        "list-marker" to CodeTokenType.Operator,
         "punctuation" to CodeTokenType.Punctuation,
         "property" to CodeTokenType.Property,
         "variable" to CodeTokenType.Variable,

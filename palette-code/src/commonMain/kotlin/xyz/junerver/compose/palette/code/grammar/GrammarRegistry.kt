@@ -12,8 +12,7 @@ import xyz.junerver.compose.palette.code.grammar.languages.PythonGrammar
 import xyz.junerver.compose.palette.code.grammar.languages.SqlGrammar
 import xyz.junerver.compose.palette.code.grammar.languages.TomlGrammar
 import xyz.junerver.compose.palette.code.grammar.languages.TypeScriptGrammar
-// YamlGrammar exists (keys/tags/directives classified; block-scalar matcher drafted) but is not
-// registered — block scalars still need refinement before YAML can leave the lexer.
+import xyz.junerver.compose.palette.code.grammar.languages.YamlGrammar
 // MarkdownGrammar is intentionally not registered yet (see comment below).
 
 /**
@@ -50,9 +49,9 @@ internal object GrammarRegistry {
         // Python: f-strings modelled via `inside` (string/operator/annotation boundaries),
         // triple-quoted strings via (?s) multi-line regex.
         putAll(aliases("python", listOf("python", "py"), PythonGrammar))
-        // YAML stays on the lexer: block scalars (|/>) need per-line indentation state that a
-        // single-pass grammar can't model cleanly. The matcher primitive exists for nested
-        // comments (Kotlin); a line-oriented block-scalar matcher is a future refinement.
+        // YAML: block scalars (|/>) via a custom indentation-scoped matcher; the last non-regular
+        // construct. Keys/anchors/aliases/tags/comments classified declaratively.
+        putAll(aliases("yaml", listOf("yaml", "yml"), YamlGrammar))
         // INI + .properties share one grammar (same lexer historically served both).
         putAll(aliases("ini", listOf("ini", "properties", "props", "conf"), IniGrammar))
         // Markdown grammar exists and the engine handles it, but it stays on the hand-written

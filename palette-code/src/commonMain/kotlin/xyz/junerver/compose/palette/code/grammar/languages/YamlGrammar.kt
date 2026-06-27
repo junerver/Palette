@@ -41,8 +41,16 @@ internal val YamlGrammar: Grammar = grammarOf(
         pattern = Regex("[A-Za-z0-9_.-]+(?=\\s*:)|\\b(?:true|false|yes|no|on|off|null)\\b"),
     ),
     // Document markers (`---`/`...`), list markers (`-`), and `:`/`,` → operator.
+    // Document markers (`---`/`...`) and `:`/`,` → operator.
     "operator" to GrammarToken(
-        pattern = Regex("(?m)^(?:---|\\.\\.\\.)(?=\\s|$)|(?m)^[ \\t]*-|(?<=\\s)-|[:,]"),
+        pattern = Regex("(?m)^(?:---|\\.\\.\\.)(?=\\s|$)|[:,]"),
+    ),
+    // List marker `-` at the start of a (possibly indented) line. Group 1 is the leading
+    // whitespace (kept as plain via lookbehind); the `-` is the operator token.
+    "list-marker" to GrammarToken(
+        pattern = Regex("(?m)^(\\s*)-"),
+        lookbehind = true,
+        alias = listOf("operator"),
     ),
     // Tags (`!Ref`, `!!str`), anchors (`&defaults`), aliases (`*defaults`), and `%YAML`
     // directives → annotation. Combined into one rule because the Grammar map keys are unique.
@@ -69,41 +77,38 @@ internal val YamlGrammar: Grammar = grammarOf(
  * more-indented than the indicator's line. Returns null if [start] isn't a block-scalar indicator.
  */
 private fun yamlBlockScalarEnd(text: String, start: Int): Int? {
+    // TEMP DEBUG removed.
     if (start !in text.indices) return null
-    // Confirm [start] points at a `|`/`>` indicator on its own (preceded only by whitespace).
-    val nlIdx = text.lastIndexOf('\n', start)
-    val lineStart = if (nlIdx < 0) 0 else nlIdx + 1
-    if (lineStart > start) return null // start is a newline itself — not an indicator
-    val prefix = text.substring(lineStart, start)
-    if (prefix.any { !it.isWhitespace() }) return null
     val c = text[start]
     if (c != '|' && c != '>') return null
-    // The key's indent = leading whitespace of the indicator line.
-    val keyIndent = prefix.length
-    // End of the indicator line (consume `|`/`>` plus chomping suffixes and a trailing comment).
-    var i = start
+    // The block-scalar indicator must be the value of a mapping (`key: |`) or a bare sequence
+    // entry — i.e. preceded on its line only by whitespace OR by `<key>:`. Reject mid-token
+    // occurrences (e.g. `a | b` is not a block scalar).
+    val nlIdx = text.lastIndexOf('\n', start)
+    val lineStart = if (nlIdx < 0) 0 else nlIdx + 1
+    val before = text.substring(lineStart, start)
+    if (before.isBlank()) return blockScalarSpanEnd(text, start, 0)
+    // Allow `<optional-ws>key:` immediately before (with optional whitespace after the colon).
+    val m = Regex("^[ \\t]*\\S[\\s\\S]*:[ \\t]*$").find(before) ?: return null
+    val keyIndent = before.takeWhile { it == ' ' || it == '\t' }.length
+    return blockScalarSpanEnd(text, start, keyIndent)
+}
+
+/** Consume the indicator line plus every following line that is blank or more-indented. */
+private fun blockScalarSpanEnd(text: String, indicatorPos: Int, keyIndent: Int): Int {
+    var i = indicatorPos
     while (i < text.length && text[i] != '\n') i += 1
-    val indicatorLineEnd = i // exclusive; text[i] is '\n' or i == text.length
-    // Consume following lines while blank or more-indented than keyIndent.
+    val indicatorLineEnd = i
     i = indicatorLineEnd
     while (i <= text.length) {
-        val ls = if (i == text.length) i else i + 1 // start of next line (after '\n')
+        val ls = if (i == text.length) i else i + 1
         if (ls >= text.length) break
         val nl = text.indexOf('\n', ls).let { if (it < 0) text.length else it }
         val line = text.substring(ls, nl)
-        if (line.isBlank()) {
-            i = nl
-            continue
-        }
+        if (line.isBlank()) { i = nl; continue }
         val indent = line.takeWhile { it == ' ' || it == '\t' }.length
-        if (indent > keyIndent) {
-            i = nl
-        } else {
-            break
-        }
+        if (indent > keyIndent) i = nl else break
     }
-    // Token spans from the indicator's line start to the end of the last consumed content line.
-    // End is exclusive; if we stopped at a non-content line, end at the previous line's newline.
     val end = if (i == indicatorLineEnd) indicatorLineEnd else i.coerceAtMost(text.length)
-    return if (end <= start) null else end
+    return if (end <= indicatorPos) indicatorPos + 1 else end
 }

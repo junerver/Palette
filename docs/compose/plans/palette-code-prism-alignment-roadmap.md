@@ -128,11 +128,12 @@ palette-code 已覆盖 17 种语言（Kotlin/Java/JS/TS/JSON/CSS/Python/HTML/XML
 | 2026-06-27 | 第二期：Python grammar 迁移 | 声明式 PythonGrammar 替代 PythonLexer；f-string 经 `inside` 拆分（`f"text`→string、`{`→op、`name`→annotation、`}`→op、`"`→string）、三引号跨行 `(?s)`、`@decorator`→annotation、# comment，零回归 |
 | 2026-06-27 | 第二期：matcher 引擎原语 | GrammarToken 新增 `matcher: ((text, start) -> Int?)?`——自定义扫描器，用于纯正则无法表达的非正则结构（嵌套计数、缩进作用域）。tokenizer 命中时按 matcher 返回的 end 索引界定 token |
 | 2026-06-27 | 第二期：Kotlin grammar 迁移 | 声明式 KotlinGrammar 替代 KotlinLikeLexer 的 kotlin 路径；嵌套块注释 `/* /* */ */` 经 matcher 深度计数、`${}`/`$var` 插值经 `inside` 拆分、三引号跨行 `(?s)`，零回归 |
+| 2026-06-28 | 第二期：YAML grammar 迁移 | 声明式 YamlGrammar 替代 YamlLexer；block scalar（`|`/`>` + 缩进内容）经 matcher 消费到非缩进行、keys/tags/anchors/aliases/directives/markers 各归其类、list marker 用 capture-group lookbehind 只匹配 `-`，零回归 |
 
 ## 待办
 
 - [x] 第一期：grammar 引擎核心（模型/tokenize/token 扩展/registry/JSON 样板）✅
-- [ ] 第二期：高频语言迁移 + 字体样式维度
+- [x] 第二期：高频语言迁移 + 字体样式维度 ✅ **全部完成**
   - [x] 字体样式维度（Bold/Italic/Important 渲染）✅
   - [x] TOML/INI/properties 迁移（最简单，无嵌入）✅
   - [x] CSS 迁移 ✅
@@ -145,6 +146,10 @@ palette-code 已覆盖 17 种语言（Kotlin/Java/JS/TS/JSON/CSS/Python/HTML/XML
   - [x] Python 迁移（f-string 经 inside 拆分、三引号跨行）✅
   - [x] matcher 引擎原语（自定义扫描器，解锁非正则结构）✅
   - [x] Kotlin 迁移（嵌套块注释经 matcher、${}/$var 插值经 inside）✅
-  - [ ] YAML 迁移：block scalar 需逐行缩进状态（YamlGrammar 已起草 keys/tags/directives 分类，block-scalar matcher 待精修）；YAML 暂留 lexer
+  - [x] YAML 迁移（block scalar 经 matcher、keys/tags/markers 声明式分类）✅
+
+## 后续可选（超出当前路线图）
+- 硬编码的 lexer fallback（PaletteCodeHighlighter.kt 的 when 分支）可逐步移除——所有迁移语言现在 grammar 优先
+- ComposeFML 语法桥（如需）
 - [ ] 第三期：扩展语言覆盖（C/C++/C#/Go/Rust/PHP/Ruby/Swift/Scala/SCSS/JSX）
 - [ ] 第四期：高级能力（行号增强/语言检测/增量/hook）

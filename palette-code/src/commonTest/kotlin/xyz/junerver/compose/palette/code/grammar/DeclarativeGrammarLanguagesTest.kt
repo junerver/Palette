@@ -11,6 +11,7 @@ import xyz.junerver.compose.palette.code.grammar.languages.PythonGrammar
 import xyz.junerver.compose.palette.code.grammar.languages.SqlGrammar
 import xyz.junerver.compose.palette.code.grammar.languages.TomlGrammar
 import xyz.junerver.compose.palette.code.grammar.languages.TypeScriptGrammar
+import xyz.junerver.compose.palette.code.grammar.languages.YamlGrammar
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
@@ -327,5 +328,32 @@ class DeclarativeGrammarLanguagesTest {
         val tokens = GrammarTokenizer.tokenize("fun Greeting() {}", KotlinGrammar)
         assertTrue(tokens.any { it.text == "fun" && it.type.name == "keyword" })
         assertTrue(tokens.any { it.text == "Greeting" && it.type.name == "function" })
+    }
+
+    // ── YAML ──────────────────────────────────────────────────────────────
+
+    @Test
+    fun yamlGrammar_classifiesKeysAndScalarsAndTags() {
+        val tokens = GrammarTokenizer.tokenize("name: Palette\nresource: !Ref App", YamlGrammar)
+        assertTrue(tokens.any { it.text == "name" && it.type.name == "keyword" })
+        assertTrue(tokens.any { it.text == "!Ref" && it.type.name == "annotation" })
+    }
+
+    @Test
+    fun yamlGrammar_blockScalarConsumesIndentedLines() {
+        val src = "description: |\n  first line\n  second line\n..."
+        val tokens = GrammarTokenizer.tokenize(src, YamlGrammar)
+        // The block-scalar matcher consumes the indicator line + indented body.
+        assertTrue(tokens.any { it.text == "|" && it.type.name == "operator" })
+        assertTrue(tokens.any { it.text.contains("first line") && it.type.name == "string" })
+        assertTrue(tokens.any { it.text.contains("second line") && it.type.name == "string" })
+    }
+
+    @Test
+    fun yamlGrammar_classifiesListMarkerAndDocumentMarkers() {
+        val tokens = GrammarTokenizer.tokenize("---\nitems:\n  - first\n  - second\n...", YamlGrammar)
+        assertTrue(tokens.any { it.text == "-" && it.type.name == "list-marker" })
+        assertTrue(tokens.any { it.text == "---" && it.type.name == "operator" })
+        assertTrue(tokens.any { it.text == "..." && it.type.name == "operator" })
     }
 }
