@@ -23,6 +23,9 @@
 | Timeline | ✅ 已支持 | section + 续行多事件 + 左→右时间轴 |
 | QuadrantChart | ✅ 已支持 | 四象限 + 点（含 color/radius 样式 + classDef） |
 | XYChart | ✅ 已支持 | bar/line 双系列 + 数值/分类轴（`xychart` 与 `xychart-beta` 双关键词） |
+| RequirementDiagram | ✅ 已支持 | 6 需求类型 + element + 7 关系（contains/satisfies/verifies/...） + 双向语法 |
+| BlockDiagram | ✅ 已支持 | columns 网格 + 列跨度 + `block:` 嵌套 + 多形状 + 中箭头标签边 |
+| C4Diagram | ✅ 已支持 | 5 子关键词 + Person/System/Container/Component 宏 + Boundary 嵌套 + Rel/BiRel/Rel_Back |
 
 架构基础（2026-06 重构）：`MermaidDiagramParser` 注册制 + `ParseResult` 密封类型，
 新增图例 = 新建一个 parser + 注册，无需改动现有代码。
@@ -129,5 +132,8 @@
 - [x] 第二期-3：QuadrantChart ✅（2026-06-27，x/y 轴 `-->` 双端标签 + 四象限文本 + 点 `[x,y]` clamp 到 [0,1] + inline `color`/`radius` 样式 + `classDef` 类样式）
 - [x] 第二期-4：XYChart ✅（2026-06-27，`xychart`/`xychart-beta` 双关键词 + 数值轴(`min-->max`)/分类轴(`[...]`) + bar/line 多系列 + 自动 y 轴范围）
 - [x] 第二期全部完成 🎉（2026-06-27）
-- [ ] 第三期：Requirement / C4 / Block
+- [x] 第三期-1：BlockDiagram ✅（2026-06-27，columns 网格 + 列跨度 + `block:` 嵌套 + 多形状 + 中箭头标签边）
+- [x] 第三期-2：RequirementDiagram ✅（2026-06-27，6 需求类型 + element + 7 关系双向语法 + DAG 拓扑布局）
+- [x] 第三期-3：C4Diagram ✅（2026-06-27，5 子关键词 + 宏调用语法 + Boundary 嵌套 + Rel/BiRel/Rel_Back + 声明顺序布局）
+- [x] 第三期全部完成 🎉（2026-06-27）
 - [ ] 第四期：Journey / Sankey / Packet / Architecture

@@ -109,6 +109,24 @@ fun MermaidDemo() {
         DemoSection(title = text.xychartTitle) {
             PMermaidDiagram(source = text.xychartSource)
         }
+
+        Spacer(modifier = Modifier.height(24.dp))
+
+        DemoSection(title = text.requirementTitle) {
+            PMermaidDiagram(source = text.requirementSource)
+        }
+
+        Spacer(modifier = Modifier.height(24.dp))
+
+        DemoSection(title = text.blockTitle) {
+            PMermaidDiagram(source = text.blockSource)
+        }
+
+        Spacer(modifier = Modifier.height(24.dp))
+
+        DemoSection(title = text.c4Title) {
+            PMermaidDiagram(source = text.c4Source)
+        }
     }
 }
 
@@ -295,6 +313,59 @@ private fun mermaidDemoText(): MermaidDemoText =
                         bar [120, 180, 240, 310]
                         line [100, 150, 210, 290]
                     """.trimIndent(),
+                requirementTitle = "需求图 (Requirement Diagram)",
+                requirementSource =
+                    """
+                    requirementDiagram
+                        requirement 测试需求 {
+                            id: 1
+                            text: 系统必须支持登录
+                            risk: high
+                            verifymethod: test
+                        }
+                        functionalRequirement 功能需求 {
+                            id: 1.1
+                            text: 密码长度不少于8位
+                            risk: medium
+                            verifymethod: inspection
+                        }
+                        element 登录模块 {
+                            type: service
+                        }
+                        登录模块 - satisfies -> 功能需求
+                        测试需求 - contains -> 功能需求
+                    """.trimIndent(),
+                blockTitle = "块图 (Block Diagram)",
+                blockSource =
+                    """
+                    block-beta
+                        columns 3
+                        db[("数据库")]
+                        block:服务:2
+                            columns 2
+                            api web
+                        end
+                        space
+                        ui["界面层"]
+                        db --> api
+                        web --> ui
+                    """.trimIndent(),
+                c4Title = "C4 架构图 (C4 Diagram)",
+                c4Source =
+                    """
+                    C4Container
+                        title 网银系统容器图
+                        Person(用户, "银行客户", "使用网银的客户")
+                        System_Ext(邮件, "邮件系统", "发送通知邮件")
+                        Container_Boundary(网银, "网银系统") {
+                            Container(前端, "前端应用", "Angular", "提供网银界面")
+                            ContainerDb(数据库, "数据库", "SQL", "存储用户数据")
+                            Container(后端, "后端服务", "Java", "提供业务接口")
+                        }
+                        Rel(用户, 前端, "使用", "HTTPS")
+                        Rel(后端, 邮件, "发送邮件", "SMTP")
+                        Rel(后端, 数据库, "读写", "JDBC")
+                    """.trimIndent(),
             )
 
         Language.EN_US ->
@@ -476,6 +547,59 @@ private fun mermaidDemoText(): MermaidDemoText =
                         bar [120, 180, 240, 310]
                         line [100, 150, 210, 290]
                     """.trimIndent(),
+                requirementTitle = "Requirement Diagram",
+                requirementSource =
+                    """
+                    requirementDiagram
+                        requirement test_req {
+                            id: 1
+                            text: The system must support login.
+                            risk: high
+                            verifymethod: test
+                        }
+                        functionalRequirement test_req2 {
+                            id: 1.1
+                            text: Password must be at least 8 characters.
+                            risk: medium
+                            verifymethod: inspection
+                        }
+                        element auth_module {
+                            type: service
+                        }
+                        auth_module - satisfies -> test_req2
+                        test_req - contains -> test_req2
+                    """.trimIndent(),
+                blockTitle = "Block Diagram",
+                blockSource =
+                    """
+                    block-beta
+                        columns 3
+                        db[("Database")]
+                        block:services:2
+                            columns 2
+                            api web
+                        end
+                        space
+                        ui["UI Layer"]
+                        db --> api
+                        web --> ui
+                    """.trimIndent(),
+                c4Title = "C4 Diagram",
+                c4Source =
+                    """
+                    C4Container
+                        title Banking System Container Diagram
+                        Person(customer, "Banking Customer", "A customer of the bank")
+                        System_Ext(email, "E-mail System", "Sends notification emails")
+                        Container_Boundary(banking, "Banking System") {
+                            Container(spa, "Frontend App", "Angular", "Provides the banking UI")
+                            ContainerDb(database, "Database", "SQL", "Stores user data")
+                            Container(backend, "Backend Service", "Java", "Provides business API")
+                        }
+                        Rel(customer, spa, "Uses", "HTTPS")
+                        Rel(backend, email, "Sends emails", "SMTP")
+                        Rel(backend, database, "Reads/writes", "JDBC")
+                    """.trimIndent(),
             )
     }
 
@@ -506,4 +630,10 @@ private data class MermaidDemoText(
     val quadrantSource: String,
     val xychartTitle: String,
     val xychartSource: String,
+    val requirementTitle: String,
+    val requirementSource: String,
+    val blockTitle: String,
+    val blockSource: String,
+    val c4Title: String,
+    val c4Source: String,
 )

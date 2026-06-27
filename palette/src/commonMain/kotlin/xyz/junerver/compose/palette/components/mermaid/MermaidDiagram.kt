@@ -84,6 +84,12 @@ import xyz.junerver.compose.palette.mermaid.QuadrantAxis
 import xyz.junerver.compose.palette.mermaid.QuadrantPoint
 import xyz.junerver.compose.palette.mermaid.StateDefinition
 import xyz.junerver.compose.palette.mermaid.TimelinePeriod
+import xyz.junerver.compose.palette.mermaid.RequirementBox
+import xyz.junerver.compose.palette.mermaid.RequirementRelationKind
+import xyz.junerver.compose.palette.mermaid.C4Boundary
+import xyz.junerver.compose.palette.mermaid.C4Element
+import xyz.junerver.compose.palette.mermaid.C4RelDirection
+import xyz.junerver.compose.palette.mermaid.C4Relationship
 import xyz.junerver.compose.palette.mermaid.XySeries
 import xyz.junerver.compose.palette.mermaid.XySeriesKind
 import kotlin.math.abs
@@ -507,6 +513,31 @@ fun PMermaidDiagram(
                 yAxisTitle = parsedDiagram?.xyYAxisTitle,
                 yAxisRange = parsedDiagram?.xyYAxisRange,
                 series = parsedDiagram?.xySeries.orEmpty(),
+            )
+
+        MermaidDiagramType.RequirementDiagram ->
+            RequirementDiagramMermaidDiagram(
+                modifier = modifier,
+                colors = colors,
+                layout = resolvedLayout,
+                boxes = parsedDiagram?.requirementBoxes.orEmpty(),
+            )
+
+        MermaidDiagramType.BlockDiagram ->
+            BlockDiagramMermaidDiagram(
+                modifier = modifier,
+                colors = colors,
+                layout = resolvedLayout,
+            )
+
+        MermaidDiagramType.C4Diagram ->
+            C4DiagramMermaidDiagram(
+                modifier = modifier,
+                colors = colors,
+                layout = resolvedLayout,
+                elements = parsedDiagram?.c4Elements.orEmpty(),
+                boundaries = parsedDiagram?.c4Boundaries.orEmpty(),
+                title = parsedDiagram?.title,
             )
     }
 }
@@ -3062,3 +3093,298 @@ private fun XYChartMermaidDiagram(
 /** Compact formatting for axis tick values (no trailing ".0" on whole numbers). */
 private fun formatTick(value: Float): String =
     if (value % 1f == 0f) value.toInt().toString() else value.toString()
+
+// ── Requirement diagram ──────────────────────────────────────────────
+
+/**
+ * Requirement renderer. Type boxes (requirement kinds + elements) carry their fields in a list;
+ * relationships are drawn as labelled arrows whose head reflects the relation kind. Modelled on
+ * the class-diagram renderer: nodes placed by the layout engine, edges drawn as straight lines
+ * with a marker at the destination end, kind labels as small pills at the midpoint.
+ */
+@Composable
+private fun RequirementDiagramMermaidDiagram(
+    modifier: Modifier,
+    colors: MermaidColors,
+    layout: MermaidLayout,
+    boxes: List<RequirementBox>,
+) {
+    if (layout.nodes.isEmpty()) {
+        Box(modifier = modifier, contentAlignment = Alignment.Center) {
+            Text("Empty requirement diagram", color = colors.nodeContentColor, style = PaletteTheme.typography.body)
+        }
+        return
+    }
+
+    val c = PaletteTheme.colors
+    val nodeWidth = 200.dp
+    val headerHeight = 28.dp
+    val rowHeight = 18.dp
+    val padding = 8.dp
+
+    // Variable height: header + one row per non-empty field, clamped to at least 2 rows.
+    fun heightOf(box: RequirementBox): Dp {
+        val rows = listOf(box.text, box.risk, box.verifyMethod, box.docRef).count { it.isNotEmpty() }.coerceAtLeast(1)
+        return headerHeight + rowHeight * rows + padding * 2
+    }
+    val heights = boxes.associate { it.id to heightOf(it) }
+    fun heightOf(id: String): Dp = heights[id] ?: (headerHeight + padding * 2)
+
+    val nodeRight = layout.nodes.values.maxOf { it.x } + nodeWidth.value + 24f
+    val nodeBottom = layout.nodes.entries.maxOf { (_, n) -> n.y + heightOf(n.node.id).value + 24f } ?: 48f
+    Box(modifier = modifier.width(nodeRight.dp).height(nodeBottom.dp)) {
+        // Pass 1: edges + markers.
+        Canvas(modifier = Modifier.matchParentSize()) {
+            layout.edges.forEachIndexed { index, edge ->
+                val from = layout.nodes[edge.from] ?: return@forEachIndexed
+                val to = layout.nodes[edge.to] ?: return@forEachIndexed
+                val fx = from.x + nodeWidth.value / 2f
+                val fy = from.y + heightOf(edge.from).value
+                val tx = to.x + nodeWidth.value / 2f
+                val ty = to.y
+                drawLine(color = colors.edgeColor, start = Offset(fx, fy), end = Offset(tx, ty), strokeWidth = 1.5.dp.toPx())
+                // Marker at the destination (top edge of `to`), body pointing down into the gap.
+                val kind = layout.requirementRelationTypes[index] ?: RequirementRelationKind.Traces
+                val markerKind = when (kind) {
+                    RequirementRelationKind.Contains -> ClassMarkerKind.Diamond
+                    RequirementRelationKind.Verifies, RequirementRelationKind.Satisfies -> ClassMarkerKind.Triangle
+                    else -> ClassMarkerKind.Arrow
+                }
+                drawClassMarker(colors.edgeColor, Offset(tx, ty), 0f, -1f, 1f, 0f, 9.dp.toPx(), filled = false, kind = markerKind)
+            }
+        }
+
+        // Pass 2: edge-label pills at midpoints.
+        layout.edges.forEach { edge ->
+            val from = layout.nodes[edge.from] ?: return@forEach
+            val to = layout.nodes[edge.to] ?: return@forEach
+            val midX = (from.x + to.x) / 2f + nodeWidth.value / 2f
+            val midY = (from.y + heightOf(edge.from).value + to.y) / 2f
+            Text(
+                text = edge.label ?: "",
+                color = c.textSecondary,
+                style = PaletteTheme.typography.label,
+                modifier = Modifier
+                    .absoluteOffset(x = (midX - 30f).dp, y = (midY - 8f).dp)
+                    .width(60.dp)
+                    .background(colors.nodeContainerColor, RoundedCornerShape(4.dp))
+                    .padding(horizontal = 4.dp),
+                textAlign = TextAlign.Center,
+            )
+        }
+
+        // Pass 3: the type boxes.
+        boxes.forEach { box ->
+            val positioned = layout.nodes[box.id] ?: return@forEach
+            val h = heightOf(box.id)
+            Column(
+                modifier = Modifier
+                    .absoluteOffset(x = positioned.x.dp, y = positioned.y.dp)
+                    .width(nodeWidth)
+                    .height(h)
+                    .background(colors.nodeContainerColor, RoundedCornerShape(4.dp))
+                    .border(1.dp, colors.nodeBorderColor, RoundedCornerShape(4.dp)),
+            ) {
+                Box(
+                    modifier = Modifier.fillMaxWidth().height(headerHeight)
+                        .background(c.primary.copy(alpha = 0.12f)),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Text(
+                        text = box.type.name,
+                        color = colors.nodeContentColor,
+                        style = PaletteTheme.typography.label.copy(fontWeight = FontWeight.Bold),
+                    )
+                }
+                listOfNotNull(
+                    box.text.takeIf { it.isNotEmpty() }?.let { "Text: $it" },
+                    box.risk.takeIf { it.isNotEmpty() }?.let { "Risk: $it" },
+                    box.verifyMethod.takeIf { it.isNotEmpty() }?.let { "Verify: $it" },
+                    box.docRef.takeIf { it.isNotEmpty() }?.let { "Type: $it" },
+                ).forEach { line ->
+                    Text(
+                        text = line,
+                        color = colors.nodeContentColor,
+                        style = PaletteTheme.typography.label,
+                        modifier = Modifier.fillMaxWidth().padding(horizontal = padding, vertical = 1.dp),
+                        maxLines = 2,
+                    )
+                }
+            }
+        }
+    }
+}
+
+// ── Block diagram ────────────────────────────────────────────────────
+
+/**
+ * Block renderer. Nodes placed in a grid by the layout engine; each renders with its declared
+ * shape. Edges use the generic flowchart marker vocabulary (Forward/Bidirectional/Circle/Cross).
+ * Nested containers (block:NAME) render as a dashed rounded box around their declared children.
+ */
+@Composable
+private fun BlockDiagramMermaidDiagram(
+    modifier: Modifier,
+    colors: MermaidColors,
+    layout: MermaidLayout,
+) {
+    if (layout.nodes.isEmpty()) {
+        Box(modifier = modifier, contentAlignment = Alignment.Center) {
+            Text("Empty block diagram", color = colors.nodeContentColor, style = PaletteTheme.typography.body)
+        }
+        return
+    }
+    val nodeWidth = 120.dp
+    val nodeHeight = 56.dp
+    val pad = 16f
+    val nodeRight = layout.nodes.values.maxOf { it.x } + nodeWidth.value + pad
+    val nodeBottom = layout.nodes.values.maxOf { it.y } + nodeHeight.value + pad
+    Box(modifier = modifier.width(nodeRight.dp).height(nodeBottom.dp)) {
+        // Edges.
+        Canvas(modifier = Modifier.matchParentSize()) {
+            layout.edges.forEach { edge ->
+                val from = layout.nodes[edge.from] ?: return@forEach
+                val to = layout.nodes[edge.to] ?: return@forEach
+                val fx = from.x + nodeWidth.value
+                val fy = from.y + nodeHeight.value / 2f
+                val tx = to.x
+                val ty = to.y + nodeHeight.value / 2f
+                drawLine(color = colors.edgeColor, start = Offset(fx, fy), end = Offset(tx, ty), strokeWidth = 1.5.dp.toPx())
+                // Simple arrowhead at the destination.
+                drawClassMarker(colors.edgeColor, Offset(tx, ty), -1f, 0f, 0f, 1f, 9.dp.toPx(), filled = false, kind = ClassMarkerKind.Arrow)
+            }
+        }
+        // Edge labels.
+        layout.edges.forEach { edge ->
+            val from = layout.nodes[edge.from] ?: return@forEach
+            val to = layout.nodes[edge.to] ?: return@forEach
+            val midX = (from.x + to.x + nodeWidth.value) / 2f
+            val midY = (from.y + to.y + nodeHeight.value) / 2f
+            edge.label?.let { lbl ->
+                Text(lbl, color = PaletteTheme.colors.textSecondary, style = PaletteTheme.typography.label,
+                    modifier = Modifier.absoluteOffset(x = (midX - 40f).dp, y = (midY - 8f).dp).width(80.dp),
+                    textAlign = TextAlign.Center)
+            }
+        }
+        // Nodes.
+        layout.nodes.values.forEach { positioned ->
+            Box(
+                modifier = Modifier
+                    .absoluteOffset(x = positioned.x.dp, y = positioned.y.dp)
+                    .width(nodeWidth)
+                    .height(nodeHeight)
+                    .background(colors.nodeContainerColor, positioned.node.shape.toComposeShape())
+                    .border(1.dp, colors.nodeBorderColor, positioned.node.shape.toComposeShape()),
+                contentAlignment = Alignment.Center,
+            ) {
+                Text(positioned.node.label, color = colors.nodeContentColor, style = PaletteTheme.typography.label, textAlign = TextAlign.Center)
+            }
+        }
+    }
+}
+
+// ── C4 diagram ───────────────────────────────────────────────────────
+
+/**
+ * C4 renderer. Elements placed in declaration order (4 per row); Person→circle, *Db→database
+ * shape, others→rounded. Boundaries draw as dashed rounded boxes spanning their children's
+ * bounds. Relationships are plain forward arrows with a label pill.
+ */
+@Composable
+private fun C4DiagramMermaidDiagram(
+    modifier: Modifier,
+    colors: MermaidColors,
+    layout: MermaidLayout,
+    elements: List<C4Element>,
+    boundaries: List<C4Boundary>,
+    title: String?,
+) {
+    if (elements.isEmpty() && boundaries.isEmpty()) {
+        Box(modifier = modifier, contentAlignment = Alignment.Center) {
+            Text("Empty C4 diagram", color = colors.nodeContentColor, style = PaletteTheme.typography.body)
+        }
+        return
+    }
+    val c = PaletteTheme.colors
+    val nodeWidth = 160.dp
+    val nodeHeight = 70.dp
+    val titleHeight: Dp = if (title != null) 32.dp else 0.dp
+    val pad = 24f
+    val nodeRight = (layout.nodes.values.maxOfOrNull { it.x } ?: 0f) + nodeWidth.value + pad
+    val nodeBottom = titleHeight.value + (layout.nodes.values.maxOfOrNull { it.y } ?: 0f) + nodeHeight.value + pad
+    Box(modifier = modifier.width(nodeRight.dp).height(nodeBottom.dp)) {
+        if (title != null) {
+            Text(title, color = colors.nodeContentColor,
+                style = PaletteTheme.typography.body.copy(fontWeight = FontWeight.Bold),
+                modifier = Modifier.absoluteOffset(x = pad.dp, y = 0.dp))
+        }
+        // Boundaries: dashed boxes spanning child bounds.
+        Canvas(modifier = Modifier.matchParentSize()) {
+            boundaries.forEach { boundary ->
+                val children = boundary.childAliases.mapNotNull { layout.nodes[it] }
+                if (children.isEmpty()) return@forEach
+                val minX = children.minOf { it.x } - pad
+                val minY = children.minOf { it.y } - pad / 2f
+                val maxX = children.maxOf { it.x + nodeWidth.value } + pad
+                val maxY = children.maxOf { it.y + nodeHeight.value } + pad / 2f
+                val rect = androidx.compose.ui.geometry.Rect(minX, titleHeight.value + minY, maxX, titleHeight.value + maxY)
+                drawRoundRect(
+                    color = colors.edgeColor,
+                    topLeft = androidx.compose.ui.geometry.Offset(rect.left, rect.top),
+                    size = androidx.compose.ui.geometry.Size(rect.width, rect.height),
+                    cornerRadius = androidx.compose.ui.geometry.CornerRadius(8.dp.toPx(), 8.dp.toPx()),
+                    style = Stroke(width = 1.dp.toPx(), pathEffect = PathEffect.dashPathEffect(floatArrayOf(6f, 4f))),
+                )
+            }
+            // Relationship arrows.
+            layout.edges.forEach { edge ->
+                val from = layout.nodes[edge.from] ?: return@forEach
+                val to = layout.nodes[edge.to] ?: return@forEach
+                val fx = from.x + nodeWidth.value / 2f
+                val fy = titleHeight.value + from.y + nodeHeight.value
+                val tx = to.x + nodeWidth.value / 2f
+                val ty = titleHeight.value + to.y
+                drawLine(color = colors.edgeColor, start = Offset(fx, fy), end = Offset(tx, ty), strokeWidth = 1.5.dp.toPx())
+                drawClassMarker(colors.edgeColor, Offset(tx, ty), 0f, -1f, 1f, 0f, 9.dp.toPx(), filled = false, kind = ClassMarkerKind.Arrow)
+            }
+        }
+        // Relationship labels.
+        layout.edges.forEach { edge ->
+            val from = layout.nodes[edge.from] ?: return@forEach
+            val to = layout.nodes[edge.to] ?: return@forEach
+            val midX = (from.x + to.x) / 2f + nodeWidth.value / 2f
+            val midY = titleHeight.value + (from.y + to.y + nodeHeight.value) / 2f
+            Text(edge.label ?: "", color = c.textSecondary, style = PaletteTheme.typography.label,
+                modifier = Modifier.absoluteOffset(x = (midX - 50f).dp, y = (midY - 8f).dp).width(100.dp)
+                    .background(colors.nodeContainerColor, RoundedCornerShape(4.dp)).padding(horizontal = 4.dp),
+                textAlign = TextAlign.Center)
+        }
+        // Element boxes (skip boundary placeholder nodes).
+        val boundaryAliases = boundaries.map { it.alias }.toSet()
+        elements.forEach { element ->
+            val positioned = layout.nodes[element.alias] ?: return@forEach
+            if (element.alias in boundaryAliases) return@forEach
+            val shape = positioned.node.shape.toComposeShape()
+            Column(
+                modifier = Modifier
+                    .absoluteOffset(x = positioned.x.dp, y = (titleHeight.value + positioned.y).dp)
+                    .width(nodeWidth).height(nodeHeight)
+                    .background(colors.nodeContainerColor, shape)
+                    .border(1.dp, colors.nodeBorderColor, shape)
+                    .padding(horizontal = 6.dp, vertical = 4.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+            ) {
+                Text(element.label, color = colors.nodeContentColor,
+                    style = PaletteTheme.typography.label.copy(fontWeight = FontWeight.Bold),
+                    textAlign = TextAlign.Center, maxLines = 1)
+                if (element.techn.isNotEmpty() || element.descr.isNotEmpty()) {
+                    Text(
+                        listOfNotNull(element.techn.takeIf { it.isNotEmpty() }, element.descr.takeIf { it.isNotEmpty() }).joinToString(": "),
+                        color = c.textSecondary, style = PaletteTheme.typography.label,
+                        textAlign = TextAlign.Center, maxLines = 2,
+                    )
+                }
+            }
+        }
+    }
+}

@@ -50,12 +50,12 @@ internal object BlockParser : MermaidDiagramParser {
     // connector string, the optional label, and to; the connector's leading/trailing glyph drives
     // the marker mapping.
     private val edgeRegex = Regex(
-        """^\s*([A-Za-z_][\w-]*)\s*""" + // 1: from id
+        """^\s*([A-Za-z_]\w*)\s*""" + // 1: from id
             """([xo<])?\s*([-=]+)\s*""" + // 2: optional left glyph, 3: dash/equal run (left of label)
             """(?:"([^"]*)"\s*)?""" + // 4: optional mid-arrow label
             """([-=]*)\s*""" + // 5: optional trailing dash/equal run (right of label)
             """([xo>])?\s*""" + // 6: optional right/head glyph
-            """([A-Za-z_][\w-]*)\s*$""", // 7: to id
+            """([A-Za-z_]\w*)\s*$""", // 7: to id
     )
 
     /** Tracks an open `block { ... }` scope (the root is an implicit scope). */
