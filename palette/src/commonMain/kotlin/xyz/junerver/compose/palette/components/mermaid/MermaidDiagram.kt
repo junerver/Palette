@@ -100,6 +100,7 @@ import xyz.junerver.compose.palette.mermaid.XySeries
 import xyz.junerver.compose.palette.mermaid.XySeriesKind
 import kotlin.math.abs
 import kotlin.math.max
+import kotlin.math.round
 import kotlin.math.sqrt
 
 internal enum class MermaidNodeContainerKind {
@@ -2121,7 +2122,7 @@ private fun PieDiagramMermaidDiagram(
         ) {
             slices.forEachIndexed { index, slice ->
                 val color = sliceColors[index % sliceColors.size]
-                val percentage = "%.1f%%".format(slice.value / total * 100)
+                val percentage = formatPercentage(slice.value / total * 100)
                 val label = if (showData) {
                     "${slice.label} : ${slice.value} ($percentage)"
                 } else {
@@ -3707,4 +3708,18 @@ private fun ArchitectureDiagramMermaidDiagram(
             }
         }
     }
+}
+
+/**
+ * Formats a percentage value with one decimal place and a trailing `%`, without relying on
+ * `String.format` (which is unavailable on Kotlin/Native / iOS targets).
+ *
+ * A tiny epsilon compensates for IEEE-754 representation error so that values like `0.05`
+ * (whose binary form is slightly below 0.05) still round half-up to `0.1`.
+ */
+internal fun formatPercentage(value: Double): String {
+    val rounded = round(value * 10.0 + 1.0e-9) / 10.0
+    val intPart = rounded.toInt()
+    val decimal = (round((rounded - intPart) * 10.0)).toInt() % 10
+    return "$intPart.$decimal%"
 }
