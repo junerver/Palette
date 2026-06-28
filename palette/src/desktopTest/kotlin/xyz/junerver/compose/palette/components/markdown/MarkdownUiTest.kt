@@ -17,6 +17,7 @@ import androidx.compose.ui.test.assertTextEquals
 import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.performClick
 import org.junit.Rule
 import xyz.junerver.compose.palette.components.checkbox.ColoredCheckBox
@@ -469,4 +470,161 @@ class MarkdownUiTest {
         rule.waitForIdle()
         assertEquals(false, checked, "After 2nd click")
     }
+
+    @Test
+    fun editorToolbarBoldButtonWrapsSelection() {
+        val textValue = androidx.compose.runtime.mutableStateOf("hello")
+        rule.setContent {
+            PaletteMaterialTheme {
+                PMarkdownEditor(
+                    value = textValue.value,
+                    onValueChange = { textValue.value = it },
+                    showPreview = false,
+                )
+            }
+        }
+
+        // 工具栏的 Bold 按钮应存在并可点击
+        rule.onNodeWithTag("md-toolbar-Bold").performClick()
+        rule.waitForIdle()
+
+        // 编辑器初始光标在文本末尾，点击 Bold 应在该处插入 **** 占位
+        rule.runOnIdle {
+            assertTrue(textValue.value.contains("****"), "Expected bold markers inserted: ${textValue.value}")
+        }
+    }
+
+    @Test
+    fun editorToolbarHeadingButtonSetsH1() {
+        val textValue = androidx.compose.runtime.mutableStateOf("title")
+        rule.setContent {
+            PaletteMaterialTheme {
+                PMarkdownEditor(
+                    value = textValue.value,
+                    onValueChange = { textValue.value = it },
+                    showPreview = false,
+                )
+            }
+        }
+
+        rule.onNodeWithTag("md-toolbar-Heading").performClick()
+        rule.waitForIdle()
+
+        rule.runOnIdle {
+            assertTrue(textValue.value.contains("# title") || textValue.value.contains("## "), "Expected heading applied: ${textValue.value}")
+        }
+    }
+
+    @Test
+    fun editorToolbarUnorderedListButtonAddsBullet() {
+        val textValue = androidx.compose.runtime.mutableStateOf("item")
+        rule.setContent {
+            PaletteMaterialTheme {
+                PMarkdownEditor(
+                    value = textValue.value,
+                    onValueChange = { textValue.value = it },
+                    showPreview = false,
+                )
+            }
+        }
+
+        rule.onNodeWithTag("md-toolbar-UnorderedList").performClick()
+        rule.waitForIdle()
+
+        rule.runOnIdle {
+            assertTrue(textValue.value.contains("- item"), "Expected bullet list: ${textValue.value}")
+        }
+    }
+
+    @Test
+    fun editorToolbarIsHiddenWhenFormatToolbarDisabled() {
+        rule.setContent {
+            PaletteMaterialTheme {
+                PMarkdownEditor(
+                    value = "hello",
+                    onValueChange = {},
+                    showPreview = false,
+                    showFormatToolbar = false,
+                )
+            }
+        }
+
+        rule.onNodeWithTag("md-toolbar-Bold").assertDoesNotExist()
+    }
+
+    // region Phase C: 内置滚动 / 锚点跳转 / 代码复制透传
+
+    @Test
+    fun viewerAnchorClickScrollsToHeadingByDefault() {
+        // 调用方未提供 onAnchorClick 时，点击锚链接应触发内置滚动（不抛异常、链接仍可点击）。
+        rule.setContent {
+            PaletteMaterialTheme {
+                PMarkdownViewer(
+                    markdown = buildString {
+                        append("# Top\n\n")
+                        repeat(40) { i -> append("line ").append(i).append("\n") }
+                        append("\n[go top](#top)")
+                    },
+                    // 故意不传 onAnchorClick，验证默认滚动行为
+                )
+            }
+        }
+
+        rule.onNodeWithTag("heading:top").assertExists()
+        rule.onNodeWithText("go top").performClick()
+        rule.waitForIdle()
+        // 默认行为是 animateScrollTo，不直接断言像素位置（动画时长不可控），仅验证不崩溃且链接可点击。
+    }
+
+    @Test
+    fun viewerShowsCodeCopyButtonByDefault() {
+        rule.setContent {
+            PaletteMaterialTheme {
+                PMarkdownViewer(
+                    markdown =
+                        """
+                        ```kotlin
+                        val x = 1
+                        ```
+                        """.trimIndent(),
+                    // showCopyAction 默认 true
+                )
+            }
+        }
+        // PCodeBlock 复制按钮的 contentDescription 为 "Copy code"
+        rule.onNodeWithContentDescription("Copy code").assertExists()
+    }
+
+    @Test
+    fun viewerHidesCodeCopyButtonWhenDisabled() {
+        rule.setContent {
+            PaletteMaterialTheme {
+                PMarkdownViewer(
+                    markdown =
+                        """
+                        ```kotlin
+                        val x = 1
+                        ```
+                        """.trimIndent(),
+                    showCopyAction = false,
+                )
+            }
+        }
+        rule.onNodeWithContentDescription("Copy code").assertDoesNotExist()
+    }
+
+    @Test
+    fun viewerInternalScrollCanBeDisabled() {
+        // verticalScroll=false 时 Viewer 不内置滚动，可嵌入外部滚动容器。
+        rule.setContent {
+            PaletteMaterialTheme {
+                PMarkdownViewer(
+                    markdown = "# Hi",
+                    verticalScroll = false,
+                )
+            }
+        }
+        rule.onNodeWithTag("heading:hi").assertExists()
+    }
+    // endregion
 }

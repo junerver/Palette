@@ -256,3 +256,60 @@ class MarkdownEditActionsLogicTest {
     }
     // endregion
 }
+
+class MarkdownToolbarIntegrationLogicTest {
+    // 模拟工具栏按钮到编辑动作的映射（与 MarkdownEditor 内 when 分支一致），
+    // 验证"动作枚举 -> 纯函数 -> 文本结果"链路，无需 Compose。
+
+    private fun applyAction(action: MarkdownToolbarAction, text: String, sel: TextRange): MarkdownEditResult {
+        val tf = androidx.compose.ui.text.input.TextFieldValue(text, sel)
+        return when (action) {
+            MarkdownToolbarAction.Bold -> wrapSelection(tf.text, tf.selection, "**")
+            MarkdownToolbarAction.Italic -> wrapSelection(tf.text, tf.selection, "*")
+            MarkdownToolbarAction.Strikethrough -> wrapSelection(tf.text, tf.selection, "~~")
+            MarkdownToolbarAction.InlineCode -> wrapSelection(tf.text, tf.selection, "`")
+            MarkdownToolbarAction.Heading -> setHeadingLevel(tf.text, tf.selection, 1)
+            MarkdownToolbarAction.UnorderedList -> toggleLinePrefix(tf.text, tf.selection, "- ")
+            MarkdownToolbarAction.OrderedList -> toggleLinePrefix(tf.text, tf.selection, "1. ", ordered = true)
+            MarkdownToolbarAction.TaskList -> toggleTaskItem(tf.text, tf.selection)
+            MarkdownToolbarAction.Quote -> toggleLinePrefix(tf.text, tf.selection, "> ")
+            MarkdownToolbarAction.Link -> insertText(tf.text, tf.selection, "[text](url)", selectInside = 7..9)
+            MarkdownToolbarAction.Image -> insertText(tf.text, tf.selection, "![alt](url)", selectInside = 8..10)
+            MarkdownToolbarAction.CodeBlock -> insertText(tf.text, tf.selection, defaultCodeFence())
+            MarkdownToolbarAction.Table -> insertText(tf.text, tf.selection, defaultTableSnippet)
+            MarkdownToolbarAction.HorizontalRule -> insertText(tf.text, tf.selection, "---\n")
+        }
+    }
+
+    @Test
+    fun boldAction_wrapsSelection() {
+        val r = applyAction(MarkdownToolbarAction.Bold, "hello", TextRange(0, 5))
+        assertEquals("**hello**", r.text)
+    }
+
+    @Test
+    fun headingAction_setsH1() {
+        val r = applyAction(MarkdownToolbarAction.Heading, "title", TextRange(0, 0))
+        assertEquals("# title", r.text)
+    }
+
+    @Test
+    fun unorderedListAction_addsBullet() {
+        val r = applyAction(MarkdownToolbarAction.UnorderedList, "item", TextRange(0, 0))
+        assertEquals("- item", r.text)
+    }
+
+    @Test
+    fun taskListAction_addsUnchecked() {
+        val r = applyAction(MarkdownToolbarAction.TaskList, "buy milk", TextRange(0, 0))
+        assertEquals("- [ ] buy milk", r.text)
+    }
+
+    @Test
+    fun linkAction_insertsAtCursor() {
+        val r = applyAction(MarkdownToolbarAction.Link, "x", TextRange(1, 1))
+        assertEquals("x[text](url)", r.text)
+        // 光标应落在 url 占位上
+        assertEquals(TextRange(8, 11), r.selection)
+    }
+}

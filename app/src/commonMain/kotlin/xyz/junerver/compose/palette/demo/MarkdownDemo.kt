@@ -58,6 +58,14 @@ fun MarkdownDemo() {
                 previewLabel = text.previewLabel,
                 splitLabel = text.splitLabel,
                 showPreview = true,
+                // 阶段 A：内置格式化工具栏（加粗/斜体/删除线/代码/标题/列表/引用/链接/图片/代码块/表格/分隔线）。
+                // Tab 缩进、回车续行也已内置；设为 false 可仅保留纯文本框。
+                // 阶段 B：撤销/重做 + 键盘快捷键。
+                //   Ctrl/Cmd+B 加粗 | +I 斜体 | +K 链接 | +Shift+K 删除线
+                //   Ctrl/Cmd+E 行内代码 | +Shift+E 代码块
+                //   Ctrl/Cmd+U 无序列表 | +O 有序列表 | +Shift+O 引用
+                //   Ctrl/Cmd+Z 撤销 | +Shift+Z 或 +Y 重做（连续输入按词合并回退）
+                showFormatToolbar = true,
             )
         }
     }

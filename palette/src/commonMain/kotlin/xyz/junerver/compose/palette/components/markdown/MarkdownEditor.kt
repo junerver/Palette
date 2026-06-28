@@ -8,6 +8,8 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.input.key.KeyEventType
+import androidx.compose.ui.input.key.isCtrlPressed
+import androidx.compose.ui.input.key.isMetaPressed
 import androidx.compose.ui.input.key.isShiftPressed
 import androidx.compose.ui.input.key.key
 import androidx.compose.ui.input.key.onPreviewKeyEvent
@@ -15,6 +17,7 @@ import androidx.compose.ui.input.key.type
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.input.TextFieldValue
 import xyz.junerver.compose.hooks.useLatestState
+import xyz.junerver.compose.hooks.useRef
 import xyz.junerver.compose.hooks.useState
 import xyz.junerver.compose.palette.components.textfield.TextArea
 import xyz.junerver.compose.palette.components.toggle.PToggleGroup
@@ -67,9 +70,12 @@ fun PMarkdownEditor(
 /**
  * [TextFieldValue] 版编辑器：暴露完整光标 / 选区，
  * 供需要精确光标控制（如自动补全、外部工具栏）的调用方使用。
+ *
+ * 注意：由于 Kotlin 顶层函数重载无法通过统一导出文件（Palette.kt）的函数引用再导出，
+ * 需要此重载的调用方请直接从本包 `xyz.junerver.compose.palette.components.markdown` 引入。
  */
 @Composable
-fun PMarkdownEditor(
+fun PMarkdownEditorValue(
     value: TextFieldValue,
     onValueChange: (TextFieldValue) -> Unit,
     modifier: Modifier = Modifier,
@@ -132,9 +138,24 @@ private fun PMarkdownEditorImpl(
 
     // 以 TextFieldValue 作为单一编辑状态来源，保证工具栏 / 键盘交互能读写光标。
     val initial = tfValue ?: TextFieldValue(value, selection = TextRange(value.length))
+
+    // 撤销/重做历史栈：用 useRef 持有（非重组、跨重组保留），用 useState 镜像 present 驱动重组。
+    val historyRef = useRef(MarkdownHistory(initial))
     val (editorValue, setEditorValue) = useState(initial)
 
-    // 外部受控值变化时同步文本（保留光标），避免工具栏回写造成光标跳动。
+    fun propagate(next: TextFieldValue) {
+        setEditorValue(next)
+        onTfValueChange?.invoke(next)
+        onValueChange?.invoke(next.text)
+    }
+
+    /** 普通打字（来自 TextArea onValueChange）：走合并入栈。 */
+    val onEdit: (TextFieldValue) -> Unit = { newTf ->
+        historyRef.current.pushTyping(newTf)
+        propagate(historyRef.current.current)
+    }
+
+    /** 外部受控值变化时同步文本（保留光标），不计入历史、不清 future。 */
     val externalText = tfValue?.text ?: value
     val externalSelection = tfValue?.selection
     LaunchedEffect(externalText, externalSelection) {
@@ -144,26 +165,36 @@ private fun PMarkdownEditorImpl(
         if (textChanged || selChanged) {
             val cursor = (externalSelection ?: current.selection)
                 .let { TextRange(it.start.coerceIn(0, externalText.length), it.end.coerceIn(0, externalText.length)) }
-            setEditorValue(TextFieldValue(externalText, cursor, composition = null))
+            val synced = TextFieldValue(externalText, cursor, composition = null)
+            historyRef.current.sync(synced)
+            setEditorValue(synced)
         }
     }
 
-    val onEdit: (TextFieldValue) -> Unit = { newTf ->
-        setEditorValue(newTf)
-        onTfValueChange?.invoke(newTf)
-        onValueChange?.invoke(newTf.text)
+    // 用 latest 持有最新编辑值与回调，便于在键盘事件等稳定回调里读取。
+    val latestEditorValue = useLatestState(editorValue)
+
+    /** 结构化变更（工具栏 / 快捷键）：走 commit，独立入栈。 */
+    fun applyEdit(result: MarkdownEditResult) {
+        val next = TextFieldValue(result.text, result.selection)
+        historyRef.current.commit(next)
+        propagate(historyRef.current.current)
     }
 
-    // 用 latest 持有最新编辑值，便于在键盘事件等稳定回调里读取。
-    val latestEditorValue = useLatestState(editorValue)
-    val latestOnEdit = useLatestState(onEdit)
+    /** 撤销一步。 */
+    fun undo() {
+        historyRef.current.undo()
+        propagate(historyRef.current.current)
+    }
 
-    fun applyEdit(result: MarkdownEditResult) {
-        latestOnEdit.value()(TextFieldValue(result.text, result.selection))
+    /** 重做一步。 */
+    fun redo() {
+        historyRef.current.redo()
+        propagate(historyRef.current.current)
     }
 
     val toolbarOnAction: (MarkdownToolbarAction) -> Unit = { action ->
-        val tf = latestEditorValue.value()
+        val tf = latestEditorValue.value
         val result = when (action) {
             MarkdownToolbarAction.Bold -> wrapSelection(tf.text, tf.selection, "**")
             MarkdownToolbarAction.Italic -> wrapSelection(tf.text, tf.selection, "*")
@@ -183,14 +214,57 @@ private fun PMarkdownEditorImpl(
         applyEdit(result)
     }
     val toolbarOnHeading: (MarkdownHeadingLevel) -> Unit = { level ->
-        val tf = latestEditorValue.value()
+        val tf = latestEditorValue.value
         applyEdit(setHeadingLevel(tf.text, tf.selection, level.level))
     }
 
-    // 键盘拦截：Tab / Shift+Tab 缩进；Enter 列表/引用续行。
+    // 键盘拦截：
+    //  - Ctrl/Cmd + B/I/K/Shift+K/E/Shift+E/U/Shift+O/Shift+Q：格式化快捷键
+    //  - Ctrl/Cmd + Z / Shift+Z / Y：撤销 / 重做
+    //  - Tab / Shift+Tab：缩进；Enter：列表/引用续行
     val keyModifier = Modifier.onPreviewKeyEvent { event ->
         if (event.type != KeyEventType.KeyDown) return@onPreviewKeyEvent false
-        val tf = latestEditorValue.value()
+        val tf = latestEditorValue.value
+        val primaryMod = event.isCtrlPressed || event.isMetaPressed
+        if (primaryMod) {
+            // 平台快捷键（Ctrl 用于 Win/Linux，Cmd 用于 macOS）
+            val handled = when (event.key) {
+                Key.B -> { applyEdit(wrapSelection(tf.text, tf.selection, "**")); true }
+                Key.I -> { applyEdit(wrapSelection(tf.text, tf.selection, "*")); true }
+                Key.K -> {
+                    if (event.isShiftPressed) {
+                        applyEdit(wrapSelection(tf.text, tf.selection, "~~"))
+                    } else {
+                        applyEdit(insertText(tf.text, tf.selection, "[text](url)", selectInside = 7..9))
+                    }
+                    true
+                }
+                Key.E -> {
+                    if (event.isShiftPressed) {
+                        applyEdit(insertText(tf.text, tf.selection, defaultCodeFence()))
+                    } else {
+                        applyEdit(wrapSelection(tf.text, tf.selection, "`"))
+                    }
+                    true
+                }
+                Key.U -> { applyEdit(toggleLinePrefix(tf.text, tf.selection, "- ")); true }
+                Key.O -> {
+                    if (event.isShiftPressed) {
+                        applyEdit(toggleLinePrefix(tf.text, tf.selection, "> "))
+                    } else {
+                        applyEdit(toggleLinePrefix(tf.text, tf.selection, "1. ", ordered = true))
+                    }
+                    true
+                }
+                Key.Z -> {
+                    if (event.isShiftPressed) redo() else undo()
+                    true
+                }
+                Key.Y -> { redo(); true }
+                else -> false
+            }
+            return@onPreviewKeyEvent handled
+        }
         when (event.key) {
             Key.Tab -> {
                 applyEdit(indent(tf.text, tf.selection, forward = !event.isShiftPressed))
@@ -210,9 +284,10 @@ private fun PMarkdownEditorImpl(
     }
 
     val taskToggleHandler: (Int) -> Unit = { taskIndex ->
-        // 预览态下勾选复选框：整体替换并重置光标到末尾。
+        // 预览态下勾选复选框：结构化操作，走 commit（可撤销），整体替换并重置光标到末尾。
         val newText = toggleTaskCheckbox(externalText, taskIndex)
-        onEdit(TextFieldValue(newText, TextRange(newText.length)))
+        historyRef.current.commit(TextFieldValue(newText, TextRange(newText.length)))
+        propagate(historyRef.current.current)
     }
 
     Column(

@@ -58,9 +58,13 @@
 - TextArea 接入 `Tab` 缩进、回车自动续行（通过新增的 `onBackspace/Enter/Tab` 钩子或包装层）。
 - TDD：先写工具栏动作函数的单元测试，再接 UI。
 
-### 阶段 B：编辑器撤销/重做与快捷键（P0-2,4）
-- 用 `compose-hooks` 的状态封装一个 `useMarkdownHistory`（基于 undo/redo 栈），替换直接透传。
-- 接入 `Ctrl/Cmd+B/I/K/U/Z/Shift+Z`。
+### 阶段 B：编辑器撤销/重做与快捷键（P0-2,4）— ✅ 已完成（2026-06-28）
+- 新增 `MarkdownHistory`（纯逻辑类，past/present/future + 连续输入合并），`useRef` 持有、`useState` 镜像 present 驱动重组；外部受控值同步走 `sync`（不入历史）。
+- 打字走 `pushTyping`（阈值窗口内合并为单条历史项 → Ctrl+Z 按词/段回退），工具栏/快捷键/任务勾选走 `commit`。
+- 快捷键：`Ctrl/Cmd+B`加粗、`+I`斜体、`+K`链接、`+Shift+K`删除线、`+E`行内代码、`+Shift+E`代码块、`+U`无序列表、`+O`有序列表、`+Shift+O`引用、`+Z`撤销、`+Shift+Z`/`+Y`重做。
+- 顺手修复预存的 `MermaidDefaults` token 审计违规（note 颜色上提到 `PaletteUtilityTokens.mermaidNoteColor/mermaidNoteBorderColor`）。
+
+> 注：调研发现 `compose-hooks` 已自带 `useUndo`（PersistentList），但因其无法在 `commonTest` 单测、且不提供输入合并，最终采用自建可测类方案。
 
 ### 阶段 C：Viewer 滚动 + 锚点跳转 + 代码复制（P1-7,8）
 - Viewer 内置 `verticalScroll`（可通过参数关闭）+ `LazyColumn` 化大文档。

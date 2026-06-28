@@ -25,10 +25,8 @@ object MermaidDefaults {
     @Composable
     fun colors(): MermaidColors {
         val tokens = PaletteTheme.componentThemes.utility
-        val semantic = PaletteTheme.colors
-        // Notes get a warm fill/border derived from the `warning` token (mermaid.live's note
-        // yellow), so they're visually distinct from participant boxes without a hard-coded hue.
-        val warning = if (semantic.warning != Color.Unspecified) semantic.warning else Color(0xFFF59E0B)
+        // Note 的暖色调已上提到 utility 组件 token（mermaidNoteColor / mermaidNoteBorderColor），
+        // 在主题层统一从 warning 语义 token 派生，符合组件样式应由顶层 token 控制的约定。
         return MermaidColors(
             nodeContainerColor = tokens.mermaidNodeContainerColor,
             nodeBorderColor = tokens.mermaidNodeBorderColor,
@@ -37,8 +35,8 @@ object MermaidDefaults {
             entityHeaderColor = tokens.mermaidEntityHeaderColor,
             primaryKeyColor = tokens.mermaidPrimaryKeyColor,
             foreignKeyColor = tokens.mermaidForeignKeyColor,
-            noteColor = warning.copy(alpha = 0.20f),
-            noteBorderColor = warning.copy(alpha = 0.75f),
+            noteColor = tokens.mermaidNoteColor,
+            noteBorderColor = tokens.mermaidNoteBorderColor,
         )
     }
 

@@ -693,6 +693,13 @@ data class PaletteDateTimeTokens(
     val calendarDayTextStyle: TextStyle,
     val calendarHeaderTextStyle: TextStyle,
     val calendarDayOfWeekTextStyle: TextStyle,
+    // 区间选择专用：band（起止之间的中间带）、hover 预览、pill-cap（起止端帽）、时间滚轮文字
+    val calendarRangeBandColor: Color,
+    val calendarRangeHoverColor: Color,
+    val calendarRangeStartCapColor: Color,
+    val calendarRangeEndCapColor: Color,
+    val calendarRangeCapTextColor: Color,
+    val timeWheelTextColor: Color,
 ) {
     companion object {
         fun default(
@@ -723,6 +730,13 @@ data class PaletteDateTimeTokens(
             calendarDayTextStyle = typography.body.copy(fontSize = 14.sp),
             calendarHeaderTextStyle = typography.body.copy(fontSize = 16.sp, fontWeight = FontWeight.Medium),
             calendarDayOfWeekTextStyle = typography.label.copy(fontSize = 12.sp),
+            // 区间选择默认色板：band/hover 由 primary 派生低透明度；cap 复用 primary；cap 文字反白
+            calendarRangeBandColor = colors.primary.copy(alpha = 0.14f),
+            calendarRangeHoverColor = colors.primary.copy(alpha = 0.08f),
+            calendarRangeStartCapColor = colors.primary,
+            calendarRangeEndCapColor = colors.primary,
+            calendarRangeCapTextColor = colors.surface,
+            timeWheelTextColor = colors.textPrimary,
         )
     }
 }
@@ -2292,6 +2306,10 @@ data class PaletteUtilityTokens(
     val mermaidEntityHeaderColor: Color,
     val mermaidPrimaryKeyColor: Color,
     val mermaidForeignKeyColor: Color,
+    /** Sequence-diagram note fill — warm tint derived from warning semantics. */
+    val mermaidNoteColor: Color,
+    /** Sequence-diagram note outline — stronger warm tint. */
+    val mermaidNoteBorderColor: Color,
 ) {
     companion object {
         fun default(
@@ -2343,6 +2361,10 @@ data class PaletteUtilityTokens(
             mermaidEntityHeaderColor = colors.bgHover,
             mermaidPrimaryKeyColor = colors.primary,
             mermaidForeignKeyColor = colors.info,
+            // Note 暖色调由 warning 语义 token 派生（与 mermaid.live 的 note yellow 视觉对齐），
+            // 填充用低透明度、描边用较高透明度，确保明/暗主题下均与参与方方框区分。
+            mermaidNoteColor = colors.warning.copy(alpha = 0.20f),
+            mermaidNoteBorderColor = colors.warning.copy(alpha = 0.75f),
         )
     }
 }

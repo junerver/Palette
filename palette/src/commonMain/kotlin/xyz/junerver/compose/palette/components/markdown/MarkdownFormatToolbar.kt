@@ -38,6 +38,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.Dp
 import xyz.junerver.compose.hooks.useState
+import xyz.junerver.compose.palette.core.theme.PaletteTheme
 
 /**
  * 工具栏可触发的动作。Toolbar 将其透传给宿主编辑器，
@@ -111,9 +112,9 @@ fun MarkdownFormatToolbar(
         // 分组3：列表 / 引用
         ToolbarGroup(spacing = groupSpacing) {
             ToolbarIconButton(MarkdownToolbarAction.UnorderedList, Icons.AutoMirrored.Filled.FormatListBulleted, "UnorderedList", enabled, onAction)
-            ToolbarIconButton(MarkdownToolbarAction.OrderedList, Icons.AutoMirrored.Filled.FormatListNumbered, "OrderedList", enabled, onAction)
+            ToolbarIconButton(MarkdownToolbarAction.OrderedList, Icons.Filled.FormatListNumbered, "OrderedList", enabled, onAction)
             ToolbarIconButton(MarkdownToolbarAction.TaskList, Icons.Filled.Checklist, "TaskList", enabled, onAction)
-            ToolbarIconButton(MarkdownToolbarAction.Quote, Icons.AutoMirrored.Filled.FormatQuote, "Quote", enabled, onAction)
+            ToolbarIconButton(MarkdownToolbarAction.Quote, Icons.Filled.FormatQuote, "Quote", enabled, onAction)
         }
 
         // 分组4：插入
@@ -205,6 +206,7 @@ private fun HeadingDropdown(
                     text = {
                         Text(
                             text = if (level == MarkdownHeadingLevel.None) "清除标题" else "Heading ${level.name}",
+                            style = PaletteTheme.typography.body,
                         )
                     },
                     onClick = {

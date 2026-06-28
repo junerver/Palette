@@ -6,6 +6,8 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.defaultMinSize
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.ui.semantics.Role
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -25,7 +27,10 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -33,6 +38,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.layout.positionInRoot
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
@@ -58,6 +65,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.em
 import androidx.compose.ui.unit.sp
+import kotlinx.coroutines.launch
 import xyz.junerver.compose.hooks.useCreation
 import xyz.junerver.compose.palette.components.code.PCodeBlock
 import xyz.junerver.compose.palette.components.mermaid.PMermaidDiagram
@@ -88,6 +96,10 @@ fun PMarkdownViewer(
     onAnchorClick: ((String) -> Unit)? = null,
     onTaskCheckedChange: ((taskIndex: Int) -> Unit)? = null,
     inlineImageContent: @Composable (MarkdownInlineImage) -> Unit = { image -> DefaultInlineImage(image) },
+    // 阶段 C：Viewer 内置纵向滚动。嵌入到自身已可滚动容器（如页面 LazyColumn）时设为 false。
+    verticalScroll: Boolean = true,
+    // 阶段 C：透传给 fenced code 块的复制按钮（PCodeBlock.showCopyAction）。
+    showCopyAction: Boolean = true,
 ) {
     val resolvedRenderModel =
         useCreation(renderModel, markdown) {
@@ -96,16 +108,36 @@ fun PMarkdownViewer(
 
     var taskCounter by remember(markdown) { mutableIntStateOf(0) }
 
+    // 内置滚动状态 + 用于锚点跳转的协程作用域。
+    val scrollState = rememberScrollState()
+    val scope = rememberCoroutineScope()
+    // heading slug -> 在滚动容器内的 y 偏移，由各 heading 的 onGloballyPositioned 填充。
+    val headingOffsets = remember(markdown) { mutableStateMapOf<String, Int>() }
+
+    // 锚点跳转默认行为：调用方未提供 onAnchorClick 时，滚动到对应 heading。
+    val effectiveAnchorClick: (String) -> Unit = onAnchorClick ?: { slug ->
+        val target = headingOffsets[slug]
+        if (target != null) {
+            scope.launch { scrollState.animateScrollTo(target.coerceAtLeast(0)) }
+        }
+    }
+
     key(markdown) {
         MarkdownBlocks(
             blocks = resolvedRenderModel.blocks,
-            modifier = modifier,
+            modifier = if (verticalScroll) {
+                modifier.verticalScroll(scrollState)
+            } else {
+                modifier
+            },
             onLinkClick = onLinkClick,
-            onAnchorClick = onAnchorClick,
+            onAnchorClick = effectiveAnchorClick,
             inlineImageContent = inlineImageContent,
             taskCheckboxEnabled = onTaskCheckedChange != null,
             nextTaskIndex = { taskCounter++ },
             onTaskCheckedChange = onTaskCheckedChange,
+            showCopyAction = showCopyAction,
+            onHeadingPositioned = { slug, y -> headingOffsets[slug] = y },
         )
     }
 }
@@ -121,9 +153,12 @@ private fun MarkdownBlocks(
     taskCheckboxEnabled: Boolean = false,
     nextTaskIndex: () -> Int = { -1 },
     onTaskCheckedChange: ((taskIndex: Int) -> Unit)? = null,
+    showCopyAction: Boolean = true,
+    onHeadingPositioned: (slug: String, y: Int) -> Unit = { _, _ -> },
 ) {
     // Ensure callbacks are always fresh even if composable skips recomposition
     val latestOnTaskCheckedChange by rememberUpdatedState(onTaskCheckedChange)
+    val latestOnHeadingPositioned by rememberUpdatedState(onHeadingPositioned)
 
     Column(
         modifier = modifier,
@@ -143,6 +178,8 @@ private fun MarkdownBlocks(
                 taskCheckboxEnabled = taskCheckboxEnabled,
                 nextTaskIndex = nextTaskIndex,
                 onTaskCheckedChange = latestOnTaskCheckedChange,
+                showCopyAction = showCopyAction,
+                onHeadingPositioned = latestOnHeadingPositioned,
             )
         }
     }
@@ -156,6 +193,8 @@ private fun MarkdownBlock(
     taskCheckboxEnabled: Boolean = false,
     nextTaskIndex: () -> Int = { -1 },
     onTaskCheckedChange: ((taskIndex: Int) -> Unit)? = null,
+    showCopyAction: Boolean = true,
+    onHeadingPositioned: (slug: String, y: Int) -> Unit = { _, _ -> },
 ) {
     val latestOnTaskCheckedChange by rememberUpdatedState(onTaskCheckedChange)
 
@@ -175,6 +214,9 @@ private fun MarkdownBlock(
                         Modifier
                             .testTag("heading:${block.id}")
                             .semantics { contentDescription = "heading:${block.id}" }
+                            .onGloballyPositioned { coords ->
+                                onHeadingPositioned(block.id, coords.positionInRoot().y.toInt())
+                            }
                     } else {
                         Modifier
                     },
@@ -303,6 +345,7 @@ private fun MarkdownBlock(
             PCodeBlock(
                 code = block.highlighted.tokens.joinToString("\n") { line -> line.joinToString("") { it.text } },
                 language = block.language,
+                showCopyAction = showCopyAction,
                 showLineNumbers = block.showLineNumbers,
                 highlightedLines = block.highlightedLines,
                 title = block.title,
