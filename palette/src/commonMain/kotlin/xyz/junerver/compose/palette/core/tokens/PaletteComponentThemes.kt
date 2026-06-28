@@ -45,6 +45,7 @@ data class PaletteComponentThemes(
     val layout: PaletteLayoutTokens,
     val floatingAction: PaletteFloatingActionTokens,
     val screen: PaletteScreenTokens,
+    val chart: PaletteChartTokens,
 ) {
     companion object {
         fun default(
@@ -91,6 +92,7 @@ data class PaletteComponentThemes(
             layout = PaletteLayoutTokens.default(spacing),
             floatingAction = PaletteFloatingActionTokens.default(colors, spacing, typography, elevation, motion),
             screen = PaletteScreenTokens.default(colors),
+            chart = PaletteChartTokens.default(colors, typography, control),
         )
     }
 }
@@ -2450,6 +2452,73 @@ data class PaletteScreenTokens(
             successBackgroundColor = colors.success,
             warningBackgroundColor = colors.warning,
             errorBackgroundColor = colors.error,
+        )
+    }
+}
+
+/**
+ * Chart component tokens — backs the `PChart` family (pie / bar / line …).
+ *
+ * Notably introduces [categoricalColors], a cyclic series palette derived from the semantic tokens
+ * (the codebase previously had no categorical/data-color concept; mermaid synthesized one inline).
+ * Every value derives from a semantic token so the whole chart family retunes from `PaletteTheme`.
+ */
+@Immutable
+data class PaletteChartTokens(
+    val axisColor: Color,
+    val gridColor: Color,
+    val tickLabelColor: Color,
+    val axisTitleColor: Color,
+    val seriesLabelColor: Color,
+    val legendTextColor: Color,
+    val emptyStateColor: Color,
+    val categoricalColors: List<Color>,
+    val axisStrokeWidth: Dp,
+    val gridStrokeWidth: Dp,
+    val axisLabelPadding: Dp,
+    val legendSymbolSize: Dp,
+    val donutHoleRadiusFraction: Float,
+    val barCornerRadius: Dp,
+    val axisTextStyle: TextStyle,
+    val legendTextStyle: TextStyle,
+    val titleTextStyle: TextStyle,
+) {
+    companion object {
+        fun default(
+            colors: PaletteColors,
+            typography: PaletteTypography,
+            control: PaletteControlTokens,
+        ): PaletteChartTokens = PaletteChartTokens(
+            axisColor = colors.divider,
+            gridColor = colors.divider.copy(alpha = colors.divider.alpha * 0.6f),
+            tickLabelColor = colors.textSecondary,
+            axisTitleColor = colors.textPrimary,
+            seriesLabelColor = colors.onSurface,
+            legendTextColor = colors.textPrimary,
+            emptyStateColor = colors.textTertiary,
+            // Cyclic palette: the 5 semantic accents + their translucent variants, then darker shades.
+            // ≥8 distinct entries cover the common series count and stay readable in dark mode.
+            categoricalColors = listOf(
+                colors.primary,
+                colors.success,
+                colors.warning,
+                colors.error,
+                colors.info,
+                colors.primary.copy(alpha = 0.6f),
+                colors.success.copy(alpha = 0.6f),
+                colors.warning.copy(alpha = 0.6f),
+                colors.error.copy(alpha = 0.6f),
+                colors.info.copy(alpha = 0.6f),
+            ),
+            axisStrokeWidth = control.borderWidth,
+            gridStrokeWidth = control.borderWidth * 0.6f,
+            axisLabelPadding = control.small.horizontalPadding,
+            legendSymbolSize = control.small.iconSize,
+            donutHoleRadiusFraction = 0.58f,
+            barCornerRadius = control.medium.cornerRadius,
+            axisTextStyle = typography.label,
+            legendTextStyle = typography.label,
+            titleTextStyle = typography.title,
         )
     }
 }

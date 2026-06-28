@@ -160,6 +160,14 @@ import xyz.junerver.compose.palette.components.affix.AffixPosition as AffixPosit
 import xyz.junerver.compose.palette.components.affix.PAffix as PAffixImpl
 import xyz.junerver.compose.palette.components.calendar.CalendarDefaults as CalendarDefaultsImpl
 import xyz.junerver.compose.palette.components.calendar.PCalendar as PCalendarImpl
+import xyz.junerver.compose.palette.components.chart.ChartColors as ChartColorsImpl
+import xyz.junerver.compose.palette.components.chart.ChartData as ChartDataImpl
+import xyz.junerver.compose.palette.components.chart.ChartDefaults as ChartDefaultsImpl
+import xyz.junerver.compose.palette.components.chart.ChartLegendPosition as ChartLegendPositionImpl
+import xyz.junerver.compose.palette.components.chart.ChartOptions as ChartOptionsImpl
+import xyz.junerver.compose.palette.components.chart.ChartSeries as ChartSeriesImpl
+import xyz.junerver.compose.palette.components.chart.ChartSpec as ChartSpecImpl
+import xyz.junerver.compose.palette.components.chart.PChart as PChartImpl
 import xyz.junerver.compose.palette.components.inputnumber.InputNumberDefaults as InputNumberDefaultsImpl
 import xyz.junerver.compose.palette.components.inputnumber.PInputNumber as PInputNumberImpl
 import xyz.junerver.compose.palette.components.inputotp.InputOTPDefaults as InputOTPDefaultsImpl
@@ -294,6 +302,7 @@ import xyz.junerver.compose.palette.core.tokens.PaletteSemanticColors as Palette
 import xyz.junerver.compose.palette.core.tokens.PaletteShapes as PaletteShapesImpl
 import xyz.junerver.compose.palette.core.tokens.PaletteSpacing as PaletteSpacingImpl
 import xyz.junerver.compose.palette.core.tokens.PaletteScreenTokens as PaletteScreenTokensImpl
+import xyz.junerver.compose.palette.core.tokens.PaletteChartTokens as PaletteChartTokensImpl
 import xyz.junerver.compose.palette.core.tokens.PaletteSelectionControlTokens as PaletteSelectionControlTokensImpl
 import xyz.junerver.compose.palette.core.tokens.PaletteSelectTokens as PaletteSelectTokensImpl
 import xyz.junerver.compose.palette.core.tokens.PaletteSwitchTokens as PaletteSwitchTokensImpl
@@ -357,6 +366,7 @@ typealias PaletteUtilityTokens = PaletteUtilityTokensImpl
 typealias PaletteLayoutTokens = PaletteLayoutTokensImpl
 typealias PaletteFloatingActionTokens = PaletteFloatingActionTokensImpl
 typealias PaletteScreenTokens = PaletteScreenTokensImpl
+typealias PaletteChartTokens = PaletteChartTokensImpl
 typealias PaletteStrings = PaletteStringsImpl
 // Core - Theme
 val LocalPaletteColors = LocalPaletteColorsImpl
@@ -504,6 +514,30 @@ val InputOTPDefaults = InputOTPDefaultsImpl
 // Components - Calendar
 val PCalendar = ::PCalendarImpl
 val CalendarDefaults = CalendarDefaultsImpl
+
+// Components - Chart (PChart re-declared as @Composable to preserve named-arg/Color/Dp defaults)
+@Composable
+fun PChart(
+    spec: ChartSpecImpl,
+    data: ChartDataImpl,
+    modifier: androidx.compose.ui.Modifier = androidx.compose.ui.Modifier,
+    options: ChartOptionsImpl = ChartOptionsImpl(),
+    colors: ChartColorsImpl = ChartDefaultsImpl.colors(),
+) = PChartImpl(
+    spec = spec,
+    data = data,
+    modifier = modifier,
+    options = options,
+    colors = colors,
+)
+
+val ChartDefaults = ChartDefaultsImpl
+typealias ChartColors = ChartColorsImpl
+typealias ChartSeries = ChartSeriesImpl
+typealias ChartData = ChartDataImpl
+typealias ChartSpec = ChartSpecImpl
+typealias ChartOptions = ChartOptionsImpl
+typealias ChartLegendPosition = ChartLegendPositionImpl
 
 // Components - Loading
 val LoadingDefaults = LoadingDefaultsImpl
