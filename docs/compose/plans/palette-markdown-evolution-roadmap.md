@@ -46,7 +46,7 @@
 
 ### P3 — 工程/质量
 
-16. **Android `testDebugUnitTest` 资源加载失败**：`CompatibilityFixtureTest` 在 Android 单元测试里因 commonTest 资源不传递而全红（8 fail），desktop 通过。需修资源配置或迁测试源集。
+16. **Android `testDebugUnitTest` 资源加载失败** — ✅ 已修复（2026-06-28）：三个新模块（`palette-code`/`palette-markdown`/`palette-mermaid`）的 `CompatibilityFixtureTest` 在 Android 单元测试里因 `commonTest/resources` 不传递到 `testDebugUnitTest` 而全红。通过在各自 `android {}` 块注册 `src/commonTest/resources` 到 test 源集解决；`.java`/`.kt` fixture 改名为 `.txt` 以规避 AGP 源码扩展名过滤。
 17. **增量解析**：当前 `useCreation(renderModel, markdown)` 整篇重解析；超大文档（>10k 行）编辑器每次按键会重算。
 18. **inline/token 级 source map**：补齐以支持编辑器"点击预览定位源码"双向定位。
 
@@ -71,9 +71,13 @@
 - `onAnchorClick` 默认实现：滚动到 `testTag("heading:<slug>")`。
 - 透传 `showCopyAction` 到 fenced code。
 
-### 阶段 D：TOC + Frontmatter（P1-9,10）
-- `MarkdownRenderModel.toc: List<TocEntry>`、`MarkdownFrontmatter` 块类型。
-- `PMarkdownToc` 组件。
+### 阶段 D：TOC + Frontmatter（P1-9,10）— ✅ 已完成（2026-06-28）
+- **Frontmatter**：新增 `MarkdownFrontmatter` 块类型（`rawYaml` + `fields: Map<String,String>`），解析器在 thematic-break 分支前以 `index==0` 闸门识别 `---`/`+++` 首尾对，扫描闭合；简易 `key: value` 行解析（支持引号剥离、注释/空行跳过），不引入 YAML 依赖。渲染层将 frontmatter 从 `blocks` 剥离，仅作为 `MarkdownRenderModel.frontmatter` 结构化元数据暴露（正文不渲染）。未闭合时回退为 thematic break，保持宽松解析。
+- **TOC**：新增 `MarkdownTocEntry(level, text, id)`；`MarkdownRenderModel.toc`。复用渲染层 slug 去重逻辑（`headingIdCounts`），在 `toRenderModel` 的 `mapIndexed` 中顺带收集（含嵌套 blockquote/list 子块），id 与 `MarkdownRenderBlock.Heading.id` 及 Viewer 的 `testTag("heading:<id>")` 完全一致。
+- **组件**：`PMarkdownToc(entries, onNavigate, modifier, maxLevel, contentPadding)` —— 按层级缩进、字号随深度递减（受 `minFontSize` 钳制），点击调 `onNavigate(id)`（可直接桥接到 `PMarkdownViewer.onAnchorClick`）。`MarkdownTocDefaults` 的缩进/字号/间距全部从 `PaletteTheme` 派生。
+- **清理**：删除 `MarkdownParser.kt` 中未调用的重复 `toRenderBlock` + `toPlainText` 死代码（refactor 残留），避免新增块类型时的穷尽性维护负担。
+- **导出**：`Palette.kt` 导出 `PMarkdownToc`、`MarkdownTocDefaults`。
+- **测试**：`MarkdownFrontmatterTest`（8 例：识别/字段解析/引号/TOML/非首行回归/未闭合回退/注释跳过/渲染剥离）、`MarkdownTocTest`（6 例：全标题/id 一致/重复去重/blockquote 嵌套/空文档/frontmatter 不污染）、`MarkdownTocUiTest`（5 例：渲染/点击导航/tag 一致/maxLevel 过滤/空条目）。Android + Desktop 全绿。
 
 ### 阶段 E：扩展语法（P2-11..15）
 - Footnote / Admonition / Definition list / Math 占位节点 + 渲染 slot。
