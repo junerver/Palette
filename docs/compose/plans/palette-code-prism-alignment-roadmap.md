@@ -151,5 +151,12 @@ palette-code 已覆盖 17 种语言（Kotlin/Java/JS/TS/JSON/CSS/Python/HTML/XML
 ## 后续可选（超出当前路线图）
 - 硬编码的 lexer fallback（PaletteCodeHighlighter.kt 的 when 分支）可逐步移除——所有迁移语言现在 grammar 优先
 - ComposeFML 语法桥（如需）
-- [ ] 第三期：扩展语言覆盖（C/C++/C#/Go/Rust/PHP/Ruby/Swift/Scala/SCSS/JSX）
+- [~] 第三期：扩展语言覆盖 —— ✅ 已完成 C/C++/Go/Rust（2026-06-28）；剩余 C#/PHP/Ruby/Swift/Scala/SCSS/JSX 待办
 - [ ] 第四期：高级能力（行号增强/语言检测/增量/hook）
+
+### Phase 3 进度（C/C++/Go/Rust）— ✅ 2026-06-28
+- **C**：`c`/`h`，C89–C11 keywords + stdint/stdio typedefs，非嵌套注释（factory 默认 regex）。
+- **C++**：`cpp`/`c++`/`cxx`/`cc`/`hpp`/`hh`/`hxx`，C++11–C++20 keywords。
+- **Go**：`go`/`golang`，backtick raw string（`templateLiterals`），内置类型作 primitive types。
+- **Rust**：`rust`/`rs`，自定义 grammar —— `#[derive(...)]`/`#![...]` attribute（annotation）、`r"…"`/`r#"…"#`/`b"…"` raw/byte string、带类型后缀的数字字面量。
+- 11 个 grammar 契约测试覆盖 keyword/type/function/comment/string/number/attribute；Android + Desktop 全绿。

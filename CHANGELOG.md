@@ -17,6 +17,7 @@
 - 新增独立模块 `palette-code`，提供声明式 grammar 引擎（对标 Prism.js）。
 - Phase 1：grammar 优先 + lexer 兜底的双层架构，外部 API 不变。
 - Phase 2：已迁移 11 种语言到声明式 grammar —— Markdown、SQL、CSS、HTML、XML、TOML、INI/properties、Java、TypeScript、Python、Kotlin。
+- Phase 3：新增 C/C++/Go/Rust 4 种系统语言（基于 `cFamilyGrammar` 工厂；Rust 因 `#[attr]` 与 raw string 自定义 grammar），注册别名 c/h、cpp/c++/cxx/cc/hpp、go/golang、rust/rs。code 模块支持语言增至 16 种。
 - 新增 matcher 引擎原语与 `embeddedTokens` 嵌入钩子，支持动态语言嵌入（HTML 内 CSS/JS、Markdown 内代码块）。
 - 渲染支持 bold/italic/important 字体样式标记。
 
