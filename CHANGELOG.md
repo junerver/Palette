@@ -4,6 +4,14 @@
 
 ### Added
 
+#### `palette` — `PChart` 图表组件（饼图/折线图/柱状图）
+- 新增 `PChart`：零第三方依赖、Compose 原生 Canvas 自渲染的可扩展图表组件（与 mermaid 自渲染理念一致）。
+- **架构**：面向数据 + 渲染器注册制 —— 新增图表类型仅需新增 `ChartSpec` 子类 + renderer 分支，零改动旧代码。
+- **首期图表**：Pie（扇形/donut/百分比标签）、Bar（分组/堆叠/横向/圆角）、Line（折线/Catmull-Rom 平滑/数据点/面积填充）。
+- **主题层**：新增 `PaletteChartTokens`（含 `categoricalColors` 色板，填补 Palette 原无 categorical/data-color 的缺口），全部从语义 token 派生，深色模式自适应。
+- 数据模型 `ChartData`/`ChartSeries` + 纯逻辑 `ChartLogic`（`deriveYRange`/`resolveSeriesColor`/`resolveCategories`/`normalizeValue`，commonTest 单测）。
+- 17 个逻辑测试 + 6 个 UI 测试。
+
 #### `palette-mermaid` — Mermaid 图表渲染模块（19/19 图例）
 - 新增独立模块 `palette-mermaid`，支持 Mermaid 19 种图例的解析与 Compose 原生渲染：
   - **核心图**：Flowchart、Sequence、ClassDiagram、ErDiagram、StateDiagram。
