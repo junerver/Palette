@@ -11,7 +11,8 @@ class CompatibilityFixtureTest {
 
     @Test
     fun kotlinSampleHighlightsKeywordsAndStrings() {
-        val code = loadResource("compatibility/kotlin-sample.kt")
+        // `.kt.txt` extension avoids AGP stripping the fixture as a compile source under Android unit tests.
+        val code = loadResource("compatibility/kotlin-sample.kt.txt")
         val highlighted = PaletteCodeHighlighter.highlight(code = code, language = "kotlin")
         val tokens = highlighted.tokens.flatten()
         assertTrue(tokens.any { it.text == "fun" && it.type == CodeTokenType.Keyword })
@@ -21,7 +22,8 @@ class CompatibilityFixtureTest {
 
     @Test
     fun javaSampleHighlightsKeywordsAndStrings() {
-        val code = loadResource("compatibility/java-sample.java")
+        // `.java.txt` extension avoids AGP stripping the fixture as a compile source under Android unit tests.
+        val code = loadResource("compatibility/java-sample.java.txt")
         val highlighted = PaletteCodeHighlighter.highlight(code = code, language = "java")
         val tokens = highlighted.tokens.flatten()
         assertTrue(tokens.any { it.text == "public" && it.type == CodeTokenType.Keyword })
