@@ -175,6 +175,8 @@ internal data class MarkdownLinkTarget(
 data class MarkdownRenderModel(
     val blocks: List<MarkdownRenderBlock>,
     val diagnostics: List<MarkdownRenderDiagnostic> = emptyList(),
+    val frontmatter: Map<String, String> = emptyMap(),
+    val toc: List<MarkdownTocEntry> = emptyList(),
 )
 
 data class MarkdownRenderDiagnostic(
@@ -282,6 +284,31 @@ sealed interface MarkdownRenderBlock {
 
     data object ThematicBreak : MarkdownRenderBlock
 }
+
+/**
+ * A YAML frontmatter block (`---\n...\n---`) appearing at the very start of a document.
+ *
+ * `fields` holds a flat `key: value` view of the most common frontmatter shape (title, author, date, …).
+ * The renderer strips frontmatter from the rendered body and surfaces it as structured metadata on
+ * [MarkdownRenderModel.frontmatter]; it is never a [MarkdownRenderBlock].
+ */
+data class MarkdownFrontmatter(
+    val rawYaml: String,
+    val fields: Map<String, String>,
+    val sourceRange: MarkdownSourceRange? = null,
+) : MarkdownBlock
+
+/**
+ * A single table-of-contents entry derived from a [MarkdownHeading].
+ *
+ * [id] matches the rendered heading's id (and therefore its `testTag("heading:<id>")`), so navigating
+ * to an entry reuses the viewer's existing anchor-scroll mechanism.
+ */
+data class MarkdownTocEntry(
+    val level: Int,
+    val text: String,
+    val id: String,
+)
 
 internal fun String.toHeadingSlug(): String {
     val slug = trim().lowercase().replace(Regex("""[^\w\s-]"""), "").replace(Regex("""\s+"""), "-").trim('-')

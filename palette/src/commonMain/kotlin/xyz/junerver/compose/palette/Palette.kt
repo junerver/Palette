@@ -203,8 +203,10 @@ import xyz.junerver.compose.palette.components.markdown.MarkdownDefaults as Mark
 import xyz.junerver.compose.palette.components.markdown.MarkdownEditorMode as MarkdownEditorModeImpl
 import xyz.junerver.compose.palette.components.markdown.MarkdownFormatToolbar as MarkdownFormatToolbarImpl
 import xyz.junerver.compose.palette.components.markdown.MarkdownHeadingLevel as MarkdownHeadingLevelImpl
+import xyz.junerver.compose.palette.components.markdown.MarkdownTocDefaults as MarkdownTocDefaultsImpl
 import xyz.junerver.compose.palette.components.markdown.MarkdownToolbarAction as MarkdownToolbarActionImpl
 import xyz.junerver.compose.palette.components.markdown.PMarkdownEditor as PMarkdownEditorImpl
+import xyz.junerver.compose.palette.components.markdown.PMarkdownToc as PMarkdownTocImpl
 import xyz.junerver.compose.palette.components.markdown.PMarkdownViewer as PMarkdownViewerImpl
 import xyz.junerver.compose.palette.components.mermaid.MermaidColors as MermaidColorsImpl
 import xyz.junerver.compose.palette.components.mermaid.MermaidDefaults as MermaidDefaultsImpl
@@ -877,7 +879,9 @@ typealias MermaidColors = MermaidColorsImpl
 // Components - Markdown
 val PMarkdownViewer = ::PMarkdownViewerImpl
 val PMarkdownEditor = ::PMarkdownEditorImpl
+val PMarkdownToc = ::PMarkdownTocImpl
 val MarkdownDefaults = MarkdownDefaultsImpl
+val MarkdownTocDefaults = MarkdownTocDefaultsImpl
 typealias MarkdownEditorMode = MarkdownEditorModeImpl
 typealias MarkdownToolbarAction = MarkdownToolbarActionImpl
 typealias MarkdownHeadingLevel = MarkdownHeadingLevelImpl

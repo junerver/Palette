@@ -18,17 +18,23 @@ object MarkdownRenderer {
     ): MarkdownRenderModel {
         val diagnostics = mutableListOf<MarkdownRenderDiagnostic>()
         val headingIdCounts = mutableMapOf<String, Int>()
+        val toc = mutableListOf<MarkdownTocEntry>()
+        // Frontmatter is document-level metadata: extract it before rendering so it never appears in the
+        // body blocks. Only the first frontmatter block is honoured (valid frontmatter is unique).
+        val frontmatter = document.blocks.firstNotNullOfOrNull { it as? MarkdownFrontmatter }?.fields.orEmpty()
+        val renderableBlocks = document.blocks.filter { it !is MarkdownFrontmatter }
         val blocks =
-            document.blocks.mapIndexed { index, block ->
+            renderableBlocks.mapIndexed { index, block ->
                 toRenderBlock(
                     block = block,
                     mermaidParser = mermaidParser,
                     diagnostics = diagnostics,
                     blockIndex = index,
                     headingIdCounts = headingIdCounts,
+                    toc = toc,
                 )
             }
-        return MarkdownRenderModel(blocks = blocks, diagnostics = diagnostics)
+        return MarkdownRenderModel(blocks = blocks, diagnostics = diagnostics, frontmatter = frontmatter, toc = toc)
     }
 
     private fun toRenderBlock(
@@ -37,6 +43,7 @@ object MarkdownRenderer {
         diagnostics: MutableList<MarkdownRenderDiagnostic>,
         blockIndex: Int?,
         headingIdCounts: MutableMap<String, Int>,
+        toc: MutableList<MarkdownTocEntry>,
     ): MarkdownRenderBlock =
         when (block) {
             is MarkdownHeading -> {
@@ -44,6 +51,7 @@ object MarkdownRenderer {
                 val count = headingIdCounts[baseSlug] ?: 0
                 headingIdCounts[baseSlug] = count + 1
                 val id = if (count == 0) baseSlug else "${baseSlug}-${count + 1}"
+                toc += MarkdownTocEntry(level = block.level, text = block.inlines.toPlainText(), id = id)
                 MarkdownRenderBlock.Heading(
                     level = block.level,
                     text = block.text,
@@ -73,6 +81,7 @@ object MarkdownRenderer {
                                             diagnostics = diagnostics,
                                             blockIndex = blockIndex,
                                             headingIdCounts = headingIdCounts,
+                                            toc = toc,
                                         )
                                     },
                                 taskChecked = item.taskChecked,
@@ -93,6 +102,7 @@ object MarkdownRenderer {
                                 diagnostics = diagnostics,
                                 blockIndex = blockIndex,
                                 headingIdCounts = headingIdCounts,
+                                toc = toc,
                             )
                         },
                     sourceRange = block.sourceRange,
@@ -161,6 +171,10 @@ object MarkdownRenderer {
                 }
 
             is MarkdownHtmlBlock -> MarkdownRenderBlock.Html(block.html, block.sourceRange)
+
+            // Frontmatter is partitioned out before rendering (see toRenderModel); this branch is unreachable
+            // but required to keep the sealed `when` exhaustive.
+            is MarkdownFrontmatter -> error("MarkdownFrontmatter must be partitioned before rendering")
 
             MarkdownThematicBreak -> MarkdownRenderBlock.ThematicBreak
         }

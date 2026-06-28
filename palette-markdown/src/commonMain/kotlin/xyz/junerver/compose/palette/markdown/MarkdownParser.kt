@@ -151,6 +151,41 @@ object MarkdownParser {
                     index += 2
                 }
 
+                // Frontmatter is only valid as the very first block of the document. It shares the `---`
+                // delimiter with thematic break, so it must be probed earlier and gated on `index == 0`.
+                index == 0 && trimmed.matches(FrontmatterDelimiterRegex) -> {
+                    val body = mutableListOf<String>()
+                    var closeIndex = -1
+                    var scan = index + 1
+                    while (scan < lines.size) {
+                        if (lines[scan].trim().matches(FrontmatterDelimiterRegex)) {
+                            closeIndex = scan
+                            break
+                        }
+                        body += lines[scan]
+                        scan += 1
+                    }
+                    if (closeIndex == -1) {
+                        // Unterminated opening delimiter — fall back to thematic break to keep parsing lenient.
+                        blocks += MarkdownThematicBreak
+                        index += 1
+                    } else {
+                        val rawYaml = body.joinToString("\n")
+                        blocks += MarkdownFrontmatter(
+                            rawYaml = rawYaml,
+                            fields = parseFrontmatterFields(body),
+                            sourceRange = MarkdownSourceRange(
+                                startLine = index,
+                                startColumn = 0,
+                                endLine = closeIndex,
+                                endColumn = lines[closeIndex].length,
+                                source = lines.subList(index, closeIndex + 1).joinToString("\n"),
+                            ),
+                        )
+                        index = closeIndex + 1
+                    }
+                }
+
                 trimmed.matches(ThematicBreakRegex) -> {
                     blocks += MarkdownThematicBreak
                     index += 1
@@ -345,6 +380,9 @@ object MarkdownParser {
 
     private val HeadingRegex = Regex("""^(#{1,6})\s+(.+)$""")
     private val ThematicBreakRegex = Regex("""^(-{3,}|\*{3,}|_{3,})$""")
+    // Frontmatter delimiters: a line that is exactly `---` or `+++` (TOML). Distinct from thematic break
+    // by position (document start) and the presence of a matching closing delimiter.
+    private val FrontmatterDelimiterRegex = Regex("""^(---|\+\+\+)$""")
     private val SetextHeadingUnderlineRegex = Regex("""^(=+|-+)$""")
     private val TaskListRegex = Regex("""^([-*+])\s+\[([ xX])]\s+(.+)$""")
     private val OrderedListRegex = Regex("""^(\d+)[.)]\s+.+$""")
@@ -584,187 +622,28 @@ object MarkdownParser {
             }
             .filter { it > 0 }
             .toSet()
+
+    /**
+     * Parses a flat `key: value` view of frontmatter body lines.
+     *
+     * Deliberately supports only the most common shape (flat scalars) used by static-site generators
+     * (title, author, date, tags-as-flow-sequence) to avoid pulling in a YAML dependency. Lines that do
+     * not match `key: value` are skipped, and quoted values are unwrapped.
+     */
+    private fun parseFrontmatterFields(lines: List<String>): Map<String, String> {
+        val result = LinkedHashMap<String, String>()
+        for (rawLine in lines) {
+            val line = rawLine.trim()
+            if (line.isEmpty() || line.startsWith("#")) continue
+            val colon = line.indexOf(':')
+            if (colon <= 0) continue
+            val key = line.substring(0, colon).trim()
+            var value = line.substring(colon + 1).trim()
+            if (value.length >= 2 && (value.first() == value.last()) && value.first() in setOf('"', '\'')) {
+                value = value.substring(1, value.length - 1)
+            }
+            if (key.isNotEmpty()) result[key] = value
+        }
+        return result
+    }
 }
-
-    private fun toRenderBlock(
-        block: MarkdownBlock,
-        mermaidParser: (String) -> MermaidDiagram,
-        diagnostics: MutableList<MarkdownRenderDiagnostic>,
-        blockIndex: Int?,
-        headingIdCounts: MutableMap<String, Int>,
-    ): MarkdownRenderBlock =
-        when (block) {
-            is MarkdownHeading -> {
-                val baseSlug = block.inlines.toPlainText().toHeadingSlug()
-                val count = headingIdCounts[baseSlug] ?: 0
-                headingIdCounts[baseSlug] = count + 1
-                val id = if (count == 0) baseSlug else "\$baseSlug-\${count + 1}"
-                MarkdownRenderBlock.Heading(
-                    level = block.level,
-                    text = block.text,
-                    inlines = block.inlines,
-                    sourceRange = block.sourceRange,
-                    id = id,
-                )
-            }
-            is MarkdownParagraph -> MarkdownRenderBlock.Paragraph(block.text, block.inlines, block.sourceRange)
-            is MarkdownListBlock ->
-                MarkdownRenderBlock.ListBlock(
-                    items = block.items,
-                    ordered = block.ordered,
-                    itemInlines = block.itemInlines,
-                    startNumber = block.startNumber,
-                    tight = block.tight,
-                    listItems =
-                        block.listItems.map { item ->
-                            MarkdownRenderListItem(
-                                text = item.text,
-                                inlines = item.inlines,
-                                children =
-                                    item.children.map { child ->
-                                        toRenderBlock(
-                                            block = child,
-                                            mermaidParser = mermaidParser,
-                                            diagnostics = diagnostics,
-                                            blockIndex = blockIndex,
-                                            headingIdCounts = headingIdCounts,
-                                        )
-                                    },
-                                taskChecked = item.taskChecked,
-                            )
-                        },
-                    sourceRange = block.sourceRange,
-                )
-            is MarkdownTaskListBlock -> MarkdownRenderBlock.TaskList(block.items)
-            is MarkdownBlockQuote ->
-                MarkdownRenderBlock.BlockQuote(
-                    text = block.text,
-                    inlines = block.inlines,
-                    children =
-                        block.children.map { child ->
-                            toRenderBlock(
-                                block = child,
-                                mermaidParser = mermaidParser,
-                                diagnostics = diagnostics,
-                                blockIndex = blockIndex,
-                                headingIdCounts = headingIdCounts,
-                            )
-                        },
-                    sourceRange = block.sourceRange,
-                )
-            is MarkdownTableBlock ->
-                MarkdownRenderBlock.Table(
-                    headers = block.headers,
-                    rows = block.rows,
-                    alignments = block.alignments,
-                    headerInlines = block.headerInlines,
-                    rowInlines = block.rowInlines,
-                    sourceRange = block.sourceRange,
-                )
-
-            is MarkdownCodeBlock -> {
-                val highlighted = PaletteCodeHighlighter.highlightWithDiagnostics(block.content, block.language)
-                val blockDiagnostics =
-                    highlighted.diagnostics.map { diagnostic ->
-                        diagnostic.toMarkdownRenderDiagnostic(blockIndex = blockIndex)
-                    }
-                diagnostics += blockDiagnostics
-                MarkdownRenderBlock.Code(
-                    language = block.language,
-                    highlighted = highlighted,
-                    title = block.title,
-                    showLineNumbers = block.showLineNumbers,
-                    highlightedLines = block.highlightedLines,
-                    diagnostics = blockDiagnostics,
-                    sourceRange = block.sourceRange,
-                )
-            }
-
-            is MarkdownMermaidBlock ->
-                runCatching {
-                    val diagram = mermaidParser(block.source)
-                    val blockDiagnostics =
-                        diagram.diagnostics.map { diagnostic ->
-                            diagnostic.toMarkdownRenderDiagnostic(blockIndex = blockIndex)
-                        }
-                    diagnostics += blockDiagnostics
-                    MarkdownRenderBlock.Mermaid(
-                        source = block.source,
-                        diagram = diagram,
-                        diagnostics = blockDiagnostics,
-                        sourceRange = block.sourceRange,
-                    )
-                }.getOrElse { error ->
-                    val diagnostic =
-                        MarkdownRenderDiagnostic(
-                            code = MarkdownRenderDiagnosticCode.MermaidParserFailure,
-                            message = "Mermaid block could not be parsed: \${error.message ?: error::class.simpleName}",
-                            severity = MarkdownRenderDiagnosticSeverity.Error,
-                            blockIndex = blockIndex,
-                            source = block.source,
-                        )
-                    diagnostics += diagnostic
-                    MarkdownRenderBlock.Code(
-                        language = "mermaid",
-                        highlighted = PaletteCodeHighlighter.highlight(block.source, "mermaid"),
-                        title = null,
-                        showLineNumbers = false,
-                        highlightedLines = emptySet(),
-                        diagnostics = listOf(diagnostic),
-                        sourceRange = block.sourceRange,
-                    )
-                }
-
-            is MarkdownHtmlBlock -> MarkdownRenderBlock.Html(block.html, block.sourceRange)
-
-            MarkdownThematicBreak -> MarkdownRenderBlock.ThematicBreak
-        }
-
-    private fun MermaidParseDiagnostic.toMarkdownRenderDiagnostic(blockIndex: Int?): MarkdownRenderDiagnostic =
-        MarkdownRenderDiagnostic(
-            code = MarkdownRenderDiagnosticCode.MermaidDiagnostic,
-            message = message,
-            severity =
-                when (severity) {
-                    MermaidDiagnosticSeverity.Warning -> MarkdownRenderDiagnosticSeverity.Warning
-                    MermaidDiagnosticSeverity.Error -> MarkdownRenderDiagnosticSeverity.Error
-                },
-            originCode = code.name,
-            blockIndex = blockIndex,
-            line = line,
-            column = column,
-            endColumn = endColumn,
-            source = source,
-        )
-
-    private fun PaletteCodeDiagnostic.toMarkdownRenderDiagnostic(blockIndex: Int?): MarkdownRenderDiagnostic =
-        MarkdownRenderDiagnostic(
-            code = MarkdownRenderDiagnosticCode.CodeHighlighterDiagnostic,
-            message = message,
-            severity =
-                when (severity) {
-                    PaletteCodeDiagnosticSeverity.Warning -> MarkdownRenderDiagnosticSeverity.Warning
-                    PaletteCodeDiagnosticSeverity.Error -> MarkdownRenderDiagnosticSeverity.Error
-                },
-            blockIndex = blockIndex,
-            line = line,
-            column = column,
-        )
-
-    private fun List<MarkdownInlineNode>.toPlainText(): String =
-        joinToString("") { node ->
-            when (node) {
-                is MarkdownInlineText -> node.text
-                is MarkdownInlineStrong -> node.children.toPlainText()
-                is MarkdownInlineEmphasis -> node.children.toPlainText()
-                is MarkdownInlineStrikethrough -> node.children.toPlainText()
-                is MarkdownInlineCode -> node.text
-                is MarkdownInlineLink -> node.children.toPlainText()
-                is MarkdownInlineImage -> node.alt
-                is MarkdownInlineHtml -> node.html
-                is MarkdownInlineHardBreak -> " "
-                is MarkdownInlineSoftBreak -> " "
-            }
-        }
-
-
