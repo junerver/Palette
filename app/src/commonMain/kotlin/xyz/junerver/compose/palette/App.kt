@@ -180,6 +180,7 @@ private fun MainContent(route: String) {
                 NavItem.Cascader.route -> CascaderDemo()
                 NavItem.Transfer.route -> TransferDemo()
                 NavItem.Calendar.route -> CalendarDemo()
+                NavItem.DateRangePicker.route -> DateRangePickerDemo()
                 NavItem.Segmented.route -> SegmentedDemo()
                 NavItem.Popconfirm.route -> PopconfirmDemo()
                 NavItem.Result.route -> ResultDemo()

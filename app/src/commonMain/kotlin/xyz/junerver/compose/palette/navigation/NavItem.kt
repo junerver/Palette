@@ -105,6 +105,7 @@ sealed class NavItem(
     data object Cascader : NavItem("cascader", "级联选择", Icons.Default.AccountTree, ComponentCategory.FORM)
     data object Transfer : NavItem("transfer", "穿梭框", Icons.Default.SwapHoriz, ComponentCategory.FORM)
     data object Calendar : NavItem("calendar", "日历", Icons.Default.CalendarMonth, ComponentCategory.FORM)
+    data object DateRangePicker : NavItem("daterangepicker", "日期范围", Icons.Default.DateRange, ComponentCategory.FORM)
     data object Segmented : NavItem("segmented", "分段控制器", Icons.Default.ToggleOn, ComponentCategory.FORM)
     data object Popconfirm : NavItem("popconfirm", "气泡确认", Icons.Default.HelpOutline, ComponentCategory.FEEDBACK)
     data object Result : NavItem("result", "结果页", Icons.Default.CheckCircleOutline, ComponentCategory.FEEDBACK)
@@ -137,7 +138,7 @@ sealed class NavItem(
                 Table, List, Descriptions, Statistic, Timeline, Tree, Image, Carousel, Pagination, Empty,
                 Card, Avatar, Collapse,
                 Tag, Popup, ActionSheet, SearchBar, ContextMenu, DashboardProgress,
-                Alert, InputNumber, Cascader, Transfer, Calendar,
+                Alert, InputNumber, Cascader, Transfer, Calendar, DateRangePicker,
                 Segmented, Popconfirm, Result, Affix, InputOTP,
                 Autocomplete, TreeSelect, ColorPicker, Grid, Space,
                 InfiniteScroll, Backtop, Watermark, QRCode, Markdown, Mermaid, FloatButton,

@@ -128,6 +128,10 @@ import xyz.junerver.compose.palette.components.datagrid.PDataGrid as PDataGridIm
 import xyz.junerver.compose.palette.components.datetimerange.DateTimeRange as DateTimeRangeImpl
 import xyz.junerver.compose.palette.components.datetimerange.DateTimeRangeDefaults as DateTimeRangeDefaultsImpl
 import xyz.junerver.compose.palette.components.datetimerange.PDateTimeRange as PDateTimeRangeImpl
+import xyz.junerver.compose.palette.components.daterangepicker.DateRange as DateRangeImpl
+import xyz.junerver.compose.palette.components.daterangepicker.DateRangePreset as DateRangePresetImpl
+import xyz.junerver.compose.palette.components.daterangepicker.DateRangePickerDefaults as DateRangePickerDefaultsImpl
+import xyz.junerver.compose.palette.components.daterangepicker.PDateRangePicker as PDateRangePickerImpl
 import xyz.junerver.compose.palette.components.commandpalette.CommandAction as CommandActionImpl
 import xyz.junerver.compose.palette.components.commandpalette.CommandPaletteDefaults as CommandPaletteDefaultsImpl
 import xyz.junerver.compose.palette.components.commandpalette.PCommandPalette as PCommandPaletteImpl
@@ -623,6 +627,50 @@ val PDateTimeRange = ::PDateTimeRangeImpl
 val DateTimeRangeDefaults = DateTimeRangeDefaultsImpl
 typealias DateTimeRange = DateTimeRangeImpl
 
+// Components - DateRangePicker
+// 注：PDateRangePicker 参数众多且含函数类型，用 @Composable re-export（而非 ::函数引用）
+// 以保留具名参数与默认值支持；DateRangePickerDefaults / DateRange / DateRangePreset 用常规导出。
+@Composable
+fun PDateRangePicker(
+    value: DateRange,
+    onValueChange: (DateRange) -> Unit,
+    modifier: Modifier = Modifier,
+    showTime: Boolean = false,
+    startTime: kotlinx.datetime.LocalTime? = null,
+    endTime: kotlinx.datetime.LocalTime? = null,
+    minDate: kotlinx.datetime.LocalDate? = null,
+    maxDate: kotlinx.datetime.LocalDate? = null,
+    disabledDate: ((kotlinx.datetime.LocalDate) -> Boolean)? = null,
+    maxSpanDays: Int? = null,
+    presets: List<DateRangePreset>? = null,
+    allowSwap: Boolean = true,
+    minuteStep: Int = DateRangePickerDefaultsImpl.DefaultMinuteStep,
+    placeholder: String = xyz.junerver.compose.palette.core.theme.PaletteTheme.strings.dateRangePickerPlaceholder,
+    size: xyz.junerver.compose.palette.core.spec.ComponentSize = xyz.junerver.compose.palette.core.spec.ComponentSize.Medium,
+    enabled: Boolean = true,
+) = PDateRangePickerImpl(
+    value = value,
+    onValueChange = onValueChange,
+    modifier = modifier,
+    showTime = showTime,
+    startTime = startTime,
+    endTime = endTime,
+    minDate = minDate,
+    maxDate = maxDate,
+    disabledDate = disabledDate,
+    maxSpanDays = maxSpanDays,
+    presets = presets,
+    allowSwap = allowSwap,
+    minuteStep = minuteStep,
+    placeholder = placeholder,
+    size = size,
+    enabled = enabled,
+)
+
+val DateRangePickerDefaults = DateRangePickerDefaultsImpl
+typealias DateRange = DateRangeImpl
+typealias DateRangePreset = DateRangePresetImpl
+
 // Components - CommandPalette
 val PCommandPalette = ::PCommandPaletteImpl
 val CommandPaletteDefaults = CommandPaletteDefaultsImpl
@@ -828,7 +876,7 @@ typealias MermaidColors = MermaidColorsImpl
 
 // Components - Markdown
 val PMarkdownViewer = ::PMarkdownViewerImpl
-typealias PMarkdownEditor = PMarkdownEditorImpl
+val PMarkdownEditor = ::PMarkdownEditorImpl
 val MarkdownDefaults = MarkdownDefaultsImpl
 typealias MarkdownEditorMode = MarkdownEditorModeImpl
 typealias MarkdownToolbarAction = MarkdownToolbarActionImpl
