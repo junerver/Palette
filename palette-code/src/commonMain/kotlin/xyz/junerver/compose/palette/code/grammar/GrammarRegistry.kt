@@ -1,6 +1,9 @@
 package xyz.junerver.compose.palette.code.grammar
 
+import xyz.junerver.compose.palette.code.grammar.languages.CGrammar
+import xyz.junerver.compose.palette.code.grammar.languages.CppGrammar
 import xyz.junerver.compose.palette.code.grammar.languages.CssGrammar
+import xyz.junerver.compose.palette.code.grammar.languages.GoGrammar
 import xyz.junerver.compose.palette.code.grammar.languages.HtmlGrammar
 import xyz.junerver.compose.palette.code.grammar.languages.IniGrammar
 import xyz.junerver.compose.palette.code.grammar.languages.JavaGrammar
@@ -9,6 +12,7 @@ import xyz.junerver.compose.palette.code.grammar.languages.KotlinGrammar
 import xyz.junerver.compose.palette.code.grammar.languages.KotlinLikeGrammar
 import xyz.junerver.compose.palette.code.grammar.languages.MarkdownGrammar
 import xyz.junerver.compose.palette.code.grammar.languages.PythonGrammar
+import xyz.junerver.compose.palette.code.grammar.languages.RustGrammar
 import xyz.junerver.compose.palette.code.grammar.languages.SqlGrammar
 import xyz.junerver.compose.palette.code.grammar.languages.TomlGrammar
 import xyz.junerver.compose.palette.code.grammar.languages.TypeScriptGrammar
@@ -54,6 +58,15 @@ internal object GrammarRegistry {
         putAll(aliases("yaml", listOf("yaml", "yml"), YamlGrammar))
         // INI + .properties share one grammar (same lexer historically served both).
         putAll(aliases("ini", listOf("ini", "properties", "props", "conf"), IniGrammar))
+        // Phase 3 — C-family systems languages on the shared cFamilyGrammar factory.
+        // C: C89–C11 keywords + stdint/stdio typedefs; non-nested comments (factory default regex).
+        putAll(aliases("c", listOf("c", "h"), CGrammar))
+        // C++: C++11–C++20 keywords; cpp/c++/cxx/cc all resolve (lowercased keys).
+        putAll(aliases("cpp", listOf("cpp", "c++", "cxx", "cc", "hpp", "hh", "hxx"), CppGrammar))
+        // Go: backtick raw strings via templateLiterals; builtins classified as primitive types.
+        putAll(aliases("go", listOf("go", "golang"), GoGrammar))
+        // Rust: custom grammar for attributes (#[…]) and raw/byte strings; rust/rs resolve.
+        putAll(aliases("rust", listOf("rust", "rs"), RustGrammar))
         // Markdown grammar exists and the engine handles it, but it stays on the hand-written
         // MarkdownLexer for now until its token classification is aligned with the existing
         // tests (Phase 2 lexer-migration task). Add it back once the classification matches.

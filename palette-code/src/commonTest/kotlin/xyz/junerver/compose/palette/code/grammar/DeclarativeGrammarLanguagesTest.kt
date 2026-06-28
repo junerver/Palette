@@ -1,6 +1,9 @@
 package xyz.junerver.compose.palette.code.grammar
 
+import xyz.junerver.compose.palette.code.grammar.languages.CGrammar
+import xyz.junerver.compose.palette.code.grammar.languages.CppGrammar
 import xyz.junerver.compose.palette.code.grammar.languages.CssGrammar
+import xyz.junerver.compose.palette.code.grammar.languages.GoGrammar
 import xyz.junerver.compose.palette.code.grammar.languages.HtmlGrammar
 import xyz.junerver.compose.palette.code.grammar.languages.IniGrammar
 import xyz.junerver.compose.palette.code.grammar.languages.JavaGrammar
@@ -8,6 +11,7 @@ import xyz.junerver.compose.palette.code.grammar.languages.KotlinGrammar
 import xyz.junerver.compose.palette.code.grammar.languages.KotlinLikeGrammar
 import xyz.junerver.compose.palette.code.grammar.languages.MarkdownGrammar
 import xyz.junerver.compose.palette.code.grammar.languages.PythonGrammar
+import xyz.junerver.compose.palette.code.grammar.languages.RustGrammar
 import xyz.junerver.compose.palette.code.grammar.languages.SqlGrammar
 import xyz.junerver.compose.palette.code.grammar.languages.TomlGrammar
 import xyz.junerver.compose.palette.code.grammar.languages.TypeScriptGrammar
@@ -355,5 +359,96 @@ class DeclarativeGrammarLanguagesTest {
         assertTrue(tokens.any { it.text == "-" && it.type.name == "list-marker" })
         assertTrue(tokens.any { it.text == "---" && it.type.name == "operator" })
         assertTrue(tokens.any { it.text == "..." && it.type.name == "operator" })
+    }
+
+    // ── C ────────────────────────────────────────────────────────────────
+
+    @Test
+    fun cGrammar_classifiesKeywordsPrimitivesAndBlockComment() {
+        val src = "/* header */\nint main(void) { return 0; }"
+        val tokens = GrammarTokenizer.tokenize(src, CGrammar)
+        assertTrue(tokens.any { it.text == "int" && it.type.name == "keyword" })
+        assertTrue(tokens.any { it.text == "return" && it.type.name == "keyword" })
+        assertTrue(tokens.any { it.text == "main" && it.type.name == "function" })
+        assertTrue(tokens.any { it.text.contains("header") && it.type.name == "comment" })
+    }
+
+    @Test
+    fun cGrammar_classifiesStdintTypesAndHexNumber() {
+        val tokens = GrammarTokenizer.tokenize("uint32_t count = 0xFF;", CGrammar)
+        assertTrue(tokens.any { it.text == "uint32_t" && it.type.name == "type" })
+        assertTrue(tokens.any { it.text == "0xFF" && it.type.name == "number" })
+    }
+
+    // ── C++ ──────────────────────────────────────────────────────────────
+
+    @Test
+    fun cppGrammar_classifiesClassTemplateAndNamespace() {
+        val src = "namespace app { template<typename T> class Vec { T x; }; }"
+        val tokens = GrammarTokenizer.tokenize(src, CppGrammar)
+        assertTrue(tokens.any { it.text == "namespace" && it.type.name == "keyword" })
+        assertTrue(tokens.any { it.text == "template" && it.type.name == "keyword" })
+        assertTrue(tokens.any { it.text == "class" && it.type.name == "keyword" })
+        // Capitalized Vec and T → type.
+        assertTrue(tokens.any { it.text == "Vec" && it.type.name == "type" })
+    }
+
+    @Test
+    fun cppGrammar_classifiesLineCommentAndString() {
+        val tokens = GrammarTokenizer.tokenize("// note\nauto s = \"hello\";", CppGrammar)
+        assertTrue(tokens.any { it.text.contains("note") && it.type.name == "comment" })
+        assertTrue(tokens.any { it.text == "\"hello\"" && it.type.name == "string" })
+        assertTrue(tokens.any { it.text == "auto" && it.type.name == "keyword" })
+    }
+
+    // ── Go ───────────────────────────────────────────────────────────────
+
+    @Test
+    fun goGrammar_classifiesKeywordsAndFunc() {
+        val src = "package main\n\nfunc add(a int, b int) int { return a + b }"
+        val tokens = GrammarTokenizer.tokenize(src, GoGrammar)
+        assertTrue(tokens.any { it.text == "package" && it.type.name == "keyword" })
+        assertTrue(tokens.any { it.text == "func" && it.type.name == "keyword" })
+        assertTrue(tokens.any { it.text == "add" && it.type.name == "function" })
+        assertTrue(tokens.any { it.text == "return" && it.type.name == "keyword" })
+    }
+
+    @Test
+    fun goGrammar_classifiesBacktickRawString() {
+        val tokens = GrammarTokenizer.tokenize("var s = `raw\nstring`", GoGrammar)
+        assertTrue(tokens.any { it.text.startsWith("`") && it.type.name == "string" })
+    }
+
+    @Test
+    fun goGrammar_classifiesBuiltinTypesAndBooleans() {
+        val tokens = GrammarTokenizer.tokenize("var b bool = true", GoGrammar)
+        assertTrue(tokens.any { it.text == "bool" && it.type.name == "type" })
+        assertTrue(tokens.any { it.text == "true" && it.type.name == "keyword" })
+    }
+
+    // ── Rust ─────────────────────────────────────────────────────────────
+
+    @Test
+    fun rustGrammar_classifiesKeywordsAndAttribute() {
+        val src = "#[derive(Debug)]\npub struct Point { x: i32 }"
+        val tokens = GrammarTokenizer.tokenize(src, RustGrammar)
+        assertTrue(tokens.any { it.text == "pub" && it.type.name == "keyword" })
+        assertTrue(tokens.any { it.text == "struct" && it.type.name == "keyword" })
+        assertTrue(tokens.any { it.text.startsWith("#[derive") && it.type.name == "annotation" })
+    }
+
+    @Test
+    fun rustGrammar_classifiesRawStringAndPrimitiveType() {
+        val tokens = GrammarTokenizer.tokenize("let s: &str = r#\"raw\"#;", RustGrammar)
+        assertTrue(tokens.any { it.text.contains("raw") && it.type.name == "string" })
+        assertTrue(tokens.any { it.text == "str" && it.type.name == "type" })
+        assertTrue(tokens.any { it.text == "let" && it.type.name == "keyword" })
+    }
+
+    @Test
+    fun rustGrammar_classifiesFunctionWithGenerics() {
+        val tokens = GrammarTokenizer.tokenize("fn id<T>(x: T) -> T { x }", RustGrammar)
+        assertTrue(tokens.any { it.text == "fn" && it.type.name == "keyword" })
+        assertTrue(tokens.any { it.text == "id" && it.type.name == "function" })
     }
 }
