@@ -63,6 +63,8 @@ sealed class NavItem(
 
     data object Statistic : NavItem("statistic", "统计数值", Icons.Default.BarChart, ComponentCategory.DATA_DISPLAY)
 
+    data object Chart : NavItem("chart", "图表", Icons.Default.BarChart, ComponentCategory.DATA_DISPLAY)
+
     data object Timeline : NavItem("timeline", "时间轴", Icons.Default.Timeline, ComponentCategory.DATA_DISPLAY)
 
     data object Tree : NavItem("tree", "树形控件", Icons.Default.AccountTree, ComponentCategory.DATA_DISPLAY)
@@ -135,7 +137,7 @@ sealed class NavItem(
                 Loading, Progress, Badge, Dialog, Toast, Skeleton,
                 Toolbar,
                 RowLayout, BorderBox,
-                Table, List, Descriptions, Statistic, Timeline, Tree, Image, Carousel, Pagination, Empty,
+                Table, List, Descriptions, Statistic, Chart, Timeline, Tree, Image, Carousel, Pagination, Empty,
                 Card, Avatar, Collapse,
                 Tag, Popup, ActionSheet, SearchBar, ContextMenu, DashboardProgress,
                 Alert, InputNumber, Cascader, Transfer, Calendar, DateRangePicker,

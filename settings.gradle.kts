@@ -15,7 +15,7 @@ pluginManagement {
 dependencyResolutionManagement {
     // PREFER_SETTINGS (not FAIL_ON_PROJECT_REPOS): Kotlin/JS webpack tasks for the wasmJs browser
     // distribution add project-level ivy repos (nodejs.org, binaryen). FAIL_ON_PROJECT_REPOS blocks
-    // them, breaking :preview:wasmJsBrowserDistribution. We mirror those repos here so resolution
+    // them, breaking :app:wasmJsBrowserDistribution. We mirror those repos here so resolution
     // still prefers settings-declared repositories.
     repositoriesMode.set(RepositoriesMode.PREFER_SETTINGS)
     repositories {
@@ -48,4 +48,3 @@ include(":palette-code")
 include(":palette-markdown")
 include(":palette-mermaid")
 include(":benchmark")
-include(":preview")

@@ -28,13 +28,17 @@ kotlin {
         }
     }
 
-    // Web target: runtime verification that palette components render in the browser (WASM).
+    // Web target: powers the docs-site playground iframe and the `:app:wasmJsBrowserDevelopmentRun`
+    // task. `binaries.executable()` is what registers the webpack run/distribution tasks — without it
+    // only wasmJsBrowserTest is available. This makes :app the single cross-platform sample
+    // (android + desktop + web), so the separate :preview module is no longer needed.
     wasmJs {
         browser {
             commonWebpackConfig {
                 outputFileName = "paletteWasm.js"
             }
         }
+        binaries.executable()
     }
 
     applyDefaultHierarchyTemplate()
@@ -51,18 +55,10 @@ kotlin {
             implementation(libs.jb.compose.material.icons.extended)
             implementation(libs.jb.compose.ui)
             implementation(project(":palette"))
+            // Note: androidx.datastore is intentionally NOT in commonMain — it publishes no wasmJs
+            // variant. Theme persistence is abstracted behind ThemeStorage (commonMain interface)
+            // with per-platform actuals; the datastore dependency lives in androidMain/desktopMain.
         }
-
-        // Intermediate source set shared by android + desktop (the full demo app, incl. theme
-        // persistence via datastore). wasmJs is excluded: androidx.datastore has no wasmJs variant,
-        // and the wasmJs entry point is a standalone minimal showcase that does not need persistence.
-        val commonJvmAndroid by creating {
-            dependsOn(commonMain.get())
-            dependencies {
-                implementation(libs.androidx.datastore.preferences.core)
-            }
-        }
-        androidMain.get().dependsOn(commonJvmAndroid)
 
         androidMain.dependencies {
             implementation(libs.androidx.activity.compose)
@@ -70,9 +66,9 @@ kotlin {
         }
 
         val desktopMain by getting {
-            dependsOn(commonJvmAndroid)
             dependencies {
                 implementation(compose.desktop.currentOs)
+                implementation(libs.androidx.datastore.preferences.core)
             }
         }
     }

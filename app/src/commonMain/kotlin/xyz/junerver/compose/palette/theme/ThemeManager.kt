@@ -2,33 +2,24 @@ package xyz.junerver.compose.palette.theme
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.compositionLocalOf
-import androidx.datastore.preferences.core.edit
-import androidx.datastore.preferences.core.stringPreferencesKey
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
 
 object ThemeManager {
-    private val dataStore by lazy { createDataStore() }
+    private val storage by lazy { themeModeStorage() }
     private val scope = CoroutineScope(Dispatchers.Default)
-
-    private val THEME_MODE_KEY = stringPreferencesKey("theme_mode")
 
     private val _themeMode = MutableStateFlow(ThemeMode.SYSTEM)
     val themeMode: StateFlow<ThemeMode> = _themeMode.asStateFlow()
 
     init {
+        // Mirror the persisted value into the observable StateFlow as it changes.
         scope.launch {
-            dataStore.data.map { preferences ->
-                val modeString = preferences[THEME_MODE_KEY] ?: ThemeMode.SYSTEM.name
-                ThemeMode.valueOf(modeString)
-            }.collect { mode ->
+            storage.themeMode.collect { mode ->
                 _themeMode.value = mode
             }
         }
@@ -36,18 +27,7 @@ object ThemeManager {
 
     fun setThemeMode(mode: ThemeMode) {
         scope.launch {
-            dataStore.edit { preferences ->
-                preferences[THEME_MODE_KEY] = mode.name
-            }
-        }
-    }
-
-    fun loadInitialThemeMode(): ThemeMode {
-        return runBlocking {
-            dataStore.data.map { preferences ->
-                val modeString = preferences[THEME_MODE_KEY] ?: ThemeMode.SYSTEM.name
-                ThemeMode.valueOf(modeString)
-            }.first()
+            storage.setThemeMode(mode)
         }
     }
 }

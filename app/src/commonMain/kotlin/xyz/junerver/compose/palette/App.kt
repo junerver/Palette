@@ -160,6 +160,7 @@ private fun MainContent(route: String) {
                 NavItem.List.route -> ListDemo()
                 NavItem.Descriptions.route -> DescriptionsDemo()
                 NavItem.Statistic.route -> StatisticDemo()
+                NavItem.Chart.route -> ChartDemo()
                 NavItem.Timeline.route -> TimelineDemo()
                 NavItem.Tree.route -> TreeDemo()
                 NavItem.Image.route -> ImageDemo()

@@ -5,7 +5,8 @@ on:
     branches: [master]
     paths:
       - 'docs-site/**'
-      - 'preview/**'
+      - 'app/src/wasmJsMain/**'
+      - 'app/build.gradle.kts'
       - '.github/workflows/docs.yml'
   workflow_dispatch:
 
@@ -43,18 +44,19 @@ jobs:
       - name: Install MkDocs Material
         run: pip install -r docs-site/requirements-docs.txt
 
-      # Build the WASM preview (development distribution — reliable without the binaryen
-      # production-optimization step). The output is a self-contained dist folder embedded into
-      # the MkDocs site so the playground iframe can load it.
-      - name: Build WASM preview
-        run: ./gradlew :preview:wasmJsBrowserDevelopmentExecutableDistribution
+      # Build the WASM playground from the :app module (development distribution — reliable without
+      # the binaryen production-optimization step). The output is a self-contained dist folder
+      # embedded into the MkDocs site so the playground iframe can load it.
+      - name: Build WASM playground
+        run: ./gradlew :app:wasmJsBrowserDevelopmentExecutableDistribution
 
-      - name: Stage WASM preview for MkDocs
+      - name: Stage WASM playground for MkDocs
         run: |
-          # MkDocs builds docs/ -> site/, so place the preview under docs/preview to be served at
-          # /preview/. The distribution produces index.html + palettePreview.js + *.wasm.
-          mkdir -p docs-site/docs/preview
-          cp -r preview/build/dist/wasmJs/developmentExecutable/* docs-site/docs/preview/
+          # MkDocs builds docs/ -> site/, so place the playground under docs/playground-dist to be
+          # served at /playground-dist/. The distribution produces index.html + paletteWasm.js +
+          # *.wasm.
+          mkdir -p docs-site/docs/playground-dist
+          cp -r app/build/dist/wasmJs/developmentExecutable/* docs-site/docs/playground-dist/
 
       - name: Build MkDocs site
         run: |
