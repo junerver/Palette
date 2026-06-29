@@ -28,6 +28,8 @@ kotlin {
         iosSimulatorArm64(),
     )
 
+    wasmJs { browser() }
+
     applyDefaultHierarchyTemplate()
 
     sourceSets {

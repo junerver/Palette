@@ -49,6 +49,10 @@ kotlin {
         }
     }
 
+    // Web target: enables Compose Multiplatform in the browser (WASM).
+    // Requires hooks2 2.4.0+ which ships a wasmJs variant.
+    wasmJs { browser() }
+
     applyDefaultHierarchyTemplate()
 
     sourceSets {
