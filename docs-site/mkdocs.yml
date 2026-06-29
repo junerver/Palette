@@ -1,0 +1,75 @@
+site_name: Palette
+site_description: A Compose Multiplatform component library — Android, Desktop, iOS & Web
+site_url: https://junerver.github.io/Palette/
+repo_url: https://github.com/junerver/Palette
+repo_name: junerver/Palette
+edit_uri: edit/master/docs-site/docs/
+
+docs_dir: docs
+site_dir: site
+
+theme:
+  name: material
+  language: en
+  features:
+    - navigation.tabs
+    - navigation.sections
+    - navigation.expand
+    - navigation.top
+    - navigation.indexes
+    - search.suggest
+    - search.highlight
+    - content.code.copy
+    - content.code.annotate
+  palette:
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: blue
+      accent: indigo
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: blue
+      accent: indigo
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+  font:
+    text: Roboto
+    code: Roboto Mono
+
+markdown_extensions:
+  - admonition
+  - pymdownx.details
+  - pymdownx.superfences
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.inlinehilite
+  - pymdownx.tabbed:
+      alternate_style: true
+  - pymdownx.snippets
+  - tables
+  - toc:
+      permalink: true
+
+nav:
+  - Home: index.md
+  - Getting Started: getting-started.md
+  - Theming: theming.md
+  - Components:
+      - Overview: components/index.md
+      - General: components/general.md
+      - Form: components/form.md
+      - Data Display: components/data-display.md
+      - Feedback: components/feedback.md
+      - Navigation: components/navigation.md
+      - Layout: components/layout.md
+  - Feature Modules:
+      - Charts: features/charts.md
+      - Code Highlighting: features/code.md
+      - Markdown: features/markdown.md
+      - Mermaid: features/mermaid.md
+  - Playground: playground.md
+  - Roadmap: roadmap.md
