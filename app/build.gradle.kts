@@ -28,6 +28,15 @@ kotlin {
         }
     }
 
+    // Web target: runtime verification that palette components render in the browser (WASM).
+    wasmJs {
+        browser {
+            commonWebpackConfig {
+                outputFileName = "paletteWasm.js"
+            }
+        }
+    }
+
     applyDefaultHierarchyTemplate()
 
     sourceSets {
@@ -42,8 +51,18 @@ kotlin {
             implementation(libs.jb.compose.material.icons.extended)
             implementation(libs.jb.compose.ui)
             implementation(project(":palette"))
-            implementation(libs.androidx.datastore.preferences.core)
         }
+
+        // Intermediate source set shared by android + desktop (the full demo app, incl. theme
+        // persistence via datastore). wasmJs is excluded: androidx.datastore has no wasmJs variant,
+        // and the wasmJs entry point is a standalone minimal showcase that does not need persistence.
+        val commonJvmAndroid by creating {
+            dependsOn(commonMain.get())
+            dependencies {
+                implementation(libs.androidx.datastore.preferences.core)
+            }
+        }
+        androidMain.get().dependsOn(commonJvmAndroid)
 
         androidMain.dependencies {
             implementation(libs.androidx.activity.compose)
@@ -51,6 +70,7 @@ kotlin {
         }
 
         val desktopMain by getting {
+            dependsOn(commonJvmAndroid)
             dependencies {
                 implementation(compose.desktop.currentOs)
             }
