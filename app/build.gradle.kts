@@ -11,6 +11,13 @@ plugins {
     alias(libs.plugins.composeHotReload)
 }
 
+// Compose Resources: bundle the CJK fallback font (Noto Sans SC) used by the wasmJs build so Skiko
+// can render Chinese glyphs. Custom namespace keeps the generated `Res` accessor next to our code.
+compose.resources {
+    publicResClass = true
+    packageOfResClass = "xyz.junerver.compose.palette"
+}
+
 kotlin {
     jvmToolchain(21)
 
@@ -54,6 +61,7 @@ kotlin {
             implementation(libs.jb.compose.material3)
             implementation(libs.jb.compose.material.icons.extended)
             implementation(libs.jb.compose.ui)
+            implementation(compose.components.resources)
             implementation(project(":palette"))
             // Note: androidx.datastore is intentionally NOT in commonMain — it publishes no wasmJs
             // variant. Theme persistence is abstracted behind ThemeStorage (commonMain interface)

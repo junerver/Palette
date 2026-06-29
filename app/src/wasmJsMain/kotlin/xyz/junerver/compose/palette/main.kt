@@ -11,6 +11,9 @@ import androidx.compose.ui.window.ComposeViewport
  * sample (android + desktop + web) sharing one codebase; the wasmJs build additionally powers the
  * docs-site playground (embedded via iframe in docs-site/docs/playground.md).
  *
+ * [WithWebFont] loads Noto Sans SC so CJK glyphs render in the browser (Skiko has no system font
+ * fallback on wasmJs).
+ *
  * Uses ComposeViewport (the Compose 1.9+ web entry point; CanvasBasedWindow is deprecated/removed
  * in 1.11).
  *
@@ -19,6 +22,8 @@ import androidx.compose.ui.window.ComposeViewport
 @OptIn(ExperimentalComposeUiApi::class)
 fun main() {
     ComposeViewport("ComposeTarget") {
-        App()
+        WithWebFont {
+            App()
+        }
     }
 }
