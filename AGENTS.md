@@ -2,7 +2,7 @@
 
 ## 项目概述
 
-Palette 是一个 Compose Multiplatform 组件库，支持 Android、Desktop (JVM) 和 iOS 平台。
+Palette 是一个 Compose Multiplatform 组件库，支持 Android、Desktop (JVM)、iOS 平台，组件库（`:palette`）与示例应用（`:app`）均启用了 wasmJs 目标，因此 Web (Wasm) 端可运行同一套示例。示例应用目前覆盖 Android、Desktop、Web 三端，共享 `commonMain` 中同一套代码。
 
 ## 项目结构
 
@@ -29,12 +29,14 @@ Palette/
 │       ├── commonJvmAndroid/   # JVM+Android 共享
 │       ├── androidMain/        # Android 特定实现
 │       ├── desktopMain/        # Desktop 特定实现
-│       └── iosMain/            # iOS 特定实现
+│       ├── iosMain/            # iOS 特定实现
+│       └── wasmJsMain/         # Web (Wasm) 特定实现
 └── app/                        # 示例应用模块
     └── src/
-        ├── commonMain/         # 共享 UI
+        ├── commonMain/         # 三端 (Android/Desktop/Web) 共享 UI 与完整 demo
         ├── androidMain/        # Android 入口
-        └── desktopMain/        # Desktop 入口
+        ├── desktopMain/        # Desktop 入口
+        └── wasmJsMain/         # Web (Wasm) 入口
 ```
 
 ## 构建命令
@@ -46,6 +48,7 @@ Palette/
 .\gradlew.bat :palette:build             # 仅构建组件库
 .\gradlew.bat :app:run                   # 运行 Desktop 应用
 .\gradlew.bat :app:hotRunDesktop         # 通过 hotrun 插件运行支持热更新的 Desktop 应用
+.\gradlew.bat :app:wasmJsBrowserDevelopmentRun # 运行 Web (Wasm) 示例，启动 webpack dev server 并打开浏览器 (http://localhost:8080)
 .\gradlew.bat :app:installDebug          # 安装 Android Debug 包
 .\gradlew.bat :palette:allTests          # 运行组件库全部测试
 .\gradlew.bat :palette:desktopTest       # 运行 Desktop 测试
