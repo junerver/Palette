@@ -112,11 +112,10 @@ internal object RequirementParser : MermaidDiagramParser {
             }
 
             // Field inside a block.
-            if (pending != null) {
+            pending?.let { p ->
                 fieldRegex.matchEntire(line)?.let { match ->
                     val key = match.groupValues[1].lowercase()
                     val value = match.groupValues[2].trim()
-                    val p = pending!!
                     when (key) {
                         "id" -> {}
                         "text" -> p.text = value

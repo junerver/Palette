@@ -142,10 +142,15 @@ class LatexParserTest {
 
     @Test
     fun parsesText() {
-        // 注意：v1 数学模式词法会吞掉普通空白，\text{} 内多词会折叠（多数 MathJax
-        // 配置下数学空白同样不可见）。单词 / 含显式间距命令的文本不受影响。
-        val expr = LatexParser.parse("\\text{helloworld}") as LatexText
-        assertEquals("helloworld", expr.content)
+        val expr = LatexParser.parse("\\text{hello world}") as LatexText
+        assertEquals("hello world", expr.content)
+    }
+
+    @Test
+    fun ignoresMathWhitespaceBeforeRequiredArguments() {
+        val expr = LatexParser.parse("\\frac {1} {2}") as LatexFraction
+        assertEquals("1", (unwrap(expr.numerator) as LatexTextRun).text)
+        assertEquals("2", (unwrap(expr.denominator) as LatexTextRun).text)
     }
 
     @Test

@@ -1,0 +1,14 @@
+id,priority,group,task,deliverables,affected_files,effort_days,coverage_uplift,depends_on,acceptance_criteria
+P1-A,1,Tooltip,实现命中检测纯函数 hitTestPoint(value,categories,plotRect,mouse) 返回命中的 series+category,纯函数+单元测试（正常/边界/点外/堆叠/横向）,ChartLogic.kt; ChartLogicTest.kt,1.0,+8%,-,给定鼠标坐标能稳定返回命中的数据点；点在空白区返回 null；横向柱与堆叠柱均正确,DONE,2026-06-30,hitTestPoint+hitTestPie+PlotRect+HitTarget 加入 ChartLogic.kt；13 项单测全绿（:palette:desktopTest）
+P1-B,1,Tooltip,实现 Tooltip UI 组件与状态钩子（hover 时显示浮层数值）,PTooltipOverlay 组件 + useState 悬浮态 + 主题化样式（复用 PaletteTheme card/elevation token）,ChartTooltip.kt; Chart.kt,1.5,+5%,P1-A,鼠标移入显示数值浮层；移出消失；浮层文字/边框/阴影可由顶层主题控制；不依赖第三方库
+P1-C,1,Tooltip,把 pointerInput/detectHoverGestures 接入 PChart 并驱动 tooltip,BarChartRenderer/LineChartRenderer/PieChartRenderer 接入 hover；Canvas 重绘高亮命中元素,Chart.kt; BarChartRenderer.kt; LineChartRenderer.kt; PieChartRenderer.kt,2.0,+2%,P1-B,三张图均支持悬浮看数；命中元素有高亮反馈（描边/放大）；性能无肉眼卡顿
+P2-A,2,Legend 交互,图例项可点击切换对应 series 显隐,ChartSeries 显隐状态（useState<BooleanArray>）+ 图例点击回调 + 被隐藏 series 不参与绘制/刻度,Chart.kt; ChartModels.kt,1.0,+3%,-,点击图例圆点切换该 series 显隐；隐藏后轴范围与刻度自适应重算；视觉有"置灰"态反馈
+P3-A,3,Animation,删除或实现 animationEnabled 空字段（消除名实不符）,决策：若实现则做入场动画（柱高/折线长度 0→目标，spring）；若不实现则删除该字段与文档,ChartModels.kt; 渲染器; Chart.kt,2.0,+3%,-,animationEnabled=true 时有 0.6s 入场动画；=false 时无；无性能回归（基准对比 ≥3 轮）
+P4-A,4,新图表类型-散点图,新增 ChartSpec.Scatter 与 ScatterChartRenderer,ChartSpec.Scatter + 渲染器 + drawBar 复用点绘制 + 示例 + 测试,ChartModels.kt; ChartRenderer.kt; ScatterChartRenderer.kt; ChartDemo.kt,2.5,+4%,-,散点图能按 (x,y) 绘制点；支持多 series 着色；接入主题；有 demo 与单元测试
+P4-B,4,新图表类型-雷达图,新增 ChartSpec.Radar 与 RadarChartRenderer,ChartSpec.Radar + 多边形/网格渲染器 + 示例 + 测试,ChartModels.kt; ChartRenderer.kt; RadarChartRenderer.kt; ChartDemo.kt,2.5,+4%,-,雷达图正确绘制多维数据；多 series 叠加；轴标签可读；有 demo 与测试
+P5-A,5,标注,实现 markLine（平均线/目标线）,ChartOptions.markLines: List<MarkLine> + drawAxes 绘制虚线 + 图例标注,ChartModels.kt; ChartAxisRenderer.kt; ChartDemo.kt,1.5,+2%,P1-C,可在图上叠加水平/垂直标注线（如平均值）；线型/颜色/文案可配；不遮挡数据
+P5-B,5,标注,支持双 Y 轴,ChartSeries 增加 yAxisIndex + 渲染器左右各画一组刻度 + 边距重算,ChartModels.kt; ChartAxisRenderer.kt; 渲染器,2.0,+2%,P5-A,左右双 Y 轴各自带刻度与标题；两 series 分别绑定左右轴；边距自适应不溢出
+P6-A,6,交互进阶,实现 dataZoom（数据缩放/拖动）,ChartOptions.dataZoom + 底部缩放条组件 + 滑动过滤 category 范围,Chart.kt; ChartModels.kt; 新 DataZoom.kt,3.0,+3%,P1-C,可拖动缩放条查看局部数据；折线/柱状均支持；缩放时刻度联动更新
+P6-B,6,交互进阶,图表联动（一图刷选，他图过滤）,联动状态提升到外部 + PChart 接收 selectedRange 参数,Chart.kt; ChartModels.kt,2.0,+1%,P6-A,两个 PChart 可联动；刷选范围通过回调外传；过滤后重绘正确
+P7-A,7,文档与测试,更新 docs-site charts.md 覆盖新 API（轴标题/单位/tooltip/legend 交互）,文档章节 + 代码示例,docs-site/docs/features/charts.md,0.5,+0%,P1-C;P2-A,文档与组件实际行为一致；示例可复制即用
+P7-B,7,文档与测试,补齐各新能力的桌面 UI 测试与逻辑单测,测试用例（tooltip 命中/legend 切换/动画/散点/雷达/markLine/双轴）,ChartLogicTest.kt; ChartUiTest.kt,1.5,+0%,P1-A;P2-A;P3-A;P4-A;P4-B;P5-A;P5-B,:palette:desktopTest 全绿；关键路径均有测试覆盖

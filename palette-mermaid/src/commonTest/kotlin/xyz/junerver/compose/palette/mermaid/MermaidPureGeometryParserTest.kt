@@ -112,9 +112,9 @@ class MermaidPureGeometryParserTest {
         )
         assertEquals(MermaidDiagramType.QuadrantChart, diagram.type)
         assertEquals("Reach and engagement", diagram.quadrantTitle)
-        assertNotNull(diagram.quadrantXAxis)
-        assertEquals("Low Reach", diagram.quadrantXAxis!!.lowLabel)
-        assertEquals("High Reach", diagram.quadrantXAxis!!.highLabel)
+        val xAxis = assertNotNull(diagram.quadrantXAxis)
+        assertEquals("Low Reach", xAxis.lowLabel)
+        assertEquals("High Reach", xAxis.highLabel)
         assertEquals(listOf("Expand", "Promote", "Re-evaluate", "Improve"), diagram.quadrantLabels)
         assertEquals(2, diagram.quadrantPoints.size)
         val p = diagram.quadrantPoints.first()
@@ -158,8 +158,9 @@ class MermaidPureGeometryParserTest {
             """.trimIndent(),
         )
         // Bare axis (no -->) → low and high both equal the label.
-        assertEquals("Just one label", diagram.quadrantXAxis!!.lowLabel)
-        assertEquals("Just one label", diagram.quadrantXAxis!!.highLabel)
+        val xAxis = assertNotNull(diagram.quadrantXAxis)
+        assertEquals("Just one label", xAxis.lowLabel)
+        assertEquals("Just one label", xAxis.highLabel)
     }
 
     @Test

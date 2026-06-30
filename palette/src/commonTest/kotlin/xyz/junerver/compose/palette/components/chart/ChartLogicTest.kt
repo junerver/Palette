@@ -1,8 +1,11 @@
 package xyz.junerver.compose.palette.components.chart
 
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertNotNull
+import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
 class ChartLogicTest {
@@ -274,5 +277,122 @@ class ChartLogicTest {
     fun formatTickValue_negative() {
         assertEquals("-40", formatTickValue(-40f))
     }
-    // endregion ────────────────────────────────────────────────────────
+    // endregion ────────────────────────────────────────────────────────────────
+
+    // region hitTestPoint (cartesian: bar / line) ─────────────────────────────
+    private val plot = PlotRect(left = 50f, top = 10f, width = 400f, height = 200f)
+    private val cats = listOf("Q1", "Q2", "Q3", "Q4")
+
+    @Test
+    fun hitTestPoint_verticalBar_returnsOwningCategory() {
+        // 4 categories over 400px starting at x=50 → slots at x=100,200,300,400 centers.
+        val s = ChartSeries("a", listOf(10f, 20f, 30f, 40f))
+        val t = hitTestPoint(Offset(310f, 100f), listOf(s), 0f, 40f, cats, plot)
+        assertNotNull(t)
+        assertEquals(2, t.categoryIndex) // slot 2 (Q3)
+        assertEquals("Q3", t.category)
+        assertEquals(30f, t.value)
+    }
+
+    @Test
+    fun hitTestPoint_horizontalBar_swapsToYAxis() {
+        // Horizontal: category axis is Y. slot 0 occupies y=[10,60), slot 3 y=[160,210).
+        val s = ChartSeries("a", listOf(10f, 20f, 30f, 40f))
+        val t = hitTestPoint(Offset(200f, 180f), listOf(s), 0f, 40f, cats, plot, horizontal = true)
+        assertNotNull(t)
+        assertEquals(3, t.categoryIndex)
+        assertEquals(40f, t.value)
+    }
+
+    @Test
+    fun hitTestPoint_stackedBar_returnsCumulativeValue() {
+        val series = listOf(
+            ChartSeries("2024", listOf(100f, 200f)),
+            ChartSeries("2025", listOf(50f, 60f)),
+        )
+        val t = hitTestPoint(Offset(125f, 100f), series, 0f, 260f, listOf("Q1", "Q2"), plot, stacked = true)
+        assertNotNull(t)
+        assertEquals(0, t.categoryIndex)
+        // Stacked sum at Q1 = 100 + 50 = 150
+        assertEquals(150f, t.value)
+        assertEquals(HitGeometry.Bar, t.geometryKind)
+    }
+
+    @Test
+    fun hitTestPoint_outsidePlot_returnsNull() {
+        val s = ChartSeries("a", listOf(1f, 2f, 3f, 4f))
+        // Left gutter (axis margin area)
+        assertNull(hitTestPoint(Offset(20f, 100f), listOf(s), 0f, 4f, cats, plot))
+        // Right gutter
+        assertNull(hitTestPoint(Offset(480f, 100f), listOf(s), 0f, 4f, cats, plot))
+        // Above plot
+        assertNull(hitTestPoint(Offset(200f, 5f), listOf(s), 0f, 4f, cats, plot))
+    }
+
+    @Test
+    fun hitTestPoint_lineChart_snapsToNearestPointWithinRadius() {
+        val s = ChartSeries("v", listOf(0f, 40f, 0f, 40f))
+        // With yMax=40 the point for Q2 sits at the top (y ≈ 10). Cursor near it should snap.
+        val t = hitTestPoint(Offset(205f, 12f), listOf(s), 0f, 40f, cats, plot, pointRadiusPx = 15f)
+        assertNotNull(t)
+        assertEquals(1, t.categoryIndex)
+        assertEquals(40f, t.value)
+        assertEquals(HitGeometry.Point, t.geometryKind)
+    }
+
+    @Test
+    fun hitTestPoint_emptySeries_returnsNull() {
+        assertNull(hitTestPoint(Offset(200f, 100f), emptyList(), 0f, 1f, cats, plot))
+    }
+
+    @Test
+    fun hitTestPoint_emptyCategories_returnsNull() {
+        val s = ChartSeries("a", listOf(1f))
+        assertNull(hitTestPoint(Offset(200f, 100f), listOf(s), 0f, 1f, emptyList(), plot))
+    }
+    // endregion ────────────────────────────────────────────────────────────────
+
+    // region hitTestPie ────────────────────────────────────────────────────────
+    @Test
+    fun hitTestPie_insideSlice_returnsThatSlice() {
+        // Two equal slices: 0..180 and 180..360 (start at 3 o'clock, clockwise).
+        val center = Offset(100f, 100f)
+        val t = hitTestPie(Offset(150f, 100f), center, radius = 80f, holeRadius = 0f, 0f, listOf(50f, 50f), listOf("A", "B"))
+        assertNotNull(t)
+        assertEquals(0, t.seriesIndex)
+        assertEquals(50f, t.value)
+        assertEquals("A", t.category)
+        assertEquals(HitGeometry.Slice, t.geometryKind)
+    }
+
+    @Test
+    fun hitTestPie_secondSlice_whenInLowerHalf() {
+        val center = Offset(100f, 100f)
+        // Slice 1 spans 180°..360° (upper-left half in screen coords). Point dx=-60, dy=-10 → ~189°.
+        val t = hitTestPie(Offset(40f, 90f), center, 80f, 0f, 0f, listOf(50f, 50f), listOf("A", "B"))
+        assertNotNull(t)
+        assertEquals(1, t.seriesIndex)
+    }
+
+    @Test
+    fun hitTestPie_outsideCircle_returnsNull() {
+        val center = Offset(100f, 100f)
+        assertNull(hitTestPie(Offset(200f, 100f), center, 80f, 0f, 0f, listOf(50f, 50f), listOf("A", "B")))
+    }
+
+    @Test
+    fun hitTestPie_insideDonutHole_returnsNull() {
+        val center = Offset(100f, 100f)
+        assertNull(hitTestPie(Offset(105f, 105f), center, 80f, 40f, 0f, listOf(50f, 50f), listOf("A", "B")))
+    }
+
+    @Test
+    fun hitTestPie_respectsStartAngle() {
+        // Start at 90° (12 o'clock). First slice (50%) now spans 90..270.
+        val center = Offset(100f, 100f)
+        val t = hitTestPie(Offset(100f, 150f), center, 80f, 0f, 90f, listOf(50f, 50f), listOf("A", "B"))
+        assertNotNull(t)
+        assertEquals(0, t.seriesIndex)
+    }
+    // endregion ────────────────────────────────────────────────────────────────
 }

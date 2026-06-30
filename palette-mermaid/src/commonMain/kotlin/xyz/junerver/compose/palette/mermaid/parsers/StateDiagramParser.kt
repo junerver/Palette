@@ -35,16 +35,15 @@ internal object StateDiagramParser : MermaidDiagramParser {
         var currentStateChildren = mutableListOf<StateDefinition>()
 
         fun flushCurrentStateComposite() {
-            if (currentStateComposite != null) {
-                stateDefinitions.add(
-                    StateDefinition(
-                        id = currentStateComposite!!,
-                        children = currentStateChildren.toList(),
-                    ),
-                )
-                currentStateComposite = null
-                currentStateChildren = mutableListOf()
-            }
+            val compositeId = currentStateComposite ?: return
+            stateDefinitions.add(
+                StateDefinition(
+                    id = compositeId,
+                    children = currentStateChildren.toList(),
+                ),
+            )
+            currentStateComposite = null
+            currentStateChildren = mutableListOf()
         }
 
         lines.forEach { line ->

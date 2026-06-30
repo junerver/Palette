@@ -6,6 +6,7 @@ package xyz.junerver.compose.palette.latex
  */
 internal sealed interface LatexToken {
     data class Word(val text: String) : LatexToken       // 普通字符序列（含数字、ASCII 运算符）
+    data class Space(val text: String) : LatexToken      // 普通空白；数学模式忽略，\text{} 中保留
     data class Command(val name: String) : LatexToken    // \name
     data class CommandSymbol(val symbol: Char) : LatexToken // \% \$ \# \& \_ \{ \} \\
     data object LBrace : LatexToken                      // {
@@ -25,7 +26,7 @@ private class Tokenizer(private val src: String) {
         while (i < src.length) {
             val c = src[i]
             when {
-                c.isWhitespace() -> { i++ }                       // 空白在数学模式中无意义
+                c.isWhitespace() -> readSpace()
                 c == '\\' -> readCommand()
                 c == '{' -> { tokens.add(LatexToken.LBrace); i++ }
                 c == '}' -> { tokens.add(LatexToken.RBrace); i++ }
@@ -38,6 +39,12 @@ private class Tokenizer(private val src: String) {
             }
         }
         return tokens
+    }
+
+    private fun readSpace() {
+        val start = i
+        while (i < src.length && src[i].isWhitespace()) i++
+        tokens.add(LatexToken.Space(src.substring(start, i)))
     }
 
     /**

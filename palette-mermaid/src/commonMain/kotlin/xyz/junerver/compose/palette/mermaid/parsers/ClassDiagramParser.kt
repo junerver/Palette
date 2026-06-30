@@ -40,20 +40,19 @@ internal object ClassDiagramParser : MermaidDiagramParser {
         var currentClassName: String? = null
 
         fun flushCurrentClass() {
-            if (currentClassId != null) {
-                classDefinitions.add(
-                    MermaidClassDefinition(
-                        id = currentClassId!!,
-                        label = currentClassName ?: currentClassId!!,
-                        annotation = currentClassAnnotation,
-                        members = currentClassMembers.toList(),
-                    ),
-                )
-                currentClassId = null
-                currentClassMembers = mutableListOf()
-                currentClassAnnotation = null
-                currentClassName = null
-            }
+            val id = currentClassId ?: return
+            classDefinitions.add(
+                MermaidClassDefinition(
+                    id = id,
+                    label = currentClassName ?: id,
+                    annotation = currentClassAnnotation,
+                    members = currentClassMembers.toList(),
+                ),
+            )
+            currentClassId = null
+            currentClassMembers = mutableListOf()
+            currentClassAnnotation = null
+            currentClassName = null
         }
 
         lines.forEach { line ->

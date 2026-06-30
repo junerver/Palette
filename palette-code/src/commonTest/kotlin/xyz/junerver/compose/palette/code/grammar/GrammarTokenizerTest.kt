@@ -159,6 +159,23 @@ class GrammarTokenizerTest {
         assertTrue(tokens.any { it.text == " body " && it.type == TokenType("string") })
     }
 
+    @Test
+    fun embeddedTokensHookTakesPrecedenceOverInsideGrammar() {
+        val grammar = grammarOf(
+            "raw" to GrammarToken(
+                pattern = Regex("RAW"),
+                inside = grammarOf("string" to GrammarToken(pattern = Regex("RAW"))),
+                embeddedTokens = {
+                    listOf(GrammarTokenValue(TokenType("keyword"), "RAW"))
+                },
+            ),
+        )
+
+        val tokens = GrammarTokenizer.tokenize("RAW", grammar)
+
+        assertEquals(listOf(GrammarTokenValue(TokenType("keyword"), "RAW")), tokens)
+    }
+
     private fun grammarOf(vararg pairs: Pair<String, GrammarToken>) = Grammar(pairs.toMap())
 
     private fun token(pattern: Regex) = GrammarToken(pattern = pattern)

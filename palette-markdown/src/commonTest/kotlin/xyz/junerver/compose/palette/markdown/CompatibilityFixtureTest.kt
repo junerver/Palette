@@ -7,9 +7,7 @@ import kotlin.test.assertTrue
 
 class CompatibilityFixtureTest {
     private fun loadResource(path: String): String =
-        checkNotNull(CompatibilityFixtureTest::class.java.classLoader.getResource(path)) {
-            "Missing compatibility fixture: $path"
-        }.readText()
+        checkNotNull(compatibilityFixtures[path]) { "Missing compatibility fixture: $path" }
 
     @Test
     fun commonmarkBasicsFixtureParsesExpectedBlocks() {
@@ -121,5 +119,168 @@ class CompatibilityFixtureTest {
         assertTrue(codeBlocks.size >= 2, "Expected at least 2 fenced code blocks")
         assertTrue(codeBlocks.any { it.language == "python" })
         assertTrue(codeBlocks.any { it.language == "ruby" })
+    }
+
+    private companion object {
+        val compatibilityFixtures = mapOf(
+            "compatibility/commonmark-basics.md" to
+                """
+                # Heading
+
+                Paragraph with [link](https://example.com) and **bold**.
+
+                - item one
+                - item two
+
+                1. first
+                2. second
+
+                > blockquote with *emphasis*
+
+                ---
+
+                ```kotlin
+                fun main() = println("Palette")
+                ```
+
+                ![alt text](https://example.com/image.png)
+
+                <div>raw html block</div>
+                """.trimIndent(),
+            "compatibility/gfm-basics.md" to
+                """
+                ## GFM samples
+
+                - [x] done task
+                - [ ] open task
+
+                | a | b |
+                | --- | --- |
+                | 1 | 2 |
+
+                ~~strikethrough~~ and https://example.com autolink.
+                """.trimIndent(),
+            "compatibility/commonmark-extended.md" to
+                """
+                # CommonMark Extended Coverage
+
+                ## Emphasis and Strong
+
+                *italic* and **bold** and ***bold italic***.
+
+                _italic_ and __bold__ and ___bold italic___.
+
+                Mixed: **bold *nested italic* bold**.
+
+                ## Links
+
+                Inline [link](https://example.com "title") with title.
+
+                Reference [link][ref] and [shortcut].
+
+                [ref]: https://example.com/reference "Reference Title"
+
+                ## Images
+
+                ![alt](https://example.com/img.png "Image Title")
+
+                ## Code
+
+                Inline `code` and ```multi ` backtick``` code.
+
+                ```kotlin
+                fun main() = println("Hello")
+                ```
+
+                ## Lists
+
+                Tight list:
+                - a
+                - b
+                - c
+
+                Ordered:
+                1. first
+                2. second
+                3. third
+
+                ## Blockquotes
+
+                > Nested
+                > > blockquote
+                > with continuation.
+
+                ## HTML
+
+                Inline <em>emphasis</em> and <strong>strong</strong>.
+
+                <script>alert('xss')</script>
+
+                ## Hard Break
+
+                Line with two spaces  
+                hard break.
+
+                Line with backslash\
+                hard break.
+                """.trimIndent(),
+            "compatibility/gfm-extended.md" to
+                """
+                # GFM Extended Coverage
+
+                ## Task Lists
+
+                - [x] completed
+                - [ ] pending
+                - regular item
+
+                ## Tables
+
+                | Left | Center | Right |
+                | :--- | :---: | ---: |
+                | a | b | c |
+
+                | Pipe | Escaped |
+                | --- | --- |
+                | `code\|pipe` | a\|b |
+
+                ## Strikethrough
+
+                ~~deleted text~~ and ~~**nested bold**~~.
+
+                ## Autolinks
+
+                https://example.com/path?q=1&r=2
+
+                www.example.com
+
+                user@example.com
+
+                ## Fenced Code
+
+                ```python
+                def hello():
+                    print("Hello")
+                ```
+
+                ~~~ruby
+                puts "Hello"
+                ~~~
+
+                {.kotlin title="Example.kt"}
+                ```kotlin
+                fun main() = Unit
+                ```
+
+                ## HTML
+
+                <strong>inline</strong>
+
+                <details>
+                <summary>Click</summary>
+                Content
+                </details>
+                """.trimIndent(),
+        )
     }
 }

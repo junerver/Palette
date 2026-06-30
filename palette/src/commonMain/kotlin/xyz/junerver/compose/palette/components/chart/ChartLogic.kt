@@ -1,9 +1,12 @@
 package xyz.junerver.compose.palette.components.chart
 
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import kotlin.math.atan2
 import kotlin.math.floor
 import kotlin.math.log10
 import kotlin.math.pow
+import kotlin.math.sqrt
 
 /**
  * Pure chart computations, kept free of Compose so they are unit-testable in `commonTest`.
@@ -230,6 +233,195 @@ internal fun formatTickValue(value: Float, unit: String = ""): String {
     val decimal = ((rounded - intPart) * 10.0).let { kotlin.math.round(it).toInt() % 10 }
     val number = if (decimal == 0) intPart.toString() else "$intPart.$decimal"
     return if (unit.isEmpty()) number else "$number$unit"
+}
+
+// endregion ───────────────────────────────────────────────────────────────────
+
+// region Hit testing (tooltip target resolution) ──────────────────────────────
+
+/**
+ * Describes the data point the pointer is hovering. Returned by [hitTestPoint].
+ *
+ * - [seriesIndex]/[categoryIndex] locate the point in the dataset.
+ * - [value] is the underlying value at that position (the stacked sum for stacked bars — the
+ *   visually-relevant "top" of the hovered segment column).
+ * - [category] is the resolved category label (or `null` for pie/scatter which have no x-axis).
+ * - [geometryKind] tells the renderer how the highlight should be drawn for this point.
+ */
+internal data class HitTarget(
+    val seriesIndex: Int,
+    val categoryIndex: Int,
+    val value: Float,
+    val category: String?,
+    val geometryKind: HitGeometry,
+)
+
+/** How a [HitTarget] is shaped on the canvas — drives the highlight feedback in the renderer. */
+internal enum class HitGeometry { Bar, Point, Slice }
+
+/**
+ * The plot rectangle in canvas pixels. [left]/[top] is the top-left corner of the data area (after
+ * axis margins); [width]/[height] its size. Built by the renderers from their [AxisLayout] + canvas
+ * size so [hitTestPoint] stays a pure function of geometry (no Compose dependency).
+ */
+internal data class PlotRect(val left: Float, val top: Float, val width: Float, val height: Float)
+
+/**
+ * Resolves which data point the pointer is hovering, or `null` when it is over empty space.
+ *
+ * The function is **chart-agnostic** for the cartesian types: given the same plot rectangle, value
+ * range, category count and orientation it returns the same answer a bar/line renderer drew. Pie is
+ * handled by a dedicated [hitTestPie] (angular geometry, not cartesian). Points outside the plot
+ * rectangle (the axis margin gutters) return `null`.
+ *
+ * Selection rules:
+ * - **Bar / line**: the hovered *category slot* is found from the pointer's category-axis position
+ *   (the slot that contains the pointer in X for vertical, in Y for horizontal). A bar additionally
+ *   requires the pointer to be within the bar's value span — but for tooltip purposes we relax this
+ *   to "inside the slot" so dragging along the axis still surfaces a value (the convention used by
+ *   mainstream chart libraries); `value` is then the series' value at that category.
+ * - **Stacked bar**: returns the *top* of the stack (the running sum) so the tooltip shows the
+ *   cumulative value at that category, matching what the eye sees.
+ *
+ * @param mouse pointer position in canvas pixels.
+ * @param series the (already visibility-filtered) series list the renderer actually draws.
+ * @param yMin/yMax the value-axis range the renderer plots against.
+ * @param categories resolved category labels (length = slot count).
+ * @param plot the data-area rectangle.
+ * @param horizontal `true` for horizontal bars (axes swapped).
+ * @param stacked `true` for stacked bars (returns cumulative value).
+ * @param pointRadiusPx for line charts, snaps to the nearest point within this radius; outside it
+ *   falls back to the slot-based hover (so the tooltip follows the cursor along the line).
+ */
+internal fun hitTestPoint(
+    mouse: Offset,
+    series: List<ChartSeries>,
+    yMin: Float,
+    yMax: Float,
+    categories: List<String>,
+    plot: PlotRect,
+    horizontal: Boolean = false,
+    stacked: Boolean = false,
+    pointRadiusPx: Float = 0f,
+): HitTarget? {
+    if (series.isEmpty() || categories.isEmpty()) return null
+    if (mouse.x < plot.left || mouse.x > plot.left + plot.width) return null
+    if (mouse.y < plot.top || mouse.y > plot.top + plot.height) return null
+
+    val catCount = categories.size
+    // Category axis position ∈ [0, catCount): X for vertical, Y for horizontal.
+    val catPos = if (horizontal) {
+        (mouse.y - plot.top) / plot.height * catCount
+    } else {
+        (mouse.x - plot.left) / plot.width * catCount
+    }
+    val catIndex = catPos.toInt().coerceIn(0, catCount - 1)
+
+    // Line chart: when a snap radius is given, prefer the nearest plotted point within it.
+    if (pointRadiusPx > 0f && !stacked) {
+        val slot = (if (horizontal) plot.width else plot.width) / catCount
+        val nearest = nearestSeriesPoint(mouse, series, yMin, yMax, catIndex, plot, horizontal, pointRadiusPx, slot)
+        if (nearest != null) return nearest
+    }
+
+    // Bar / line default: report the first visible series' value at this category. For a stacked bar
+    // sum every series so the tooltip reflects the visible stack height.
+    val value = if (stacked) {
+        series.sumOf { (it.values.getOrNull(catIndex) ?: 0f).toDouble() }.toFloat()
+    } else {
+        series.firstOrNull()?.values?.getOrNull(catIndex) ?: return null
+    }
+
+    return HitTarget(
+        seriesIndex = 0,
+        categoryIndex = catIndex,
+        value = value,
+        category = categories.getOrNull(catIndex),
+        geometryKind = if (stacked || series.size > 1) HitGeometry.Bar else HitGeometry.Point,
+    )
+}
+
+/**
+ * Finds the plotted data point nearest to [mouse] within [pointRadiusPx], used by line charts so the
+ * tooltip can snap to a marker rather than the cursor's raw slot. Returns `null` when no point is
+ * close enough.
+ */
+private fun nearestSeriesPoint(
+    mouse: Offset,
+    series: List<ChartSeries>,
+    yMin: Float,
+    yMax: Float,
+    catIndex: Int,
+    plot: PlotRect,
+    horizontal: Boolean,
+    pointRadiusPx: Float,
+    slot: Float,
+): HitTarget? {
+    // Search the hovered slot and its immediate neighbours — a point can sit near a slot edge.
+    val range = (catIndex - 1).coerceAtLeast(0)..(catIndex + 1).let { it.coerceAtMost((series.firstOrNull()?.values?.size ?: 1) - 1) }
+    var best: HitTarget? = null
+    var bestDist = pointRadiusPx * pointRadiusPx
+    series.forEachIndexed { sIndex, s ->
+        for (i in range) {
+            val v = s.values.getOrNull(i) ?: continue
+            val catFrac = (i + 0.5f) / (s.values.size.coerceAtLeast(1))
+            val valFrac = normalizeValue(v, yMin, yMax)
+            val (px, py) = if (horizontal) {
+                plot.left + valFrac * plot.width to plot.top + catFrac * plot.height
+            } else {
+                plot.left + catFrac * plot.width to plot.top + plot.height - valFrac * plot.height
+            }
+            val dx = mouse.x - px
+            val dy = mouse.y - py
+            val dist = dx * dx + dy * dy
+            if (dist <= bestDist) {
+                bestDist = dist
+                best = HitTarget(sIndex, i, v, category = null, geometryKind = HitGeometry.Point)
+            }
+        }
+    }
+    // suppress unused-warning while keeping the parameter documented
+    @Suppress("UNUSED_VARIABLE") val _slot = slot
+    return best
+}
+
+/**
+ * Hit test for a pie / donut. Returns the slice under [mouse], or `null` when the pointer is outside
+ * the pie circle or inside the donut hole.
+ *
+ * @param center pie center in canvas pixels.
+ * @param radius outer draw radius (slices are drawn within this circle).
+ * @param holeRadius donut hole radius (0 for a solid pie).
+ * @param startAngleDeg the base angle slices are laid out from (matches [ChartSpec.Pie.startAngleDeg]).
+ * @param values the slice values (the first series' values).
+ * @param categories slice labels.
+ */
+internal fun hitTestPie(
+    mouse: Offset,
+    center: Offset,
+    radius: Float,
+    holeRadius: Float,
+    startAngleDeg: Float,
+    values: List<Float>,
+    categories: List<String>,
+): HitTarget? {
+    if (values.isEmpty()) return null
+    val dx = mouse.x - center.x
+    val dy = mouse.y - center.y
+    val dist = sqrt(dx * dx + dy * dy)
+    if (dist > radius || dist < holeRadius) return null
+    // Compose drawArc measures angles clockwise from 3 o'clock; atan2(y,x) gives the same convention.
+    val angle = ((Math.toDegrees(atan2(dy.toDouble(), dx.toDouble())).toFloat() - startAngleDeg) % 360f + 360f) % 360f
+    val total = values.sum().coerceAtLeast(Float.MIN_VALUE)
+    var acc = 0f
+    values.forEachIndexed { i, v ->
+        val sweep = v / total * 360f
+        if (angle >= acc && angle < acc + sweep) {
+            return HitTarget(i, i, v, categories.getOrNull(i), HitGeometry.Slice)
+        }
+        acc += sweep
+    }
+    return null
 }
 
 // endregion ───────────────────────────────────────────────────────────────────

@@ -34,16 +34,15 @@ internal object ErDiagramParser : MermaidDiagramParser {
         var currentErAttributes = mutableListOf<ErAttribute>()
 
         fun flushCurrentErEntity() {
-            if (currentErEntity != null) {
-                erEntities.add(
-                    ErEntity(
-                        name = currentErEntity!!,
-                        attributes = currentErAttributes.toList(),
-                    ),
-                )
-                currentErEntity = null
-                currentErAttributes = mutableListOf()
-            }
+            val entityName = currentErEntity ?: return
+            erEntities.add(
+                ErEntity(
+                    name = entityName,
+                    attributes = currentErAttributes.toList(),
+                ),
+            )
+            currentErEntity = null
+            currentErAttributes = mutableListOf()
         }
 
         lines.forEach { line ->

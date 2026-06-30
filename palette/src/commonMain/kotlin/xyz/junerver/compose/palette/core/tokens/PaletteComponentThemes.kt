@@ -92,7 +92,7 @@ data class PaletteComponentThemes(
             layout = PaletteLayoutTokens.default(spacing),
             floatingAction = PaletteFloatingActionTokens.default(colors, spacing, typography, elevation, motion),
             screen = PaletteScreenTokens.default(colors),
-            chart = PaletteChartTokens.default(colors, typography, control),
+            chart = PaletteChartTokens.default(colors, typography, control, elevation, opacity),
         )
     }
 }
@@ -2506,12 +2506,26 @@ data class PaletteChartTokens(
     val axisTextStyle: TextStyle,
     val legendTextStyle: TextStyle,
     val titleTextStyle: TextStyle,
+    // Tooltip overlay (hover value readout). Derived from surface/elevation so it tracks the theme.
+    val tooltipBackgroundColor: Color,
+    val tooltipTextColor: Color,
+    val tooltipBorderColor: Color,
+    val tooltipElevation: Dp,
+    val tooltipCornerRadius: Dp,
+    val tooltipPadding: Dp,
+    val tooltipTextStyle: TextStyle,
+    // Legend interaction feedback.
+    val legendHiddenAlpha: Float,
+    // Highlight feedback for a hovered data point.
+    val highlightStrokeWidth: Dp,
 ) {
     companion object {
         fun default(
             colors: PaletteColors,
             typography: PaletteTypography,
             control: PaletteControlTokens,
+            elevation: PaletteElevation,
+            opacity: PaletteOpacity,
         ): PaletteChartTokens = PaletteChartTokens(
             axisColor = colors.divider,
             gridColor = colors.divider.copy(alpha = colors.divider.alpha * 0.6f),
@@ -2543,6 +2557,16 @@ data class PaletteChartTokens(
             axisTextStyle = typography.label,
             legendTextStyle = typography.label,
             titleTextStyle = typography.title,
+            // Tooltip sits above the plot as a floating surface — reuse the surface + overlay elevation.
+            tooltipBackgroundColor = colors.surface,
+            tooltipTextColor = colors.textPrimary,
+            tooltipBorderColor = colors.divider,
+            tooltipElevation = elevation.overlay,
+            tooltipCornerRadius = control.medium.cornerRadius,
+            tooltipPadding = control.small.horizontalPadding,
+            tooltipTextStyle = typography.label,
+            legendHiddenAlpha = opacity.disabled,
+            highlightStrokeWidth = control.borderWidth,
         )
     }
 }

@@ -29,6 +29,7 @@ public object LatexParser {
             val tk = ctx.peek()
             if (stop != null && stop(tk)) break
             when {
+                tk is LatexToken.Space -> ctx.next()
                 tk is LatexToken.RBrace || tk is LatexToken.RBracket -> ctx.next()
                 tk is LatexToken.Sup || tk is LatexToken.Sub -> {
                     // 上下标：合并到前一个原子（若有），否则以空为底
@@ -83,6 +84,10 @@ public object LatexParser {
                 ctx.next()
                 val atoms = wordToAtoms(tk.text)
                 if (atoms.size == 1) atoms[0] else LatexGroup(atoms)
+            }
+            tk is LatexToken.Space -> {
+                ctx.next()
+                LatexRaw("")
             }
             tk is LatexToken.LBracket -> {
                 // 在需要原子的位置遇到 [ ]，按字面量
@@ -338,6 +343,7 @@ public object LatexParser {
      * 解析必填分组 `{...}`；若不是分组则返回 null（容错）。
      */
     private fun parseRequiredGroup(ctx: ParseContext): LatexExpr? {
+        ctx.skipSpaces()
         if (!ctx.hasNext()) return null
         if (ctx.peek() is LatexToken.LBrace) return parseGroup(ctx)
         // 允许单 token 作参数：\frac12 → \frac{1}{2}
@@ -350,6 +356,8 @@ public object LatexParser {
      * 中的剩余字符一并吞掉。
      */
     private fun parseSingleTokenAtom(ctx: ParseContext): LatexExpr {
+        ctx.skipSpaces()
+        if (!ctx.hasNext()) return LatexRaw("")
         return when (ctx.peek()) {
             is LatexToken.Word -> {
                 val text = ctx.nextWordPrefix() ?: ""
@@ -377,6 +385,7 @@ public object LatexParser {
      * 解析必填分组并提取为纯文本（用于 `\text{}`）。
      */
     private fun parseRequiredGroupText(ctx: ParseContext): String? {
+        ctx.skipSpaces()
         if (ctx.peek() is LatexToken.LBrace) {
             ctx.next()
             val sb = StringBuilder()
@@ -384,6 +393,7 @@ public object LatexParser {
                 val tk = ctx.next()
                 when (tk) {
                     is LatexToken.Word -> sb.append(tk.text)
+                    is LatexToken.Space -> sb.append(tk.text)
                     is LatexToken.Command -> sb.append('\\').append(tk.name).append(' ')
                     is LatexToken.CommandSymbol -> sb.append(tk.symbol)
                     is LatexToken.Sup -> sb.append('^')
@@ -402,6 +412,7 @@ public object LatexParser {
         val tk = ctx.next()
         return when (tk) {
             is LatexToken.Word -> tk.text
+            is LatexToken.Space -> tk.text
             is LatexToken.CommandSymbol -> tk.symbol.toString()
             else -> ""
         }
@@ -413,6 +424,7 @@ public object LatexParser {
     private fun parseScriptOperand(ctx: ParseContext): LatexExpr {
         // ctx 仍指向 ^ 或 _
         ctx.next() // 消费 ^ 或 _
+        ctx.skipSpaces()
         if (!ctx.hasNext()) return LatexRaw("")
         return parseSingleTokenAtom(ctx)
     }
@@ -475,5 +487,8 @@ private class ParseContext(tokens: List<LatexToken>) {
     }
     fun consumeIf(token: LatexToken) {
         if (hasNext() && peek() == token) next()
+    }
+    fun skipSpaces() {
+        while (hasNext() && peek() is LatexToken.Space) next()
     }
 }

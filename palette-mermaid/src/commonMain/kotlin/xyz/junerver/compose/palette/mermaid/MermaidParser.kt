@@ -55,7 +55,7 @@ object MermaidParser {
                 // Indentation-sensitive diagrams (e.g. mindmap) receive raw lines so depth is
                 // preserved; every other parser keeps the trimmed, blank/comment-stripped view.
                 val body =
-                    if (handler!!.preservesIndentation) {
+                    if (handler.preservesIndentation) {
                         source.lines()
                             .filter { it.isNotBlank() && !it.trimStart().startsWith("%%") }
                     } else if (handler.consumesHeaderLine) {

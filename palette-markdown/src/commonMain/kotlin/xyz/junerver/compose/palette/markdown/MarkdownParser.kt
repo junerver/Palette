@@ -19,7 +19,7 @@ object MarkdownParser {
         while (index < lines.size) {
             val line = lines[index]
             val trimmed = line.trim()
-            val fence = trimmed.toFenceStart()
+            val fence = line.toFenceStart()
             when {
                 trimmed.isEmpty() -> index += 1
                 line.isIndentedCodeLine() -> {
@@ -44,8 +44,8 @@ object MarkdownParser {
                     val fenceInfo = CodeFenceInfo.parse(fence.info)
                     val content = mutableListOf<String>()
                     index += 1
-                    while (index < lines.size && !lines[index].trim().isFenceEnd(fence)) {
-                        content += lines[index]
+                    while (index < lines.size && !lines[index].isFenceEnd(fence)) {
+                        content += lines[index].withoutFenceContentIndent(fence.indent)
                         index += 1
                     }
                     if (index < lines.size) index += 1
@@ -325,7 +325,7 @@ object MarkdownParser {
         var index = 0
         while (index < lines.size) {
             val trimmed = lines[index].trim()
-            val fence = trimmed.toFenceStart()
+            val fence = lines[index].toFenceStart()
             if (lines[index].isIndentedCodeLine()) {
                 index += 1
                 while (index < lines.size && (lines[index].isIndentedCodeLine() || lines[index].trim().isEmpty())) {
@@ -333,7 +333,7 @@ object MarkdownParser {
                 }
             } else if (fence != null) {
                 index += 1
-                while (index < lines.size && !lines[index].trim().isFenceEnd(fence)) {
+                while (index < lines.size && !lines[index].isFenceEnd(fence)) {
                     index += 1
                 }
                 if (index < lines.size) index += 1
@@ -569,19 +569,32 @@ object MarkdownParser {
         val marker: Char,
         val length: Int,
         val info: String,
+        val indent: Int,
     )
 
     private fun String.toFenceStart(): MarkdownFence? {
-        val marker = firstOrNull()?.takeIf { it == '`' || it == '~' } ?: return null
-        val length = takeWhile { it == marker }.length
+        val indent = countLeadingSpaces()
+        if (indent > 3) return null
+        val fenceStart = drop(indent)
+        val marker = fenceStart.firstOrNull()?.takeIf { it == '`' || it == '~' } ?: return null
+        val length = fenceStart.takeWhile { it == marker }.length
         if (length < 3) return null
-        return MarkdownFence(marker = marker, length = length, info = drop(length).trim())
+        return MarkdownFence(marker = marker, length = length, info = fenceStart.drop(length).trim(), indent = indent)
     }
 
     private fun String.isFenceEnd(fence: MarkdownFence): Boolean {
-        val length = takeWhile { it == fence.marker }.length
-        return length >= fence.length && drop(length).trim().isEmpty()
+        val indent = countLeadingSpaces()
+        if (indent > 3) return false
+        val fenceEnd = drop(indent)
+        val length = fenceEnd.takeWhile { it == fence.marker }.length
+        return length >= fence.length && fenceEnd.drop(length).trim().isEmpty()
     }
+
+    private fun String.withoutFenceContentIndent(fenceIndent: Int): String =
+        drop(countLeadingSpaces().coerceAtMost(fenceIndent))
+
+    private fun String.countLeadingSpaces(): Int =
+        takeWhile { it == ' ' }.length
 
     private data class CodeFenceInfo(
         val language: String,

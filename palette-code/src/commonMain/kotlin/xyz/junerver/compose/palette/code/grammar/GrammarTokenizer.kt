@@ -67,7 +67,7 @@ internal object GrammarTokenizer {
                 // Scan forward to the first position where the matcher returns a span.
                 var scan = pos
                 while (scan < str.length) {
-                    val end = rule.matcher!!.invoke(str, scan)
+                    val end = rule.matcher.invoke(str, scan)
                     if (end != null && end > scan) {
                         matchStart = scan
                         matchEnd = end
@@ -100,19 +100,19 @@ internal object GrammarTokenizer {
             }
 
             val innerTokens = when {
-                // Fixed nested grammar (Prism `inside`).
-                rule.inside != null && tokenText.isNotEmpty() ->
-                    tokenize(tokenText, rule.inside!!)
                 // Pre-tokenized embedding: the hook returns tokens directly (e.g. when the
                 // embedded language must run through the full highlighter incl. lexer fallback).
                 // Highest precedence so a hook that wants total control wins.
                 rule.embeddedTokens != null && tokenText.isNotEmpty() ->
-                    rule.embeddedTokens!!.invoke(tokenText) ?: emptyList()
+                    rule.embeddedTokens.invoke(tokenText) ?: emptyList()
+                // Fixed nested grammar (Prism `inside`).
+                rule.inside != null && tokenText.isNotEmpty() ->
+                    tokenize(tokenText, rule.inside)
                 // Dynamic embedding: resolve a grammar per-match and re-tokenize. Used for
                 // constructs where the embedded language varies (Markdown fenced code, HTML
                 // <style>/<script>), which a static `inside` can't express.
                 rule.languageResolver != null && tokenText.isNotEmpty() ->
-                    rule.languageResolver!!.invoke(tokenText)?.let { tokenize(tokenText, it) }
+                    rule.languageResolver.invoke(tokenText)?.let { tokenize(tokenText, it) }
                         ?: emptyList()
                 else -> emptyList()
             }

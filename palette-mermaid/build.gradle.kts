@@ -1,4 +1,7 @@
-@file:OptIn(org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi::class)
+@file:OptIn(
+    org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi::class,
+    org.jetbrains.kotlin.gradle.ExperimentalWasmDsl::class,
+)
 
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
@@ -45,14 +48,5 @@ android {
 
     defaultConfig {
         minSdk = 24
-    }
-
-    // KMP `commonTest/resources/` are placed on the Desktop/JVM test classpath automatically,
-    // but the Android unit test source set does not inherit them. Register the directory so
-    // compatibility fixture tests can load their diagram sources under testDebugUnitTest.
-    sourceSets {
-        getByName("test") {
-            resources.srcDirs("src/commonTest/resources")
-        }
     }
 }

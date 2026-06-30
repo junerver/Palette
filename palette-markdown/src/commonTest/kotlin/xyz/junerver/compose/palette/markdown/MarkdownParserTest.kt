@@ -93,6 +93,35 @@ class MarkdownParserTest {
     }
 
     @Test
+    fun parsesIndentedFencedCodeBlocksUpToThreeSpaces() {
+        val document =
+            MarkdownParser.parse(
+                "   ```kotlin\n" +
+                    "   val answer = 42\n" +
+                    "     println(answer)\n" +
+                    "   ```",
+            )
+
+        val code = assertIs<MarkdownCodeBlock>(document.blocks.single())
+        assertEquals("kotlin", code.language)
+        assertEquals("val answer = 42\n  println(answer)", code.content)
+    }
+
+    @Test
+    fun keepsFourSpaceIndentedFenceAsIndentedCode() {
+        val document =
+            MarkdownParser.parse(
+                "    ```kotlin\n" +
+                    "    val answer = 42\n" +
+                    "    ```",
+            )
+
+        val code = assertIs<MarkdownCodeBlock>(document.blocks.single())
+        assertEquals("plain", code.language)
+        assertEquals("```kotlin\nval answer = 42\n```", code.content)
+    }
+
+    @Test
     fun parsesIndentedCodeBlocksAsPlainCode() {
         val document =
             MarkdownParser.parse(

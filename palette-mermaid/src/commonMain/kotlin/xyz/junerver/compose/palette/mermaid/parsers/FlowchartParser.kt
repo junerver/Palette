@@ -54,7 +54,8 @@ internal object FlowchartParser : MermaidDiagramParser {
             }
 
             // Subgraph-local direction.
-            if (line.startsWith("direction ", ignoreCase = true) && currentSubgraph != null) {
+            currentSubgraph?.let { subgraph ->
+                if (!line.startsWith("direction ", ignoreCase = true)) return@let
                 val dir = when (line.substringAfter("direction ").trim().uppercase()) {
                     "TD", "TB" -> MermaidDirection.TopDown
                     "BT" -> MermaidDirection.BottomTop
@@ -62,7 +63,7 @@ internal object FlowchartParser : MermaidDiagramParser {
                     "RL" -> MermaidDirection.RightLeft
                     else -> null
                 }
-                if (dir != null) currentSubgraph!!.direction = dir
+                if (dir != null) subgraph.direction = dir
                 return@forEachIndexed
             }
 
