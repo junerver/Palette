@@ -11,6 +11,8 @@ import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.Fill
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.unit.dp
 import xyz.junerver.compose.palette.core.theme.PaletteTheme
 
@@ -31,18 +33,19 @@ internal fun LineChartRenderer(
     val categories = resolveCategories(data)
     val series = data.series
     val (yMin, yMax) = deriveYRange(series, options.yRange)
-    val gridColor = colors.gridColor
-    val axisColor = colors.axisColor
     val accentFallback = PaletteTheme.colors.textPrimary
-    // Pre-resolve in the @Composable scope so the DrawScope stays pure.
-    val axisStrokePx = with(density) { tokens.axisStrokeWidth.toPx() }
-    val gridStrokePx = with(density) { tokens.gridStrokeWidth.toPx() }
-    val leftPx = with(density) { 48.dp.toPx() }
-    val topPx = with(density) { 12.dp.toPx() }
-    val rightPx = with(density) { 12.dp.toPx() }
-    val bottomPx = with(density) { 32.dp.toPx() }
+    // Pre-resolve in the @Composable scope so the DrawScope stays pure
+    // (PaletteTheme.componentThemes is a @Composable getter — cannot be read inside DrawScope).
     val lineStrokePx = with(density) { 2.dp.toPx() }
     val pointRadiusPx = with(density) { 3.dp.toPx() }
+    val axisStrokePx = with(density) { tokens.axisStrokeWidth.toPx() }
+    val gridStrokePx = with(density) { tokens.gridStrokeWidth.toPx() }
+    val labelPadPx = with(density) { tokens.axisLabelPadding.toPx() }
+    // Axis margins are now label-driven (see ChartAxisRenderer); ticks/titles add room as needed.
+    val axisLayout = rememberAxisLayout(options, yMin, yMax, categories)
+    val tickStyle = ChartDefaults.axisTextStyle()
+    val titleStyle = ChartDefaults.axisTitleTextStyle()
+    val measurer = rememberTextMeasurer()
     val seriesColors = series.mapIndexed { i, s ->
         resolveSeriesColor(s, i, colors.categoricalColors, accentFallback)
     }
@@ -51,24 +54,29 @@ internal fun LineChartRenderer(
         Canvas(modifier = Modifier.fillMaxSize()) {
             if (series.isEmpty()) return@Canvas
             val catCount = categories.size.coerceAtLeast(1)
-            val plotW = (size.width - leftPx - rightPx).coerceAtLeast(1f)
-            val plotH = (size.height - topPx - bottomPx).coerceAtLeast(1f)
+            val leftPx = axisLayout.leftPx
+            val topPx = axisLayout.topPx
+            val plotW = (size.width - leftPx - axisLayout.rightPx).coerceAtLeast(1f)
+            val plotH = (size.height - topPx - axisLayout.bottomPx).coerceAtLeast(1f)
             val baselineY = topPx + plotH
             val slotW = plotW / catCount
 
-            // Grid + axes.
-            if (options.showGrid) {
-                val ticks = 4
-                for (i in 0..ticks) {
-                    val frac = i / ticks.toFloat()
-                    val y = baselineY - frac * plotH
-                    drawLine(gridColor, Offset(leftPx, y), Offset(leftPx + plotW, y), gridStrokePx)
-                }
-            }
-            if (options.showAxes) {
-                drawLine(axisColor, Offset(leftPx, topPx), Offset(leftPx, baselineY), axisStrokePx)
-                drawLine(axisColor, Offset(leftPx, baselineY), Offset(leftPx + plotW, baselineY), axisStrokePx)
-            }
+            // Shared cartesian frame (grid + axes + Y ticks + X labels + titles).
+            drawAxes(
+                layout = axisLayout,
+                plotW = plotW,
+                plotH = plotH,
+                yMin = yMin,
+                yMax = yMax,
+                options = options,
+                colors = colors,
+                measurer = measurer,
+                tickStyle = tickStyle,
+                titleStyle = titleStyle,
+                axisStrokePx = axisStrokePx,
+                gridStrokePx = gridStrokePx,
+                labelPadPx = labelPadPx,
+            )
 
             fun pointOf(v: Float, i: Int): Offset {
                 val x = leftPx + slotW * (i + 0.5f)

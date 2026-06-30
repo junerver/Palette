@@ -65,29 +65,31 @@ internal fun PieChartRenderer(
 
             var startAngle = sweepBase
             slices.forEachIndexed { index, value ->
-                val sweep = (value / total) * 360f
+                // Geometry (incl. useCenter) is derived from one tested source — donut slices must be
+                // full wedges too, since the hole is cleared afterwards by a center circle.
+                val geom = pieSliceGeometry(index, value, startAngle, total)
                 val color = sliceColors[index]
                 drawArc(
                     color = color,
-                    startAngle = startAngle,
-                    sweepAngle = sweep,
-                    useCenter = !spec.donut,
+                    startAngle = geom.startAngle,
+                    sweepAngle = geom.sweepAngle,
+                    useCenter = geom.useCenter,
                     topLeft = Offset(center.x - drawRadius, center.y - drawRadius),
                     size = Size(drawRadius * 2, drawRadius * 2),
                 )
                 // Slice separator stroke.
                 drawArc(
                     color = Color.White,
-                    startAngle = startAngle,
-                    sweepAngle = sweep,
+                    startAngle = geom.startAngle,
+                    sweepAngle = geom.sweepAngle,
                     useCenter = false,
                     topLeft = Offset(center.x - drawRadius, center.y - drawRadius),
                     size = Size(drawRadius * 2, drawRadius * 2),
                     style = Stroke(width = separatorPx),
                 )
 
-                if (spec.showLabels && sweep >= 8f) {
-                    val midAngle = startAngle + sweep / 2f
+                if (spec.showLabels && geom.sweepAngle >= 8f) {
+                    val midAngle = geom.startAngle + geom.sweepAngle / 2f
                     val labelRad = drawRadius * 1.12f
                     val rad = midAngle * (PI / 180f)
                     val lx = center.x + (labelRad * cos(rad)).toFloat()
@@ -101,7 +103,7 @@ internal fun PieChartRenderer(
                         topLeft = Offset(lx - layout.size.width / 2f, ly - layout.size.height / 2f),
                     )
                 }
-                startAngle += sweep
+                startAngle += geom.sweepAngle
             }
 
             // Donut hole: clear the center by drawing the surface color (keeps it theme-correct).

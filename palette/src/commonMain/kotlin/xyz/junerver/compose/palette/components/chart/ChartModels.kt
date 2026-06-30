@@ -64,6 +64,10 @@ enum class ChartLegendPosition { Top, Bottom, Start, End }
 /**
  * Render options independent of data and chart type. All flags default to sensible values so a bare
  * `PChart(spec, data)` is valid.
+ *
+ * Axis annotation: [showTickLabels] draws Y value ticks + X category labels (defaults to true — this
+ * is the "previously missing" capability, now on by default). [xAxisTitle]/[yAxisTitle] add axis
+ * titles; [valueUnit] appends a unit suffix (e.g. "%", "k") to every Y tick label.
  */
 @Immutable
 data class ChartOptions(
@@ -74,4 +78,14 @@ data class ChartOptions(
     val legendPosition: ChartLegendPosition = ChartLegendPosition.Bottom,
     val animationEnabled: Boolean = true,
     val yRange: Pair<Float, Float>? = null,
+    /** X-axis title drawn below the category labels, e.g. "Quarter" / "Weekday". */
+    val xAxisTitle: String? = null,
+    /** Y-axis title drawn rotated on the left of the value axis, e.g. "Revenue (¥10k)". */
+    val yAxisTitle: String? = null,
+    /** Unit suffix appended to each Y tick label, e.g. "%" or "k". Empty by default. */
+    val valueUnit: String = "",
+    /** Draws Y value ticks + X category labels. On by default (the previously missing capability). */
+    val showTickLabels: Boolean = true,
+    /** Target number of Y-axis tick intervals (the actual count snaps to a 1/2/5 grid). */
+    val tickCount: Int = 4,
 )

@@ -55,6 +55,11 @@ object ChartDefaults {
     @ReadOnlyComposable
     fun axisTextStyle(): TextStyle = PaletteTheme.componentThemes.chart.axisTextStyle
 
+    /** Axis title font. Reuses [axisTextStyle] (both are axis annotations of the same scale). */
+    @Composable
+    @ReadOnlyComposable
+    fun axisTitleTextStyle(): TextStyle = PaletteTheme.componentThemes.chart.axisTextStyle
+
     @Composable
     @ReadOnlyComposable
     fun legendTextStyle(): TextStyle = PaletteTheme.componentThemes.chart.legendTextStyle
