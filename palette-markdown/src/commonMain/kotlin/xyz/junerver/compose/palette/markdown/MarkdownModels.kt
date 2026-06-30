@@ -167,6 +167,40 @@ data class MarkdownInlineImage(
         get() = alt
 }
 
+/**
+ * 行内 LaTeX 公式（`$...$`）。[tex] 为去除外层定界符后的 LaTeX 源码。
+ */
+data class MarkdownInlineLatex(
+    val tex: String,
+) : MarkdownInlineNode {
+    override val text: String
+        get() = tex
+}
+
+/**
+ * 下标（`H~2~O`）。下标内容按行内节点递归解析（支持下标内嵌套强调 / 代码等）。
+ */
+data class MarkdownInlineSubscript(
+    override val text: String,
+    val children: List<MarkdownInlineNode> = listOf(MarkdownInlineText(text)),
+) : MarkdownInlineNode
+
+/**
+ * 上标（`X^2^`）。
+ */
+data class MarkdownInlineSuperscript(
+    override val text: String,
+    val children: List<MarkdownInlineNode> = listOf(MarkdownInlineText(text)),
+) : MarkdownInlineNode
+
+/**
+ * 高亮（`==KEY==`）。
+ */
+data class MarkdownInlineHighlight(
+    override val text: String,
+    val children: List<MarkdownInlineNode> = listOf(MarkdownInlineText(text)),
+) : MarkdownInlineNode
+
 internal data class MarkdownLinkTarget(
     val destination: String,
     val title: String? = null,

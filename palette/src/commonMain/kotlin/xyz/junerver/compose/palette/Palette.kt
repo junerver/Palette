@@ -219,6 +219,9 @@ import xyz.junerver.compose.palette.components.markdown.PMarkdownViewer as PMark
 import xyz.junerver.compose.palette.components.mermaid.MermaidColors as MermaidColorsImpl
 import xyz.junerver.compose.palette.components.mermaid.MermaidDefaults as MermaidDefaultsImpl
 import xyz.junerver.compose.palette.components.mermaid.PMermaidDiagram as PMermaidDiagramImpl
+import xyz.junerver.compose.palette.components.latex.LatexColors as LatexColorsImpl
+import xyz.junerver.compose.palette.components.latex.LatexDefaults as LatexDefaultsImpl
+import xyz.junerver.compose.palette.components.latex.PLatexFormula as PLatexFormulaImpl
 import xyz.junerver.compose.palette.components.barcode.BarcodeDefaults as BarcodeDefaultsImpl
 import xyz.junerver.compose.palette.components.barcode.PBarcode as PBarcodeImpl
 import xyz.junerver.compose.palette.components.barcode.PaletteBarcodeType as PaletteBarcodeTypeImpl
@@ -909,6 +912,11 @@ typealias CodeBlockColors = CodeBlockColorsImpl
 val PMermaidDiagram = ::PMermaidDiagramImpl
 val MermaidDefaults = MermaidDefaultsImpl
 typealias MermaidColors = MermaidColorsImpl
+
+// Components - Latex
+val PLatexFormula = ::PLatexFormulaImpl
+val LatexDefaults = LatexDefaultsImpl
+typealias LatexColors = LatexColorsImpl
 
 // Components - Markdown
 val PMarkdownViewer = ::PMarkdownViewerImpl

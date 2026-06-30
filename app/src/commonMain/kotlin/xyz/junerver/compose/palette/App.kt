@@ -198,6 +198,7 @@ private fun MainContent(route: String) {
                 NavItem.QRCode.route -> QRCodeDemo()
                 NavItem.Markdown.route -> MarkdownDemo()
                 NavItem.Mermaid.route -> MermaidDemo()
+                NavItem.Latex.route -> LatexDemo()
                 NavItem.FloatButton.route -> FloatButtonDemo()
                 NavItem.PageHeader.route -> PageHeaderDemo()
                 NavItem.Toggle.route -> ToggleDemo()

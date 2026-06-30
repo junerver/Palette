@@ -1051,4 +1051,84 @@ class MarkdownParserTest {
         assertEquals("Multi-line title here", link.title)
     }
 
+    @Test
+    fun parsesInlineLatexFormula() {
+        val inline = MarkdownInlineParser.parse("公式 \$a^2 + b^2 = c^2\$。")
+        // 去除首尾文本节点后应包含一个 MarkdownInlineLatex
+        val latex = inline.filterIsInstance<MarkdownInlineLatex>().single()
+        assertEquals("a^2 + b^2 = c^2", latex.tex)
+    }
+
+    @Test
+    fun parsesInlineLatexWithFraction() {
+        val inline = MarkdownInlineParser.parse("half of one is \$\\frac{1}{2}\$.")
+        val latex = inline.filterIsInstance<MarkdownInlineLatex>().single()
+        assertEquals("\\frac{1}{2}", latex.tex)
+    }
+
+    @Test
+    fun parsesDisplayLatex() {
+        // 块级 $$...$$ 作为单个行内节点（在段落内）
+        val inline = MarkdownInlineParser.parse("\$\$E=mc^2\$\$")
+        val latex = inline.filterIsInstance<MarkdownInlineLatex>().single()
+        assertEquals("E=mc^2", latex.tex)
+    }
+
+    @Test
+    fun latexLeftBoundaryAvoidsPriceFalsePositive() {
+        // "price $5 and $6" 不应把 $5...$ 当作公式：右侧 $ 后无边界 / 左侧非边界
+        val inline = MarkdownInlineParser.parse("price \$5 and \$6")
+        assertTrue(inline.none { it is MarkdownInlineLatex }, "价格符号不应被误判为行内公式")
+    }
+
+    @Test
+    fun escapedDollarIsLiteral() {
+        val inline = MarkdownInlineParser.parse("cost \\\$5 each")
+        assertTrue(inline.none { it is MarkdownInlineLatex })
+        assertEquals("cost \$5 each", inline.joinToString("") { it.text })
+    }
+
+    @Test
+    fun parsesLatexParenDelimiters() {
+        val inline = MarkdownInlineParser.parse("\\(x^2\\) inline")
+        val latex = inline.filterIsInstance<MarkdownInlineLatex>().single()
+        assertEquals("x^2", latex.tex)
+    }
+
+    @Test
+    fun parsesSubscript() {
+        val inline = MarkdownInlineParser.parse("Water is H~2~O.")
+        val sub = inline.filterIsInstance<MarkdownInlineSubscript>().single()
+        assertEquals("2", sub.text)
+    }
+
+    @Test
+    fun parsesSuperscript() {
+        val inline = MarkdownInlineParser.parse("Energy E^2^.")
+        val sup = inline.filterIsInstance<MarkdownInlineSuperscript>().single()
+        assertEquals("2", sup.text)
+    }
+
+    @Test
+    fun parsesHighlight() {
+        val inline = MarkdownInlineParser.parse("This is ==KEY==.")
+        val hl = inline.filterIsInstance<MarkdownInlineHighlight>().single()
+        assertEquals("KEY", hl.text)
+    }
+
+    @Test
+    fun highlightNotTriggeredOnEquality() {
+        // a==b 是等式比较，左侧无边界，不应解析为高亮
+        val inline = MarkdownInlineParser.parse("a==b==c")
+        assertTrue(inline.none { it is MarkdownInlineHighlight }, "等式 a==b 不应被误判为高亮")
+    }
+
+    @Test
+    fun strikethroughStillWorksAlongsideSubscript() {
+        // ~~删除线~~ 与 H~2~O 下标共存
+        val inline = MarkdownInlineParser.parse("~~gone~~ and H~2~O")
+        assertTrue(inline.any { it is MarkdownInlineStrikethrough })
+        assertTrue(inline.any { it is MarkdownInlineSubscript })
+    }
+
 }

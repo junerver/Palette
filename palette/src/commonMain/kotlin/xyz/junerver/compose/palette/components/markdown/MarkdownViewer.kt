@@ -11,6 +11,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.ui.semantics.Role
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
@@ -61,14 +62,18 @@ import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
+import androidx.compose.ui.text.style.BaselineShift
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.em
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.unit.TextUnit
+import androidx.compose.ui.unit.TextUnitType
 import kotlinx.coroutines.launch
 import xyz.junerver.compose.hooks.useCreation
 import xyz.junerver.compose.palette.components.code.PCodeBlock
 import xyz.junerver.compose.palette.components.mermaid.PMermaidDiagram
+import xyz.junerver.compose.palette.components.latex.PLatexFormula
 import xyz.junerver.compose.palette.core.theme.PaletteTheme
 import xyz.junerver.compose.palette.markdown.MarkdownInlineCode
 import xyz.junerver.compose.palette.markdown.MarkdownInlineEmphasis
@@ -76,6 +81,10 @@ import xyz.junerver.compose.palette.markdown.MarkdownInlineHardBreak
 import xyz.junerver.compose.palette.markdown.MarkdownInlineHtml
 import xyz.junerver.compose.palette.markdown.MarkdownInlineImage
 import xyz.junerver.compose.palette.markdown.MarkdownInlineLink
+import xyz.junerver.compose.palette.markdown.MarkdownInlineLatex
+import xyz.junerver.compose.palette.markdown.MarkdownInlineSubscript
+import xyz.junerver.compose.palette.markdown.MarkdownInlineSuperscript
+import xyz.junerver.compose.palette.markdown.MarkdownInlineHighlight
 import xyz.junerver.compose.palette.markdown.MarkdownInlineNode
 import xyz.junerver.compose.palette.markdown.MarkdownInlineSoftBreak
 import xyz.junerver.compose.palette.markdown.MarkdownInlineStrikethrough
@@ -122,23 +131,30 @@ fun PMarkdownViewer(
         }
     }
 
-    key(markdown) {
-        MarkdownBlocks(
-            blocks = resolvedRenderModel.blocks,
-            modifier = if (verticalScroll) {
-                modifier.verticalScroll(scrollState)
-            } else {
-                modifier
-            },
-            onLinkClick = onLinkClick,
-            onAnchorClick = effectiveAnchorClick,
-            inlineImageContent = inlineImageContent,
-            taskCheckboxEnabled = onTaskCheckedChange != null,
-            nextTaskIndex = { taskCounter++ },
-            onTaskCheckedChange = onTaskCheckedChange,
-            showCopyAction = showCopyAction,
-            onHeadingPositioned = { slug, y -> headingOffsets[slug] = y },
-        )
+    // 自动防嵌套滚动崩溃：父容器已提供无限高约束（即父容器自身可纵向滚动，如页面
+    // LazyColumn / Column(Modifier.verticalScroll)）时，禁用 Viewer 内置滚动，
+    // 把无限高约束透传给内容让其按需测量。调用方显式传 verticalScroll=false 时同样关闭。
+    BoxWithConstraints(modifier = modifier) {
+        // maxHeight == Infinity 表示父容器不限高度（自身可滚动），此时不能再嵌一层滚动。
+        val effectiveScroll = verticalScroll && maxHeight != Dp.Infinity
+        key(markdown) {
+            MarkdownBlocks(
+                blocks = resolvedRenderModel.blocks,
+                modifier = if (effectiveScroll) {
+                    Modifier.verticalScroll(scrollState)
+                } else {
+                    Modifier
+                },
+                onLinkClick = onLinkClick,
+                onAnchorClick = effectiveAnchorClick,
+                inlineImageContent = inlineImageContent,
+                taskCheckboxEnabled = onTaskCheckedChange != null,
+                nextTaskIndex = { taskCounter++ },
+                onTaskCheckedChange = onTaskCheckedChange,
+                showCopyAction = showCopyAction,
+                onHeadingPositioned = { slug, y -> headingOffsets[slug] = y },
+            )
+        }
     }
 }
 
@@ -552,8 +568,21 @@ private fun List<MarkdownInlineNode>.toAnnotatedContent(
     inlineImageContent: @Composable (MarkdownInlineImage) -> Unit,
 ): MarkdownAnnotatedContent {
     val colors = PaletteTheme.colors
+    val tokens = PaletteTheme.componentThemes.utility
     val inlineContent = linkedMapOf<String, InlineTextContent>()
     var imageIndex = 0
+    var latexIndex = 0
+    // 行内公式 / 高亮 / 上下标的字号与色彩从顶层 token 派生：
+    // - 行内公式按 latexInlineScale 放大、上下标缩到 0.7，保证可读且与段落协调。
+    val bodyFontPx = PaletteTheme.typography.body.fontSize.value
+    val latexFontPx = bodyFontPx * tokens.latexInlineScale
+    val highlightColor = tokens.markdownInlineHighlightColor
+    // 估算行内公式占位尺寸：高度约 1.6 行高，宽度按字符数粗估（公式居中渲染，容差较大）。
+    fun latexWidthFor(tex: String): Float {
+        val chars = tex.length.coerceIn(1, 40)
+        return (latexFontPx * 0.7f * chars).coerceAtLeast(latexFontPx)
+    }
+    fun latexHeightFor(@Suppress("UNUSED_PARAMETER") tex: String): Float = latexFontPx * 1.6f
     val text =
         buildAnnotatedString {
             fun appendNodes(nodes: List<MarkdownInlineNode>) {
@@ -579,6 +608,54 @@ private fun List<MarkdownInlineNode>.toAnnotatedContent(
                             pushStyle(SpanStyle(textDecoration = TextDecoration.LineThrough))
                             appendNodes(node.children)
                             pop()
+                        }
+
+                        is MarkdownInlineSubscript -> {
+                            pushStyle(
+                                SpanStyle(
+                                    baselineShift = BaselineShift.Subscript,
+                                    fontSize = TextUnit(bodyFontPx * 0.7f, TextUnitType.Sp),
+                                ),
+                            )
+                            appendNodes(node.children)
+                            pop()
+                        }
+
+                        is MarkdownInlineSuperscript -> {
+                            pushStyle(
+                                SpanStyle(
+                                    baselineShift = BaselineShift.Superscript,
+                                    fontSize = TextUnit(bodyFontPx * 0.7f, TextUnitType.Sp),
+                                ),
+                            )
+                            appendNodes(node.children)
+                            pop()
+                        }
+
+                        is MarkdownInlineHighlight -> {
+                            pushStyle(SpanStyle(background = highlightColor))
+                            appendNodes(node.children)
+                            pop()
+                        }
+
+                        is MarkdownInlineLatex -> {
+                            val contentId = "$LatexInlineContentTag-${latexIndex++}"
+                            append("￼")
+                            append(contentId)
+                            inlineContent[contentId] =
+                                InlineTextContent(
+                                    placeholder =
+                                        Placeholder(
+                                            width = TextUnit(latexWidthFor(node.tex), TextUnitType.Sp),
+                                            height = TextUnit(latexHeightFor(node.tex), TextUnitType.Sp),
+                                            placeholderVerticalAlign = PlaceholderVerticalAlign.TextCenter,
+                                        ),
+                                ) {
+                                    PLatexFormula(
+                                        source = node.tex,
+                                        fontSize = TextUnit(latexFontPx, TextUnitType.Sp),
+                                    )
+                                }
                         }
 
                         is MarkdownInlineCode -> {
@@ -694,3 +771,4 @@ private fun TaskCheckbox(
 
 private const val LinkAnnotationTag = "palette-markdown-link"
 private const val ImageInlineContentTag = "palette-markdown-image"
+private const val LatexInlineContentTag = "palette-markdown-latex"

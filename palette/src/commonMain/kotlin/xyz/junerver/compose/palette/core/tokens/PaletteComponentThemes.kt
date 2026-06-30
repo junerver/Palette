@@ -2312,6 +2312,20 @@ data class PaletteUtilityTokens(
     val mermaidNoteColor: Color,
     /** Sequence-diagram note outline — stronger warm tint. */
     val mermaidNoteBorderColor: Color,
+    /** LaTeX 数学排版：变量 / 普通文本字形颜色。 */
+    val latexTextColor: Color,
+    /** LaTeX 数学排版：运算符 / 分数线 / 辅助线条颜色（弱化语义）。 */
+    val latexOperatorColor: Color,
+    /** LaTeX 数学排版：数字颜色（正体，略区别于斜体变量）。 */
+    val latexNumberColor: Color,
+    /** LaTeX 数学排版：根号符号与上方横线颜色。 */
+    val latexRadicalColor: Color,
+    /** LaTeX 数学排版：行内公式相对当前段落的字号缩放系数。 */
+    val latexInlineScale: Float,
+    /** Markdown 行内高亮 `==KEY==` 的背景色（warning 语义低透明度，与行内代码背景区分）。 */
+    val markdownInlineHighlightColor: Color,
+    /** Markdown 行内代码 `` `code` `` 的背景色。 */
+    val markdownInlineCodeBackgroundColor: Color,
 ) {
     companion object {
         fun default(
@@ -2367,6 +2381,16 @@ data class PaletteUtilityTokens(
             // 填充用低透明度、描边用较高透明度，确保明/暗主题下均与参与方方框区分。
             mermaidNoteColor = colors.warning.copy(alpha = 0.20f),
             mermaidNoteBorderColor = colors.warning.copy(alpha = 0.75f),
+            // LaTeX 数学排版默认全部从语义 token 派生：变量/根号用主文本色，运算符/线条用次级文本色，
+            // 数字沿用主文本色但渲染为正体。行内公式略大于段落字号以保证可读性。
+            latexTextColor = colors.textPrimary,
+            latexOperatorColor = colors.textSecondary,
+            latexNumberColor = colors.textPrimary,
+            latexRadicalColor = colors.textPrimary,
+            latexInlineScale = 1.1f,
+            // ==高亮== 用 warning 暖色低透明度，与行内代码（bgSelected 冷色）视觉区分。
+            markdownInlineHighlightColor = colors.warning.copy(alpha = 0.30f),
+            markdownInlineCodeBackgroundColor = colors.bgSelected,
         )
     }
 }

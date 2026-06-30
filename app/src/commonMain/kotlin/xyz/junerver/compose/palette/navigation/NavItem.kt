@@ -124,6 +124,7 @@ sealed class NavItem(
     data object QRCode : NavItem("qrcode", "二维码", Icons.Default.QrCode, ComponentCategory.DATA_DISPLAY)
     data object Markdown : NavItem("markdown", "Markdown", Icons.Default.Article, ComponentCategory.DATA_DISPLAY)
     data object Mermaid : NavItem("mermaid", "Mermaid", Icons.Default.AccountTree, ComponentCategory.DATA_DISPLAY)
+    data object Latex : NavItem("latex", "LaTeX", Icons.Default.Functions, ComponentCategory.DATA_DISPLAY)
     data object FloatButton : NavItem("floatbutton", "浮动按钮", Icons.Default.AddCircle, ComponentCategory.FEEDBACK)
     data object PageHeader : NavItem("pageheader", "页头", Icons.Default.ArrowBack, ComponentCategory.NAVIGATION)
     data object Toggle : NavItem("toggle", "切换按钮", Icons.Default.ToggleOn, ComponentCategory.FORM)
@@ -143,7 +144,7 @@ sealed class NavItem(
                 Alert, InputNumber, Cascader, Transfer, Calendar, DateRangePicker,
                 Segmented, Popconfirm, Result, Affix, InputOTP,
                 Autocomplete, TreeSelect, ColorPicker, Grid, Space,
-                InfiniteScroll, Backtop, Watermark, QRCode, Markdown, Mermaid, FloatButton,
+                InfiniteScroll, Backtop, Watermark, QRCode, Markdown, Mermaid, Latex, FloatButton,
                 PageHeader, Toggle, Mentions, CascaderPanel,
             )
 

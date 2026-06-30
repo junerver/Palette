@@ -59,6 +59,11 @@ enum class MarkdownToolbarAction {
     CodeBlock,
     Table,
     HorizontalRule,
+    // 扩展行内语法
+    InlineLatex,
+    Subscript,
+    Superscript,
+    Highlight,
 }
 
 /** 标题层级。Heading 下拉项回调。 */
@@ -125,6 +130,14 @@ fun MarkdownFormatToolbar(
             ToolbarIconButton(MarkdownToolbarAction.Table, Icons.Filled.TableChart, "Table", enabled, onAction)
             ToolbarIconButton(MarkdownToolbarAction.HorizontalRule, Icons.Filled.HorizontalRule, "HorizontalRule", enabled, onAction)
         }
+
+        // 分组5：扩展行内语法（LaTeX / 下标 / 上标 / 高亮）
+        ToolbarGroup(spacing = groupSpacing) {
+            ToolbarTextButton(MarkdownToolbarAction.InlineLatex, "\$", "InlineLatex", enabled, onAction)
+            ToolbarTextButton(MarkdownToolbarAction.Subscript, "x₂", "Subscript", enabled, onAction)
+            ToolbarTextButton(MarkdownToolbarAction.Superscript, "x²", "Superscript", enabled, onAction)
+            ToolbarTextButton(MarkdownToolbarAction.Highlight, "≡", "Highlight", enabled, onAction)
+        }
     }
 }
 
@@ -158,6 +171,30 @@ private fun ToolbarIconButton(
             imageVector = icon,
             contentDescription = action.name,
             modifier = Modifier.size(MarkdownDefaults.toolbarIconSize),
+        )
+    }
+}
+
+/**
+ * 文本图标按钮：用于无合适 Material 矢量图标的行内语法（LaTeX `$`、下标 `x₂`、上标 `x²`、高亮 `≡`）。
+ */
+@Composable
+private fun ToolbarTextButton(
+    action: MarkdownToolbarAction,
+    label: String,
+    tagSuffix: String,
+    enabled: Boolean,
+    onAction: (MarkdownToolbarAction) -> Unit,
+) {
+    IconButton(
+        onClick = { onAction(action) },
+        enabled = enabled,
+        modifier = Modifier.testTag("md-toolbar-$tagSuffix"),
+    ) {
+        Text(
+            text = label,
+            style = PaletteTheme.typography.body,
+            color = PaletteTheme.colors.textPrimary,
         )
     }
 }

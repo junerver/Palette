@@ -223,6 +223,10 @@ object MarkdownRenderer {
                 is MarkdownInlineHtml -> node.html
                 is MarkdownInlineHardBreak -> " "
                 is MarkdownInlineSoftBreak -> " "
+                is MarkdownInlineLatex -> node.tex
+                is MarkdownInlineSubscript -> node.children.toPlainText()
+                is MarkdownInlineSuperscript -> node.children.toPlainText()
+                is MarkdownInlineHighlight -> node.children.toPlainText()
             }
         }
 

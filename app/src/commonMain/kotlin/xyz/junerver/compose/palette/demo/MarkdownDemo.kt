@@ -100,6 +100,10 @@ private fun markdownDemoText(): MarkdownDemoText =
 
                     [palette-docs]: https://palette.example/docs "Palette docs"
 
+                    行内数学与标记：勾股定理 ${'$'}a^2 + b^2 = c^2${'$'}、分数 ${'$'}\frac{1}{2}${'$'}、根号 ${'$'}\sqrt{x+1}${'$'}、求和 ${'$'}\sum_{i=0}^{n} i${'$'}、向量 ${'$'}\vec{a} \cdot \vec{b}${'$'}、不等式 ${'$'}a \neq b \leq c \geq d${'$'}、下标 H~2~O、上标 E^2^、高亮 ==关键==。
+
+                    ${'$'}${'$'}\int_0^1 x^2 \, dx = \frac{1}{3}${'$'}${'$'}
+
                     ## ATX 结尾井号 ##
 
                     Setext 标题
@@ -246,6 +250,10 @@ private fun markdownDemoText(): MarkdownDemoText =
                     Reference-style links are parsed too: [docs][palette-docs].
 
                     [palette-docs]: https://palette.example/docs "Palette docs"
+
+                    Inline math and marks: Pythagorean theorem ${'$'}a^2 + b^2 = c^2${'$'}, fraction ${'$'}\frac{1}{2}${'$'}, radical ${'$'}\sqrt{x+1}${'$'}, summation ${'$'}\sum_{i=0}^{n} i${'$'}, vectors ${'$'}\vec{a} \cdot \vec{b}${'$'}, inequality ${'$'}a \neq b \leq c \geq d${'$'}, subscript H~2~O, superscript E^2^, highlight ==key==.
+
+                    ${'$'}${'$'}\int_0^1 x^2 \, dx = \frac{1}{3}${'$'}${'$'}
 
                     ## ATX Closing Hashes ##
 

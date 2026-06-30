@@ -210,6 +210,10 @@ private fun PMarkdownEditorImpl(
             MarkdownToolbarAction.CodeBlock -> insertText(tf.text, tf.selection, defaultCodeFence())
             MarkdownToolbarAction.Table -> insertText(tf.text, tf.selection, defaultTableSnippet)
             MarkdownToolbarAction.HorizontalRule -> insertText(tf.text, tf.selection, "---\n")
+            MarkdownToolbarAction.InlineLatex -> wrapSelection(tf.text, tf.selection, "\$")
+            MarkdownToolbarAction.Subscript -> wrapSelection(tf.text, tf.selection, "~")
+            MarkdownToolbarAction.Superscript -> wrapSelection(tf.text, tf.selection, "^")
+            MarkdownToolbarAction.Highlight -> wrapSelection(tf.text, tf.selection, "==")
         }
         applyEdit(result)
     }

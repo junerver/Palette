@@ -62,13 +62,27 @@ object MarkdownInlineParser {
                 }
 
                 source[index] == '\\' -> {
-                    val next = source.getOrNull(index + 1)
-                    if (next != null && next in EscapableMarkdownChars) {
-                        plain.append(next)
-                        index += 2
+                    // LaTeX 备用定界 \( ... \)（须先于通用转义判定，否则 \ 会被单独消费）
+                    if (source.startsWith("\\(", index)) {
+                        val end = source.indexOf("\\)", startIndex = index + 2)
+                        if (end != -1 && !source.substring(index + 2, end).contains('\n')) {
+                            val tex = source.substring(index + 2, end)
+                            flushPlain()
+                            nodes += MarkdownInlineLatex(tex)
+                            index = end + 2
+                        } else {
+                            plain.append(source[index])
+                            index += 1
+                        }
                     } else {
-                        plain.append(source[index])
-                        index += 1
+                        val next = source.getOrNull(index + 1)
+                        if (next != null && next in EscapableMarkdownChars) {
+                            plain.append(next)
+                            index += 2
+                        } else {
+                            plain.append(source[index])
+                            index += 1
+                        }
                     }
                 }
 
@@ -140,6 +154,92 @@ object MarkdownInlineParser {
                                 children = parseResolvedReferences(text, references),
                             )
                         index = end + 2
+                    } else {
+                        plain.append(source[index])
+                        index += 1
+                    }
+                }
+
+                // 块级 / 显示模式 LaTeX：$$...$$（须先于 $ 判定）。
+                source.startsWith("$$", index) -> {
+                    val end = source.indexOf("$$", startIndex = index + 2)
+                    if (end != -1 && !source.substring(index + 2, end).contains('\n')) {
+                        val tex = source.substring(index + 2, end)
+                        flushPlain()
+                        nodes += MarkdownInlineLatex(tex)
+                        index = end + 2
+                    } else {
+                        plain.append(source[index])
+                        index += 1
+                    }
+                }
+
+                // 行内 LaTeX：$...$。加左右边界判定，避免 "$5 and $6" 误判：
+                // 左侧须为行首 / 空白 / 某些标点，右侧须后随空白 / 标点 / 行尾；内容禁止跨行。
+                source[index] == '$' -> {
+                    val leftOk = index == 0 || source[index - 1].isLatexLeftBoundary()
+                    val end = if (leftOk) source.indexOf('$', startIndex = index + 1) else -1
+                    val rightOk = end != -1 && end + 1 >= source.length || (end != -1 && end + 1 < source.length && source[end + 1].isLatexRightBoundary())
+                    val noNewline = end != -1 && !source.substring(index + 1, end).contains('\n')
+                    if (leftOk && rightOk && noNewline && end > index + 1) {
+                        val tex = source.substring(index + 1, end)
+                        flushPlain()
+                        nodes += MarkdownInlineLatex(tex)
+                        index = end + 1
+                    } else {
+                        plain.append(source[index])
+                        index += 1
+                    }
+                }
+
+                // 高亮：==KEY==（须先于单字符运算判定）。
+                source.startsWith("==", index) && isHighlightDelimiterBoundary(source, index) -> {
+                    val end = findHighlightEnd(source, index + 2)
+                    if (end != -1) {
+                        val text = source.substring(index + 2, end)
+                        flushPlain()
+                        nodes +=
+                            MarkdownInlineHighlight(
+                                text = text,
+                                children = parseResolvedReferences(text, references),
+                            )
+                        index = end + 2
+                    } else {
+                        plain.append(source[index])
+                        index += 1
+                    }
+                }
+
+                // 下标：H~2~O（单 ~；~~ 已被删除线分支先行消费）。
+                source[index] == '~' && source.getOrNull(index + 1)?.let { it != '~' && !it.isWhitespace() } == true -> {
+                    val end = source.indexOf('~', startIndex = index + 1)
+                    if (end != -1 && end > index + 1 && !source.substring(index + 1, end).contains('\n')) {
+                        val text = source.substring(index + 1, end)
+                        flushPlain()
+                        nodes +=
+                            MarkdownInlineSubscript(
+                                text = text,
+                                children = parseResolvedReferences(text, references),
+                            )
+                        index = end + 1
+                    } else {
+                        plain.append(source[index])
+                        index += 1
+                    }
+                }
+
+                // 上标：X^2^（单 ^；与行内代码 / 链等无冲突）。
+                source[index] == '^' && source.getOrNull(index + 1)?.let { it != '^' && !it.isWhitespace() } == true -> {
+                    val end = source.indexOf('^', startIndex = index + 1)
+                    if (end != -1 && end > index + 1 && !source.substring(index + 1, end).contains('\n')) {
+                        val text = source.substring(index + 1, end)
+                        flushPlain()
+                        nodes +=
+                            MarkdownInlineSuperscript(
+                                text = text,
+                                children = parseResolvedReferences(text, references),
+                            )
+                        index = end + 1
                     } else {
                         plain.append(source[index])
                         index += 1
@@ -547,7 +647,42 @@ object MarkdownInlineParser {
     private val InlineHtmlOpeningTagRegex = Regex("""</?\s*([A-Za-z][A-Za-z0-9-]*)(?:\s+[^<>]*)?/?>""")
     private val VoidHtmlTags = setOf("area", "base", "br", "col", "embed", "hr", "img", "input", "link", "meta", "param", "source", "track", "wbr")
     private val BareAutolinkTrailingPunctuation = setOf('.', ',', ';', ':', '!', '?')
-    private val EscapableMarkdownChars = setOf('\\', '`', '*', '_', '{', '}', '[', ']', '(', ')', '#', '+', '-', '.', '!', '|', '~')
+    private val EscapableMarkdownChars = setOf('\\', '`', '*', '_', '{', '}', '[', ']', '(', ')', '#', '+', '-', '.', '!', '|', '~', '$', '^', '=')
+
+    /** `$` 左侧允许的边界（行首 / 空白 / 开括号），用于判定行内公式起始。 */
+    private fun Char.isLatexLeftBoundary(): Boolean =
+        this.isWhitespace() || this == '(' || this == '[' || this == '{'
+
+    private val latexRightBoundaryChars = setOf('.', ',', ';', ':', '!', '?', ')', ']', '}', '，', '。', '；', '：', '！', '？', '）', '】', '、')
+
+    /** `$` 右侧允许的边界（行尾 / 空白 / 标点 / 闭括号），用于判定行内公式结束。 */
+    private fun Char.isLatexRightBoundary(): Boolean =
+        this.isWhitespace() || this in latexRightBoundaryChars
+
+    /**
+     * `==` 高亮定界的左边界判定：左侧须为行首 / 空白 / 标点，避免把 `a==b`（等式）
+     * 误判为高亮。如 `a==b==c` 中首段 `==b==` 才是高亮。
+     */
+    private fun isHighlightDelimiterBoundary(source: String, index: Int): Boolean {
+        if (index == 0) return true
+        val prev = source[index - 1]
+        return prev.isWhitespace() || prev in "([{.,;:!?、" || prev in "（【《"
+    }
+
+    /** 查找 `==` 高亮的结束定界（要求其后为边界，避免 `==a==b` 截断）。 */
+    private fun findHighlightEnd(source: String, start: Int): Int {
+        var search = start
+        while (true) {
+            val end = source.indexOf("==", startIndex = search)
+            if (end == -1) return -1
+            // 结束定界右侧须为边界或结尾
+            val after = source.getOrNull(end + 2)
+            if (after == null || after.isWhitespace() || after in latexRightBoundaryChars || after == '$') {
+                return end
+            }
+            search = end + 1
+        }
+    }
 
     private fun Char.isBareAutolinkBoundary(): Boolean =
         isWhitespace() || this in setOf('(', '[', '{', '<')

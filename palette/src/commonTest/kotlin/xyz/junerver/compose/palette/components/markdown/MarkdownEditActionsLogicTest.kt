@@ -278,6 +278,10 @@ class MarkdownToolbarIntegrationLogicTest {
             MarkdownToolbarAction.CodeBlock -> insertText(tf.text, tf.selection, defaultCodeFence())
             MarkdownToolbarAction.Table -> insertText(tf.text, tf.selection, defaultTableSnippet)
             MarkdownToolbarAction.HorizontalRule -> insertText(tf.text, tf.selection, "---\n")
+            MarkdownToolbarAction.InlineLatex -> wrapSelection(tf.text, tf.selection, "\$")
+            MarkdownToolbarAction.Subscript -> wrapSelection(tf.text, tf.selection, "~")
+            MarkdownToolbarAction.Superscript -> wrapSelection(tf.text, tf.selection, "^")
+            MarkdownToolbarAction.Highlight -> wrapSelection(tf.text, tf.selection, "==")
         }
     }
 
@@ -285,6 +289,30 @@ class MarkdownToolbarIntegrationLogicTest {
     fun boldAction_wrapsSelection() {
         val r = applyAction(MarkdownToolbarAction.Bold, "hello", TextRange(0, 5))
         assertEquals("**hello**", r.text)
+    }
+
+    @Test
+    fun inlineLatexAction_wrapsSelection() {
+        val r = applyAction(MarkdownToolbarAction.InlineLatex, "a^2+b^2", TextRange(0, 7))
+        assertEquals("\$a^2+b^2\$", r.text)
+    }
+
+    @Test
+    fun subscriptAction_wrapsSelection() {
+        val r = applyAction(MarkdownToolbarAction.Subscript, "2", TextRange(0, 1))
+        assertEquals("~2~", r.text)
+    }
+
+    @Test
+    fun superscriptAction_wrapsSelection() {
+        val r = applyAction(MarkdownToolbarAction.Superscript, "2", TextRange(0, 1))
+        assertEquals("^2^", r.text)
+    }
+
+    @Test
+    fun highlightAction_wrapsSelection() {
+        val r = applyAction(MarkdownToolbarAction.Highlight, "KEY", TextRange(0, 3))
+        assertEquals("==KEY==", r.text)
     }
 
     @Test
