@@ -18,16 +18,20 @@ class SankeyDiagramUiTest {
                 PMermaidDiagram(
                     source = """
                         sankey
-                        Electricity grid,Over generation,104.453
-                        Electricity grid,H2 conversion,27.14
+                        Agricultural waste,Bio-conversion,124.729
                         Bio-conversion,Liquid,0.597
+                        Bio-conversion,Losses,26.862
+                        Bio-conversion,Solid,280.322
+                        Biofuel imports,Liquid,35
+                        Coal imports,Coal,11.606
                     """.trimIndent(),
                 )
             }
         }
         rule.waitForIdle()
-        rule.onNodeWithText("Electricity grid").assertExists()
-        rule.onNodeWithText("Over generation").assertExists()
-        rule.onNodeWithText("Bio-conversion").assertExists()
+        rule.onNodeWithText("Biofuel imports 35").assertExists()
+        rule.onNodeWithText("Agricultural waste 124.73").assertExists()
+        rule.onNodeWithText("Bio-conversion 307.78").assertExists()
+        rule.onNodeWithText("Coal 11.61").assertExists()
     }
 }

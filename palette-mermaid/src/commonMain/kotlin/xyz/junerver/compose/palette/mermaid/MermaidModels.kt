@@ -207,6 +207,16 @@ data class SankeyFlow(
     val value: Float,
 )
 
+data class SankeyNodeLayout(
+    val name: String,
+    val level: Int,
+    val maxLevel: Int,
+    val value: Float,
+    val order: Int,
+    val yWeight: Float,
+    val heightWeight: Float,
+)
+
 // ── Architecture models ──────────────────────────────────────────────
 
 enum class ArchNodeKind { Group, Service, Junction }
@@ -662,6 +672,12 @@ data class MermaidLayout(
     val classRelationTypes: Map<Int, MermaidClassRelationType> = emptyMap(),
     /** Requirement diagram only: relationship kind per edge index (contains/satisfies/...). */
     val requirementRelationTypes: Map<Int, RequirementRelationKind> = emptyMap(),
+    /** Sankey diagram only: semantic node columns, ordering, and value-scaled vertical spans. */
+    val sankeyNodes: List<SankeyNodeLayout> = emptyList(),
+    /** Architecture diagram only: parsed service/group/junction nodes with icon and parent metadata. */
+    val archNodes: List<ArchNode> = emptyList(),
+    /** Architecture diagram only: parsed edges with port directions. */
+    val archEdges: List<ArchEdge> = emptyList(),
 )
 
 data class PositionedMermaidNode(

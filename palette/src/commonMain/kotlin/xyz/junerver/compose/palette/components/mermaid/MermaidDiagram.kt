@@ -93,6 +93,10 @@ import xyz.junerver.compose.palette.mermaid.C4Boundary
 import xyz.junerver.compose.palette.mermaid.C4Element
 import xyz.junerver.compose.palette.mermaid.C4RelDirection
 import xyz.junerver.compose.palette.mermaid.C4Relationship
+import xyz.junerver.compose.palette.mermaid.ArchDir
+import xyz.junerver.compose.palette.mermaid.ArchEdgeKind
+import xyz.junerver.compose.palette.mermaid.ArchNode
+import xyz.junerver.compose.palette.mermaid.ArchNodeKind
 import xyz.junerver.compose.palette.mermaid.JourneySection
 import xyz.junerver.compose.palette.mermaid.PacketField
 import xyz.junerver.compose.palette.mermaid.SankeyFlow
@@ -567,6 +571,7 @@ fun PMermaidDiagram(
             SankeyDiagramMermaidDiagram(
                 modifier = modifier,
                 colors = colors,
+                layout = resolvedLayout,
                 flows = parsedDiagram?.sankeyFlows.orEmpty(),
             )
 
@@ -3564,14 +3569,11 @@ private fun PacketDiagramMermaidDiagram(
 
 // ── Sankey ───────────────────────────────────────────────────────────
 
-/**
- * Sankey renderer: source nodes in a left column, target nodes in a right column, connected by
- * Bézier ribbons whose thickness scales with the flow value.
- */
 @Composable
 private fun SankeyDiagramMermaidDiagram(
     modifier: Modifier,
     colors: MermaidColors,
+    layout: MermaidLayout,
     flows: List<SankeyFlow>,
 ) {
     if (flows.isEmpty()) {
@@ -3583,85 +3585,160 @@ private fun SankeyDiagramMermaidDiagram(
     val c = PaletteTheme.colors
     val palette = rememberSliceColors()
 
-    val sources = flows.groupBy { it.source }.toList()
-    val targets = flows.groupBy { it.target }.toList()
-    val maxSide = maxOf(sources.size, targets.size).coerceAtLeast(1)
-    val totalValue = flows.sumOf { it.value.toDouble() }.coerceAtLeast(1.0)
-
-    val width = 600.dp
-    val columnWidth = 24.dp
-    val leftX = 80.dp
-    val rightX = width - leftX - columnWidth
-    val totalNodeHeight = 360.dp
-    val gap = 8.dp
-    val nodeHeight = ((totalNodeHeight.value - gap.value * (maxSide - 1)) / maxSide).coerceAtLeast(8f).dp
-
-    val sourceSpans = mutableMapOf<String, Pair<Float, Float>>()
-    val targetSpans = mutableMapOf<String, Pair<Float, Float>>()
-    var cursor = 0f
-    sources.forEach { (name, _) ->
-        sourceSpans[name] = cursor to (cursor + nodeHeight.value); cursor += nodeHeight.value + gap.value
-    }
-    cursor = 0f
-    targets.forEach { (name, _) ->
-        targetSpans[name] = cursor to (cursor + nodeHeight.value); cursor += nodeHeight.value + gap.value
-    }
-
-    val height = totalNodeHeight + 16.dp
+    val width = 680.dp
+    val height = 390.dp
+    val columnWidth = 10.dp
+    val leftPadding = 190.dp
+    val rightPadding = 118.dp
+    val topPadding = 16.dp
+    val bottomPadding = 24.dp
+    val layoutNodes = layout.sankeyNodes.mapSankeyLayoutNodes(
+        width = width.value,
+        height = height.value,
+        columnWidth = columnWidth.value,
+        leftPadding = leftPadding.value,
+        rightPadding = rightPadding.value,
+        topPadding = topPadding.value,
+        bottomPadding = bottomPadding.value,
+    )
+    val nodeByName = layoutNodes.associateBy { it.name }
+    val indexedFlows = flows.withIndex().toList()
+    val indexedIncoming = indexedFlows.groupBy { it.value.target }
+    val indexedOutgoing = indexedFlows.groupBy { it.value.source }
+    val sourceOffsets = calculateSankeyFlowOffsets(
+        flowsByNode = indexedOutgoing,
+        nodeByName = nodeByName,
+        otherNodeName = { it.value.target },
+    )
+    val targetOffsets = calculateSankeyFlowOffsets(
+        flowsByNode = indexedIncoming,
+        nodeByName = nodeByName,
+        otherNodeName = { it.value.source },
+    )
 
     Box(modifier = modifier.width(width).height(height)) {
         Canvas(modifier = Modifier.matchParentSize()) {
-            flows.forEachIndexed { i, flow ->
-                val src = sourceSpans[flow.source] ?: return@forEachIndexed
-                val dst = targetSpans[flow.target] ?: return@forEachIndexed
-                val srcMid = (src.first + src.second) / 2f
-                val dstMid = (dst.first + dst.second) / 2f
-                val ribW = (flow.value / totalValue).toFloat() * totalNodeHeight.toPx() * 0.5f
-                val sx = leftX.toPx() + columnWidth.toPx()
-                val ex = rightX.toPx()
+            indexedFlows.forEach flowLoop@{ (i, flow) ->
+                val src = nodeByName[flow.source] ?: return@flowLoop
+                val dst = nodeByName[flow.target] ?: return@flowLoop
+                val srcOffset = sourceOffsets[i] ?: 0f
+                val dstOffset = targetOffsets[i] ?: 0f
+                val (srcTop, srcBottom) = sankeyFlowSpan(src, srcOffset, flow.value)
+                val (dstTop, dstBottom) = sankeyFlowSpan(dst, dstOffset, flow.value)
+                val sx = src.x.dp.toPx() + columnWidth.toPx()
+                val ex = dst.x.dp.toPx()
                 val cx = (sx + ex) / 2f
                 val path = Path().apply {
-                    moveTo(sx, srcMid - ribW / 2f)
-                    cubicTo(cx, srcMid - ribW / 2f, cx, dstMid - ribW / 2f, ex, dstMid - ribW / 2f)
-                    lineTo(ex, dstMid + ribW / 2f)
-                    cubicTo(cx, dstMid + ribW / 2f, cx, srcMid + ribW / 2f, sx, srcMid + ribW / 2f)
+                    moveTo(sx, srcTop.dp.toPx())
+                    cubicTo(cx, srcTop.dp.toPx(), cx, dstTop.dp.toPx(), ex, dstTop.dp.toPx())
+                    lineTo(ex, dstBottom.dp.toPx())
+                    cubicTo(cx, dstBottom.dp.toPx(), cx, srcBottom.dp.toPx(), sx, srcBottom.dp.toPx())
                     close()
                 }
                 drawPath(path = path, color = palette[i % palette.size].copy(alpha = 0.45f))
             }
-            sources.forEachIndexed { i, (name, _) ->
-                val span = sourceSpans[name] ?: return@forEachIndexed
-                drawRect(color = palette[i % palette.size],
-                    topLeft = Offset(leftX.toPx(), span.first.dp.toPx()),
-                    size = Size(columnWidth.toPx(), nodeHeight.toPx()))
-            }
-            targets.forEachIndexed { i, (name, _) ->
-                val span = targetSpans[name] ?: return@forEachIndexed
-                drawRect(color = palette[(sources.size + i) % palette.size],
-                    topLeft = Offset(rightX.toPx(), span.first.dp.toPx()),
-                    size = Size(columnWidth.toPx(), nodeHeight.toPx()))
+            layoutNodes.forEachIndexed { i, node ->
+                drawRect(
+                    color = palette[i % palette.size],
+                    topLeft = Offset(node.x.dp.toPx(), node.y.dp.toPx()),
+                    size = Size(columnWidth.toPx(), node.height.dp.toPx()),
+                )
             }
         }
-        sources.forEach { (name, _) ->
-            val span = sourceSpans[name] ?: return@forEach
-            Text(name, color = c.textPrimary, style = PaletteTheme.typography.label,
-                modifier = Modifier.absoluteOffset(x = 0.dp, y = span.first.dp).width(leftX - 4.dp),
-                textAlign = TextAlign.End)
-        }
-        targets.forEach { (name, _) ->
-            val span = targetSpans[name] ?: return@forEach
-            Text(name, color = c.textPrimary, style = PaletteTheme.typography.label,
-                modifier = Modifier.absoluteOffset(x = rightX + columnWidth + 4.dp, y = span.first.dp))
+        layoutNodes.forEach { node ->
+            val isRightSide = node.level == node.maxLevel
+            val labelX = if (isRightSide) node.x + columnWidth.value + 4f else node.x - 168f
+            Text(
+                text = "${node.name} ${formatSankeyValue(node.value)}",
+                color = c.textPrimary,
+                style = PaletteTheme.typography.label,
+                modifier = Modifier.absoluteOffset(x = labelX.dp, y = (node.y + 2f).dp).width(164.dp),
+                textAlign = if (isRightSide) TextAlign.Start else TextAlign.End,
+                maxLines = 1,
+            )
         }
     }
 }
 
+internal fun sankeyFlowSpan(
+    node: SankeyRenderNode,
+    valueOffset: Float,
+    flowValue: Float,
+): Pair<Float, Float> {
+    val scale = node.height / node.value.coerceAtLeast(1f)
+    val top = node.y + valueOffset * scale
+    return top to top + flowValue * scale
+}
+
+internal fun calculateSankeyFlowOffsets(
+    flowsByNode: Map<String, List<IndexedValue<SankeyFlow>>>,
+    nodeByName: Map<String, SankeyRenderNode>,
+    otherNodeName: (IndexedValue<SankeyFlow>) -> String,
+): Map<Int, Float> {
+    val offsets = mutableMapOf<Int, Float>()
+    flowsByNode.forEach { (_, nodeFlows) ->
+        var cursor = 0f
+        nodeFlows
+            .sortedWith(
+                compareBy<IndexedValue<SankeyFlow>> { flow -> nodeByName[otherNodeName(flow)]?.y ?: 0f }
+                    .thenBy { flow -> nodeByName[otherNodeName(flow)]?.x ?: 0f },
+            )
+            .forEach { flow ->
+                offsets[flow.index] = cursor
+                cursor += flow.value.value
+            }
+    }
+    return offsets
+}
+
+internal data class SankeyRenderNode(
+    val name: String,
+    val level: Int,
+    val maxLevel: Int,
+    val value: Float,
+    val x: Float,
+    val y: Float,
+    val height: Float,
+)
+
+private fun List<xyz.junerver.compose.palette.mermaid.SankeyNodeLayout>.mapSankeyLayoutNodes(
+    width: Float,
+    height: Float,
+    columnWidth: Float,
+    leftPadding: Float,
+    rightPadding: Float,
+    topPadding: Float,
+    bottomPadding: Float,
+): List<SankeyRenderNode> {
+    if (isEmpty()) return emptyList()
+    val maxLevel = maxOf { it.maxLevel }.coerceAtLeast(1)
+    val levelWidth = (width - leftPadding - rightPadding - columnWidth) / maxLevel
+    val availableHeight = height - topPadding - bottomPadding
+    return sortedWith(compareBy<xyz.junerver.compose.palette.mermaid.SankeyNodeLayout> { it.level }.thenBy { it.order })
+        .map { node ->
+            SankeyRenderNode(
+                name = node.name,
+                level = node.level,
+                maxLevel = node.maxLevel,
+                value = node.value,
+                x = leftPadding + node.level * levelWidth,
+                y = topPadding + node.yWeight * availableHeight,
+                height = node.heightWeight * availableHeight,
+            )
+    }
+}
+
+internal fun formatSankeyValue(value: Float): String {
+    val rounded = round(value * 100.0) / 100.0
+    val intPart = rounded.toInt()
+    if (abs(rounded - intPart) < 0.005) return intPart.toString()
+    val decimal = ((rounded - intPart) * 100.0 + 0.5).toInt()
+    val trimmedDecimal = if (decimal % 10 == 0) (decimal / 10).toString() else decimal.toString().padStart(2, '0')
+    return "$intPart.$trimmedDecimal"
+}
+
 // ── Architecture ─────────────────────────────────────────────────────
 
-/**
- * Architecture renderer: nodes placed in a grid by the layout engine; edges are straight lines
- * with a forward arrowhead at the destination.
- */
 @Composable
 private fun ArchitectureDiagramMermaidDiagram(
     modifier: Modifier,
@@ -3674,40 +3751,205 @@ private fun ArchitectureDiagramMermaidDiagram(
         }
         return
     }
-    val nodeWidth = 120.dp
-    val nodeHeight = 64.dp
-    val pad = 24f
-    val nodeRight = layout.nodes.values.maxOf { it.x } + nodeWidth.value + pad
-    val nodeBottom = layout.nodes.values.maxOf { it.y } + nodeHeight.value + pad
+    val serviceSize = 58.dp
+    val labelHeight = 22.dp
+    val junctionSize = 12.dp
+    val groupPadding = 34.dp
+    val groupHeaderHeight = 30.dp
+    val canvasPad = 48f
+    val serviceExtent = serviceSize.value + labelHeight.value
+    val archNodeById = layout.archNodes.associateBy { it.id }
+    val visibleNodes = layout.nodes.values.filter { archNodeById[it.node.id]?.kind != ArchNodeKind.Junction }
+    if (visibleNodes.isEmpty()) {
+        Box(modifier = modifier, contentAlignment = Alignment.Center) {
+            Text("Empty architecture", color = colors.nodeContentColor, style = PaletteTheme.typography.body)
+        }
+        return
+    }
+    val minX = visibleNodes.minOf { it.x }
+    val minY = visibleNodes.minOf { it.y }
+    val maxX = visibleNodes.maxOf { it.x }
+    val maxY = visibleNodes.maxOf { it.y }
+    val offsetX = canvasPad - minX
+    val offsetY = canvasPad - minY + groupHeaderHeight.value
+    val nodeRight = maxX + offsetX + serviceSize.value + canvasPad
+    val nodeBottom = maxY + offsetY + serviceExtent + canvasPad
+    val groups = layout.archNodes.filter { it.kind == ArchNodeKind.Group }
 
     Box(modifier = modifier.width(nodeRight.dp).height(nodeBottom.dp)) {
         Canvas(modifier = Modifier.matchParentSize()) {
-            layout.edges.forEach { edge ->
+            groups.forEach { group ->
+                val children = layout.archNodes.filter { it.parentId == group.id && it.kind == ArchNodeKind.Service }
+                    .mapNotNull { layout.nodes[it.id] }
+                if (children.isEmpty()) return@forEach
+                val left = children.minOf { it.x + offsetX } - groupPadding.toPx()
+                val top = children.minOf { it.y + offsetY } - groupPadding.toPx() - groupHeaderHeight.toPx()
+                val right = children.maxOf { it.x + offsetX } + serviceSize.toPx() + groupPadding.toPx()
+                val bottom = children.maxOf { it.y + offsetY } + serviceExtent.dp.toPx() + groupPadding.toPx()
+                drawRoundRect(
+                    color = colors.edgeColor,
+                    topLeft = Offset(left, top),
+                    size = Size(right - left, bottom - top),
+                    cornerRadius = CornerRadius(0f, 0f),
+                    style = Stroke(
+                        width = 1.5.dp.toPx(),
+                        pathEffect = PathEffect.dashPathEffect(floatArrayOf(6f, 7f)),
+                    ),
+                )
+            }
+
+            visibleArchitectureEdges(layout.archEdges, archNodeById).forEach { edge ->
                 val from = layout.nodes[edge.from] ?: return@forEach
                 val to = layout.nodes[edge.to] ?: return@forEach
-                val fx = from.x + nodeWidth.value
-                val fy = from.y + nodeHeight.value / 2f
-                val tx = to.x
-                val ty = to.y + nodeHeight.value / 2f
-                drawLine(color = colors.edgeColor, start = Offset(fx, fy), end = Offset(tx, ty), strokeWidth = 1.5.dp.toPx())
-                drawClassMarker(colors.edgeColor, Offset(tx, ty), -1f, 0f, 0f, 1f, 9.dp.toPx(), filled = false, kind = ClassMarkerKind.Arrow)
+                val start = architecturePort(from.x + offsetX, from.y + offsetY, serviceSize.toPx(), junctionSize.toPx(), archNodeById[edge.from], edge.fromDir)
+                val end = architecturePort(to.x + offsetX, to.y + offsetY, serviceSize.toPx(), junctionSize.toPx(), archNodeById[edge.to], edge.toDir)
+                drawLine(color = colors.edgeColor, start = start, end = end, strokeWidth = 1.5.dp.toPx())
+                if (edge.kind == ArchEdgeKind.Forward || edge.kind == ArchEdgeKind.Bidirectional) {
+                    val vector = start - end
+                    drawClassMarker(colors.edgeColor, end, vector.x, vector.y, -vector.y, vector.x, 9.dp.toPx(), filled = false, kind = ClassMarkerKind.Arrow)
+                }
+                if (edge.kind == ArchEdgeKind.Back || edge.kind == ArchEdgeKind.Bidirectional) {
+                    val vector = end - start
+                    drawClassMarker(colors.edgeColor, start, vector.x, vector.y, -vector.y, vector.x, 9.dp.toPx(), filled = false, kind = ClassMarkerKind.Arrow)
+                }
             }
         }
-        layout.nodes.values.forEach { positioned ->
-            Box(
-                modifier = Modifier
-                    .absoluteOffset(x = positioned.x.dp, y = positioned.y.dp)
-                    .width(nodeWidth).height(nodeHeight)
-                    .background(colors.nodeContainerColor, RoundedCornerShape(6.dp))
-                    .border(1.dp, colors.nodeBorderColor, RoundedCornerShape(6.dp)),
-                contentAlignment = Alignment.Center,
+
+        groups.forEach { group ->
+            val children = layout.archNodes.filter { it.parentId == group.id && it.kind == ArchNodeKind.Service }
+                .mapNotNull { layout.nodes[it.id] }
+            if (children.isEmpty()) return@forEach
+            val left = children.minOf { it.x + offsetX } - groupPadding.value
+            val top = children.minOf { it.y + offsetY } - groupPadding.value - groupHeaderHeight.value
+            Row(
+                modifier = Modifier.absoluteOffset(x = left.dp, y = top.dp).height(groupHeaderHeight),
+                verticalAlignment = Alignment.CenterVertically,
             ) {
-                Text(positioned.node.label, color = colors.nodeContentColor,
-                    style = PaletteTheme.typography.label.copy(fontWeight = FontWeight.Bold),
-                    textAlign = TextAlign.Center, maxLines = 1)
+                ArchitectureIconBox(icon = group.icon ?: "cloud", size = 22.dp, colors = colors)
+                Text(
+                    text = group.title ?: group.id,
+                    color = colors.nodeContentColor,
+                    style = PaletteTheme.typography.label,
+                    modifier = Modifier.padding(start = 4.dp),
+                )
+            }
+        }
+
+        layout.nodes.values.forEach { positioned ->
+            val node = archNodeById[positioned.node.id]
+            if (node?.kind == ArchNodeKind.Junction) {
+                return@forEach
+            } else {
+                Column(
+                    modifier = Modifier.absoluteOffset(x = (positioned.x + offsetX).dp, y = (positioned.y + offsetY).dp).width(serviceSize),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                ) {
+                    ArchitectureIconBox(icon = node?.icon ?: "server", size = serviceSize, colors = colors)
+                    Text(
+                        text = positioned.node.label,
+                        color = colors.nodeContentColor,
+                        style = PaletteTheme.typography.label,
+                        textAlign = TextAlign.Center,
+                        maxLines = 1,
+                    )
+                }
             }
         }
     }
+}
+
+internal fun visibleArchitectureEdges(
+    edges: List<xyz.junerver.compose.palette.mermaid.ArchEdge>,
+    nodeById: Map<String, ArchNode>,
+): List<xyz.junerver.compose.palette.mermaid.ArchEdge> =
+    edges.filter { edge ->
+        nodeById[edge.from]?.kind != ArchNodeKind.Junction &&
+            nodeById[edge.to]?.kind != ArchNodeKind.Junction
+    }
+
+private fun architecturePort(
+    x: Float,
+    y: Float,
+    serviceSize: Float,
+    junctionSize: Float,
+    node: ArchNode?,
+    dir: ArchDir,
+): Offset {
+    val size = if (node?.kind == ArchNodeKind.Junction) junctionSize else serviceSize
+    val originX = if (node?.kind == ArchNodeKind.Junction) x + (serviceSize - junctionSize) / 2f else x
+    val originY = if (node?.kind == ArchNodeKind.Junction) y + (serviceSize - junctionSize) / 2f else y
+    return when (dir) {
+        ArchDir.L -> Offset(originX, originY + size / 2f)
+        ArchDir.R -> Offset(originX + size, originY + size / 2f)
+        ArchDir.T -> Offset(originX + size / 2f, originY)
+        ArchDir.B -> Offset(originX + size / 2f, originY + size)
+    }
+}
+
+@Composable
+private fun ArchitectureIconBox(
+    icon: String,
+    size: Dp,
+    colors: MermaidColors,
+) {
+    Canvas(
+        modifier = Modifier
+            .size(size)
+            .background(colors.nodeBorderColor),
+    ) {
+        val white = colors.nodeContentColor
+        when (icon.lowercase()) {
+            "database" -> drawArchitectureDatabaseIcon(white)
+            "disk", "cache" -> drawArchitectureDiskIcon(white)
+            "cloud" -> drawArchitectureCloudIcon(white)
+            else -> drawArchitectureServerIcon(white)
+        }
+    }
+}
+
+private fun androidx.compose.ui.graphics.drawscope.DrawScope.drawArchitectureServerIcon(color: Color) {
+    val left = size.width * 0.23f
+    val top = size.height * 0.22f
+    val width = size.width * 0.54f
+    val rowHeight = size.height * 0.16f
+    repeat(3) { index ->
+        val y = top + index * rowHeight * 1.35f
+        drawRect(color = color, topLeft = Offset(left, y), size = Size(width, rowHeight), style = Stroke(width = 1.7.dp.toPx()))
+        drawCircle(color = color, radius = 1.5.dp.toPx(), center = Offset(left + width * 0.18f, y + rowHeight / 2f))
+        drawLine(color = color, start = Offset(left + width * 0.36f, y + rowHeight / 2f), end = Offset(left + width * 0.82f, y + rowHeight / 2f), strokeWidth = 1.4.dp.toPx())
+    }
+}
+
+private fun androidx.compose.ui.graphics.drawscope.DrawScope.drawArchitectureDatabaseIcon(color: Color) {
+    val left = size.width * 0.25f
+    val top = size.height * 0.22f
+    val width = size.width * 0.5f
+    val height = size.height * 0.54f
+    drawOval(color = color, topLeft = Offset(left, top), size = Size(width, height * 0.28f), style = Stroke(width = 1.8.dp.toPx()))
+    drawLine(color = color, start = Offset(left, top + height * 0.14f), end = Offset(left, top + height * 0.82f), strokeWidth = 1.8.dp.toPx())
+    drawLine(color = color, start = Offset(left + width, top + height * 0.14f), end = Offset(left + width, top + height * 0.82f), strokeWidth = 1.8.dp.toPx())
+    drawOval(color = color, topLeft = Offset(left, top + height * 0.68f), size = Size(width, height * 0.28f), style = Stroke(width = 1.8.dp.toPx()))
+    drawArc(color = color, startAngle = 0f, sweepAngle = 180f, useCenter = false, topLeft = Offset(left, top + height * 0.36f), size = Size(width, height * 0.28f), style = Stroke(width = 1.4.dp.toPx()))
+}
+
+private fun androidx.compose.ui.graphics.drawscope.DrawScope.drawArchitectureDiskIcon(color: Color) {
+    val center = Offset(size.width * 0.5f, size.height * 0.46f)
+    drawCircle(color = color, radius = size.minDimension * 0.26f, center = center, style = Stroke(width = 1.9.dp.toPx()))
+    drawCircle(color = color, radius = size.minDimension * 0.07f, center = center, style = Stroke(width = 1.7.dp.toPx()))
+    drawLine(color = color, start = Offset(size.width * 0.35f, size.height * 0.74f), end = Offset(size.width * 0.65f, size.height * 0.74f), strokeWidth = 1.8.dp.toPx())
+}
+
+private fun androidx.compose.ui.graphics.drawscope.DrawScope.drawArchitectureCloudIcon(color: Color) {
+    val path = Path().apply {
+        moveTo(size.width * 0.18f, size.height * 0.62f)
+        quadraticBezierTo(size.width * 0.18f, size.height * 0.42f, size.width * 0.38f, size.height * 0.45f)
+        quadraticBezierTo(size.width * 0.45f, size.height * 0.24f, size.width * 0.64f, size.height * 0.38f)
+        quadraticBezierTo(size.width * 0.82f, size.height * 0.38f, size.width * 0.84f, size.height * 0.58f)
+        lineTo(size.width * 0.84f, size.height * 0.68f)
+        lineTo(size.width * 0.18f, size.height * 0.68f)
+        close()
+    }
+    drawPath(path = path, color = color, style = Stroke(width = 1.6.dp.toPx(), cap = StrokeCap.Round))
 }
 
 /**

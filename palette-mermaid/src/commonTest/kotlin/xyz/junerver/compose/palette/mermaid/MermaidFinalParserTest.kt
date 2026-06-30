@@ -231,4 +231,25 @@ class MermaidFinalParserTest {
         assertEquals(MermaidDiagramType.Architecture, layout.type)
         assertTrue(layout.nodes.isNotEmpty())
     }
+
+    @Test
+    fun laysOutArchitectureFromPorts() {
+        val diagram = MermaidParser.parse(
+            """
+            architecture-beta
+                group api(cloud)[API 网关]
+                service db(database)[数据库] in api
+                service server(server)[服务器] in api
+                service cache(disk)[缓存] in api
+                junction jc
+                db:L -- R:server
+                cache:T -- B:server
+                server:R --> L:jc
+            """.trimIndent(),
+        )
+        val layout = MermaidLayoutEngine.layout(diagram)
+        assertTrue(layout.nodes.getValue("db").x > layout.nodes.getValue("server").x)
+        assertTrue(layout.nodes.getValue("cache").y > layout.nodes.getValue("server").y)
+        assertEquals(3, layout.archEdges.size)
+    }
 }

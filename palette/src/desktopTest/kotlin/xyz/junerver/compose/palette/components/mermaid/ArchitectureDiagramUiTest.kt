@@ -21,7 +21,11 @@ class ArchitectureDiagramUiTest {
                             group api(cloud)[API]
                             service db(database)[Database] in api
                             service server(server)[Server] in api
+                            service cache(disk)[Cache] in api
+                            junction jc
                             db:L -- R:server
+                            cache:T -- B:server
+                            server:R --> L:jc
                     """.trimIndent(),
                 )
             }
@@ -30,5 +34,7 @@ class ArchitectureDiagramUiTest {
         rule.onNodeWithText("API").assertExists()
         rule.onNodeWithText("Database").assertExists()
         rule.onNodeWithText("Server").assertExists()
+        rule.onNodeWithText("Cache").assertExists()
+        rule.onNodeWithText("jc").assertDoesNotExist()
     }
 }

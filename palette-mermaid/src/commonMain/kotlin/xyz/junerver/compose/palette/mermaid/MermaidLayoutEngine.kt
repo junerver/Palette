@@ -18,7 +18,7 @@ object MermaidLayoutEngine {
         if (diagram.type == MermaidDiagramType.C4Diagram) return layoutC4Diagram(diagram)
         if (diagram.type == MermaidDiagramType.Journey) return layoutEmptyGeometry(diagram, MermaidDiagramType.Journey)
         if (diagram.type == MermaidDiagramType.Packet) return layoutEmptyGeometry(diagram, MermaidDiagramType.Packet)
-        if (diagram.type == MermaidDiagramType.Sankey) return layoutEmptyGeometry(diagram, MermaidDiagramType.Sankey)
+        if (diagram.type == MermaidDiagramType.Sankey) return layoutSankeyDiagram(diagram)
         if (diagram.type == MermaidDiagramType.Architecture) return layoutArchitectureDiagram(diagram)
         if (diagram.type == MermaidDiagramType.Flowchart) return layoutFlowchartDiagram(diagram)
 
@@ -724,53 +724,210 @@ object MermaidLayoutEngine {
     }
 
     /**
-     * Journey / Packet / Sankey are pure-geometry diagrams whose renderer computes all positions
+     * Journey / Packet are pure-geometry diagrams whose renderer computes all positions
      * from the parsed diagram. The layout returns an empty node/edge set (the Pie/Gantt pattern).
      */
     private fun layoutEmptyGeometry(diagram: MermaidDiagram, type: MermaidDiagramType): MermaidLayout =
         MermaidLayout(type = type, direction = diagram.direction, nodes = emptyMap(), edges = emptyList())
 
-    /**
-     * Architecture layout. Services/junctions are placed in a declaration-order grid (3 per row);
-     * groups are positioned as anchors at their first child. Edges map straight to [MermaidEdge].
-     */
-    private fun layoutArchitectureDiagram(diagram: MermaidDiagram): MermaidLayout {
-        val cellW = 180f
-        val cellH = 100f
-        val gap = 16f
-        val perRow = 3
+    private fun layoutSankeyDiagram(diagram: MermaidDiagram): MermaidLayout {
+        val sankeyNodes = calculateSankeyNodeLayouts(diagram.sankeyFlows)
+        return MermaidLayout(
+            type = MermaidDiagramType.Sankey,
+            direction = diagram.direction,
+            nodes = emptyMap(),
+            edges = emptyList(),
+            sankeyNodes = sankeyNodes,
+        )
+    }
 
-        val positioned = linkedMapOf<String, PositionedMermaidNode>()
-        var col = 0
-        var row = 0
-        diagram.archNodes.forEach { node ->
-            if (node.kind == ArchNodeKind.Group) {
-                // Groups anchor at their first child's position; the renderer expands the box.
-                val firstChild = diagram.archNodes.firstOrNull { it.parentId == node.id }?.let { positioned[it.id] }
-                val (x, y) = firstChild?.let { it.x - gap to it.y - gap } ?: (col * (cellW + gap) to row * (cellH + gap))
-                positioned[node.id] = PositionedMermaidNode(
-                    node = MermaidNode(id = node.id, label = node.title ?: node.id, shape = MermaidNodeShape.Rounded),
-                    rank = row, order = col, x = x, y = y,
+    internal fun calculateSankeyNodeLayouts(flows: List<SankeyFlow>): List<SankeyNodeLayout> {
+        val nodeOrder = buildList {
+            flows.forEach { flow ->
+                if (flow.source !in this) add(flow.source)
+                if (flow.target !in this) add(flow.target)
+            }
+        }
+        if (nodeOrder.isEmpty()) return emptyList()
+        val incoming = flows.groupBy { it.target }
+        val outgoing = flows.groupBy { it.source }
+        val levels = linkedMapOf<String, Int>()
+        nodeOrder.filter { it !in incoming }.forEach { levels[it] = 0 }
+        if (levels.isEmpty()) levels[nodeOrder.first()] = 0
+        repeat(nodeOrder.size) {
+            var changed = false
+            flows.forEach { flow ->
+                val sourceLevel = levels[flow.source] ?: return@forEach
+                val nextLevel = sourceLevel + 1
+                if ((levels[flow.target] ?: -1) < nextLevel) {
+                    levels[flow.target] = nextLevel
+                    changed = true
+                }
+            }
+            if (!changed) return@repeat
+        }
+        nodeOrder.forEach { if (it !in levels) levels[it] = 0 }
+        val maxLevel = levels.values.maxOrNull()?.coerceAtLeast(1) ?: 1
+        nodeOrder.filter { it !in outgoing }.forEach { levels[it] = maxLevel }
+        val nodeValues = nodeOrder.associateWith { node ->
+            kotlin.math.max(
+                incoming[node]?.sumOf { it.value.toDouble() }?.toFloat() ?: 0f,
+                outgoing[node]?.sumOf { it.value.toDouble() }?.toFloat() ?: 0f,
+            ).coerceAtLeast(1f)
+        }
+        val firstSeen = nodeOrder.withIndex().associate { it.value to it.index }
+        val sinkOrder = nodeOrder
+            .filter { it !in outgoing }
+            .withIndex()
+            .associate { it.value to it.index.toFloat() }
+        fun terminalAverage(node: String, visiting: Set<String> = emptySet()): Double {
+            if (node in visiting) return firstSeen.getValue(node).toDouble()
+            val next = outgoing[node].orEmpty()
+            if (next.isEmpty()) return sinkOrder[node]?.toDouble() ?: firstSeen.getValue(node).toDouble()
+            val weighted = next.sumOf { flow -> terminalAverage(flow.target, visiting + node) * flow.value.toDouble() }
+            val total = next.sumOf { it.value.toDouble() }.coerceAtLeast(1.0)
+            return weighted / total
+        }
+        val rawLevelNodes = nodeOrder.groupBy { levels.getValue(it) }
+        val nodesByLevel = rawLevelNodes.mapValues { (level, names) ->
+            when {
+                level == maxLevel -> names.sortedBy { sinkOrder[it] ?: firstSeen.getValue(it).toFloat() }
+                level == 0 -> names.sortedWith(
+                    compareBy<String> { terminalAverage(it) }.thenBy { firstSeen.getValue(it) },
                 )
-            } else {
-                if (col >= perRow) { col = 0; row++ }
-                positioned[node.id] = PositionedMermaidNode(
-                    node = MermaidNode(id = node.id, label = node.title ?: node.id, shape = MermaidNodeShape.Rounded),
-                    rank = row, order = col, x = col * (cellW + gap), y = row * (cellH + gap),
+                else -> names.sortedWith(
+                    compareBy<String> {
+                        incoming[it]
+                            ?.map { flow -> terminalAverage(flow.source) }
+                            ?.average()
+                            ?.takeIf { value -> !value.isNaN() }
+                            ?: firstSeen.getValue(it).toDouble()
+                    }.thenBy { firstSeen.getValue(it) },
                 )
-                col++
             }
         }
 
-        val edges = diagram.archEdges.map { e ->
-            MermaidEdge(from = e.from, to = e.to, label = e.label, style = MermaidEdgeStyle.Solid, arrow = MermaidEdgeArrow.Forward)
+        val levelTotals = nodesByLevel.mapValues { (_, names) ->
+            names.sumOf { nodeValues.getValue(it).toDouble() }.toFloat()
+        }
+        val maxLevelTotal = levelTotals.values.maxOrNull()?.coerceAtLeast(1f) ?: 1f
+        val maxNodesInLevel = nodesByLevel.values.maxOfOrNull { it.size } ?: 1
+        val normalizedGap = 0.03f
+        val reservedGap = normalizedGap * (maxNodesInLevel - 1).coerceAtLeast(0)
+        val valueScale = (1f - reservedGap).coerceAtLeast(0.01f) / maxLevelTotal
+
+        val result = mutableListOf<SankeyNodeLayout>()
+        nodesByLevel.forEach { (level, names) ->
+            val nodeHeights = names.associateWith { name ->
+                (nodeValues.getValue(name) * valueScale).coerceAtLeast(0.02f)
+            }
+            val usedHeight = nodeHeights.values.sum() + normalizedGap * (names.size - 1).coerceAtLeast(0)
+            val slack = (1f - usedHeight).coerceAtLeast(0f)
+            val outerGap = if (names.size == 1) slack / 2f else 0f
+            val extraInnerGap = if (names.size > 1) slack / (names.size - 1) else 0f
+            var cursor = outerGap
+            names.forEachIndexed { index, name ->
+                val nodeHeight = nodeHeights.getValue(name)
+                result.add(
+                    SankeyNodeLayout(
+                        name = name,
+                        level = level,
+                        maxLevel = maxLevel,
+                        value = nodeValues.getValue(name),
+                        order = index,
+                        yWeight = cursor,
+                        heightWeight = nodeHeight,
+                    ),
+                )
+                cursor += nodeHeight + normalizedGap + extraInnerGap
+            }
+        }
+        return result
+    }
+
+    private fun layoutArchitectureDiagram(diagram: MermaidDiagram): MermaidLayout {
+        val stepX = 315f
+        val stepY = 225f
+        val serviceNodes = diagram.archNodes.filter { it.kind != ArchNodeKind.Group }
+        if (serviceNodes.isEmpty()) {
+            return MermaidLayout(
+                type = MermaidDiagramType.Architecture,
+                direction = diagram.direction,
+                nodes = emptyMap(),
+                edges = emptyList(),
+                archNodes = diagram.archNodes,
+                archEdges = diagram.archEdges,
+            )
+        }
+
+        val grid = linkedMapOf<String, Pair<Int, Int>>()
+        val incomingCounts = diagram.archEdges.groupingBy { it.to }.eachCount()
+        val first = serviceNodes
+            .filter { it.kind != ArchNodeKind.Junction }
+            .minWithOrNull(compareBy<ArchNode> { incomingCounts[it.id] ?: 0 }.thenBy { serviceNodes.indexOf(it) })
+            ?: serviceNodes.first()
+        grid[first.id] = 0 to 0
+
+        fun delta(fromDir: ArchDir, toDir: ArchDir): Pair<Int, Int> =
+            when {
+                fromDir == ArchDir.R || toDir == ArchDir.L -> 1 to 0
+                fromDir == ArchDir.L || toDir == ArchDir.R -> -1 to 0
+                fromDir == ArchDir.B || toDir == ArchDir.T -> 0 to 1
+                fromDir == ArchDir.T || toDir == ArchDir.B -> 0 to -1
+                else -> 1 to 0
+            }
+
+        repeat(serviceNodes.size) {
+            var changed = false
+            diagram.archEdges.forEach { edge ->
+                val from = grid[edge.from]
+                val to = grid[edge.to]
+                val (dx, dy) = delta(edge.fromDir, edge.toDir)
+                when {
+                    from != null && to == null -> {
+                        grid[edge.to] = from.first + dx to from.second + dy
+                        changed = true
+                    }
+                    from == null && to != null -> {
+                        grid[edge.from] = to.first - dx to to.second - dy
+                        changed = true
+                    }
+                }
+            }
+            if (!changed) return@repeat
+        }
+
+        var fallbackIndex = 0
+        serviceNodes.forEach { node ->
+            if (node.id !in grid) {
+                fallbackIndex += 1
+                grid[node.id] = fallbackIndex to 0
+            }
+        }
+
+        val minCol = grid.values.minOf { it.first }
+        val minRow = grid.values.minOf { it.second }
+        val positioned = linkedMapOf<String, PositionedMermaidNode>()
+        serviceNodes.forEach { node ->
+            val (col, row) = grid.getValue(node.id)
+            positioned[node.id] = PositionedMermaidNode(
+                node = MermaidNode(id = node.id, label = node.title ?: node.id, shape = MermaidNodeShape.Rounded),
+                rank = row - minRow,
+                order = col - minCol,
+                x = (col - minCol) * stepX,
+                y = (row - minRow) * stepY,
+            )
         }
 
         return MermaidLayout(
             type = MermaidDiagramType.Architecture,
             direction = diagram.direction,
             nodes = positioned,
-            edges = edges,
+            edges = diagram.archEdges.map { e ->
+                MermaidEdge(from = e.from, to = e.to, label = e.label, style = MermaidEdgeStyle.Solid, arrow = MermaidEdgeArrow.Forward)
+            },
+            archNodes = diagram.archNodes,
+            archEdges = diagram.archEdges,
         )
     }
 
