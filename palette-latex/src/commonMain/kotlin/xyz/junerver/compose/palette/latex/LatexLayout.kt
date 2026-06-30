@@ -413,14 +413,17 @@ public object LatexLayoutEngine {
     private fun layoutRoot(expr: LatexRoot, measurer: LatexTextMeasurer, sizePx: Float): LatexBox {
         val radicand = layoutExpr(expr.radicand, measurer, sizePx)
         val ruleThickness = (sizePx * RADICAL_RULE_RATIO).coerceAtLeast(1f)
-        // 根号几何（自绘三段折线 + 顶部横线），与被开方数高度对齐：
-        //   顶部横线在 y=0；勾/斜升/斜降占 signHeight；被开方数从 signHeight 顶部下方开始。
+        // 根号几何（自绘左入笔 + 低谷 + 斜升 + 顶部横线），与被开方数高度对齐。
+        // 顶部横线需要留出半个 stroke 的裁切空间；被开方数和横线之间保留细缝，
+        // 视觉上更接近数学字体中的 radical，而不是贴顶的硬折线。
         val radicandHeight = radicand.height.coerceAtLeast(sizePx * 0.5f)
-        // 根号主体高度：约被开方数高度 + 字号 0.35 倍（顶部斜升空间）
-        val signHeight = radicandHeight + sizePx * 0.35f
-        // 根号主体宽度：基于 signHeight 取 0.7 倍，使主笔斜升角度约 55°（标准 √ 视觉）。
-        // 过窄（如基于字号 0.6）会让斜线接近竖直，畸形。
-        val signWidth = (signHeight * 0.7f).coerceAtLeast(sizePx * 0.4f)
+        val topPad = ruleThickness / 2f
+        val gap = (sizePx * RADICAL_GAP_RATIO).coerceAtLeast(ruleThickness)
+        // 根号主体高度主要跟随被开方数，额外只给顶部横线和间隙空间。
+        val signHeight = radicandHeight + gap + ruleThickness
+        // 根号宽度以字号为主、随高内容轻微拉伸，避免高分式下符号横向过宽。
+        val signWidth = (sizePx * 0.72f + (signHeight - sizePx).coerceAtLeast(0f) * 0.12f)
+            .coerceAtLeast(sizePx * 0.55f)
         // 指数（n 次根）布局在根号左上角，缩小
         val indexBox = expr.index?.let {
             LatexPlacedBox(layoutExpr(it, measurer, sizePx * SCRIPT_SCRIPT_SCALE), 0f, 0f)
@@ -428,11 +431,10 @@ public object LatexLayoutEngine {
         val indexWidth = indexBox?.box?.width ?: 0f
         // 被开方数 x 起点：根号宽度之后
         val radicandPlaceX = indexWidth + signWidth
-        // 被开方数 y：放在根号主体（signHeight）下方，留细缝避免贴边
-        val radicandPlaceY = signHeight - radicandHeight
-        // 顶部横线：覆盖根号斜升顶点 → 被开方数右沿，y=0
+        val radicandPlaceY = topPad + gap
+        // 顶部横线：覆盖根号斜升顶点 → 被开方数右沿。
         val ruleX = indexWidth + signWidth
-        val ruleWidth = radicand.width + (signWidth * 0.1f) // 横线略长，覆盖斜升顶点
+        val ruleWidth = radicand.width + ruleThickness
         val totalHeight = signHeight
         val width = radicandPlaceX + radicand.width
         val baseline = radicandPlaceY + radicand.baseline
@@ -445,7 +447,7 @@ public object LatexLayoutEngine {
             signOffsetX = indexWidth,
             signWidth = signWidth,
             signHeight = signHeight,
-            ruleY = 0f,
+            ruleY = topPad,
             ruleWidth = ruleWidth,
             ruleThickness = ruleThickness,
             radicandHeight = radicandHeight,

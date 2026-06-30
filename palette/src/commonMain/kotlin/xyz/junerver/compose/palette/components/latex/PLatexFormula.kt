@@ -120,40 +120,39 @@ private fun DrawScope.drawLatexBox(
             drawPlaced(box.denominator, offsetX, offsetY, colors, measurer)
         }
         is LatexRootBox -> {
-            // 自绘标准根号符号：勾（左下小钩）+ 斜升主笔（升至顶点）+ 顶部横线。
-            // 坐标系：x 从 signOffsetX 起；y=0 为顶部（横线），向下为正，signHeight 为根号底部。
+            // 自绘根号符号：短入笔 + 低谷 + 长斜升 + 顶部横线。
             val sx = offsetX + box.signOffsetX
             val sy = offsetY
             val signH = box.signHeight
-            // 斜升顶点（主笔最高点 = 横线左端）
+            val stroke = box.ruleThickness
             val apexX = sx + box.signWidth
             val apexY = sy + box.ruleY
-            // 主笔底端（勾的右上方转折处），位于根号底部
-            val mainBottomX = sx + box.signWidth * 0.45f
-            val mainBottomY = sy + signH
-            // 勾：一个小钩，从主笔底端向左下凸出再回勾。勾的大小由 signHeight 决定（独立于 signWidth）。
-            val checkWidth = signH * 0.18f
-            val checkDepth = signH * 0.12f
-            val checkTipX = mainBottomX - checkWidth       // 勾尖（最左下）
-            val checkTipY = mainBottomY - checkDepth * 0.3f
+            val startX = sx + stroke * 0.5f
+            val startY = sy + signH * 0.68f
+            val valleyX = sx + box.signWidth * 0.28f
+            val valleyY = sy + signH - stroke * 0.65f
             val radicalPath = Path().apply {
-                // 从勾尖出发，向右上方弧形过渡到主笔底端
-                moveTo(checkTipX, checkTipY)
-                quadraticTo(mainBottomX - checkWidth * 0.2f, mainBottomY + checkDepth, mainBottomX, mainBottomY)
-                // 主笔斜升到底端 → 顶点
+                moveTo(startX, startY)
+                quadraticTo(
+                    sx + box.signWidth * 0.14f,
+                    sy + signH * 0.62f,
+                    valleyX,
+                    valleyY,
+                )
                 lineTo(apexX, apexY)
             }
             drawPath(
                 path = radicalPath,
                 color = colors.radical,
-                style = Stroke(width = box.ruleThickness, cap = androidx.compose.ui.graphics.StrokeCap.Round, join = androidx.compose.ui.graphics.StrokeJoin.Round),
+                style = Stroke(width = stroke, cap = androidx.compose.ui.graphics.StrokeCap.Round, join = androidx.compose.ui.graphics.StrokeJoin.Round),
             )
             // 顶部横线：从斜升顶点水平延伸到被开方数右沿
             drawLine(
                 color = colors.radical,
                 start = Offset(apexX, apexY),
                 end = Offset(offsetX + box.ruleX + box.ruleWidth, apexY),
-                strokeWidth = box.ruleThickness,
+                strokeWidth = stroke,
+                cap = androidx.compose.ui.graphics.StrokeCap.Round,
             )
             box.index?.let { drawPlaced(it, offsetX, offsetY, colors, measurer) }
             drawPlaced(box.radicand, offsetX, offsetY, colors, measurer)

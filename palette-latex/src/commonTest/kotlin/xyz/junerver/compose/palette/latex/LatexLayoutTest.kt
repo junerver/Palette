@@ -68,8 +68,8 @@ class LatexLayoutTest {
         val layout = LatexLayoutEngine.layout(LatexParser.parse("x^2"), measurer, baseSize)
         val h = layout.box as LatexHorizontalBox
         // base + sup
-        val sup = h.items.first { it.box is LatexGlyphBox && (it.box as LatexGlyphBox).text == "2" }
-        val base = h.items.first { it.box is LatexGlyphBox && (it.box as LatexGlyphBox).text == "x" }
+        val sup = h.items.first { (it.box as? LatexGlyphBox)?.text == "2" }
+        val base = h.items.first { (it.box as? LatexGlyphBox)?.text == "x" }
         val supBox = sup.box as LatexGlyphBox
         val baseBox = base.box as LatexGlyphBox
         assertTrue(supBox.sizePx < baseBox.sizePx, "上标字号应小于底数字号")
@@ -85,6 +85,25 @@ class LatexLayoutTest {
         // 被开方数 x 偏移在根号符号右侧之后
         assertTrue(root.radicand.x > root.signOffsetX)
         assertEquals(root.signOffsetX + root.signWidth, root.radicand.x)
+    }
+
+    @Test
+    fun sqrtLeavesTopPaddingAndGapForRadicalRule() {
+        val layout = LatexLayoutEngine.layout(LatexParser.parse("\\sqrt{x}"), measurer, baseSize)
+        val root = layout.box as LatexRootBox
+
+        assertTrue(root.ruleY > 0f, "根号横线应留出顶部裁切空间")
+        assertTrue(root.radicand.y > root.ruleY + root.ruleThickness, "被开方数应与根号横线保持间隙")
+        assertEquals(root.radicand.y + root.radicand.box.baseline, root.baseline)
+    }
+
+    @Test
+    fun sqrtSignWidthDoesNotOverExpandForTallRadicand() {
+        val simple = LatexLayoutEngine.layout(LatexParser.parse("\\sqrt{x}"), measurer, baseSize).box as LatexRootBox
+        val tall = LatexLayoutEngine.layout(LatexParser.parse("\\sqrt{\\frac{x}{y}}"), measurer, baseSize).box as LatexRootBox
+
+        assertTrue(tall.signHeight > simple.signHeight, "高被开方数应拉高根号")
+        assertTrue(tall.signWidth < tall.signHeight * 0.55f, "高被开方数不应让根号横向过宽")
     }
 
     @Test

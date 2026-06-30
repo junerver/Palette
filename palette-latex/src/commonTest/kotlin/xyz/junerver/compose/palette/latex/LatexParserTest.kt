@@ -38,9 +38,14 @@ class LatexParserTest {
 
     @Test
     fun parsesFractionWithExplicitGroups() {
-        // 标准用法 \frac{1}{2}；注意词法会把连续数字合并，故 \frac12（单 token 简写）
-        // 在本实现中会被当作 \frac{12}{...}，推荐使用显式分组。
         val expr = LatexParser.parse("\\frac{1}{2}") as LatexFraction
+        assertEquals("1", (unwrap(expr.numerator) as LatexTextRun).text)
+        assertEquals("2", (unwrap(expr.denominator) as LatexTextRun).text)
+    }
+
+    @Test
+    fun parsesSingleTokenFractionArgumentsOneCharacterAtATime() {
+        val expr = LatexParser.parse("\\frac12") as LatexFraction
         assertEquals("1", (unwrap(expr.numerator) as LatexTextRun).text)
         assertEquals("2", (unwrap(expr.denominator) as LatexTextRun).text)
     }
@@ -51,6 +56,14 @@ class LatexParserTest {
         assertEquals('x', (expr.base as LatexCharacter).char)
         assertEquals("2", (unwrap(expr.sup!!) as LatexTextRun).text)
         assertNull(expr.sub)
+    }
+
+    @Test
+    fun parsesUngroupedScriptAsSingleCharacterAndKeepsRemainder() {
+        val expr = LatexParser.parse("x^12") as LatexGroup
+        val scripted = expr.children[0] as LatexSubSup
+        assertEquals("1", (unwrap(scripted.sup!!) as LatexTextRun).text)
+        assertEquals("2", (expr.children[1] as LatexTextRun).text)
     }
 
     @Test

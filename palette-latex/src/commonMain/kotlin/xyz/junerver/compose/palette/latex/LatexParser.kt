@@ -341,7 +341,36 @@ public object LatexParser {
         if (!ctx.hasNext()) return null
         if (ctx.peek() is LatexToken.LBrace) return parseGroup(ctx)
         // 允许单 token 作参数：\frac12 → \frac{1}{2}
-        return parseAtom(ctx)
+        return parseSingleTokenAtom(ctx)
+    }
+
+    /**
+     * 解析命令参数 / 上下标的无花括号单 token 形式。TeX 规则下 `\frac12`
+     * 等价于 `\frac{1}{2}`，`x^12` 等价于 `x^1 2`，不能把同一个 Word token
+     * 中的剩余字符一并吞掉。
+     */
+    private fun parseSingleTokenAtom(ctx: ParseContext): LatexExpr {
+        return when (ctx.peek()) {
+            is LatexToken.Word -> {
+                val text = ctx.nextWordPrefix() ?: ""
+                wordToAtoms(text).firstOrNull() ?: LatexRaw("")
+            }
+            is LatexToken.LBrace -> parseGroup(ctx)
+            is LatexToken.Command -> commandAtom(ctx)
+            is LatexToken.CommandSymbol -> commandSymbolAtom(ctx.next() as LatexToken.CommandSymbol)
+            is LatexToken.LBracket -> {
+                ctx.next()
+                LatexCharacter('[', italic = false)
+            }
+            is LatexToken.Ampersand -> {
+                ctx.next()
+                LatexCharacter('&', italic = false)
+            }
+            else -> {
+                ctx.next()
+                LatexRaw("")
+            }
+        }
     }
 
     /**
@@ -385,19 +414,7 @@ public object LatexParser {
         // ctx 仍指向 ^ 或 _
         ctx.next() // 消费 ^ 或 _
         if (!ctx.hasNext()) return LatexRaw("")
-        return when (ctx.peek()) {
-            is LatexToken.LBrace -> parseGroup(ctx)
-            is LatexToken.Command -> commandAtom(ctx)
-            is LatexToken.CommandSymbol -> commandSymbolAtom(ctx.next() as LatexToken.CommandSymbol)
-            is LatexToken.Word -> {
-                val tk = ctx.next() as LatexToken.Word
-                wordToAtoms(tk.text).firstOrNull() ?: LatexRaw("")
-            }
-            else -> {
-                ctx.next()
-                LatexRaw("")
-            }
-        }
+        return parseSingleTokenAtom(ctx)
     }
 
     /**
@@ -438,11 +455,21 @@ public object LatexParser {
 /**
  * 解析上下文：带游标的 token 列表。
  */
-private class ParseContext(private val tokens: List<LatexToken>) {
+private class ParseContext(tokens: List<LatexToken>) {
+    private val tokens: MutableList<LatexToken> = tokens.toMutableList()
     private var index = 0
     fun hasNext(): Boolean = index < tokens.size
     fun peek(): LatexToken = tokens[index]
     fun next(): LatexToken = tokens[index++]
+    fun nextWordPrefix(): String? {
+        val word = tokens.getOrNull(index) as? LatexToken.Word ?: return null
+        if (word.text.length <= 1) {
+            index++
+            return word.text
+        }
+        tokens[index] = LatexToken.Word(word.text.drop(1))
+        return word.text.first().toString()
+    }
     fun expect(token: LatexToken) {
         if (hasNext() && peek() == token) next() else Unit
     }
