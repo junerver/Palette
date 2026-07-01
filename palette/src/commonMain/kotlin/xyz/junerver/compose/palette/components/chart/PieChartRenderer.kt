@@ -14,6 +14,8 @@ import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.drawText
 import androidx.compose.ui.text.rememberTextMeasurer
+import androidx.compose.ui.unit.Density
+import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import kotlin.math.PI
@@ -25,6 +27,9 @@ import xyz.junerver.compose.palette.core.theme.PaletteTheme
 /**
  * Renders a pie / donut chart from the FIRST series of [data] (each value → one slice). Slices are
  * colored by the categorical palette (cycling by index) unless [ChartSeries.color] is set.
+ *
+ * When [hoverState] is active, the slice under the pointer is resolved via [hitTestPie] and drawn
+ * slightly "popped" (a thicker bright outline) for tooltip feedback.
  */
 @Composable
 internal fun PieChartRenderer(
@@ -33,6 +38,9 @@ internal fun PieChartRenderer(
     modifier: Modifier,
     @Suppress("UNUSED_PARAMETER") options: ChartOptions,
     colors: ChartColors,
+    hoverState: ChartHoverState,
+    canvasSize: IntSize,
+    entrance: ChartEntranceAnimation,
 ) {
     val tokens = PaletteTheme.componentThemes.chart
     val density = LocalDensity.current
@@ -43,8 +51,10 @@ internal fun PieChartRenderer(
     val measurer = rememberTextMeasurer()
     val labelStyle = TextStyle(color = colors.seriesLabelColor, fontSize = 11.sp)
     val separatorPx = with(density) { 2.dp.toPx() }
+    val highlightStrokePx = with(density) { (tokens.highlightStrokeWidth * 1.5f).toPx() }
     val holeFraction = tokens.donutHoleRadiusFraction
     val surfaceColor = PaletteTheme.colors.surface
+    val ringColor = PaletteTheme.colors.onSurface
     val accentFallback = PaletteTheme.colors.textPrimary
     // Pre-resolve per-slice colors in the @Composable scope.
     val sliceColors = slices.mapIndexed { i, _ ->
@@ -63,34 +73,78 @@ internal fun PieChartRenderer(
 
             if (slices.isEmpty()) return@Canvas
 
+            // Resolve the hovered slice (angular hit-test).
+            val hovered = if (hoverState.active) {
+                hitTestPie(
+                    mouse = hoverState.anchor,
+                    center = center,
+                    radius = drawRadius,
+                    holeRadius = holeRadius,
+                    startAngleDeg = sweepBase,
+                    values = slices,
+                    categories = categories,
+                )
+            } else null
+            hoverState.target = hovered
+
             var startAngle = sweepBase
+            // Entrance animation: scale each slice's sweep so the pie sweeps in from the start angle.
+            // The "remaining" sweep budget shrinks so partial slices don't overshoot mid-animation.
+            val progress = entrance.value
+            val fullSweep = 360f
+            val sweptSoFar = FloatArray(1) // mutable running total for the sweep-in effect
+
             slices.forEachIndexed { index, value ->
                 // Geometry (incl. useCenter) is derived from one tested source — donut slices must be
                 // full wedges too, since the hole is cleared afterwards by a center circle.
                 val geom = pieSliceGeometry(index, value, startAngle, total)
                 val color = sliceColors[index]
+                val isHovered = hovered != null && hovered.seriesIndex == index
+                // Hovered slices draw slightly enlarged (a "pop") for tactile feedback.
+                val r = if (isHovered) drawRadius * 1.03f else drawRadius
+                // Sweep-in: this slice's visible sweep is how much of its target sweep falls within
+                // the [0, progress*360°] window that has "drawn in" so far.
+                val drawnBudget = progress * fullSweep
+                val sliceStart = sweptSoFar[0]
+                val sliceEnd = minOf(sliceStart + geom.sweepAngle, drawnBudget)
+                val visibleSweep = (sliceEnd - sliceStart).coerceAtLeast(0f)
+                sweptSoFar[0] = minOf(sliceStart + geom.sweepAngle, drawnBudget)
                 drawArc(
                     color = color,
                     startAngle = geom.startAngle,
-                    sweepAngle = geom.sweepAngle,
+                    sweepAngle = visibleSweep,
                     useCenter = geom.useCenter,
-                    topLeft = Offset(center.x - drawRadius, center.y - drawRadius),
-                    size = Size(drawRadius * 2, drawRadius * 2),
+                    topLeft = Offset(center.x - r, center.y - r),
+                    size = Size(r * 2, r * 2),
                 )
-                // Slice separator stroke.
-                drawArc(
-                    color = Color.White,
-                    startAngle = geom.startAngle,
-                    sweepAngle = geom.sweepAngle,
-                    useCenter = false,
-                    topLeft = Offset(center.x - drawRadius, center.y - drawRadius),
-                    size = Size(drawRadius * 2, drawRadius * 2),
-                    style = Stroke(width = separatorPx),
-                )
+                // Slice separator stroke (only once the slice has actually drawn).
+                if (visibleSweep > 0f) {
+                    drawArc(
+                        color = surfaceColor,
+                        startAngle = geom.startAngle,
+                        sweepAngle = visibleSweep,
+                        useCenter = false,
+                        topLeft = Offset(center.x - r, center.y - r),
+                        size = Size(r * 2, r * 2),
+                        style = Stroke(width = separatorPx),
+                    )
+                }
+                // Hovered slice outline.
+                if (isHovered && visibleSweep > 0f) {
+                    drawArc(
+                        color = ringColor,
+                        startAngle = geom.startAngle,
+                        sweepAngle = visibleSweep,
+                        useCenter = false,
+                        topLeft = Offset(center.x - r, center.y - r),
+                        size = Size(r * 2, r * 2),
+                        style = Stroke(width = highlightStrokePx),
+                    )
+                }
 
-                if (spec.showLabels && geom.sweepAngle >= 8f) {
+                if (spec.showLabels && geom.sweepAngle >= 8f && progress >= 0.98f) {
                     val midAngle = geom.startAngle + geom.sweepAngle / 2f
-                    val labelRad = drawRadius * 1.12f
+                    val labelRad = r * 1.12f
                     val rad = midAngle * (PI / 180f)
                     val lx = center.x + (labelRad * cos(rad)).toFloat()
                     val ly = center.y + (labelRad * sin(rad)).toFloat()

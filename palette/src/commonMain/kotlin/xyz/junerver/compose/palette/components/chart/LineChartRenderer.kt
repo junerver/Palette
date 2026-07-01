@@ -13,12 +13,17 @@ import androidx.compose.ui.graphics.drawscope.Fill
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.rememberTextMeasurer
+import androidx.compose.ui.unit.Density
+import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import xyz.junerver.compose.palette.core.theme.PaletteTheme
 
 /**
  * Renders a line / area chart. Each series is a polyline through its values, optionally smoothed
  * (Catmull-Rom→cubic Bézier), with optional data points and area fill to the baseline.
+ *
+ * When [hoverState] is active, the nearest data point to the pointer is resolved via
+ * [hitTestPoint] (with a snap radius) and drawn larger + ringed for tooltip feedback.
  */
 @Composable
 internal fun LineChartRenderer(
@@ -27,28 +32,44 @@ internal fun LineChartRenderer(
     modifier: Modifier,
     options: ChartOptions,
     colors: ChartColors,
+    hoverState: ChartHoverState,
+    canvasSize: IntSize,
+    density: Density,
+    entrance: ChartEntranceAnimation,
 ) {
     val tokens = PaletteTheme.componentThemes.chart
-    val density = LocalDensity.current
     val categories = resolveCategories(data)
     val series = data.series
-    val (yMin, yMax) = deriveYRange(series, options.yRange)
+    // Dual-axis support: rightRange non-null only when some series binds to yAxisIndex=1.
+    val (leftRange, rightRange) = deriveDualYRanges(series, options.yRange)
+    val (yMin, yMax) = leftRange
+    val (yMinRight, yMaxRight) = rightRange ?: (0f to 1f)
+    val yAxisTitleRight: String? = null
     val accentFallback = PaletteTheme.colors.textPrimary
     // Pre-resolve in the @Composable scope so the DrawScope stays pure
     // (PaletteTheme.componentThemes is a @Composable getter — cannot be read inside DrawScope).
     val lineStrokePx = with(density) { 2.dp.toPx() }
     val pointRadiusPx = with(density) { 3.dp.toPx() }
+    val hoveredRadiusPx = with(density) { 6.dp.toPx() }
     val axisStrokePx = with(density) { tokens.axisStrokeWidth.toPx() }
     val gridStrokePx = with(density) { tokens.gridStrokeWidth.toPx() }
     val labelPadPx = with(density) { tokens.axisLabelPadding.toPx() }
     // Axis margins are now label-driven (see ChartAxisRenderer); ticks/titles add room as needed.
-    val axisLayout = rememberAxisLayout(options, yMin, yMax, categories)
+    val axisLayout = rememberAxisLayout(
+        options = options,
+        yMin = yMin,
+        yMax = yMax,
+        xLabels = categories,
+        yRangeRight = rightRange,
+        yAxisTitleRight = yAxisTitleRight,
+    )
     val tickStyle = ChartDefaults.axisTextStyle()
     val titleStyle = ChartDefaults.axisTitleTextStyle()
     val measurer = rememberTextMeasurer()
     val seriesColors = series.mapIndexed { i, s ->
         resolveSeriesColor(s, i, colors.categoricalColors, accentFallback)
     }
+    val ringColor = PaletteTheme.colors.onSurface
 
     Box(modifier = modifier) {
         Canvas(modifier = Modifier.fillMaxSize()) {
@@ -76,17 +97,44 @@ internal fun LineChartRenderer(
                 axisStrokePx = axisStrokePx,
                 gridStrokePx = gridStrokePx,
                 labelPadPx = labelPadPx,
+                yMinRight = yMinRight,
+                yMaxRight = yMaxRight,
+                yAxisTitleRight = yAxisTitleRight,
             )
 
-            fun pointOf(v: Float, i: Int): Offset {
+            // Entrance animation progress: scales each point's lift from the baseline (yMin) so the
+            // line "grows" up from the axis. Pinned at 1 when disabled → no effect.
+            val progress = entrance.value
+
+            // Per-series point resolver: right-axis series map against the right range. The axis is
+            // selected once per series (constant within a series) so the polyline stays coherent.
+            fun pointOf(v: Float, i: Int, useRightAxis: Boolean): Offset {
                 val x = leftPx + slotW * (i + 0.5f)
-                val y = baselineY - normalizeValue(v, yMin, yMax) * plotH
+                val (lo, hi) = if (useRightAxis) yMinRight to yMaxRight else yMin to yMax
+                val lifted = lo + (v - lo) * progress
+                val y = baselineY - normalizeValue(lifted, lo, hi) * plotH
                 return Offset(x, y)
             }
 
+            // Resolve the hovered point (snaps to nearest marker within a radius).
+            val plot = PlotRect(leftPx, topPx, plotW, plotH)
+            val hovered = if (hoverState.active) {
+                hitTestPoint(
+                    mouse = hoverState.anchor,
+                    series = series,
+                    yMin = yMin,
+                    yMax = yMax,
+                    categories = categories,
+                    plot = plot,
+                    pointRadiusPx = with(density) { 12.dp.toPx() },
+                )
+            } else null
+            hoverState.target = hovered
+
             series.forEachIndexed { sIndex, s ->
                 val color = seriesColors[sIndex]
-                val pts = s.values.mapIndexed { i, v -> pointOf(v, i) }
+                val useRightAxis = rightRange != null && s.yAxisIndex.coerceIn(0, 1) == 1
+                val pts = s.values.mapIndexed { i, v -> pointOf(v, i, useRightAxis) }
                 if (pts.isEmpty()) return@forEachIndexed
 
                 val linePath = if (spec.smooth) buildSmoothPath(pts) else buildStraightPath(pts)
@@ -106,7 +154,33 @@ internal fun LineChartRenderer(
                     style = Stroke(width = lineStrokePx),
                 )
                 if (spec.showPoints) {
-                    pts.forEach { p -> drawCircle(color = color, radius = pointRadiusPx, center = p) }
+                    pts.forEachIndexed { i, p ->
+                        val isHovered = hovered != null &&
+                            hovered.seriesIndex == sIndex &&
+                            hovered.categoryIndex == i
+                        if (isHovered) {
+                            // Hovered marker: larger fill + bright ring.
+                            drawCircle(color = color, radius = hoveredRadiusPx, center = p)
+                            drawCircle(
+                                color = ringColor,
+                                radius = hoveredRadiusPx,
+                                center = p,
+                                style = Stroke(width = with(density) { 1.5.dp.toPx() }),
+                            )
+                        } else {
+                            drawCircle(color = color, radius = pointRadiusPx, center = p)
+                        }
+                    }
+                } else if (hovered != null && hovered.seriesIndex == sIndex) {
+                    // Even with points hidden, surface the hovered marker so the tooltip has an anchor.
+                    val p = pts.getOrNull(hovered.categoryIndex) ?: return@forEachIndexed
+                    drawCircle(color = color, radius = hoveredRadiusPx, center = p)
+                    drawCircle(
+                        color = ringColor,
+                        radius = hoveredRadiusPx,
+                        center = p,
+                        style = Stroke(width = with(density) { 1.5.dp.toPx() }),
+                    )
                 }
             }
         }

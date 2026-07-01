@@ -2,10 +2,13 @@ package xyz.junerver.compose.palette.components.chart
 
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import kotlin.math.PI
 import kotlin.math.atan2
+import kotlin.math.cos
 import kotlin.math.floor
 import kotlin.math.log10
 import kotlin.math.pow
+import kotlin.math.sin
 import kotlin.math.sqrt
 
 /**
@@ -48,6 +51,25 @@ internal fun deriveYRange(
     val min = values.min()
     val max = values.max()
     return if (min >= 0f) 0f to max.coerceAtLeast(min + 1f) else min to max.coerceAtLeast(min + 1f)
+}
+
+/**
+ * Splits a series list by [ChartSeries.yAxisIndex] (clamped to 0/1) and derives each axis's range.
+ * Returns `(leftRange, rightRange)` where `rightRange` is `null` when NO series binds to axis 1
+ * (single-axis mode). Used by the dual-axis bar/line renderers.
+ *
+ * [stacked] only affects the LEFT axis (a stacked bar's right axis is unusual; left dominates).
+ */
+internal fun deriveDualYRanges(
+    series: List<ChartSeries>,
+    override: Pair<Float, Float>? = null,
+    stacked: Boolean = false,
+): Pair<Pair<Float, Float>, Pair<Float, Float>?> {
+    val left = series.filter { (it.yAxisIndex.coerceIn(0, 1)) == 0 }
+    val right = series.filter { it.yAxisIndex.coerceIn(0, 1) == 1 }
+    val leftRange = deriveYRange(left, override, stacked)
+    val rightRange = if (right.isNotEmpty()) deriveYRange(right) else null
+    return leftRange to rightRange
 }
 
 /**
@@ -237,7 +259,156 @@ internal fun formatTickValue(value: Float, unit: String = ""): String {
 
 // endregion ───────────────────────────────────────────────────────────────────
 
-// region Hit testing (tooltip target resolution) ──────────────────────────────
+/**
+ * Parses a flat values list into (x, y) pairs for scatter charts: indices 0,2,4,… are X and
+ * 1,3,5,… are Y. An odd-length list drops the trailing unpaired value. Pure + testable.
+ */
+internal fun scatterPairs(values: List<Float>): List<Pair<Float, Float>> {
+    val n = values.size / 2
+    if (n == 0) return emptyList()
+    return List(n) { i -> values[i * 2] to values[i * 2 + 1] }
+}
+
+/**
+ * Derives the bounding box of all scatter points across every series. Returns `null` when there are
+ * no points. Used to size the scatter chart's axes (its X axis is numeric, not categorical).
+ */
+internal fun scatterBounds(series: List<ChartSeries>): Pair<Pair<Float, Float>, Pair<Float, Float>>? {
+    val pts = series.flatMap { scatterPairs(it.values) }
+    if (pts.isEmpty()) return null
+    val xs = pts.map { it.first }
+    val ys = pts.map { it.second }
+    val xMin = xs.min()
+    val xMax = xs.max().coerceAtLeast(xMin + 1f)
+    val yMin = ys.min()
+    val yMax = ys.max().coerceAtLeast(yMin + 1f)
+    return (xMin to xMax) to (yMin to yMax)
+}
+
+/**
+ * Hit test for a scatter chart: returns the nearest point within [radiusPx] of [mouse], or `null`.
+ * Pure + testable. [xRange]/[yRange] are the scatter bounds (so points map onto the plot rect).
+ */
+internal fun hitTestScatter(
+    mouse: Offset,
+    series: List<ChartSeries>,
+    xRange: Pair<Float, Float>,
+    yRange: Pair<Float, Float>,
+    plot: PlotRect,
+    radiusPx: Float,
+): HitTarget? {
+    if (series.isEmpty()) return null
+    val (xMin, xMax) = xRange
+    val (yMin, yMax) = yRange
+    var best: HitTarget? = null
+    var bestDist = radiusPx * radiusPx
+    series.forEachIndexed { sIndex, s ->
+        scatterPairs(s.values).forEachIndexed { pairIndex, (x, y) ->
+            val fx = normalizeValue(x, xMin, xMax)
+            val fy = normalizeValue(y, yMin, yMax)
+            val px = plot.left + fx * plot.width
+            // Y grows downward on screen → invert.
+            val py = plot.top + plot.height - fy * plot.height
+            val dx = mouse.x - px
+            val dy = mouse.y - py
+            val dist = dx * dx + dy * dy
+            if (dist <= bestDist) {
+                bestDist = dist
+                best = HitTarget(sIndex, pairIndex, y, category = null, geometryKind = HitGeometry.Point)
+            }
+        }
+    }
+    return best
+}
+
+/**
+ * Produces `count + 1` evenly-spaced tick fractions in `[0, 1]` (i.e. `0, 1/n, 2/n, …, 1`).
+ *
+ * Used for **dual-axis** charts: both Y axes map their own `[min, max]` ranges onto these SAME
+ * fractions, so a left-axis tick at fraction `f` lands at exactly the same pixel height as the
+ * right-axis tick at fraction `f`. This is what makes the two axes' grid lines align — calling
+ * `niceTicks` independently per axis would produce different step counts/positions and the ticks
+ * would visually disagree (the original dual-axis bug).
+ *
+ * [count] is the number of INTERVALS (so count=4 → 5 ticks at 0/0.25/0.5/0.75/1). Clamped to ≥1.
+ */
+internal fun evenTickFractions(count: Int): List<Float> {
+    val n = count.coerceAtLeast(1)
+    return List(n + 1) { i -> i.toFloat() / n }
+}
+
+/**
+ * Maps an evenly-spaced tick fraction [frac] ∈ `[0,1]` to its value on the axis spanning
+ * `[axisMin, axisMax]`. Pure; the dual-axis layout pairs this with [evenTickFractions].
+ */
+internal fun fractionToAxisValue(frac: Float, axisMin: Float, axisMax: Float): Float =
+    axisMin + frac * (axisMax - axisMin)
+
+/**
+ * Applies a data-zoom window [range] = (startFrac, endFrac) to [data], trimming the categories and
+ * each series' values to that sub-range. Returns [data] unchanged when [range] is null or covers the
+ * full set, or when there's ≤1 category (nothing to slice). Pure + testable.
+ */
+internal fun applyZoomSlice(data: ChartData, range: Pair<Float, Float>?): ChartData {
+    if (range == null) return data
+    val cats = resolveCategories(data)
+    if (cats.size <= 1) return data
+    val (s, e) = range
+    if (s <= 0f && e >= 1f) return data
+    val startIdx = (s * cats.size).toInt().coerceIn(0, cats.size - 1)
+    val endIdx = (e * cats.size).toInt().coerceIn(startIdx + 1, cats.size)
+    val slicedCats = cats.subList(startIdx, endIdx)
+    val slicedSeries = data.series.map { series ->
+        series.copy(values = series.values.subList(startIdx.coerceAtMost(series.values.size), endIdx.coerceAtMost(series.values.size)))
+    }
+    return data.copy(series = slicedSeries, categories = slicedCats)
+}
+
+// region Radar geometry (P4-B) ───────────────────────────────────────────────
+
+/**
+ * The angle (radians) of radar axis [axisIndex] given there are [axisCount] axes radiating from the
+ * center. Axes start at the top (−90°) and go clockwise, matching how a radar/spider chart is
+ * conventionally drawn. Pure + testable.
+ */
+internal fun radarAxisAngle(axisIndex: Int, axisCount: Int): Float {
+    val safeCount = axisCount.coerceAtLeast(1)
+    val step = (2.0 * PI).toFloat() / safeCount
+    return -PI.toFloat() / 2f + step * axisIndex
+}
+
+/**
+ * Computes the (x, y) canvas position of a radar vertex: the point on axis [axisIndex] at the given
+ * normalized [fraction] (0 = center, 1 = outer ring), around [center] with [radius]. Pure.
+ */
+internal fun radarVertex(
+    center: Offset,
+    radius: Float,
+    axisIndex: Int,
+    axisCount: Int,
+    fraction: Float,
+): Offset {
+    val angle = radarAxisAngle(axisIndex, axisCount)
+    val r = radius * fraction.coerceIn(0f, 1f)
+    return Offset(
+        x = center.x + (r * cos(angle)),
+        y = center.y + (r * sin(angle)),
+    )
+}
+
+/**
+ * Derives the inclusive value range for a radar chart across every series+axis. Min is clamped to 0
+ * (radar axes read from the center = 0) unless all data is negative. An explicit [override] wins.
+ */
+internal fun radarValueRange(series: List<ChartSeries>, override: Pair<Float, Float>? = null): Pair<Float, Float> {
+    override?.let { return it }
+    val values = series.flatMap { it.values }
+    if (values.isEmpty()) return 0f to 1f
+    val max = values.max()
+    return if (max > 0f) 0f to max else values.min() to max.coerceAtLeast(values.min() + 1f)
+}
+
+// endregion ───────────────────────────────────────────────────────────────────
 
 /**
  * Describes the data point the pointer is hovering. Returned by [hitTestPoint].

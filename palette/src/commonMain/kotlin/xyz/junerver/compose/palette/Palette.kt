@@ -526,12 +526,16 @@ fun PChart(
     modifier: androidx.compose.ui.Modifier = androidx.compose.ui.Modifier,
     options: ChartOptionsImpl = ChartOptionsImpl(),
     colors: ChartColorsImpl = ChartDefaultsImpl.colors(),
+    controlledZoomRange: Pair<Float, Float>? = null,
+    onZoomChange: ((Pair<Float, Float>) -> Unit)? = null,
 ) = PChartImpl(
     spec = spec,
     data = data,
     modifier = modifier,
     options = options,
     colors = colors,
+    controlledZoomRange = controlledZoomRange,
+    onZoomChange = onZoomChange,
 )
 
 val ChartDefaults = ChartDefaultsImpl

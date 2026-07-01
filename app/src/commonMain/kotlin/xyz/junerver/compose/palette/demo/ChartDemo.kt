@@ -12,7 +12,10 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.ReadOnlyComposable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import xyz.junerver.compose.palette.Language
@@ -23,6 +26,9 @@ import xyz.junerver.compose.palette.components.chart.ChartLegendPosition
 import xyz.junerver.compose.palette.components.chart.ChartOptions
 import xyz.junerver.compose.palette.components.chart.ChartSeries
 import xyz.junerver.compose.palette.components.chart.ChartSpec
+import xyz.junerver.compose.palette.components.chart.DataZoom
+import xyz.junerver.compose.palette.components.chart.MarkLine
+import xyz.junerver.compose.palette.components.chart.MarkLineAxis
 import xyz.junerver.compose.palette.components.chart.PChart
 import xyz.junerver.compose.palette.components.text.PText
 
@@ -129,6 +135,15 @@ fun ChartDemo() {
                             legendPosition = ChartLegendPosition.Top,
                             xAxisTitle = text.lineXAxisTitle,
                             yAxisTitle = text.lineYAxisTitle,
+                            // Average-visitor reference line drawn over the plot (P5-A demo).
+                            markLines =
+                                listOf(
+                                    MarkLine(
+                                        axis = MarkLineAxis.Value,
+                                        position = 53.6f,
+                                        label = text.lineAverageLabel,
+                                    ),
+                                ),
                         ),
                 )
                 PChart(
@@ -142,6 +157,94 @@ fun ChartDemo() {
                             xAxisTitle = text.lineXAxisTitle,
                             yAxisTitle = text.lineYAxisTitle,
                         ),
+                )
+            }
+        }
+
+        Spacer(modifier = Modifier.height(24.dp))
+
+        // ---- Scatter ----
+        DemoSection(title = text.scatterSectionTitle) {
+            PChart(
+                spec = ChartSpec.Scatter(),
+                data = data.scatter,
+                modifier = Modifier.fillMaxWidth().height(240.dp),
+                options =
+                    ChartOptions(
+                        title = text.scatterTitle,
+                        legendPosition = ChartLegendPosition.Top,
+                        xAxisTitle = text.scatterXAxisTitle,
+                        yAxisTitle = text.scatterYAxisTitle,
+                    ),
+            )
+        }
+
+        Spacer(modifier = Modifier.height(24.dp))
+
+        // ---- Radar ----
+        DemoSection(title = text.radarSectionTitle) {
+            PChart(
+                spec = ChartSpec.Radar(),
+                data = data.radar,
+                modifier = Modifier.fillMaxWidth().height(260.dp),
+                options =
+                    ChartOptions(
+                        title = text.radarTitle,
+                        legendPosition = ChartLegendPosition.Top,
+                    ),
+            )
+        }
+
+        Spacer(modifier = Modifier.height(24.dp))
+
+        // ---- Dual Y-axis (P5-B): two metrics with different scales on one chart ----
+        DemoSection(title = text.dualAxisSectionTitle) {
+            PChart(
+                spec = ChartSpec.Line(),
+                data = data.dualAxis,
+                modifier = Modifier.fillMaxWidth().height(240.dp),
+                options =
+                    ChartOptions(
+                        title = text.dualAxisTitle,
+                        legendPosition = ChartLegendPosition.Top,
+                        xAxisTitle = text.dualAxisXTitle,
+                        yAxisTitle = text.dualAxisLeftYTitle,
+                    ),
+            )
+        }
+
+        Spacer(modifier = Modifier.height(24.dp))
+
+        // ---- DataZoom + Linked charts (P6-A/B): drag one slider to drive both views ----
+        DemoSection(title = text.linkedSectionTitle) {
+            // Lift the zoom range into parent state so the two charts share it.
+            var linkedZoom by remember { mutableStateOf(0f to 1f) }
+            Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                PChart(
+                    spec = ChartSpec.Line(),
+                    data = data.zoomLine,
+                    modifier = Modifier.fillMaxWidth().height(200.dp),
+                    options =
+                        ChartOptions(
+                            title = text.linkedTopTitle,
+                            legendPosition = ChartLegendPosition.Top,
+                            dataZoom = DataZoom(),
+                        ),
+                    controlledZoomRange = linkedZoom,
+                    onZoomChange = { linkedZoom = it },
+                )
+                PChart(
+                    spec = ChartSpec.Bar(),
+                    data = data.zoomBar,
+                    modifier = Modifier.fillMaxWidth().height(200.dp),
+                    options =
+                        ChartOptions(
+                            title = text.linkedBottomTitle,
+                            legendPosition = ChartLegendPosition.Top,
+                            dataZoom = DataZoom(),
+                        ),
+                    controlledZoomRange = linkedZoom,
+                    onZoomChange = { linkedZoom = it },
                 )
             }
         }
@@ -178,6 +281,11 @@ private class ChartDemoData(
     val bar: ChartData,
     val singleBar: ChartData,
     val line: ChartData,
+    val scatter: ChartData,
+    val radar: ChartData,
+    val dualAxis: ChartData,
+    val zoomLine: ChartData,
+    val zoomBar: ChartData,
 )
 
 @Composable
@@ -220,6 +328,53 @@ private fun rememberChartData(): ChartDemoData {
                         ),
                     categories = listOf("Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"),
                 ),
+            // Scatter: flat values list read as (x,y) pairs. Two series for color grouping.
+            scatter =
+                ChartData(
+                    series =
+                        listOf(
+                            ChartSeries(labels.groupA, listOf(1f, 2f, 2f, 5f, 3f, 8f, 5f, 3f, 7f, 9f)),
+                            ChartSeries(labels.groupB, listOf(2f, 4f, 4f, 7f, 6f, 6f, 8f, 5f, 9f, 8f)),
+                        ),
+                ),
+            // Radar: categories define the axes; each series is a polygon.
+            radar =
+                ChartData(
+                    series =
+                        listOf(
+                            ChartSeries(labels.productA, listOf(80f, 60f, 90f, 70f, 85f)),
+                            ChartSeries(labels.productB, listOf(50f, 85f, 65f, 95f, 60f)),
+                        ),
+                    categories = listOf(labels.speed, labels.power, labels.range, labels.quality, labels.cost),
+                ),
+            // Dual-axis: visitors (left, 0..100) vs. revenue (right, 0..1000). Same categories.
+            dualAxis =
+                ChartData(
+                    series =
+                        listOf(
+                            ChartSeries(labels.visitors, listOf(20f, 35f, 50f, 45f, 70f), yAxisIndex = 0),
+                            ChartSeries(labels.revenue, listOf(150f, 300f, 550f, 480f, 900f), yAxisIndex = 1),
+                        ),
+                    categories = listOf(labels.mon, labels.tue, labels.wed, labels.thu, labels.fri),
+                ),
+            // Long series for the data-zoom / linked demo (zoomLine on top, zoomBar on bottom —
+            // same 12 months so the linked slider slices both in lockstep).
+            zoomLine =
+                ChartData(
+                    series =
+                        listOf(
+                            ChartSeries(labels.visitors, listOf(30f, 45f, 40f, 60f, 55f, 75f, 70f, 65f, 80f, 50f, 35f, 60f)),
+                        ),
+                    categories = listOf("Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"),
+                ),
+            zoomBar =
+                ChartData(
+                    series =
+                        listOf(
+                            ChartSeries(labels.revenue, listOf(120f, 180f, 150f, 210f, 190f, 260f, 240f, 220f, 280f, 200f, 160f, 230f)),
+                        ),
+                    categories = listOf("Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"),
+                ),
         )
     }
 }
@@ -251,6 +406,20 @@ private fun chartDemoText(): ChartDemoText =
                 lineSmoothAreaTitle = "平滑曲线 + 面积填充",
                 lineXAxisTitle = "星期",
                 lineYAxisTitle = "人数",
+                lineAverageLabel = "平均值",
+                scatterSectionTitle = "散点图",
+                scatterTitle = "散点分布",
+                scatterXAxisTitle = "X",
+                scatterYAxisTitle = "Y",
+                radarSectionTitle = "雷达图",
+                radarTitle = "多维对比",
+                dualAxisSectionTitle = "双 Y 轴",
+                dualAxisTitle = "访客 vs 收入（双轴）",
+                dualAxisXTitle = "工作日",
+                dualAxisLeftYTitle = "访客",
+                linkedSectionTitle = "缩放与联动",
+                linkedTopTitle = "访客趋势（拖动下方滑块）",
+                linkedBottomTitle = "收入对比（联动）",
                 emptySectionTitle = "空状态",
                 emptyStateTitle = "无数据",
                 codeTitle = "代码示例",
@@ -313,6 +482,20 @@ private fun chartDemoText(): ChartDemoText =
                 lineSmoothAreaTitle = "Smooth + Area Fill",
                 lineXAxisTitle = "Weekday",
                 lineYAxisTitle = "Count",
+                lineAverageLabel = "Average",
+                scatterSectionTitle = "Scatter",
+                scatterTitle = "Scatter Distribution",
+                scatterXAxisTitle = "X",
+                scatterYAxisTitle = "Y",
+                radarSectionTitle = "Radar",
+                radarTitle = "Multi-dimension Compare",
+                dualAxisSectionTitle = "Dual Y-axis",
+                dualAxisTitle = "Visitors vs. Revenue (dual axis)",
+                dualAxisXTitle = "Weekday",
+                dualAxisLeftYTitle = "Visitors",
+                linkedSectionTitle = "Zoom & Linking",
+                linkedTopTitle = "Visitor Trend (drag the slider)",
+                linkedBottomTitle = "Revenue (linked)",
                 emptySectionTitle = "Empty State",
                 emptyStateTitle = "No data",
                 codeTitle = "Code Example",
@@ -368,6 +551,20 @@ private fun chartDemoLabels(): ChartDemoLabels =
                 revenue = "收入",
                 visitors = "访客",
                 buyers = "买家",
+                groupA = "A 组",
+                groupB = "B 组",
+                productA = "产品 A",
+                productB = "产品 B",
+                speed = "速度",
+                power = "性能",
+                range = "续航",
+                quality = "质量",
+                cost = "成本",
+                mon = "周一",
+                tue = "周二",
+                wed = "周三",
+                thu = "周四",
+                fri = "周五",
             )
 
         Language.EN_US ->
@@ -379,6 +576,20 @@ private fun chartDemoLabels(): ChartDemoLabels =
                 revenue = "Revenue",
                 visitors = "Visitors",
                 buyers = "Buyers",
+                groupA = "Group A",
+                groupB = "Group B",
+                productA = "Product A",
+                productB = "Product B",
+                speed = "Speed",
+                power = "Power",
+                range = "Range",
+                quality = "Quality",
+                cost = "Cost",
+                mon = "Mon",
+                tue = "Tue",
+                wed = "Wed",
+                thu = "Thu",
+                fri = "Fri",
             )
     }
 
@@ -402,6 +613,20 @@ private data class ChartDemoText(
     val lineSmoothAreaTitle: String,
     val lineXAxisTitle: String,
     val lineYAxisTitle: String,
+    val lineAverageLabel: String,
+    val scatterSectionTitle: String,
+    val scatterTitle: String,
+    val scatterXAxisTitle: String,
+    val scatterYAxisTitle: String,
+    val radarSectionTitle: String,
+    val radarTitle: String,
+    val dualAxisSectionTitle: String,
+    val dualAxisTitle: String,
+    val dualAxisXTitle: String,
+    val dualAxisLeftYTitle: String,
+    val linkedSectionTitle: String,
+    val linkedTopTitle: String,
+    val linkedBottomTitle: String,
     val emptySectionTitle: String,
     val emptyStateTitle: String,
     val codeTitle: String,
@@ -416,4 +641,18 @@ private data class ChartDemoLabels(
     val revenue: String,
     val visitors: String,
     val buyers: String,
+    val groupA: String,
+    val groupB: String,
+    val productA: String,
+    val productB: String,
+    val speed: String,
+    val power: String,
+    val range: String,
+    val quality: String,
+    val cost: String,
+    val mon: String,
+    val tue: String,
+    val wed: String,
+    val thu: String,
+    val fri: String,
 )
