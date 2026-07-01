@@ -147,6 +147,7 @@ internal fun ScatterChartRenderer(
                     yRange = yMin to yMax,
                     plot = plot,
                     radiusPx = with(density) { 16.dp.toPx() },
+                    seriesColors = seriesColors,
                 )
             } else null
             hoverState.target = hovered
@@ -159,7 +160,9 @@ internal fun ScatterChartRenderer(
                 scatterPairs(s.values).forEachIndexed { pairIndex, (x, y) ->
                     val px = leftPx + normalizeValue(x, xMin, xMax) * plotW
                     val py = topPx + plotH - normalizeValue(y, yMin, yMax) * plotH
-                    val isHovered = hovered != null && hovered.seriesIndex == sIndex && hovered.categoryIndex == pairIndex
+                    val isHovered = hovered != null &&
+                        hovered.primarySeriesIndex == sIndex &&
+                        hovered.primaryCategoryIndex == pairIndex
                     if (isHovered) {
                         drawCircle(color = color, radius = hoveredRadiusPx, center = Offset(px, py))
                         drawCircle(

@@ -83,6 +83,8 @@ internal fun PieChartRenderer(
                     startAngleDeg = sweepBase,
                     values = slices,
                     categories = categories,
+                    sliceColors = sliceColors,
+                    sliceLabel = series?.label ?: "",
                 )
             } else null
             hoverState.target = hovered
@@ -99,7 +101,7 @@ internal fun PieChartRenderer(
                 // full wedges too, since the hole is cleared afterwards by a center circle.
                 val geom = pieSliceGeometry(index, value, startAngle, total)
                 val color = sliceColors[index]
-                val isHovered = hovered != null && hovered.seriesIndex == index
+                val isHovered = hovered != null && hovered.primaryCategoryIndex == index
                 // Hovered slices draw slightly enlarged (a "pop") for tactile feedback.
                 val r = if (isHovered) drawRadius * 1.03f else drawRadius
                 // Sweep-in: this slice's visible sweep is how much of its target sweep falls within

@@ -288,6 +288,7 @@ internal fun scatterBounds(series: List<ChartSeries>): Pair<Pair<Float, Float>, 
 /**
  * Hit test for a scatter chart: returns the nearest point within [radiusPx] of [mouse], or `null`.
  * Pure + testable. [xRange]/[yRange] are the scatter bounds (so points map onto the plot rect).
+ * [seriesColors] drives the tooltip dot color for the hit point.
  */
 internal fun hitTestScatter(
     mouse: Offset,
@@ -296,11 +297,14 @@ internal fun hitTestScatter(
     yRange: Pair<Float, Float>,
     plot: PlotRect,
     radiusPx: Float,
+    seriesColors: List<Color>,
 ): HitTarget? {
     if (series.isEmpty()) return null
     val (xMin, xMax) = xRange
     val (yMin, yMax) = yRange
-    var best: HitTarget? = null
+    var bestS = -1
+    var bestPair = -1
+    var bestY = 0f
     var bestDist = radiusPx * radiusPx
     series.forEachIndexed { sIndex, s ->
         scatterPairs(s.values).forEachIndexed { pairIndex, (x, y) ->
@@ -314,11 +318,23 @@ internal fun hitTestScatter(
             val dist = dx * dx + dy * dy
             if (dist <= bestDist) {
                 bestDist = dist
-                best = HitTarget(sIndex, pairIndex, y, category = null, geometryKind = HitGeometry.Point)
+                bestS = sIndex
+                bestPair = pairIndex
+                bestY = y
             }
         }
     }
-    return best
+    if (bestS < 0) return null
+    val color = seriesColors.getOrNull(bestS) ?: Color.Gray
+    val label = series[bestS].label
+    return HitTarget(
+        categoryIndex = -1, // scatter has no shared category axis
+        category = null,
+        entries = listOf(TooltipEntry(bestS, bestY, color, label, 0)),
+        primarySeriesIndex = bestS,
+        primaryCategoryIndex = bestPair,
+        geometryKind = HitGeometry.Point,
+    )
 }
 
 /**
@@ -411,24 +427,72 @@ internal fun radarValueRange(series: List<ChartSeries>, override: Pair<Float, Fl
 // endregion ───────────────────────────────────────────────────────────────────
 
 /**
- * Describes the data point the pointer is hovering. Returned by [hitTestPoint].
+ * One row in a tooltip: the value of a single series at the hovered category, plus its resolved
+ * color/label so the tooltip can render a legend-matched dot per row. [yAxisIndex] drives the
+ * dual-axis grouping (0 = left, 1 = right); the tooltip adds a "left/right axis" sub-header when
+ * any entry binds to axis 1.
+ */
+internal data class TooltipEntry(
+    val seriesIndex: Int,
+    val value: Float,
+    val color: Color,
+    val label: String,
+    val yAxisIndex: Int = 0,
+)
+
+/**
+ * Describes what the pointer is hovering. Carries a WHOLE COLUMN of series values ([entries]) so a
+ * multi-series / dual-axis tooltip can show every series at the hovered category — the fix for the
+ * "tooltip only showed one series" bug.
  *
- * - [seriesIndex]/[categoryIndex] locate the point in the dataset.
- * - [value] is the underlying value at that position (the stacked sum for stacked bars — the
- *   visually-relevant "top" of the hovered segment column).
- * - [category] is the resolved category label (or `null` for pie/scatter which have no x-axis).
- * - [geometryKind] tells the renderer how the highlight should be drawn for this point.
+ * - [categoryIndex] locates the hovered category slot (bar/line); `-1` for pie/scatter which have no
+ *   shared category axis (each hit is a single independent point).
+ * - [category] is the resolved category label (or `null` for pie/scatter).
+ * - [entries] are the per-series values to list in the tooltip. For bar/line this is EVERY visible
+ *   series at [categoryIndex]; for pie/scatter it's just the one hit point.
+ * - [primarySeriesIndex]/[primaryCategoryIndex] name the single "closest" point the cursor actually
+ *   landed on — used by pie/scatter/line-snap for single-point highlight feedback, and by the
+ *   tooltip to anchor near the nearest marker.
+ * - [geometryKind] tells the renderer how to draw the highlight.
  */
 internal data class HitTarget(
-    val seriesIndex: Int,
     val categoryIndex: Int,
-    val value: Float,
     val category: String?,
+    val entries: List<TooltipEntry>,
+    val primarySeriesIndex: Int,
+    val primaryCategoryIndex: Int,
     val geometryKind: HitGeometry,
 )
 
 /** How a [HitTarget] is shaped on the canvas — drives the highlight feedback in the renderer. */
 internal enum class HitGeometry { Bar, Point, Slice }
+
+/**
+ * Builds the [TooltipEntry] list for a hovered category: one entry per visible series that HAS a
+ * value at [catIndex], carrying its resolved color + label + axis binding. Series whose value is
+ * missing at [catIndex] are skipped (no empty rows). Pure + testable.
+ *
+ * @param series the (already visibility-filtered) series list.
+ * @param catIndex the hovered category index.
+ * @param seriesColors per-series resolved colors, aligned with [series].
+ * @param yAxisBySeries per-series axis index (clamped to 0/1); `null` → all 0.
+ */
+internal fun resolveTooltipEntries(
+    series: List<ChartSeries>,
+    catIndex: Int,
+    seriesColors: List<Color>,
+    yAxisBySeries: List<Int>? = null,
+): List<TooltipEntry> {
+    if (catIndex < 0) return emptyList()
+    val result = ArrayList<TooltipEntry>(series.size)
+    series.forEachIndexed { sIndex, s ->
+        val v = s.values.getOrNull(catIndex) ?: return@forEachIndexed // missing → skip
+        val color = seriesColors.getOrNull(sIndex) ?: Color.Gray
+        val axis = yAxisBySeries?.getOrNull(sIndex)?.coerceIn(0, 1) ?: 0
+        result.add(TooltipEntry(sIndex, v, color, s.label, axis))
+    }
+    return result
+}
 
 /**
  * The plot rectangle in canvas pixels. [left]/[top] is the top-left corner of the data area (after
@@ -471,6 +535,8 @@ internal fun hitTestPoint(
     yMax: Float,
     categories: List<String>,
     plot: PlotRect,
+    seriesColors: List<Color>,
+    yAxisBySeries: List<Int>? = null,
     horizontal: Boolean = false,
     stacked: Boolean = false,
     pointRadiusPx: Float = 0f,
@@ -488,34 +554,38 @@ internal fun hitTestPoint(
     }
     val catIndex = catPos.toInt().coerceIn(0, catCount - 1)
 
-    // Line chart: when a snap radius is given, prefer the nearest plotted point within it.
-    if (pointRadiusPx > 0f && !stacked) {
-        val slot = (if (horizontal) plot.width else plot.width) / catCount
-        val nearest = nearestSeriesPoint(mouse, series, yMin, yMax, catIndex, plot, horizontal, pointRadiusPx, slot)
-        if (nearest != null) return nearest
-    }
+    // Collect EVERY visible series' value at this category → the tooltip lists them all (the fix for
+    // "multi-series tooltip only showed one"). Missing values are skipped by resolveTooltipEntries.
+    val entries = resolveTooltipEntries(series, catIndex, seriesColors, yAxisBySeries)
+    if (entries.isEmpty()) return null
 
-    // Bar / line default: report the first visible series' value at this category. For a stacked bar
-    // sum every series so the tooltip reflects the visible stack height.
-    val value = if (stacked) {
-        series.sumOf { (it.values.getOrNull(catIndex) ?: 0f).toDouble() }.toFloat()
-    } else {
-        series.firstOrNull()?.values?.getOrNull(catIndex) ?: return null
+    // Line chart: when a snap radius is given, find the nearest plotted point within it — that point
+    // becomes the primary hit (drives single-point highlight + tooltip anchor). The entries list still
+    // covers the whole column so the tooltip shows every series.
+    var primarySeries = entries.first().seriesIndex
+    var primaryCat = catIndex
+    if (pointRadiusPx > 0f && !stacked) {
+        val nearest = nearestSeriesPoint(mouse, series, yMin, yMax, catIndex, plot, horizontal, pointRadiusPx)
+        if (nearest != null) {
+            primarySeries = nearest.first
+            primaryCat = nearest.second
+        }
     }
 
     return HitTarget(
-        seriesIndex = 0,
         categoryIndex = catIndex,
-        value = value,
         category = categories.getOrNull(catIndex),
+        entries = entries,
+        primarySeriesIndex = primarySeries,
+        primaryCategoryIndex = primaryCat,
         geometryKind = if (stacked || series.size > 1) HitGeometry.Bar else HitGeometry.Point,
     )
 }
 
 /**
- * Finds the plotted data point nearest to [mouse] within [pointRadiusPx], used by line charts so the
- * tooltip can snap to a marker rather than the cursor's raw slot. Returns `null` when no point is
- * close enough.
+ * Finds the plotted data point nearest to [mouse] within [radiusPx], used by line charts so the
+ * tooltip can snap to a marker. Returns `(seriesIndex, categoryIndex)` of the closest point, or
+ * `null` when none is within the radius.
  */
 private fun nearestSeriesPoint(
     mouse: Offset,
@@ -525,13 +595,12 @@ private fun nearestSeriesPoint(
     catIndex: Int,
     plot: PlotRect,
     horizontal: Boolean,
-    pointRadiusPx: Float,
-    slot: Float,
-): HitTarget? {
+    radiusPx: Float,
+): Pair<Int, Int>? {
     // Search the hovered slot and its immediate neighbours — a point can sit near a slot edge.
     val range = (catIndex - 1).coerceAtLeast(0)..(catIndex + 1).let { it.coerceAtMost((series.firstOrNull()?.values?.size ?: 1) - 1) }
-    var best: HitTarget? = null
-    var bestDist = pointRadiusPx * pointRadiusPx
+    var best: Pair<Int, Int>? = null
+    var bestDist = radiusPx * radiusPx
     series.forEachIndexed { sIndex, s ->
         for (i in range) {
             val v = s.values.getOrNull(i) ?: continue
@@ -547,12 +616,10 @@ private fun nearestSeriesPoint(
             val dist = dx * dx + dy * dy
             if (dist <= bestDist) {
                 bestDist = dist
-                best = HitTarget(sIndex, i, v, category = null, geometryKind = HitGeometry.Point)
+                best = sIndex to i
             }
         }
     }
-    // suppress unused-warning while keeping the parameter documented
-    @Suppress("UNUSED_VARIABLE") val _slot = slot
     return best
 }
 
@@ -566,6 +633,8 @@ private fun nearestSeriesPoint(
  * @param startAngleDeg the base angle slices are laid out from (matches [ChartSpec.Pie.startAngleDeg]).
  * @param values the slice values (the first series' values).
  * @param categories slice labels.
+ * @param sliceColors per-slice resolved colors (tooltip dot).
+ * @param sliceLabel the single series' label (tooltip row label source).
  */
 internal fun hitTestPie(
     mouse: Offset,
@@ -575,6 +644,8 @@ internal fun hitTestPie(
     startAngleDeg: Float,
     values: List<Float>,
     categories: List<String>,
+    sliceColors: List<Color>,
+    sliceLabel: String,
 ): HitTarget? {
     if (values.isEmpty()) return null
     val dx = mouse.x - center.x
@@ -588,7 +659,18 @@ internal fun hitTestPie(
     values.forEachIndexed { i, v ->
         val sweep = v / total * 360f
         if (angle >= acc && angle < acc + sweep) {
-            return HitTarget(i, i, v, categories.getOrNull(i), HitGeometry.Slice)
+            // Pie is a single series: the hit slice → one entry whose seriesIndex is 0 (the only
+            // series). primarySeriesIndex/primaryCategoryIndex both name the slice for highlight.
+            val color = sliceColors.getOrNull(i) ?: Color.Gray
+            val label = categories.getOrNull(i) ?: sliceLabel
+            return HitTarget(
+                categoryIndex = i,
+                category = categories.getOrNull(i),
+                entries = listOf(TooltipEntry(0, v, color, label, 0)),
+                primarySeriesIndex = 0,
+                primaryCategoryIndex = i,
+                geometryKind = HitGeometry.Slice,
+            )
         }
         acc += sweep
     }

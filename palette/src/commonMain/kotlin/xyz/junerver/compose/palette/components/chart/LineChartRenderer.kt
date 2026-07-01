@@ -126,6 +126,8 @@ internal fun LineChartRenderer(
                     yMax = yMax,
                     categories = categories,
                     plot = plot,
+                    seriesColors = seriesColors,
+                    yAxisBySeries = series.map { it.yAxisIndex },
                     pointRadiusPx = with(density) { 12.dp.toPx() },
                 )
             } else null
@@ -153,13 +155,14 @@ internal fun LineChartRenderer(
                     color = color,
                     style = Stroke(width = lineStrokePx),
                 )
+                // Whole-column highlight: when hovering category C, EVERY series' point at C is enlarged
+                // + ringed (the fix for "multi-series only highlighted one point"). hovered.categoryIndex
+                // is the cursor's slot; points hidden → still surface the column's markers.
+                val hoveredCat = hovered?.categoryIndex ?: -1
                 if (spec.showPoints) {
                     pts.forEachIndexed { i, p ->
-                        val isHovered = hovered != null &&
-                            hovered.seriesIndex == sIndex &&
-                            hovered.categoryIndex == i
+                        val isHovered = i == hoveredCat
                         if (isHovered) {
-                            // Hovered marker: larger fill + bright ring.
                             drawCircle(color = color, radius = hoveredRadiusPx, center = p)
                             drawCircle(
                                 color = ringColor,
@@ -171,9 +174,10 @@ internal fun LineChartRenderer(
                             drawCircle(color = color, radius = pointRadiusPx, center = p)
                         }
                     }
-                } else if (hovered != null && hovered.seriesIndex == sIndex) {
-                    // Even with points hidden, surface the hovered marker so the tooltip has an anchor.
-                    val p = pts.getOrNull(hovered.categoryIndex) ?: return@forEachIndexed
+                } else if (hoveredCat >= 0) {
+                    // Even with points hidden, surface the hovered column's markers so the tooltip has
+                    // a visible anchor on every series.
+                    val p = pts.getOrNull(hoveredCat) ?: return@forEachIndexed
                     drawCircle(color = color, radius = hoveredRadiusPx, center = p)
                     drawCircle(
                         color = ringColor,

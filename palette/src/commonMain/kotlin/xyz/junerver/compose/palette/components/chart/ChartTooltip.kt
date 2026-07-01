@@ -2,10 +2,21 @@ package xyz.junerver.compose.palette.components.chart
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.IntrinsicSize
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.layout.wrapContentSize
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Stable
@@ -13,13 +24,19 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.IntOffset
+import androidx.compose.ui.unit.IntSize
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.dp
 import kotlin.math.roundToInt
 import xyz.junerver.compose.palette.core.theme.PaletteTheme
@@ -78,8 +95,8 @@ internal fun rememberChartHoverState(): ChartHoverState = remember { ChartHoverS
 @Composable
 internal fun ChartTooltipOverlay(
     state: ChartHoverState,
-    data: ChartData,
-    colors: ChartColors,
+    @Suppress("UNUSED_PARAMETER") data: ChartData,
+    @Suppress("UNUSED_PARAMETER") colors: ChartColors,
     modifier: Modifier = Modifier,
 ) {
     val target = state.target
@@ -87,56 +104,135 @@ internal fun ChartTooltipOverlay(
 
     val tokens = PaletteTheme.componentThemes.chart
     val density = LocalDensity.current
-    // Leader gap + cursor offset so the tooltip clears the highlighted element.
     val gapPx = with(density) { 12.dp.toPx() }
+    val edgePaddingPx = with(density) { 4.dp.toPx() }
     val anchor = state.anchor
-    val seriesLabel = data.series.getOrNull(target.seriesIndex)?.label
-    val valueText = formatTooltipValue(target.value)
+    val dotSize = 8.dp
+    val rowGap = 6.dp
+    val hasRightAxis = target.entries.any { it.yAxisIndex == 1 }
+    val cornerShape = androidx.compose.foundation.shape.RoundedCornerShape(tokens.tooltipCornerRadius)
 
-    Box(modifier = modifier) {
-        // Anchor the tooltip at the cursor, nudged up-right by the leader gap.
+    // Measure the tooltip + host once they're laid out, so we can flip it to the opposite side of
+    // the cursor when it would overflow the chart canvas (the fix for "tooltip runs off-screen").
+    var hostSize by remember { mutableStateOf(IntSize.Zero) }
+    var tooltipSize by remember { mutableStateOf(IntSize.Zero) }
+
+    Box(modifier = modifier.onGloballyPositioned { hostSize = it.size }) {
         Column(
             modifier = Modifier
+                // width(IntrinsicSize.Min) → the Column shrinks to its widest child, so the inner
+                // Rows have a BOUNDED width. Without this the Row's weight(1f) is unbounded and long
+                // labels push the tooltip (and the value column) off the right edge of the screen.
+                // widthIn(max) caps pathological labels so the tooltip never exceeds a sane size and
+                // the value column stays visible (label ellipsizes instead).
+                .width(IntrinsicSize.Min)
+                .widthIn(max = 220.dp)
+                .onGloballyPositioned { tooltipSize = it.size }
                 .offset {
-                    IntOffset(
-                        x = (anchor.x + gapPx).roundToInt(),
-                        y = (anchor.y - gapPx).roundToInt(),
-                    )
+                    val aw = tooltipSize.width.toFloat()
+                    val ah = tooltipSize.height.toFloat()
+                    val hw = hostSize.width.toFloat().coerceAtLeast(1f)
+                    val hh = hostSize.height.toFloat().coerceAtLeast(1f)
+                    // Default: place to the right of + above the cursor. Flip when that overflows.
+                    val placeRight = anchor.x + gapPx + aw <= hw - edgePaddingPx
+                    val x = if (placeRight) {
+                        anchor.x + gapPx
+                    } else {
+                        // No room on the right → place on the left of the cursor.
+                        (anchor.x - gapPx - aw).coerceAtLeast(edgePaddingPx)
+                    }
+                    // Vertically: prefer above the cursor; flip below if it would clip the top.
+                    val placeAbove = anchor.y - gapPx - ah >= edgePaddingPx
+                    val y = if (placeAbove) {
+                        anchor.y - gapPx - ah
+                    } else {
+                        (anchor.y + gapPx).coerceAtMost((hh - ah - edgePaddingPx).coerceAtLeast(edgePaddingPx))
+                    }
+                    IntOffset(x.roundToInt(), y.roundToInt())
                 }
-                .shadow(elevation = tokens.tooltipElevation, shape = androidx.compose.foundation.shape.RoundedCornerShape(tokens.tooltipCornerRadius))
-                .background(
-                    color = tokens.tooltipBackgroundColor,
-                    shape = androidx.compose.foundation.shape.RoundedCornerShape(tokens.tooltipCornerRadius),
-                )
-                .border(
-                    width = 1.dp,
-                    color = tokens.tooltipBorderColor,
-                    shape = androidx.compose.foundation.shape.RoundedCornerShape(tokens.tooltipCornerRadius),
-                )
+                .shadow(elevation = tokens.tooltipElevation, shape = cornerShape)
+                .background(color = tokens.tooltipBackgroundColor, shape = cornerShape)
+                .border(width = 1.dp, color = tokens.tooltipBorderColor, shape = cornerShape)
                 .padding(tokens.tooltipPadding),
         ) {
-            if (seriesLabel != null) {
-                Text(
-                    text = seriesLabel,
-                    color = tokens.tooltipTextColor,
-                    style = tokens.tooltipTextStyle.copy(fontWeight = FontWeight.SemiBold),
-                )
-            }
+            // Header: the hovered category (e.g. "Q2", "Mon"). Omitted for pie/scatter (null).
             if (target.category != null) {
                 Text(
                     text = target.category,
-                    color = tokens.tooltipTextColor.copy(alpha = 0.7f),
-                    style = tokens.tooltipTextStyle,
+                    color = tokens.tooltipTextColor,
+                    style = tokens.tooltipTextStyle.copy(fontWeight = FontWeight.SemiBold),
                 )
+                Spacer(modifier = Modifier.size(rowGap))
             }
-            Text(
-                text = valueText,
-                color = tokens.tooltipTextColor,
-                style = tokens.tooltipTextStyle,
-            )
+            if (hasRightAxis) {
+                val left = target.entries.filter { it.yAxisIndex == 0 }
+                val right = target.entries.filter { it.yAxisIndex == 1 }
+                if (left.isNotEmpty()) {
+                    AxisGroupHeader(label = LeftAxisLabel, style = tokens.tooltipTextStyle, color = tokens.tooltipTextColor)
+                    left.forEach { EntryRow(it, dotSize, rowGap, tokens) }
+                }
+                if (right.isNotEmpty()) {
+                    if (left.isNotEmpty()) Spacer(modifier = Modifier.size(rowGap))
+                    AxisGroupHeader(label = RightAxisLabel, style = tokens.tooltipTextStyle, color = tokens.tooltipTextColor)
+                    right.forEach { EntryRow(it, dotSize, rowGap, tokens) }
+                }
+            } else {
+                target.entries.forEach { EntryRow(it, dotSize, rowGap, tokens) }
+            }
         }
     }
 }
+
+/** The per-series row: a color dot + label (left, fill) + value (right). Stays inside the tooltip's
+ *  bounded width (the parent Column uses width(IntrinsicSize.Min)), so the value is always visible. */
+@Composable
+private fun EntryRow(
+    entry: TooltipEntry,
+    dotSize: androidx.compose.ui.unit.Dp,
+    rowGap: androidx.compose.ui.unit.Dp,
+    tokens: xyz.junerver.compose.palette.core.tokens.PaletteChartTokens,
+) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(rowGap),
+    ) {
+        Box(modifier = Modifier.size(dotSize).clip(CircleShape).background(entry.color))
+        // Label fills the remaining width; long labels ellipsize instead of pushing the value out.
+        Text(
+            text = entry.label,
+            color = tokens.tooltipTextColor,
+            style = tokens.tooltipTextStyle,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+            modifier = Modifier.weight(1f),
+        )
+        // Value is right-aligned and never truncated (the whole point of the tooltip).
+        Text(
+            text = formatTooltipValue(entry.value),
+            color = tokens.tooltipTextColor,
+            style = tokens.tooltipTextStyle.copy(fontWeight = FontWeight.Medium),
+            maxLines = 1,
+        )
+    }
+}
+
+/** A small dimmed sub-header labeling an axis group in the dual-axis tooltip. */
+@Composable
+private fun AxisGroupHeader(
+    label: String,
+    style: androidx.compose.ui.text.TextStyle,
+    color: Color,
+) {
+    Text(
+        text = label,
+        color = color.copy(alpha = 0.6f),
+        style = style,
+    )
+}
+
+/** i18n-neutral axis labels. The chart has no string-table; these are short fixed labels. */
+private const val LeftAxisLabel = "Y1"
+private const val RightAxisLabel = "Y2"
 
 /**
  * Formats the hovered value for the tooltip, mirroring [formatTickValue]'s platform-agnostic

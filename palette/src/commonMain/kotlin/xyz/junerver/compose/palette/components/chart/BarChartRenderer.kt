@@ -118,6 +118,8 @@ internal fun BarChartRenderer(
                     yMax = yMax,
                     categories = categories,
                     plot = plot,
+                    seriesColors = seriesColors,
+                    yAxisBySeries = series.map { it.yAxisIndex },
                     horizontal = spec.horizontal,
                     stacked = spec.stacked,
                 )

@@ -287,21 +287,21 @@ class ChartLogicTest {
     fun hitTestPoint_verticalBar_returnsOwningCategory() {
         // 4 categories over 400px starting at x=50 → slots at x=100,200,300,400 centers.
         val s = ChartSeries("a", listOf(10f, 20f, 30f, 40f))
-        val t = hitTestPoint(Offset(310f, 100f), listOf(s), 0f, 40f, cats, plot)
+        val t = hitTestPoint(Offset(310f, 100f), listOf(s), 0f, 40f, cats, plot, listOf(Color.Red))
         assertNotNull(t)
         assertEquals(2, t.categoryIndex) // slot 2 (Q3)
         assertEquals("Q3", t.category)
-        assertEquals(30f, t.value)
+        assertEquals(30f, t.entries.first().value)
     }
 
     @Test
     fun hitTestPoint_horizontalBar_swapsToYAxis() {
         // Horizontal: category axis is Y. slot 0 occupies y=[10,60), slot 3 y=[160,210).
         val s = ChartSeries("a", listOf(10f, 20f, 30f, 40f))
-        val t = hitTestPoint(Offset(200f, 180f), listOf(s), 0f, 40f, cats, plot, horizontal = true)
+        val t = hitTestPoint(Offset(200f, 180f), listOf(s), 0f, 40f, cats, plot, listOf(Color.Red), horizontal = true)
         assertNotNull(t)
         assertEquals(3, t.categoryIndex)
-        assertEquals(40f, t.value)
+        assertEquals(40f, t.entries.first().value)
     }
 
     @Test
@@ -310,57 +310,77 @@ class ChartLogicTest {
             ChartSeries("2024", listOf(100f, 200f)),
             ChartSeries("2025", listOf(50f, 60f)),
         )
-        val t = hitTestPoint(Offset(125f, 100f), series, 0f, 260f, listOf("Q1", "Q2"), plot, stacked = true)
+        val t = hitTestPoint(Offset(125f, 100f), series, 0f, 260f, listOf("Q1", "Q2"), plot, listOf(Color.Red, Color.Blue), stacked = true)
         assertNotNull(t)
         assertEquals(0, t.categoryIndex)
-        // Stacked sum at Q1 = 100 + 50 = 150
-        assertEquals(150f, t.value)
+        // Stacked: entries list both series; cumulative = 100 + 50 = 150.
+        assertEquals(2, t.entries.size)
+        assertEquals(150f, t.entries.sumOf { it.value.toDouble() }.toFloat())
         assertEquals(HitGeometry.Bar, t.geometryKind)
+    }
+
+    @Test
+    fun hitTestPoint_multiSeries_collectsAllEntriesAtCategory() {
+        // The core fix: hovering a category returns an entry PER visible series, not just the first.
+        val series = listOf(
+            ChartSeries("a", listOf(10f, 20f)),
+            ChartSeries("b", listOf(5f, 15f)),
+        )
+        val t = hitTestPoint(Offset(300f, 100f), series, 0f, 20f, listOf("Q1", "Q2"), plot, listOf(Color.Red, Color.Blue))
+        assertNotNull(t)
+        assertEquals(1, t.categoryIndex) // Q2
+        assertEquals(2, t.entries.size)
+        assertEquals(20f, t.entries[0].value) // series "a" at Q2
+        assertEquals(15f, t.entries[1].value) // series "b" at Q2
+        assertEquals("a", t.entries[0].label)
+        assertEquals("b", t.entries[1].label)
     }
 
     @Test
     fun hitTestPoint_outsidePlot_returnsNull() {
         val s = ChartSeries("a", listOf(1f, 2f, 3f, 4f))
         // Left gutter (axis margin area)
-        assertNull(hitTestPoint(Offset(20f, 100f), listOf(s), 0f, 4f, cats, plot))
+        assertNull(hitTestPoint(Offset(20f, 100f), listOf(s), 0f, 4f, cats, plot, listOf(Color.Red)))
         // Right gutter
-        assertNull(hitTestPoint(Offset(480f, 100f), listOf(s), 0f, 4f, cats, plot))
+        assertNull(hitTestPoint(Offset(480f, 100f), listOf(s), 0f, 4f, cats, plot, listOf(Color.Red)))
         // Above plot
-        assertNull(hitTestPoint(Offset(200f, 5f), listOf(s), 0f, 4f, cats, plot))
+        assertNull(hitTestPoint(Offset(200f, 5f), listOf(s), 0f, 4f, cats, plot, listOf(Color.Red)))
     }
 
     @Test
     fun hitTestPoint_lineChart_snapsToNearestPointWithinRadius() {
         val s = ChartSeries("v", listOf(0f, 40f, 0f, 40f))
         // With yMax=40 the point for Q2 sits at the top (y ≈ 10). Cursor near it should snap.
-        val t = hitTestPoint(Offset(205f, 12f), listOf(s), 0f, 40f, cats, plot, pointRadiusPx = 15f)
+        val t = hitTestPoint(Offset(205f, 12f), listOf(s), 0f, 40f, cats, plot, listOf(Color.Red), pointRadiusPx = 15f)
         assertNotNull(t)
-        assertEquals(1, t.categoryIndex)
-        assertEquals(40f, t.value)
+        assertEquals(1, t.primaryCategoryIndex) // snapped to Q2's marker
+        assertEquals(40f, t.entries.first().value)
         assertEquals(HitGeometry.Point, t.geometryKind)
     }
 
     @Test
     fun hitTestPoint_emptySeries_returnsNull() {
-        assertNull(hitTestPoint(Offset(200f, 100f), emptyList(), 0f, 1f, cats, plot))
+        assertNull(hitTestPoint(Offset(200f, 100f), emptyList(), 0f, 1f, cats, plot, emptyList()))
     }
 
     @Test
     fun hitTestPoint_emptyCategories_returnsNull() {
         val s = ChartSeries("a", listOf(1f))
-        assertNull(hitTestPoint(Offset(200f, 100f), listOf(s), 0f, 1f, emptyList(), plot))
+        assertNull(hitTestPoint(Offset(200f, 100f), listOf(s), 0f, 1f, emptyList(), plot, listOf(Color.Red)))
     }
     // endregion ────────────────────────────────────────────────────────────────
 
     // region hitTestPie ────────────────────────────────────────────────────────
+    private val pieColors = listOf(Color.Red, Color.Green)
+
     @Test
     fun hitTestPie_insideSlice_returnsThatSlice() {
         // Two equal slices: 0..180 and 180..360 (start at 3 o'clock, clockwise).
         val center = Offset(100f, 100f)
-        val t = hitTestPie(Offset(150f, 100f), center, radius = 80f, holeRadius = 0f, 0f, listOf(50f, 50f), listOf("A", "B"))
+        val t = hitTestPie(Offset(150f, 100f), center, radius = 80f, holeRadius = 0f, 0f, listOf(50f, 50f), listOf("A", "B"), pieColors, "Share")
         assertNotNull(t)
-        assertEquals(0, t.seriesIndex)
-        assertEquals(50f, t.value)
+        assertEquals(0, t.primaryCategoryIndex)
+        assertEquals(50f, t.entries.first().value)
         assertEquals("A", t.category)
         assertEquals(HitGeometry.Slice, t.geometryKind)
     }
@@ -369,30 +389,30 @@ class ChartLogicTest {
     fun hitTestPie_secondSlice_whenInLowerHalf() {
         val center = Offset(100f, 100f)
         // Slice 1 spans 180°..360° (upper-left half in screen coords). Point dx=-60, dy=-10 → ~189°.
-        val t = hitTestPie(Offset(40f, 90f), center, 80f, 0f, 0f, listOf(50f, 50f), listOf("A", "B"))
+        val t = hitTestPie(Offset(40f, 90f), center, 80f, 0f, 0f, listOf(50f, 50f), listOf("A", "B"), pieColors, "Share")
         assertNotNull(t)
-        assertEquals(1, t.seriesIndex)
+        assertEquals(1, t.primaryCategoryIndex)
     }
 
     @Test
     fun hitTestPie_outsideCircle_returnsNull() {
         val center = Offset(100f, 100f)
-        assertNull(hitTestPie(Offset(200f, 100f), center, 80f, 0f, 0f, listOf(50f, 50f), listOf("A", "B")))
+        assertNull(hitTestPie(Offset(200f, 100f), center, 80f, 0f, 0f, listOf(50f, 50f), listOf("A", "B"), pieColors, "Share"))
     }
 
     @Test
     fun hitTestPie_insideDonutHole_returnsNull() {
         val center = Offset(100f, 100f)
-        assertNull(hitTestPie(Offset(105f, 105f), center, 80f, 40f, 0f, listOf(50f, 50f), listOf("A", "B")))
+        assertNull(hitTestPie(Offset(105f, 105f), center, 80f, 40f, 0f, listOf(50f, 50f), listOf("A", "B"), pieColors, "Share"))
     }
 
     @Test
     fun hitTestPie_respectsStartAngle() {
         // Start at 90° (12 o'clock). First slice (50%) now spans 90..270.
         val center = Offset(100f, 100f)
-        val t = hitTestPie(Offset(100f, 150f), center, 80f, 0f, 90f, listOf(50f, 50f), listOf("A", "B"))
+        val t = hitTestPie(Offset(100f, 150f), center, 80f, 0f, 90f, listOf(50f, 50f), listOf("A", "B"), pieColors, "Share")
         assertNotNull(t)
-        assertEquals(0, t.seriesIndex)
+        assertEquals(0, t.primaryCategoryIndex)
     }
     // endregion ────────────────────────────────────────────────────────────────
 
@@ -510,17 +530,71 @@ class ChartLogicTest {
         // One point at (x=0,y=0) → bottom-left; another at (x=1,y=1) → top-right.
         val series = listOf(ChartSeries("a", listOf(0f, 0f, 1f, 1f)))
         // Cursor near top-right (≈ x=100,y=0) should hit the (1,1) point.
-        val t = hitTestScatter(Offset(92f, 8f), series, 0f to 1f, 0f to 1f, plot, radiusPx = 15f)
+        val t = hitTestScatter(Offset(92f, 8f), series, 0f to 1f, 0f to 1f, plot, radiusPx = 15f, seriesColors = listOf(Color.Red))
         assertNotNull(t)
-        assertEquals(1, t.categoryIndex) // second pair
-        assertEquals(1f, t.value) // y of the hit point
+        assertEquals(1, t.primaryCategoryIndex) // second pair
+        assertEquals(1f, t.entries.first().value) // y of the hit point
     }
 
     @Test
     fun hitTestScatter_outsideRadiusReturnsNull() {
         val plot = PlotRect(0f, 0f, 100f, 100f)
         val series = listOf(ChartSeries("a", listOf(0f, 0f)))
-        assertNull(hitTestScatter(Offset(90f, 90f), series, 0f to 1f, 0f to 1f, plot, radiusPx = 5f))
+        assertNull(hitTestScatter(Offset(90f, 90f), series, 0f to 1f, 0f to 1f, plot, radiusPx = 5f, seriesColors = listOf(Color.Red)))
+    }
+    // endregion ────────────────────────────────────────────────────────────────
+
+    // region resolveTooltipEntries (multi-series tooltip collection) ───────────
+    @Test
+    fun resolveTooltipEntries_collectsAllSeriesAtCategory() {
+        val series = listOf(
+            ChartSeries("a", listOf(10f, 20f, 30f)),
+            ChartSeries("b", listOf(5f, 15f, 25f)),
+        )
+        val entries = resolveTooltipEntries(series, catIndex = 1, seriesColors = listOf(Color.Red, Color.Blue))
+        assertEquals(2, entries.size)
+        assertEquals(20f, entries[0].value)
+        assertEquals(15f, entries[1].value)
+        assertEquals(Color.Red, entries[0].color)
+        assertEquals("a", entries[0].label)
+    }
+
+    @Test
+    fun resolveTooltipEntries_skipsSeriesMissingValueAtCategory() {
+        // Series "b" has only 1 value; at catIndex 2 it's missing → skipped, only "a" appears.
+        val series = listOf(
+            ChartSeries("a", listOf(1f, 2f, 3f)),
+            ChartSeries("b", listOf(10f)),
+        )
+        val entries = resolveTooltipEntries(series, catIndex = 2, seriesColors = listOf(Color.Red, Color.Blue))
+        assertEquals(1, entries.size)
+        assertEquals(3f, entries[0].value)
+        assertEquals("a", entries[0].label)
+    }
+
+    @Test
+    fun resolveTooltipEntries_assignsYAxisIndex() {
+        val series = listOf(
+            ChartSeries("left", listOf(1f), yAxisIndex = 0),
+            ChartSeries("right", listOf(100f), yAxisIndex = 1),
+        )
+        val entries = resolveTooltipEntries(series, catIndex = 0, seriesColors = listOf(Color.Red, Color.Blue), yAxisBySeries = listOf(0, 1))
+        assertEquals(2, entries.size)
+        assertEquals(0, entries[0].yAxisIndex)
+        assertEquals(1, entries[1].yAxisIndex)
+    }
+
+    @Test
+    fun resolveTooltipEntries_clampsAxisIndexToZeroOne() {
+        val series = listOf(ChartSeries("x", listOf(1f)))
+        val entries = resolveTooltipEntries(series, 0, listOf(Color.Red), yAxisBySeries = listOf(5))
+        assertEquals(1, entries[0].yAxisIndex.coerceAtMost(1))
+    }
+
+    @Test
+    fun resolveTooltipEntries_negativeCatIndexReturnsEmpty() {
+        val series = listOf(ChartSeries("a", listOf(1f)))
+        assertTrue(resolveTooltipEntries(series, catIndex = -1, seriesColors = listOf(Color.Red)).isEmpty())
     }
     // endregion ────────────────────────────────────────────────────────────────
 
