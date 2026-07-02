@@ -3,22 +3,24 @@ package xyz.junerver.compose.palette.markdown
 import kotlin.time.TimeSource
 
 /**
- * 编辑器撤销 / 重做历史栈（纯逻辑、无 Compose 依赖，便于单元测试）。
- *
- * 设计要点：
- * - 每次变更产生一个 [Entry]，包含文本与光标。
- * - 连续的"打字"[pushTyping] 会在阈值窗口内合并为同一个 Entry（Ctrl+Z 按词/段回退，而非逐字符）。
- * - 工具栏、快捷键、粘贴等结构化操作走 [commit]，永远开启新的历史项。
- * - [undo]/[redo] 在 past/present/future 之间移动，不破坏另一侧栈。
- * - 容量有上限，避免超长编辑会话内存膨胀。
+ * 历史项的纯数据载体（文本 + 选区），替代 `TextFieldValue` 作为 Compose-free 核心层的
+ * 数据模型，UI 层负责桥接转换。
  */
-
-/** 撤销栈中的一个历史项（纯数据：文本 + 选区）。 */
 public data class MarkdownHistoryEntry(
     val text: String,
     val selection: MarkdownSelection,
 )
 
+/**
+ * 编辑器撤销 / 重做历史栈（纯逻辑、无 Compose 依赖，便于单元测试）。
+ *
+ * 设计要点：
+ * - 每次变更产生一个 [MarkdownHistoryEntry]，包含文本与光标。
+ * - 连续的"打字"[pushTyping] 会在阈值窗口内合并为同一个 Entry（Ctrl+Z 按词/段回退，而非逐字符）。
+ * - 工具栏、快捷键、粘贴等结构化操作走 [commit]，永远开启新的历史项。
+ * - [undo]/[redo] 在 past/present/future 之间移动，不破坏另一侧栈。
+ * - 容量有上限，避免超长编辑会话内存膨胀。
+ */
 public class MarkdownHistory(
     initial: MarkdownHistoryEntry,
     private val capacity: Int = DEFAULT_CAPACITY,
