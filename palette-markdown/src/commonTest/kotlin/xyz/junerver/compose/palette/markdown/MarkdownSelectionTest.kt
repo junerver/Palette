@@ -23,4 +23,12 @@ class MarkdownSelectionTest {
         assertEquals("new text", r.text)
         assertEquals(MarkdownSelection(0, 3), r.selection)
     }
+
+    @Test
+    fun minMax_areReorderedWhenStartExceedsEnd() {
+        val reversed = MarkdownSelection(7, 2)
+        assertEquals(2, reversed.min)
+        assertEquals(7, reversed.max)
+        assertEquals(5, reversed.length)
+    }
 }

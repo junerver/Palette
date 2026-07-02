@@ -350,7 +350,7 @@ internal fun String.toHeadingSlug(): String {
 }
 
 /**
- * Compose-free 选区：等价于 Compose 的 [androidx.compose.ui.text.TextRange]，但核心层
+ * Compose-free 选区：等价于 Compose 的 androidx.compose.ui.text.TextRange，但核心层
  * 不依赖 Compose。start<=end（collapsed 表示纯光标）。UI 层负责与 TextRange 互转。
  */
 data class MarkdownSelection(
