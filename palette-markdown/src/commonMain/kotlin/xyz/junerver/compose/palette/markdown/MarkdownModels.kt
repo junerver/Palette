@@ -348,3 +348,29 @@ internal fun String.toHeadingSlug(): String {
     val slug = trim().lowercase().replace(Regex("""[^\w\s-]"""), "").replace(Regex("""\s+"""), "-").trim('-')
     return slug.ifEmpty { "heading" }
 }
+
+/**
+ * Compose-free 选区：等价于 Compose 的 [androidx.compose.ui.text.TextRange]，但核心层
+ * 不依赖 Compose。start<=end（collapsed 表示纯光标）。UI 层负责与 TextRange 互转。
+ */
+data class MarkdownSelection(
+    val start: Int,
+    val end: Int,
+) {
+    val min: Int get() = if (start <= end) start else end
+    val max: Int get() = if (start <= end) end else start
+    val length: Int get() = max - min
+
+    companion object {
+        val Empty = MarkdownSelection(0, 0)
+    }
+}
+
+/**
+ * 所有编辑变换的统一返回：新文本 + 新选区。
+ * 核心层纯函数返回此类型，UI 层据此更新 TextFieldValue。
+ */
+data class MarkdownEditResult(
+    val text: String,
+    val selection: MarkdownSelection,
+)
