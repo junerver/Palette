@@ -158,8 +158,13 @@ fun PMarkdownViewer(
     }
 }
 
+/**
+ * Render atom: iterates a list of [MarkdownRenderBlock]s into a spaced [Column].
+ * Public composable so custom UIs can render a parsed markdown model directly
+ * (instead of going through the all-in-one [PMarkdownViewer]).
+ */
 @Composable
-private fun MarkdownBlocks(
+fun MarkdownBlocks(
     blocks: List<MarkdownRenderBlock>,
     modifier: Modifier = Modifier,
     blockSpacing: Dp = MarkdownDefaults.blockSpacing(),
@@ -201,8 +206,13 @@ private fun MarkdownBlocks(
     }
 }
 
+/**
+ * Render atom: dispatches a single [MarkdownRenderBlock] to its renderer (heading,
+ * code, list, table, blockquote, etc.) via a `when`. Public composable for custom
+ * markdown UI composition.
+ */
 @Composable
-private fun MarkdownBlock(
+fun MarkdownBlock(
     block: MarkdownRenderBlock,
     onLinkClick: ((String) -> Unit)?,
     inlineImageContent: @Composable (MarkdownInlineImage) -> Unit,
@@ -449,8 +459,13 @@ private fun MarkdownListBlock(
     }
 }
 
+/**
+ * Render atom: the default inline-image placeholder used when no custom image
+ * composable is supplied. Public so callers can reuse it inside their own
+ * [inlineImageContent] slot.
+ */
 @Composable
-private fun DefaultInlineImage(image: MarkdownInlineImage) {
+fun DefaultInlineImage(image: MarkdownInlineImage) {
     Box(
         modifier =
             Modifier
@@ -517,8 +532,13 @@ private fun List<List<MarkdownInlineNode>>.normalizedCellCount(columnCount: Int)
     return this + List(columnCount - size) { emptyList() }
 }
 
+/**
+ * Render atom: lays out a list of inline markdown nodes into a [BasicText]-style
+ * surface with link/inline-image handling. Public composable for custom UIs that
+ * need to render inline markdown outside of the standard block flow.
+ */
 @Composable
-private fun InlineMarkdownText(
+fun InlineMarkdownText(
     inlines: List<MarkdownInlineNode>,
     color: androidx.compose.ui.graphics.Color,
     style: TextStyle,
@@ -558,13 +578,25 @@ private fun InlineMarkdownText(
     )
 }
 
-private data class MarkdownAnnotatedContent(
+/**
+ * Render atom: the [AnnotatedString] + inline-content map produced by
+ * [toAnnotatedContent]. Public because it is the return type of the public
+ * [toAnnotatedContent] render atom (a `public` member cannot expose a private type).
+ */
+data class MarkdownAnnotatedContent(
     val text: AnnotatedString,
     val inlineContent: Map<String, InlineTextContent>,
 )
 
+/**
+ * Render atom: builds an [AnnotatedString] (plus inline-content map) from a list of
+ * [MarkdownInlineNode]s, applying styles/colors from [PaletteTheme]. Public so custom
+ * inline renderers can reuse the same annotation strategy.
+ *
+ * NOTE: returns [MarkdownAnnotatedContent] (also public).
+ */
 @Composable
-private fun List<MarkdownInlineNode>.toAnnotatedContent(
+fun List<MarkdownInlineNode>.toAnnotatedContent(
     inlineImageContent: @Composable (MarkdownInlineImage) -> Unit,
 ): MarkdownAnnotatedContent {
     val colors = PaletteTheme.colors
