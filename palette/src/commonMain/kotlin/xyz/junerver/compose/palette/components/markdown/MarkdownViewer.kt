@@ -159,9 +159,12 @@ fun PMarkdownViewer(
 }
 
 /**
- * Render atom: iterates a list of [MarkdownRenderBlock]s into a spaced [Column].
- * Public composable so custom UIs can render a parsed markdown model directly
- * (instead of going through the all-in-one [PMarkdownViewer]).
+ * 渲染原子：将一组 [MarkdownRenderBlock] 迭代为带间距的 [Column]。
+ * 声明为 public，便于自定义 UI 直接渲染解析后的 markdown 模型（而非走一体化的 [PMarkdownViewer]）。
+ *
+ * 注：[taskCheckboxEnabled]/[nextTaskIndex]/[onTaskCheckedChange]/[onHeadingPositioned]
+ * 用于在块树间协调任务复选框状态与标题锚点定位，均已提供安全默认值（空操作），
+ * 无需该联动时直接省略即可。
  */
 @Composable
 fun MarkdownBlocks(
@@ -207,9 +210,8 @@ fun MarkdownBlocks(
 }
 
 /**
- * Render atom: dispatches a single [MarkdownRenderBlock] to its renderer (heading,
- * code, list, table, blockquote, etc.) via a `when`. Public composable for custom
- * markdown UI composition.
+ * 渲染原子：通过 `when` 将单个 [MarkdownRenderBlock] 分发给对应的渲染器
+ * （标题、代码、列表、表格、引用等）。声明为 public，便于自定义 markdown UI 组合使用。
  */
 @Composable
 fun MarkdownBlock(
@@ -460,9 +462,8 @@ private fun MarkdownListBlock(
 }
 
 /**
- * Render atom: the default inline-image placeholder used when no custom image
- * composable is supplied. Public so callers can reuse it inside their own
- * [inlineImageContent] slot.
+ * 渲染原子：未提供自定义图片组合时的默认行内图片占位符。声明为 public，
+ * 便于调用方在自己的 [inlineImageContent] 槽位中复用。
  */
 @Composable
 fun DefaultInlineImage(image: MarkdownInlineImage) {
@@ -533,9 +534,8 @@ private fun List<List<MarkdownInlineNode>>.normalizedCellCount(columnCount: Int)
 }
 
 /**
- * Render atom: lays out a list of inline markdown nodes into a [BasicText]-style
- * surface with link/inline-image handling. Public composable for custom UIs that
- * need to render inline markdown outside of the standard block flow.
+ * 渲染原子：将一组行内 markdown 节点布局到 [BasicText] 风格的表面上，并处理链接与行内图片。
+ * 声明为 public，便于需要在标准块流之外渲染行内 markdown 的自定义 UI 使用。
  */
 @Composable
 fun InlineMarkdownText(
@@ -579,9 +579,9 @@ fun InlineMarkdownText(
 }
 
 /**
- * Render atom: the [AnnotatedString] + inline-content map produced by
- * [toAnnotatedContent]. Public because it is the return type of the public
- * [toAnnotatedContent] render atom (a `public` member cannot expose a private type).
+ * 渲染原子：由 [toAnnotatedContent] 生成的 [AnnotatedString] + 行内内容映射。
+ * 声明为 public，因为它是 public 渲染原子 [toAnnotatedContent] 的返回类型
+ * （public 成员不能暴露 private 类型）。
  */
 data class MarkdownAnnotatedContent(
     val text: AnnotatedString,
@@ -589,11 +589,10 @@ data class MarkdownAnnotatedContent(
 )
 
 /**
- * Render atom: builds an [AnnotatedString] (plus inline-content map) from a list of
- * [MarkdownInlineNode]s, applying styles/colors from [PaletteTheme]. Public so custom
- * inline renderers can reuse the same annotation strategy.
+ * 渲染原子：从一组 [MarkdownInlineNode] 构建 [AnnotatedString]（及行内内容映射），
+ * 并应用 [PaletteTheme] 的样式/配色。声明为 public，便于自定义行内渲染器复用同一标注策略。
  *
- * NOTE: returns [MarkdownAnnotatedContent] (also public).
+ * 注：返回 [MarkdownAnnotatedContent]（同为 public）。
  */
 @Composable
 fun List<MarkdownInlineNode>.toAnnotatedContent(
