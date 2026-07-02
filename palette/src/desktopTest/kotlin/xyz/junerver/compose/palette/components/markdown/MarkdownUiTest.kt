@@ -5,15 +5,19 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.selection.toggleable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.text.TextRange
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.material3.Text
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.test.assertTextEquals
+import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
@@ -243,10 +247,11 @@ class MarkdownUiTest {
                 PMarkdownEditor(
                     value = textValue.value,
                     onValueChange = { textValue.value = it },
-                    mode = MarkdownEditorMode.Preview,
-                    editLabel = "Edit",
-                    previewLabel = "Preview",
-                    splitLabel = "Split",
+                    modeSwitch = {
+                        LaunchedEffect(Unit) {
+                            controller.setMode(MarkdownEditorMode.Preview)
+                        }
+                    },
                 )
             }
         }
@@ -268,10 +273,11 @@ class MarkdownUiTest {
                 PMarkdownEditor(
                     value = textValue.value,
                     onValueChange = { textValue.value = it },
-                    mode = MarkdownEditorMode.Preview,
-                    editLabel = "Edit",
-                    previewLabel = "Preview",
-                    splitLabel = "Split",
+                    modeSwitch = {
+                        LaunchedEffect(Unit) {
+                            controller.setMode(MarkdownEditorMode.Preview)
+                        }
+                    },
                 )
             }
         }
@@ -495,6 +501,114 @@ class MarkdownUiTest {
     }
 
     @Test
+    fun editorToolbarBoldButtonWrapsCurrentSelectionInsteadOfAppendingMarkersElsewhere() {
+        val valueState = androidx.compose.runtime.mutableStateOf(
+            TextFieldValue(
+                text = "hello",
+                selection = TextRange(1, 4),
+            )
+        )
+        rule.setContent {
+            PaletteMaterialTheme {
+                PMarkdownEditorValue(
+                    value = valueState.value,
+                    onValueChange = { valueState.value = it },
+                    showPreview = false,
+                )
+            }
+        }
+
+        rule.onNodeWithTag("md-toolbar-Bold").performClick()
+        rule.waitForIdle()
+
+        rule.runOnIdle {
+            assertEquals("h**ell**o", valueState.value.text)
+            assertEquals(TextRange(1, 6), valueState.value.selection)
+        }
+    }
+
+    @Test
+    fun editorToolbarItalicButtonWrapsCurrentSelection() {
+        val valueState = androidx.compose.runtime.mutableStateOf(
+            TextFieldValue(
+                text = "hello",
+                selection = TextRange(1, 4),
+            )
+        )
+        rule.setContent {
+            PaletteMaterialTheme {
+                PMarkdownEditorValue(
+                    value = valueState.value,
+                    onValueChange = { valueState.value = it },
+                    showPreview = false,
+                )
+            }
+        }
+
+        rule.onNodeWithTag("md-toolbar-Italic").performClick()
+        rule.waitForIdle()
+
+        rule.runOnIdle {
+            assertEquals("h*ell*o", valueState.value.text)
+            assertEquals(TextRange(1, 5), valueState.value.selection)
+        }
+    }
+
+    @Test
+    fun editorToolbarStrikethroughButtonWrapsCurrentSelection() {
+        val valueState = androidx.compose.runtime.mutableStateOf(
+            TextFieldValue(
+                text = "hello",
+                selection = TextRange(1, 4),
+            )
+        )
+        rule.setContent {
+            PaletteMaterialTheme {
+                PMarkdownEditorValue(
+                    value = valueState.value,
+                    onValueChange = { valueState.value = it },
+                    showPreview = false,
+                )
+            }
+        }
+
+        rule.onNodeWithTag("md-toolbar-Strikethrough").performClick()
+        rule.waitForIdle()
+
+        rule.runOnIdle {
+            assertEquals("h~~ell~~o", valueState.value.text)
+            assertEquals(TextRange(1, 6), valueState.value.selection)
+        }
+    }
+
+    @Test
+    fun editorToolbarInlineCodeButtonWrapsCurrentSelection() {
+        val valueState = androidx.compose.runtime.mutableStateOf(
+            TextFieldValue(
+                text = "hello",
+                selection = TextRange(1, 4),
+            )
+        )
+        rule.setContent {
+            PaletteMaterialTheme {
+                PMarkdownEditorValue(
+                    value = valueState.value,
+                    onValueChange = { valueState.value = it },
+                    showPreview = false,
+                )
+            }
+        }
+
+        rule.onNodeWithTag("md-toolbar-InlineCode").performClick()
+        rule.waitForIdle()
+
+        rule.runOnIdle {
+            assertEquals("h`ell`o", valueState.value.text)
+            assertEquals(TextRange(1, 5), valueState.value.selection)
+        }
+    }
+
+    @Test
     fun editorToolbarHeadingButtonSetsH1() {
         val textValue = androidx.compose.runtime.mutableStateOf("title")
         rule.setContent {
@@ -625,6 +739,25 @@ class MarkdownUiTest {
             }
         }
         rule.onNodeWithTag("heading:hi").assertExists()
+    }
+
+    @Test
+    fun defaultMarkdownModeSwitchRendersAllLabels() {
+        rule.setContent {
+            PaletteMaterialTheme {
+                PMarkdownEditor(
+                    value = "demo",
+                    onValueChange = {},
+                    showPreview = true,
+                    showFormatToolbar = false,
+                )
+            }
+        }
+
+        rule.onNodeWithTag("markdown-mode-switch").assertIsDisplayed()
+        rule.onNodeWithText("编辑").assertIsDisplayed()
+        rule.onNodeWithText("预览").assertIsDisplayed()
+        rule.onNodeWithText("分屏").assertIsDisplayed()
     }
     // endregion
 }

@@ -208,14 +208,20 @@ import xyz.junerver.compose.palette.components.code.CodeBlockColors as CodeBlock
 import xyz.junerver.compose.palette.components.code.CodeBlockDefaults as CodeBlockDefaultsImpl
 import xyz.junerver.compose.palette.components.code.PCodeBlock as PCodeBlockImpl
 import xyz.junerver.compose.palette.components.markdown.MarkdownDefaults as MarkdownDefaultsImpl
+import xyz.junerver.compose.palette.components.markdown.MarkdownBlock as MarkdownBlockImpl
+import xyz.junerver.compose.palette.components.markdown.MarkdownBlocks as MarkdownBlocksImpl
+import xyz.junerver.compose.palette.components.markdown.MarkdownEditorController as MarkdownEditorControllerImpl
 import xyz.junerver.compose.palette.components.markdown.MarkdownEditorMode as MarkdownEditorModeImpl
+import xyz.junerver.compose.palette.components.markdown.MarkdownEditorScope as MarkdownEditorScopeImpl
 import xyz.junerver.compose.palette.components.markdown.MarkdownFormatToolbar as MarkdownFormatToolbarImpl
 import xyz.junerver.compose.palette.components.markdown.MarkdownHeadingLevel as MarkdownHeadingLevelImpl
 import xyz.junerver.compose.palette.components.markdown.MarkdownTocDefaults as MarkdownTocDefaultsImpl
 import xyz.junerver.compose.palette.components.markdown.MarkdownToolbarAction as MarkdownToolbarActionImpl
+import xyz.junerver.compose.palette.components.markdown.DefaultInlineImage as DefaultInlineImageImpl
 import xyz.junerver.compose.palette.components.markdown.PMarkdownEditor as PMarkdownEditorImpl
 import xyz.junerver.compose.palette.components.markdown.PMarkdownToc as PMarkdownTocImpl
 import xyz.junerver.compose.palette.components.markdown.PMarkdownViewer as PMarkdownViewerImpl
+import xyz.junerver.compose.palette.components.markdown.useMarkdownEditorController as useMarkdownEditorControllerImpl
 import xyz.junerver.compose.palette.components.mermaid.MermaidColors as MermaidColorsImpl
 import xyz.junerver.compose.palette.components.mermaid.MermaidDefaults as MermaidDefaultsImpl
 import xyz.junerver.compose.palette.components.mermaid.PMermaidDiagram as PMermaidDiagramImpl
@@ -315,6 +321,8 @@ import xyz.junerver.compose.palette.core.tokens.PaletteTagTokens as PaletteTagTo
 import xyz.junerver.compose.palette.core.tokens.PaletteTextFieldTokens as PaletteTextFieldTokensImpl
 import xyz.junerver.compose.palette.core.tokens.PaletteToastTokens as PaletteToastTokensImpl
 import xyz.junerver.compose.palette.core.tokens.PaletteTypography as PaletteTypographyImpl
+import xyz.junerver.compose.palette.markdown.MarkdownEditResult as MarkdownEditResultImpl
+import xyz.junerver.compose.palette.markdown.MarkdownSelection as MarkdownSelectionImpl
 import xyz.junerver.compose.palette.core.tokens.PaletteUtilityTokens as PaletteUtilityTokensImpl
 import xyz.junerver.compose.palette.core.util.PaletteDefaults as PaletteDefaultsImpl
 import xyz.junerver.compose.palette.foundation.border.BorderContainerDefaults as BorderContainerDefaultsImpl
@@ -928,9 +936,17 @@ val PMarkdownEditor = ::PMarkdownEditorImpl
 val PMarkdownToc = ::PMarkdownTocImpl
 val MarkdownDefaults = MarkdownDefaultsImpl
 val MarkdownTocDefaults = MarkdownTocDefaultsImpl
+val useMarkdownEditorController = ::useMarkdownEditorControllerImpl
+val MarkdownBlock = ::MarkdownBlockImpl
+val MarkdownBlocks = ::MarkdownBlocksImpl
+val DefaultInlineImage = ::DefaultInlineImageImpl
+typealias MarkdownEditorController = MarkdownEditorControllerImpl
 typealias MarkdownEditorMode = MarkdownEditorModeImpl
+typealias MarkdownEditorScope = MarkdownEditorScopeImpl
 typealias MarkdownToolbarAction = MarkdownToolbarActionImpl
 typealias MarkdownHeadingLevel = MarkdownHeadingLevelImpl
+typealias MarkdownSelection = MarkdownSelectionImpl
+typealias MarkdownEditResult = MarkdownEditResultImpl
 val MarkdownFormatToolbar = ::MarkdownFormatToolbarImpl
 
 // Components - Barcode

@@ -32,6 +32,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.focus.focusProperties
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -165,7 +166,9 @@ private fun ToolbarIconButton(
     IconButton(
         onClick = { onAction(action) },
         enabled = enabled,
-        modifier = Modifier.testTag("md-toolbar-$tagSuffix"),
+        modifier = Modifier
+            .focusProperties { canFocus = false }
+            .testTag("md-toolbar-$tagSuffix"),
     ) {
         Icon(
             imageVector = icon,
@@ -189,7 +192,9 @@ private fun ToolbarTextButton(
     IconButton(
         onClick = { onAction(action) },
         enabled = enabled,
-        modifier = Modifier.testTag("md-toolbar-$tagSuffix"),
+        modifier = Modifier
+            .focusProperties { canFocus = false }
+            .testTag("md-toolbar-$tagSuffix"),
     ) {
         Text(
             text = label,
@@ -214,7 +219,9 @@ private fun HeadingDropdown(
             IconButton(
                 onClick = { onDefaultHeading() },
                 enabled = enabled,
-                modifier = Modifier.testTag("md-toolbar-Heading"),
+                modifier = Modifier
+                    .focusProperties { canFocus = false }
+                    .testTag("md-toolbar-Heading"),
             ) {
                 Icon(
                     imageVector = Icons.Filled.Title,
@@ -225,7 +232,9 @@ private fun HeadingDropdown(
             IconButton(
                 onClick = { setExpanded(true) },
                 enabled = enabled,
-                modifier = Modifier.testTag("md-toolbar-HeadingArrow"),
+                modifier = Modifier
+                    .focusProperties { canFocus = false }
+                    .testTag("md-toolbar-HeadingArrow"),
             ) {
                 Icon(
                     imageVector = Icons.Filled.ArrowDropDown,
