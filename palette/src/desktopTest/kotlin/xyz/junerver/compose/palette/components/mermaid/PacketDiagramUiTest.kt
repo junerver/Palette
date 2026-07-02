@@ -32,5 +32,11 @@ class PacketDiagramUiTest {
         rule.onNodeWithText("Source Port").assertExists()
         rule.onNodeWithText("Destination Port").assertExists()
         rule.onNodeWithText("Checksum").assertExists()
+        rule.onNodeWithText("0").assertExists()
+        rule.onNodeWithText("15").assertExists()
+        rule.onNodeWithText("16").assertExists()
+        rule.onNodeWithText("31").assertExists()
+        rule.onNodeWithText("47").assertExists()
+        rule.onNodeWithText("63").assertExists()
     }
 }

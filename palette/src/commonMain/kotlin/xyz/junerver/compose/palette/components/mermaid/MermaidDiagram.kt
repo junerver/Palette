@@ -3493,6 +3493,119 @@ private fun JourneyDiagramMermaidDiagram(
 
 // ── Packet ───────────────────────────────────────────────────────────
 
+internal data class PacketSegmentLayout(
+    val field: PacketField,
+    val startBit: Int,
+    val endBit: Int,
+) {
+    val bitCount: Int = endBit - startBit + 1
+}
+
+internal data class PacketRowLayout(
+    val rowIndex: Int,
+    val rowStartBit: Int,
+    val rowEndBit: Int,
+    val segments: List<PacketSegmentLayout>,
+)
+
+internal data class PacketVisualSegmentLayout(
+    val segment: PacketSegmentLayout,
+    val startFraction: Float,
+    val widthFraction: Float,
+)
+
+private enum class PacketBoundaryLabelAnchor { Start, End, Center }
+
+private data class PacketBoundaryLabel(
+    val text: String,
+    val bit: Int,
+    val anchor: PacketBoundaryLabelAnchor,
+)
+
+internal fun buildPacketRowLayouts(fields: List<PacketField>, bitsPerRow: Int = 32): List<PacketRowLayout> {
+    if (fields.isEmpty()) return emptyList()
+    val rowSegments = linkedMapOf<Int, MutableList<PacketSegmentLayout>>()
+    fields.forEach { field ->
+        var segmentStart = field.startBit
+        while (segmentStart <= field.endBit) {
+            val rowIndex = segmentStart / bitsPerRow
+            val rowStart = rowIndex * bitsPerRow
+            val rowEnd = rowStart + bitsPerRow - 1
+            val segmentEnd = minOf(field.endBit, rowEnd)
+            rowSegments.getOrPut(rowIndex) { mutableListOf() }
+                .add(PacketSegmentLayout(field = field, startBit = segmentStart, endBit = segmentEnd))
+            segmentStart = segmentEnd + 1
+        }
+    }
+    return rowSegments.entries.map { (rowIndex, segments) ->
+        val rowStart = rowIndex * bitsPerRow
+        PacketRowLayout(
+            rowIndex = rowIndex,
+            rowStartBit = rowStart,
+            rowEndBit = rowStart + bitsPerRow - 1,
+            segments = segments.sortedBy { it.startBit },
+        )
+    }
+}
+
+internal fun buildPacketVisualSegmentLayouts(
+    row: PacketRowLayout,
+    bitsPerRow: Int,
+    adjacentGapBits: Float = 0.16f,
+): List<PacketVisualSegmentLayout> {
+    val halfGapBits = adjacentGapBits / 2f
+    return row.segments.mapIndexed { index, segment ->
+        val previous = row.segments.getOrNull(index - 1)
+        val next = row.segments.getOrNull(index + 1)
+        val leftInsetBits =
+            if (previous != null && previous.endBit + 1 == segment.startBit) halfGapBits else 0f
+        val rightInsetBits =
+            if (next != null && segment.endBit + 1 == next.startBit) halfGapBits else 0f
+        val startBits = (segment.startBit - row.rowStartBit).toFloat() + leftInsetBits
+        val widthBits = (segment.bitCount.toFloat() - leftInsetBits - rightInsetBits).coerceAtLeast(0f)
+        PacketVisualSegmentLayout(
+            segment = segment,
+            startFraction = startBits / bitsPerRow,
+            widthFraction = widthBits / bitsPerRow,
+        )
+    }
+}
+
+private fun buildPacketBoundaryLabels(row: PacketRowLayout): List<PacketBoundaryLabel> {
+    val labels = linkedMapOf<String, PacketBoundaryLabel>()
+
+    fun add(bit: Int, anchor: PacketBoundaryLabelAnchor) {
+        labels["$bit-$anchor"] = PacketBoundaryLabel(text = bit.toString(), bit = bit, anchor = anchor)
+    }
+
+    val firstSegment = row.segments.firstOrNull()
+    val lastSegment = row.segments.lastOrNull()
+    if (firstSegment == null || firstSegment.startBit > row.rowStartBit) {
+        add(row.rowStartBit, PacketBoundaryLabelAnchor.Start)
+    }
+    row.segments.forEach { segment ->
+        if (segment.startBit == segment.endBit) {
+            add(segment.startBit, PacketBoundaryLabelAnchor.Center)
+        } else {
+            add(segment.startBit, PacketBoundaryLabelAnchor.Start)
+            add(segment.endBit, PacketBoundaryLabelAnchor.End)
+        }
+    }
+    if (lastSegment == null || lastSegment.endBit < row.rowEndBit) {
+        add(row.rowEndBit, PacketBoundaryLabelAnchor.End)
+    }
+    return labels.values.toList()
+}
+
+private fun approximatePacketLabelWidth(text: String): Dp = (text.length * 6 + 2).dp
+
+private fun Dp.clamp(min: Dp, max: Dp): Dp =
+    when {
+        this < min -> min
+        this > max -> max
+        else -> this
+    }
+
 /**
  * Packet renderer: bit-fields laid out in horizontal rows of `bitsPerRow` (default 32) bits.
  * Each field's width is proportional to its bit count; fields wrap to a new row when a row fills.
@@ -3513,56 +3626,91 @@ private fun PacketDiagramMermaidDiagram(
     val c = PaletteTheme.colors
     val bitsPerRow = 32
     val rowWidth = 960.dp
-    val rowHeight = 40.dp
+    val rowHeight = 44.dp
+    val rowLabelHeight = 14.dp
+    val rowSpacing = 12.dp
+    val titleSpacing = 10.dp
     val fieldColors = rememberSliceColors()
 
-    // Group fields into rows that sum to `bitsPerRow`.
-    data class RowLayout(val fields: List<Pair<PacketField, Int>>, val totalBits: Int)
-    val rows = mutableListOf<RowLayout>()
-    var current = RowLayout(emptyList(), 0)
-    fields.forEach { field ->
-        var remaining = field.bits
-        while (remaining > 0) {
-            val space = bitsPerRow - current.totalBits
-            if (space <= 0) { rows.add(current); current = RowLayout(emptyList(), 0); continue }
-            val take = minOf(space, remaining)
-            current = RowLayout(current.fields + (field to take), current.totalBits + take)
-            remaining -= take
-            if (current.totalBits == bitsPerRow) { rows.add(current); current = RowLayout(emptyList(), 0) }
-        }
-    }
-    if (current.fields.isNotEmpty()) rows.add(current)
-
-    val titleHeight: Dp = if (title != null) 32.dp else 0.dp
-    val height = titleHeight + rowHeight * rows.size + 8.dp
+    val rows = buildPacketRowLayouts(fields = fields, bitsPerRow = bitsPerRow)
+    val titleHeight: Dp = if (title != null) 24.dp + titleSpacing else 0.dp
+    val rowsHeight = (rowLabelHeight + rowHeight) * rows.size + rowSpacing * (rows.size - 1).coerceAtLeast(0)
+    val height = titleHeight + rowsHeight
 
     Column(modifier = modifier.width(rowWidth).height(height)) {
-        if (title != null) {
-            Text(title, color = colors.nodeContentColor,
-                style = PaletteTheme.typography.body.copy(fontWeight = FontWeight.Bold))
-        }
-        rows.forEach { row ->
-            Row(modifier = Modifier.fillMaxWidth().height(rowHeight)) {
-                row.fields.forEach { (field, _) ->
-                    val frac = (field.bits.coerceAtMost(bitsPerRow)).toFloat() / bitsPerRow
-                    val colorIdx = fields.indexOf(field).coerceAtLeast(0)
-                    Box(
-                        modifier = Modifier
-                            .weight(frac)
-                            .fillMaxHeight()
-                            .background(fieldColors[colorIdx % fieldColors.size].copy(alpha = 0.7f), RoundedCornerShape(2.dp))
-                            .border(1.dp, c.border, RoundedCornerShape(2.dp))
-                            .padding(2.dp),
-                        contentAlignment = Alignment.Center,
-                    ) {
-                        Text(field.label, color = Color.White, style = PaletteTheme.typography.label,
-                            textAlign = TextAlign.Center, maxLines = 1)
+        rows.forEachIndexed { index, row ->
+            val boundaryLabels = buildPacketBoundaryLabels(row)
+            val visualSegments = buildPacketVisualSegmentLayouts(row = row, bitsPerRow = bitsPerRow)
+            Box(modifier = Modifier.fillMaxWidth().height(rowLabelHeight + rowHeight)) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(rowHeight)
+                        .align(Alignment.BottomStart),
+                ) {
+                    visualSegments.forEach { visualSegment ->
+                        val segment = visualSegment.segment
+                        val colorIdx = fields.indexOf(segment.field).coerceAtLeast(0)
+                        Box(
+                            modifier = Modifier
+                                .absoluteOffset(x = rowWidth * visualSegment.startFraction)
+                                .width(rowWidth * visualSegment.widthFraction)
+                                .fillMaxHeight()
+                                .background(
+                                    fieldColors[colorIdx % fieldColors.size].copy(alpha = 0.22f),
+                                    RoundedCornerShape(2.dp),
+                                )
+                                .border(1.dp, c.border, RoundedCornerShape(2.dp))
+                                .padding(horizontal = 2.dp),
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            Text(
+                                segment.field.label,
+                                color = colors.nodeContentColor,
+                                style = PaletteTheme.typography.label,
+                                textAlign = TextAlign.Center,
+                                maxLines = 1,
+                            )
+                        }
                     }
                 }
-                if (row.totalBits < bitsPerRow) {
-                    Spacer(modifier = Modifier.weight((bitsPerRow - row.totalBits).toFloat() / bitsPerRow))
+
+                boundaryLabels.forEach { label ->
+                    val rawOffset =
+                        when (label.anchor) {
+                            PacketBoundaryLabelAnchor.Start ->
+                                rowWidth * ((label.bit - row.rowStartBit).toFloat() / bitsPerRow)
+                            PacketBoundaryLabelAnchor.End ->
+                                rowWidth * ((label.bit - row.rowStartBit + 1).toFloat() / bitsPerRow) -
+                                    approximatePacketLabelWidth(label.text)
+                            PacketBoundaryLabelAnchor.Center ->
+                                rowWidth * (((label.bit - row.rowStartBit).toFloat() + 0.5f) / bitsPerRow) -
+                                    approximatePacketLabelWidth(label.text) / 2
+                        }
+                    Text(
+                        text = label.text,
+                        color = c.textSecondary,
+                        style = PaletteTheme.typography.label.copy(fontWeight = FontWeight.Normal),
+                        modifier = Modifier.absoluteOffset(
+                            x = rawOffset.clamp(0.dp, rowWidth - approximatePacketLabelWidth(label.text)),
+                            y = 0.dp,
+                        ),
+                    )
                 }
             }
+            if (index != rows.lastIndex) {
+                Spacer(modifier = Modifier.height(rowSpacing))
+            }
+        }
+        if (title != null) {
+            Spacer(modifier = Modifier.height(titleSpacing))
+            Text(
+                text = title,
+                color = colors.nodeContentColor,
+                style = PaletteTheme.typography.body.copy(fontWeight = FontWeight.Bold),
+                textAlign = TextAlign.Center,
+                modifier = Modifier.fillMaxWidth(),
+            )
         }
     }
 }
